@@ -3,7 +3,7 @@ This repository contains some C++ code that shows how to implement CORDIC math. 
 </p>
 
 <p>
-CORDIC was invented in the 1950's and thus is nothing novel.  There is nothing proprietary here.
+CORDIC was invented in the 1950's.  There is nothing novel or proprietary here.  Just passing along some knowledge.
 </p>
 
 <p>
@@ -20,7 +20,7 @@ $ make _test_cordic.run
 </pre>
 
 <p>
-TODO: add argument minimization and test more cases
+TODO: add argument minimization and many more test cases
 </p>
 
 <p>
