@@ -4,7 +4,6 @@ DEPS = \
 
 OBJS = \
 	Cordic.o \
-	Misc.o \
 
 LIBS = \
 

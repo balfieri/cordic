@@ -39,19 +39,6 @@
 //------------------------------------------
 // Debugging
 //------------------------------------------
-#define dprintf if ( 0 ) printf
-#define dassert(expr) if ( !(expr) ) { printf( "ERROR: assertion failure: '%s' at %s:%d\n", #expr, __FILE__, __LINE__ ); my_exit( 1 ); }
-#define error(msg) { printf( "ERROR: %s (%s:%d)\n", msg, __FILE__, __LINE__ ); my_exit( 1 ); }
-
-extern void my_exit( int status );
-
-//------------------------------------------
-// Math
-//------------------------------------------
-extern int  int_log2( int n );
-extern bool int_is_pow2( int n );
-extern int  int_sqrt( int n );
-extern int  rand_n( int n );  // returns 0 .. n-1
-extern int  heads( void );    // returns 0 or 1
+#define dassert(expr) if ( !(expr) ) { printf( "ERROR: assertion failure: '%s' at %s:%d\n", #expr, __FILE__, __LINE__ ); exit( 1 ); }
 
 #endif
