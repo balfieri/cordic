@@ -1,0 +1,2 @@
+(cd base; make clean)
+(cd viz;  make clean)
