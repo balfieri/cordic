@@ -22,3 +22,8 @@ $ make _test_cordic.run
 <p>
 TODO: add argument minimization and test more cases
 </p>
+
+<p>
+Bob Alfieri<br>
+Chapel Hill, NC
+</p>
