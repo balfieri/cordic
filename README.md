@@ -11,5 +11,14 @@ This is all open-source.  Refer to the LICENSE.md for licensing details.
 </p>
 
 <p>
+To build and run the test:
+</p>
+<pre>
+$ cd src
+$ make
+$ make _test_cordic.run
+</pre>
+
+<p>
 TODO: add argument minimization and test more cases
 </p>
