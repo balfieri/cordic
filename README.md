@@ -11,7 +11,7 @@ This is all open-source.  Refer to the LICENSE.md for licensing details.
 </p>
 
 <p>
-To build and run the test:
+To build and run the test on Linux, Cygwin, or macOS:
 </p>
 <pre>
 $ cd src
