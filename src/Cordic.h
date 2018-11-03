@@ -58,7 +58,7 @@ public:
     // The CORDIC functions
     //-----------------------------------------------------
 
-    // rotation mode after step n:
+    // circular rotation mode after step n:
     //      x = gain*(x0*cos(z0) - y0*sin(z0))
     //      y = gain*(y0*cos(z0) + x0*sin(z0))
     //      z = 0
