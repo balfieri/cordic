@@ -24,17 +24,18 @@
 
 using FLT = double;
 using FP  = int64_t;
-constexpr int64_t  FW  = 56;
-constexpr FLT      TOL = 1.0 / FLT( 1LL << (FW/4) ); 
+constexpr int INT_W  = 7;
+constexpr int FRAC_W = 56;
+constexpr FLT TOL = 1.0 / FLT( 1LL << (FRAC_W/4) ); 
 
 FP to_fp( FLT x )
 {
-    return FP( x * FLT(FP(1) << FP(FW)) );
+    return FP( x * FLT(FP(1) << FP(FRAC_W)) );
 }
 
 FLT to_flt( FP x )
 {
-    return FLT( x ) / FLT(FP(1) << FP(FW));
+    return FLT( x ) / FLT(FP(1) << FP(FRAC_W));
 }
 
 #define do_op1( str, cordic_fn, exp_fn, fltx )                          \
@@ -134,7 +135,7 @@ void polar_to_rect( FLT r, FLT a, FLT& x, FLT& y ) { x = r*std::cos( a ); y = r*
 
 int main( int argc, const char * argv[] )
 {
-    Cordic<FP, FW> cordic;
+    Cordic<FP, INT_W, FRAC_W> cordic;
     std::cout << "tol: " << TOL << "\n";
 
     FLT x = 0.681807431807431031;

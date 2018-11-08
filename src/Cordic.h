@@ -23,10 +23,11 @@
 
 #include "Misc.h"
 
-// T  = some signed integer type that can hold fixed-point values (e.g., int64_t)
-// FW = fraction width of fixed point values                    
+// T      = some signed integer type that can hold fixed-point values (e.g., int64_t)
+// INT_W  = integer width to left of fixed decimal point (not including sign)
+// FRAC_W = fraction width to right of fixed decimal point
 //
-template< typename T, int FW >              
+template< typename T, int INT_W, int FRAC_W >              
 class Cordic
 {
 public:
@@ -37,15 +38,15 @@ public:
     // nh == number of iterations for hyperbolic
     // nl == number of iterations for linear
     //-----------------------------------------------------
-    Cordic( uint32_t nc=FW, uint32_t nh=FW, uint32_t nl=FW );
+    Cordic( uint32_t nc=FRAC_W, uint32_t nh=FRAC_W, uint32_t nl=FRAC_W );
     ~Cordic();
 
     //-----------------------------------------------------
     // Queries
     //-----------------------------------------------------
     const T ZERO    = 0;
-    const T ONE     = T(1) << T(FW);
-    const T QUARTER = T(1) << T(FW-2);
+    const T ONE     = T(1) << T(FRAC_W);
+    const T QUARTER = T(1) << T(FRAC_W-2);
 
     uint32_t n_circular( void ) const;
     uint32_t n_linear( void ) const;
@@ -140,6 +141,10 @@ public:
     T    acosh( const T& x ) const;                                             // log(x + sqrt(x^2 - 1))       (2)
     T    atanh( const T& x ) const;                                             // atanh(x)
     T    atanh2( const T& y, const T& x ) const;                                // atanh2(y, x)
+
+    //-----------------------------------------------------
+    // Argument Reduction Routines
+    //-----------------------------------------------------
 
 private:
     class Impl;
