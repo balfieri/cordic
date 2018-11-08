@@ -164,5 +164,12 @@ int main( int argc, const char * argv[] )
     do_op22("rect_to_polar(x,y)", cordic.rect_to_polar,rect_to_polar, x, y );
     do_op22("polar_to_rect(x,y)", cordic.polar_to_rect,polar_to_rect, x, y );
 
+    // argument reduction
+    FLT a   = 68.44513890321;
+    FP  afp = cordic.to_fp( a );
+    cordic.reduce_angle( afp );
+    FLT s  = std::sin( a );
+    FLT sr = std::sin( cordic.to_flt(a) );
+    std::cout << "\nsin(" << a << ")=" << s << " sin(" << cordic.to_flt(afp) << ")=" << sr << "\n";
     return 0;
 }

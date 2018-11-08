@@ -43,6 +43,8 @@ struct Cordic<T,INT_W,FRAC_W>::Impl
     T                           log2;                           // log(2)
     T                           log10;                          // log(10)
     T                           log10_div_e;                    // log(10) / e
+
+    std::unique_ptr<T[]>        reduce_angle_addend;            // for each possible integer value, an addend to help normalize
 };
 
 //-----------------------------------------------------
@@ -593,6 +595,40 @@ T Cordic<T,INT_W,FRAC_W>::atanh2( const T& y, const T& x, bool do_reduce ) const
 template< typename T, int INT_W, int FRAC_W >
 void Cordic<T,INT_W,FRAC_W>::reduce_angle( T& a ) const
 {
+    const T MIN_INT  = -(1 << INT_W);
+    const T MAX_INT  = (1 << INT_W)-1;
+    T * addend = impl->reduce_angle_addend.get();
+    if ( addend == nullptr ) {
+        //-----------------------------------------------------
+        // Construct LUT that maps int bits to value to add to get back in range.
+        //-----------------------------------------------------
+        dassert( INT_W < 14 && "too many cases to worry about" );
+        uint32_t N = 1 << (1+INT_W);
+        addend = new T[N];
+        impl->reduce_angle_addend = std::unique_ptr<T[]>( addend );
+
+        const highres PI       = M_PI;
+        const highres PI_DIV_2 = PI / 2.0;
+        for( T i = MIN_INT; i <= MAX_INT; i++ )
+        {
+            T       abs_i = (i < 0) ? -i : i;
+            highres abs_f = abs_i;
+            highres cnt   = abs_f / PI_DIV_2;
+            T       cnt_i = cnt;
+            if ( i < 0 ) cnt_i++;
+            std::cout << "cnt_i=" << cnt_i << "\n";
+            highres add_f = highres(cnt_i) * PI_DIV_2;
+            if ( i > 0 ) add_f = -add_f;
+            addend[i-MIN_INT] = to_fp( add_f );
+            std::cout << "addend[" << (i-MIN_INT) << "]=" << to_flt(addend[i-MIN_INT]) << "\n";
+        }
+    }
+
+    //-----------------------------------------------------
+    // Use LUT to find addend.
+    //-----------------------------------------------------
+    T index = (a >> FRAC_W) & MAX_INT + MIN_INT;
+    a += addend[index];
 }
 
 template class Cordic<int64_t, 7, 56>;
