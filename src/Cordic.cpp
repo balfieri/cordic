@@ -43,17 +43,6 @@ struct Cordic<T,INT_W,FRAC_W>::Impl
     T                           log2;                           // log(2)
     T                           log10;                          // log(10)
     T                           log10_div_e;                    // log(10) / e
-
-    T to_fp( highres x )
-    {
-        return T( x * highres(T(1) << T(FRAC_W)) );
-    }
-
-    highres to_flt( T x )
-    {
-        return highres( x ) / highres(T(1) << T(FRAC_W));
-    }
-
 };
 
 //-----------------------------------------------------
@@ -184,7 +173,7 @@ void Cordic<T,INT_W,FRAC_W>::circular_rotation( const T& x0, const T& y0, const 
         T xi;
         T yi;
         T zi;
-        if ( debug ) printf( "circular_rotation: i=%d xyz=[%f,%f,%f] test=%d\n", i, impl->to_flt(x), impl->to_flt(y), impl->to_flt(z), int(z >= ZERO) );
+        if ( debug ) printf( "circular_rotation: i=%d xyz=[%f,%f,%f] test=%d\n", i, to_flt(x), to_flt(y), to_flt(z), int(z >= ZERO) );
         if ( z >= ZERO ) {
             xi = x - (y >> i);
             yi = y + (x >> i);
@@ -218,7 +207,7 @@ void Cordic<T,INT_W,FRAC_W>::circular_vectoring( const T& x0, const T& y0, const
         T xi;
         T yi;
         T zi;
-        if ( debug ) printf( "circular_vectoring: i=%d xyz=[%f,%f,%f] test=%d\n", i, impl->to_flt(x), impl->to_flt(y), impl->to_flt(z), int((x < ZERO) != (y < ZERO)) );
+        if ( debug ) printf( "circular_vectoring: i=%d xyz=[%f,%f,%f] test=%d\n", i, to_flt(x), to_flt(y), to_flt(z), int((x < ZERO) != (y < ZERO)) );
         if ( (x < ZERO) != (y < ZERO) ) {
             xi = x - (y >> i);
             yi = y + (x >> i);
@@ -253,7 +242,7 @@ void Cordic<T,INT_W,FRAC_W>::hyperbolic_rotation( const T& x0, const T& y0, cons
         T xi;
         T yi;
         T zi;
-        if ( debug ) printf( "hyperbolic_rotation: i=%d xyz=[%f,%f,%f] test=%d\n", i, impl->to_flt(x), impl->to_flt(y), impl->to_flt(z), int(z >= ZERO) );
+        if ( debug ) printf( "hyperbolic_rotation: i=%d xyz=[%f,%f,%f] test=%d\n", i, to_flt(x), to_flt(y), to_flt(z), int(z >= ZERO) );
         if ( z >= ZERO ) {
             xi = x + (y >> i);
             yi = y + (x >> i);
@@ -330,7 +319,7 @@ void Cordic<T,INT_W,FRAC_W>::linear_rotation( const T& x0, const T& y0, const T&
     uint32_t n = impl->nl;
     for( uint32_t i = 0; i <= n; i++ )
     {
-        if ( debug ) printf( "linear_rotation: i=%d xyz=[%f,%f,%f] test=%d\n", i, impl->to_flt(x), impl->to_flt(y), impl->to_flt(z), int(z >= ZERO) );
+        if ( debug ) printf( "linear_rotation: i=%d xyz=[%f,%f,%f] test=%d\n", i, to_flt(x), to_flt(y), to_flt(z), int(z >= ZERO) );
         T yi;
         T zi;
         if ( z >= ZERO ) {
@@ -360,7 +349,7 @@ void Cordic<T,INT_W,FRAC_W>::linear_vectoring( const T& x0, const T& y0, const T
     uint32_t n = impl->nl;
     for( uint32_t i = 0; i <= n; i++ )
     {
-        if ( debug ) printf( "linear_vectoring: i=%d xyz=[%f,%f,%f] test=%d\n", i, impl->to_flt(x), impl->to_flt(y), impl->to_flt(z), int((x < ZERO) != (y < ZERO)) );
+        if ( debug ) printf( "linear_vectoring: i=%d xyz=[%f,%f,%f] test=%d\n", i, to_flt(x), to_flt(y), to_flt(z), int((x < ZERO) != (y < ZERO)) );
         T yi;
         T zi;
         if ( (x < ZERO) != (y < ZERO) ) {
