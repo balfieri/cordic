@@ -30,9 +30,9 @@ constexpr FLT TOL = 1.0 / FLT( 1LL << (FRAC_W/4) );
 
 #define do_op1( str, cordic_fn, exp_fn, fltx )                          \
 {                                                                       \
-    FP  fpx  = Cordic<FP,INT_W,FRAC_W>::to_fp( fltx );			\
+    FP  fpx  = cordic.to_fp( fltx );			                \
     FP  fpz  = cordic_fn( fpx );			                \
-    FLT fltz = Cordic<FP,INT_W,FRAC_W>::to_flt( fpz );			\
+    FLT fltz = cordic.to_flt( fpz );			                \
     FLT flte = exp_fn( fltx );			                        \
     FLT flterr = std::abs( flte-fltz );			                \
 			                                                \
@@ -47,11 +47,11 @@ constexpr FLT TOL = 1.0 / FLT( 1LL << (FRAC_W/4) );
 
 #define do_op12( str, cordic_fn, exp_fn, fltx )                         \
 {                                                                       \
-    FP  fpx  = Cordic<FP,INT_W,FRAC_W>::to_fp( fltx );			\
+    FP  fpx  = cordic.to_fp( fltx );			                \
     FP  fpz1, fpz2;                                                     \
     cordic_fn( fpx, fpz1, fpz2 );			                \
-    FLT fltz1 = Cordic<FP,INT_W,FRAC_W>::to_flt( fpz1 );		\
-    FLT fltz2 = Cordic<FP,INT_W,FRAC_W>::to_flt( fpz2 );		\
+    FLT fltz1 = cordic.to_flt( fpz1 );		                        \
+    FLT fltz2 = cordic.to_flt( fpz2 );		                        \
     FLT flte1, flte2;                                                   \
     exp_fn( fltx, flte1, flte2 );			                \
     FLT flterr1 = std::abs( flte1-fltz1 );			        \
@@ -69,10 +69,10 @@ constexpr FLT TOL = 1.0 / FLT( 1LL << (FRAC_W/4) );
 
 #define do_op2( str, cordic_fn, exp_fn, fltx, flty )                    \
 {                                                                       \
-    FP  fpx  = Cordic<FP,INT_W,FRAC_W>::to_fp( fltx );			\
-    FP  fpy  = Cordic<FP,INT_W,FRAC_W>::to_fp( flty );			\
+    FP  fpx  = cordic.to_fp( fltx );			                \
+    FP  fpy  = cordic.to_fp( flty );			                \
     FP  fpz  = cordic_fn( fpx, fpy );			                \
-    FLT fltz = Cordic<FP,INT_W,FRAC_W>::to_flt( fpz );			\
+    FLT fltz = cordic.to_flt( fpz );			                \
     FLT flte = exp_fn( fltx, flty );			                \
     FLT flterr = std::abs( flte-fltz );			                \
 			                                                \
@@ -87,12 +87,12 @@ constexpr FLT TOL = 1.0 / FLT( 1LL << (FRAC_W/4) );
 
 #define do_op22( str, cordic_fn, exp_fn, fltx, flty )                   \
 {                                                                       \
-    FP  fpx  = Cordic<FP,INT_W,FRAC_W>::to_fp( fltx );			\
-    FP  fpy  = Cordic<FP,INT_W,FRAC_W>::to_fp( flty );			\
+    FP  fpx  = cordic.to_fp( fltx );			                \
+    FP  fpy  = cordic.to_fp( flty );			                \
     FP  fpz1, fpz2;                                                     \
     cordic_fn( fpx, fpy, fpz1, fpz2 );			                \
-    FLT fltz1 = Cordic<FP,INT_W,FRAC_W>::to_flt( fpz1 );		\
-    FLT fltz2 = Cordic<FP,INT_W,FRAC_W>::to_flt( fpz2 );		\
+    FLT fltz1 = cordic.to_flt( fpz1 );		                        \
+    FLT fltz2 = cordic.to_flt( fpz2 );		                        \
     FLT flte1, flte2;                                                   \
     exp_fn( fltx, flty, flte1, flte2 );			                \
     FLT flterr1 = std::abs( flte1-fltz1 );			        \
