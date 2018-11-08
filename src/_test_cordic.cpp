@@ -118,7 +118,7 @@ FLT to_flt( FP x )
 }    
 
 FLT mul( FLT x, FLT y ) { return x*y; }
-FLT div( FLT x, FLT y ) { return y/x; }
+FLT div( FLT x, FLT y ) { return x/y; }
 FLT pow2( FLT x )       { return std::pow( 2.0, x ); }
 FLT pow10( FLT x )      { return std::pow( 10.0, x ); }
 FLT logb( FLT x, FLT y ){ return std::log( x ) / std::log( y ); }
@@ -141,7 +141,7 @@ int main( int argc, const char * argv[] )
     FLT y = 0.810431798013170871;
 
     do_op2( "x*y",              cordic.mul,     mul,            x, y );
-    do_op2( "y/x",              cordic.div,     div,            x, y );
+    do_op2( "y/x",              cordic.div,     div,            y, x );
     do_op1( "sqrt(x)",          cordic.sqrt,    std::sqrt,      x    );
     do_op1( "exp(x)",           cordic.exp,     std::exp,       x    );
     do_op2( "pow(x,y)",         cordic.pow,     std::pow,       x, y );
