@@ -24,8 +24,8 @@
 
 using FLT = double;
 using FP  = int64_t;
-constexpr int64_t FW = 56;
-constexpr FLT     TOL = 1.0 / FLT( 1LL << (FW/4) ); 
+constexpr int64_t  FW  = 56;
+constexpr FLT      TOL = 1.0 / FLT( 1LL << (FW/4) ); 
 
 FP to_fp( FLT x )
 {
@@ -37,356 +37,101 @@ FLT to_flt( FP x )
     return FLT( x ) / FLT(FP(1) << FP(FW));
 }
 
+#define do_op1( str, cordic_fn, exp_fn, fltx )                          \
+{                                                                       \
+    FP  fpx  = to_fp( fltx );			                        \
+    FP  fpz  = cordic_fn( fpx );			                \
+    FLT fltz = to_flt( fpz );			                        \
+    FLT flte = exp_fn( fltx );			                        \
+    FLT flterr = std::abs( flte-fltz );			                \
+			                                                \
+    std::cout.precision(24);			                        \
+    std::cout << "\n" << #str << "\n";			                \
+    std::cout << "Input:    " << std::setw(30) << fltx << "(fltx)\n";	\
+    std::cout << "Expected: " << std::setw(30) << flte << "\n";		\
+    std::cout << "Actual:   " << std::setw(30) << fltz << "\n";		\
+    std::cout << "Diff:     " << std::setw(30) << flterr << "\n";	\
+    dassert( flterr <= TOL );			                        \
+}    
+
+#define do_op12( str, cordic_fn, exp_fn, fltx )                         \
+{                                                                       \
+    FP  fpx  = to_fp( fltx );			                        \
+    FP  fpz1, fpz2;                                                     \
+    cordic_fn( fpx, fpz1, fpz2 );			                \
+    FLT fltz1 = to_flt( fpz1 );			                        \
+    FLT fltz2 = to_flt( fpz2 );			                        \
+    FLT flte1, flte2;                                                   \
+    exp_fn( fltx, flte1, flte2 );			                \
+    FLT flterr1 = std::abs( flte1-fltz1 );			        \
+    FLT flterr2 = std::abs( flte2-fltz2 );			        \
+			                                                \
+    std::cout.precision(24);			                        \
+    std::cout << "\n" << #str << "\n";			                \
+    std::cout << "Input:    " << std::setw(30) << fltx << "(fltx)\n";	\
+    std::cout << "Expected: " << std::setw(30) << flte1 << "," << flte2 << "\n"; \
+    std::cout << "Actual:   " << std::setw(30) << fltz1 << "," << fltz2 << "\n"; \
+    std::cout << "Diff:     " << std::setw(30) << flterr1 << "," << flterr2 << "\n"; \
+    dassert( flterr1 <= TOL );			                        \
+    dassert( flterr2 <= TOL );			                        \
+}    
+
+#define do_op2( str, cordic_fn, exp_fn, fltx, flty )                    \
+{                                                                       \
+    FP  fpx  = to_fp( fltx );			                        \
+    FP  fpy  = to_fp( flty );			                        \
+    FP  fpz  = cordic_fn( fpx, fpy );			                \
+    FLT fltz = to_flt( fpz );			                        \
+    FLT flte = exp_fn( fltx, flty );			                \
+    FLT flterr = std::abs( flte-fltz );			                \
+			                                                \
+    std::cout.precision(24);			                        \
+    std::cout << "\n" << #str << "\n";			                \
+    std::cout << "Input:    " << std::setw(30) << fltx << "(x) " << flty << "(y)\n"; \
+    std::cout << "Expected: " << std::setw(30) << flte << "\n";		\
+    std::cout << "Actual:   " << std::setw(30) << fltz << "\n";		\
+    std::cout << "Diff:     " << std::setw(30) << flterr << "\n";	\
+    dassert( flterr <= TOL );			                        \
+}    
+
+FLT mul( FLT x, FLT y ) { return x*y; }
+FLT div( FLT x, FLT y ) { return y/x; }
+FLT pow2( FLT x )       { return std::pow( 2.0, x ); }
+FLT pow10( FLT x )      { return std::pow( 10.0, x ); }
+FLT logb( FLT x, FLT y ){ return std::log( x ) / std::log( y ); }
+FLT log2( FLT x )       { return std::log( x ) / std::log( 2.0 ); }
+FLT log10( FLT x )      { return std::log( x ) / std::log( 10.0 ); }
+void sin_cos( FLT x, FLT& si, FLT& co ) { si = std::sin( x ); co = std::cos( x ); }
+
 int main( int argc, const char * argv[] )
 {
     Cordic<FP, FW> cordic;
-    FLT fltx;
-    FLT flty;
-    FP  fpx;
-    FP  fpy;
-    FP  fpz;
-    FP  fpz0;
-    FP  fpz1;
-    FLT fltz;
-    FLT fltz0;
-    FLT fltz1;
-    FLT flte;
-    FLT flte0;
-    FLT flte1;
-    FLT flterr;
-    FLT flterr0;
-    FLT flterr1;
-
     std::cout << "tol: " << TOL << "\n";
 
-    // x*y
-    //
-    fltx = 0.681807431807431031;
-    flty = 0.810431798013170871;
-    fpx  = to_fp( fltx );
-    fpy  = to_fp( flty );
-    fpz  = cordic.mul( fpx, fpy );
-    fltz = to_flt( fpz );
-    flte = fltx*flty;
-    flterr = std::abs( flte-fltz );
+    FLT x = 0.681807431807431031;
+    FLT y = 0.810431798013170871;
 
-    std::cout.precision(24);
-    std::cout << "\nx*y\n";
-    std::cout << "Input:    " << std::setw(30) << fltx << "(x), " << flty << "(y)\n";
-    std::cout << "Expected: " << std::setw(30) << flte << "\n";
-    std::cout << "Actual:   " << std::setw(30) << fltz << "\n";
-    std::cout << "Error:    " << std::setw(30) << flterr << "\n";
-    dassert( flterr <= TOL );
+    do_op2( "x*y",              cordic.mul,     mul,            x, y );
+    do_op2( "y/x",              cordic.div,     div,            x, y );
+    do_op1( "sqrt(x)",          cordic.sqrt,    std::sqrt,      x    );
+    do_op1( "exp(x)",           cordic.exp,     std::exp,       x    );
+    do_op2( "pow(x,y)",         cordic.pow,     std::pow,       x, y );
+    do_op1( "pow2(x)",          cordic.pow2,    pow2,           x    );
+    do_op1( "pow10(x)",         cordic.pow10,   pow10,          x    );
+    do_op1( "log(x)",           cordic.log,     std::log,       x    );
+    do_op2( "logb(x,b)",        cordic.logb,    logb,           x, y );
+    do_op1( "log2(x)",          cordic.log2,    log2,           x    );
+    do_op1( "log10(x)",         cordic.log10,   log10,          x    );
+    do_op1( "sin(x)",           cordic.sin,     std::sin,       x    );
+    do_op1( "cos(x)",           cordic.cos,     std::cos,       x    );
+    do_op12("sin_cos(x)",       cordic.sin_cos, sin_cos,        x    );
+    do_op1( "tan(x)",           cordic.tan,     std::tan,       x    );
+    do_op1( "asin(x)",          cordic.asin,    std::sin,       x    );
+    do_op1( "acos(x)",          cordic.acos,    std::cos,       x    );
+    do_op1( "atan(x)",          cordic.atan,    std::atan,      x    );
+    do_op2( "atan2(y,x)",       cordic.atan2,   std::atan2,     y, x );
 
-    // y/x
-    //
-    fltx = 0.681807431807431031;
-    flty = 0.810431798013170871;
-    fpx  = to_fp( fltx );
-    fpy  = to_fp( flty );
-    fpz  = cordic.div( fpy, fpx );
-    fltz = to_flt( fpz );
-    flte = flty/fltx;
-    flterr = std::abs( flte-fltz );
-
-    std::cout.precision(24);
-    std::cout << "\ny/x\n";
-    std::cout << "Input:    " << std::setw(30) << fltx << "(x), " << flty << "(y)\n";
-    std::cout << "Expected: " << std::setw(30) << flte << "\n";
-    std::cout << "Actual:   " << std::setw(30) << fltz << "\n";
-    std::cout << "Error:    " << std::setw(30) << flterr << "\n";
-    dassert( flterr <= TOL );
-
-    // sqrt( x )
-    fltx = 0.756728943106177373;
-    fpx  = to_fp( fltx );
-    fpy  = to_fp( flty );
-    fpz  = cordic.sqrt( fpx );
-    fltz = to_flt( fpz );
-    flte = std::sqrt( fltx );
-    flterr = std::abs( flte-fltz );
-
-    std::cout.precision(24);
-    std::cout << "\nsqrt(x)\n";
-    std::cout << "Input:    " << std::setw(30) << fltx << "\n";
-    std::cout << "Expected: " << std::setw(30) << flte << "\n";
-    std::cout << "Actual:   " << std::setw(30) << fltz << "\n";
-    std::cout << "Error:    " << std::setw(30) << flterr << "\n";
-    dassert( flterr <= TOL );
-
-    // e^x 
-    fltx = 0.456728943106177373;
-    fpx  = to_fp( fltx );
-    fpz  = cordic.exp( fpx );
-    fltz = to_flt( fpz );
-    flte = std::exp( fltx );
-    flterr = std::abs( flte-fltz );
-
-    std::cout.precision(24);
-    std::cout << "\nexp(x)\n";
-    std::cout << "Input:    " << std::setw(30) << fltx << "\n";
-    std::cout << "Expected: " << std::setw(30) << flte << "\n";
-    std::cout << "Actual:   " << std::setw(30) << fltz << "\n";
-    std::cout << "Error:    " << std::setw(30) << flterr << "\n";
-    dassert( flterr <= TOL );
-
-    // x^y
-    fltx = 0.456728943106177373;
-    flty = 0.790843170754708943;
-    fpx  = to_fp( fltx );
-    fpy  = to_fp( flty );
-    fpz  = cordic.pow( fpx, fpy );
-    fltz = to_flt( fpz );
-    flte = std::pow( fltx, flty );
-    flterr = std::abs( flte-fltz );
-
-    std::cout.precision(24);
-    std::cout << "\npow(x, y)\n";
-    std::cout << "Input:    " << std::setw(30) << fltx << "(x), " << flty << "(y)\n";
-    std::cout << "Expected: " << std::setw(30) << flte << "\n";
-    std::cout << "Actual:   " << std::setw(30) << fltz << "\n";
-    std::cout << "Error:    " << std::setw(30) << flterr << "\n";
-    dassert( flterr <= TOL );
-
-    // 2^x 
-    fltx = 0.456728943106177373;
-    fpx  = to_fp( fltx );
-    fpz  = cordic.pow2( fpx );
-    fltz = to_flt( fpz );
-    flte = std::pow( 2.0, fltx );
-    flterr = std::abs( flte-fltz );
-
-    std::cout.precision(24);
-    std::cout << "\npow2(x)\n";
-    std::cout << "Input:    " << std::setw(30) << fltx << "\n";
-    std::cout << "Expected: " << std::setw(30) << flte << "\n";
-    std::cout << "Actual:   " << std::setw(30) << fltz << "\n";
-    std::cout << "Error:    " << std::setw(30) << flterr << "\n";
-    dassert( flterr <= TOL );
-
-    // 10^x 
-    fltx = 0.456728943106177373;
-    fpx  = to_fp( fltx );
-    fpz  = cordic.pow10( fpx );
-    fltz = to_flt( fpz );
-    flte = std::pow( 10.0, fltx );
-    flterr = std::abs( flte-fltz );
-
-    std::cout.precision(24);
-    std::cout << "\npow10(x)\n";
-    std::cout << "Input:    " << std::setw(30) << fltx << "\n";
-    std::cout << "Expected: " << std::setw(30) << flte << "\n";
-    std::cout << "Actual:   " << std::setw(30) << fltz << "\n";
-    std::cout << "Error:    " << std::setw(30) << flterr << "\n";
-    //dassert( flterr <= TOL ); // TODO
-
-    // log(x)
-    fltx = 1.456728943106177373;
-    fpx  = to_fp( fltx );
-    fpz  = cordic.log( fpx );
-    fltz = to_flt( fpz );
-    flte = std::log( fltx );
-    flterr = std::abs( flte-fltz );
-
-    std::cout.precision(24);
-    std::cout << "\nlog(x)\n";
-    std::cout << "Input:    " << std::setw(30) << fltx << "\n";
-    std::cout << "Expected: " << std::setw(30) << flte << "\n";
-    std::cout << "Actual:   " << std::setw(30) << fltz << "\n";
-    std::cout << "Error:    " << std::setw(30) << flterr << "\n";
-    dassert( flterr <= TOL );
-
-    // logb(x, b)
-    fltx = 0.456728943106177373;
-    flty = 1.790843170754708943;
-    fpx  = to_fp( fltx );
-    fpy  = to_fp( flty );
-    fpz  = cordic.logb( fpx, fpy );
-    fltz = to_flt( fpz );
-    flte = std::log( fltx ) / std::log( flty );
-    flterr = std::abs( flte-fltz );
-
-    std::cout.precision(24);
-    std::cout << "\nlogb(x, b)\n";
-    std::cout << "Input:    " << std::setw(30) << fltx << "(x), " << flty << "(y)\n";
-    std::cout << "Expected: " << std::setw(30) << flte << "\n";
-    std::cout << "Actual:   " << std::setw(30) << fltz << "\n";
-    std::cout << "Error:    " << std::setw(30) << flterr << "\n";
-    dassert( flterr <= TOL );
-
-    // log2(x)
-    fltx = 1.456728943106177373;
-    fpx  = to_fp( fltx );
-    fpz  = cordic.log2( fpx );
-    fltz = to_flt( fpz );
-    flte = std::log( fltx ) / std::log( 2.0 );
-    flterr = std::abs( flte-fltz );
-
-    std::cout.precision(24);
-    std::cout << "\nlog2(x)\n";
-    std::cout << "Input:    " << std::setw(30) << fltx << "\n";
-    std::cout << "Expected: " << std::setw(30) << flte << "\n";
-    std::cout << "Actual:   " << std::setw(30) << fltz << "\n";
-    std::cout << "Error:    " << std::setw(30) << flterr << "\n";
-    dassert( flterr <= TOL );
-
-    // log10(x)
-    fltx = 1.456728943106177373;
-    fpx  = to_fp( fltx );
-    fpz  = cordic.log10( fpx );
-    fltz = to_flt( fpz );
-    flte = std::log( fltx ) / std::log( 10.0 );
-    flterr = std::abs( flte-fltz );
-
-    std::cout.precision(24);
-    std::cout << "\nlog10(x)\n";
-    std::cout << "Input:    " << std::setw(30) << fltx << "\n";
-    std::cout << "Expected: " << std::setw(30) << flte << "\n";
-    std::cout << "Actual:   " << std::setw(30) << fltz << "\n";
-    std::cout << "Error:    " << std::setw(30) << flterr << "\n";
-    dassert( flterr <= TOL );
-
-    // sin() 
-    //
-    fltx = 0.456728943106177373;
-    fpx  = to_fp( fltx );
-    fpz  = cordic.sin( fpx );
-    fltz = to_flt( fpz );
-    flte = std::sin( fltx );
-    flterr = std::abs( flte-fltz );
-
-    std::cout.precision(24);
-    std::cout << "\nsin(x)\n";
-    std::cout << "Input:    " << std::setw(30) << fltx << "\n";
-    std::cout << "Expected: " << std::setw(30) << flte << "\n";
-    std::cout << "Actual:   " << std::setw(30) << fltz << "\n";
-    std::cout << "Error:    " << std::setw(30) << flterr << "\n";
-    dassert( flterr <= TOL );
-
-    // cos() 
-    //
-    fltx = 0.456728943106177373;
-    fpx  = to_fp( fltx );
-    fpz  = cordic.cos( fpx );
-    fltz = to_flt( fpz );
-    flte = std::cos( fltx );
-    flterr = std::abs( flte-fltz );
-
-    std::cout.precision(24);
-    std::cout << "\ncos(x)\n";
-    std::cout << "Input:    " << std::setw(30) << fltx << "\n";
-    std::cout << "Expected: " << std::setw(30) << flte << "\n";
-    std::cout << "Actual:   " << std::setw(30) << fltz << "\n";
-    std::cout << "Error:    " << std::setw(30) << flterr << "\n";
-    dassert( flterr <= TOL );
-
-    // sin( x ), cos( x )
-    fltx = 0.456728943106177373;
-    fpx  = to_fp( fltx );
-    cordic.sin_cos( fpx, fpz0, fpz1 );
-    fltz0 = to_flt( fpz0 );
-    fltz1 = to_flt( fpz1 );
-    flte0 = std::sin( fltx );
-    flte1 = std::cos( fltx );
-    flterr0 = std::abs( flte0-fltz0 );
-    flterr1 = std::abs( flte1-fltz1 );
-
-    std::cout.precision(24);
-    std::cout << "\nsin_cos(x)\n";
-    std::cout << "Input:    " << std::setw(30) << fltx  << "\n";
-    std::cout << "Expected: " << std::setw(30) << flte0 << ", " << flte1 << "\n";
-    std::cout << "Actual:   " << std::setw(30) << fltz0 << ", " << fltz1 << "\n";
-    std::cout << "Error:    " << std::setw(30) << flterr0 << ", " << flterr1 << "\n";
-    dassert( flterr0 <= TOL );
-    dassert( flterr1 <= TOL );
-
-    // tan() 
-    //
-    fltx = 0.456728943106177373;
-    fpx  = to_fp( fltx );
-    fpz  = cordic.tan( fpx );
-    fltz = to_flt( fpz );
-    flte = std::tan( fltx );
-    flterr = std::abs( flte-fltz );
-
-    std::cout.precision(24);
-    std::cout << "\ntan(x)\n";
-    std::cout << "Input:    " << std::setw(30) << fltx << "\n";
-    std::cout << "Expected: " << std::setw(30) << flte << "\n";
-    std::cout << "Actual:   " << std::setw(30) << fltz << "\n";
-    std::cout << "Error:    " << std::setw(30) << flterr << "\n";
-    dassert( flterr <= TOL );
-
-    // asin() 
-    //
-    fltx = 0.456728943106177373;
-    fpx  = to_fp( fltx );
-    fpz  = cordic.asin( fpx );
-    fltz = to_flt( fpz );
-    flte = std::asin( fltx );
-    flterr = std::abs( flte-fltz );
-
-    std::cout.precision(24);
-    std::cout << "\nasin(x)\n";
-    std::cout << "Input:    " << std::setw(30) << fltx << "\n";
-    std::cout << "Expected: " << std::setw(30) << flte << "\n";
-    std::cout << "Actual:   " << std::setw(30) << fltz << "\n";
-    std::cout << "Error:    " << std::setw(30) << flterr << "\n";
-    dassert( flterr <= TOL );
-
-    // acos() 
-    //
-    fltx = 0.456728943106177373;
-    fpx  = to_fp( fltx );
-    fpz  = cordic.acos( fpx );
-    fltz = to_flt( fpz );
-    flte = std::acos( fltx );
-    flterr = std::abs( flte-fltz );
-
-    std::cout.precision(24);
-    std::cout << "\nacos(x)\n";
-    std::cout << "Input:    " << std::setw(30) << fltx << "\n";
-    std::cout << "Expected: " << std::setw(30) << flte << "\n";
-    std::cout << "Actual:   " << std::setw(30) << fltz << "\n";
-    std::cout << "Error:    " << std::setw(30) << flterr << "\n";
-    dassert( flterr <= TOL );
-
-    // atan() 
-    //
-    fltx = 0.456728943106177373;
-    fpx  = to_fp( fltx );
-    fpz  = cordic.atan( fpx );
-    fltz = to_flt( fpz );
-    flte = std::atan( fltx );
-    flterr = std::abs( flte-fltz );
-
-    std::cout.precision(24);
-    std::cout << "\natan(x)\n";
-    std::cout << "Input:    " << std::setw(30) << fltx << "\n";
-    std::cout << "Expected: " << std::setw(30) << flte << "\n";
-    std::cout << "Actual:   " << std::setw(30) << fltz << "\n";
-    std::cout << "Error:    " << std::setw(30) << flterr << "\n";
-    dassert( flterr <= TOL );
-    
-    // atan2() 
-    //
-    fltx = 0.456728943106177373;
-    flty = 0.709831990704326039;
-    fpx  = to_fp( fltx );
-    fpy  = to_fp( flty );
-    fpz  = cordic.atan2( fpy, fpx );
-    fltz = to_flt( fpz );
-    flte = std::atan2( flty, fltx );
-    flterr = std::abs( flte-fltz );
-
-    std::cout.precision(24);
-    std::cout << "\natan2(y, x)\n";
-    std::cout << "Input:    " << std::setw(30) << fltx << "(x), " << flty << "(y)\n";
-    std::cout << "Expected: " << std::setw(30) << flte << "\n";
-    std::cout << "Actual:   " << std::setw(30) << fltz << "\n";
-    std::cout << "Error:    " << std::setw(30) << flterr << "\n";
-    dassert( flterr <= TOL );
-
+#if 0
     // norm( x, y ) = sqrt( x^2 + y^2 )
     fltx = 0.956728943106177373;
     flty = 0.708473170947310947;
@@ -607,6 +352,6 @@ int main( int argc, const char * argv[] )
     std::cout << "Actual:   " << std::setw(30) << fltz << "\n";
     std::cout << "Error:    " << std::setw(30) << flterr << "\n";
     dassert( flterr <= TOL );
-
+#endif
     return 0;
 }
