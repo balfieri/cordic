@@ -27,6 +27,8 @@
 // INT_W  = integer width to left of fixed decimal point (not including sign)
 // FRAC_W = fraction width to right of fixed decimal point
 //
+using highres = double;
+
 template< typename T, int INT_W, int FRAC_W >              
 class Cordic
 {
@@ -44,6 +46,9 @@ public:
     //-----------------------------------------------------
     // Queries
     //-----------------------------------------------------
+    static T       to_fp( highres x );
+    static highres to_flt( const T& x );
+
     const T ZERO    = 0;
     const T ONE     = T(1) << T(FRAC_W);
     const T QUARTER = T(1) << T(FRAC_W-2);
