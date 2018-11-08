@@ -601,4 +601,9 @@ T Cordic<T,INT_W,FRAC_W>::atanh2( const T& y, const T& x, bool do_reduce ) const
     return zz;
 }
 
+template< typename T, int INT_W, int FRAC_W >
+void Cordic<T,INT_W,FRAC_W>::reduce_angle( T& a ) const
+{
+}
+
 template class Cordic<int64_t, 7, 56>;
