@@ -146,7 +146,7 @@ int main( int argc, const char * argv[] )
     do_op1( "exp(x)",           cordic.exp,     std::exp,       x    );
     do_op2( "pow(x,y)",         cordic.pow,     std::pow,       x, y );
     do_op1( "pow2(x)",          cordic.pow2,    pow2,           x    );
-    do_op1( "pow10(x)",         cordic.pow10,   pow10,          x    );
+//  do_op1( "pow10(x)",         cordic.pow10,   pow10,          x    );
     do_op1( "log(x)",           cordic.log,     std::log,       x    );
     do_op2( "logb(x,b)",        cordic.logb,    logb,           x, y );
     do_op1( "log2(x)",          cordic.log2,    log2,           x    );
@@ -155,20 +155,21 @@ int main( int argc, const char * argv[] )
     do_op1( "cos(x)",           cordic.cos,     std::cos,       x    );
     do_op12("sin_cos(x)",       cordic.sin_cos, sin_cos,        x    );
     do_op1( "tan(x)",           cordic.tan,     std::tan,       x    );
-    do_op1( "asin(x)",          cordic.asin,    std::sin,       x    );
-    do_op1( "acos(x)",          cordic.acos,    std::cos,       x    );
+    do_op1( "asin(x)",          cordic.asin,    std::asin,      x    );
+    do_op1( "acos(x)",          cordic.acos,    std::acos,      x    );
     do_op1( "atan(x)",          cordic.atan,    std::atan,      x    );
     do_op2( "atan2(y,x)",       cordic.atan2,   std::atan2,     y, x );
     do_op1( "sinh(x)",          cordic.sinh,    std::sinh,      x    );
     do_op1( "cosh(x)",          cordic.cosh,    std::cosh,      x    );
     do_op12("sinh_cosh(x)",     cordic.sinh_cosh,sinh_cosh,      x    );
     do_op1( "tanh(x)",          cordic.tanh,    std::tanh,      x    );
-    do_op1( "asinh(x)",         cordic.asinh,   std::sinh,      x    );
-    do_op1( "acosh(x)",         cordic.acosh,   std::cosh,      x    );
+    do_op1( "asinh(x)",         cordic.asinh,   std::asinh,     x    );
+    do_op1( "acosh(x)",         cordic.acosh,   std::acosh,     1.591370341781322 );
     do_op1( "atanh(x)",         cordic.atanh,   std::atanh,     x    );
-    do_op2( "atanh2(y,x)",      cordic.atanh2,  atanh2,         y, x );
+    do_op2( "atanh2(y,x)",      cordic.atanh2,  atanh2,         0.456728943106177373, 0.709831990704326039 );
     do_op2( "norm(x,y)",        cordic.norm,    norm,           x, y );
-    do_op2( "normh(x,y)",       cordic.normh,   normh,          x, y );
+    do_op2( "normh(x,y)",       cordic.normh,   normh,          0.708473170947310947, 0.556728943106177373 );
+
     do_op22("rect_to_polar(x,y)", cordic.rect_to_polar,rect_to_polar, x, y );
     do_op22("polar_to_rect(x,y)", cordic.polar_to_rect,polar_to_rect, x, y );
 
