@@ -122,13 +122,13 @@ Cordic<T,INT_W,FRAC_W>::~Cordic( void )
 // Queries
 //-----------------------------------------------------
 template< typename T, int INT_W, int FRAC_W >
-T to_fp( highres x )
+T Cordic<T,INT_W,FRAC_W>::to_fp( highres x )
 {
     return T( x * highres(T(1) << T(FRAC_W)) );
 }
 
 template< typename T, int INT_W, int FRAC_W >
-highres to_flt( const T& x )
+highres Cordic<T,INT_W,FRAC_W>::to_flt( const T& x )
 {
     return highres( x ) / highres(T(1) << T(FRAC_W));
 }
