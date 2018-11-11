@@ -169,7 +169,7 @@ int main( int argc, const char * argv[] )
     FP  afp = cordic.to_fp( a );
     cordic.reduce_angle( afp );
     FLT s  = std::sin( a );
-    FLT sr = std::sin( cordic.to_flt(a) );
+    FLT sr = std::sin( cordic.to_flt(afp) );
     std::cout << "\nsin(" << a << ")=" << s << " sin(" << cordic.to_flt(afp) << ")=" << sr << "\n";
     return 0;
 }
