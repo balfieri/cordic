@@ -633,6 +633,8 @@ void Cordic<T,INT_W,FRAC_W>::reduce_angle( T& a ) const
     // Use LUT to find addend.
     //-----------------------------------------------------
     T index = (a >> FRAC_W) & MAX_INT;
+    std::cout << "a=0x" << std::hex << a << std::dec << " index=" << index << " addend=0x" << std::hex << addend[index] <<
+                 " (" << to_flt(addend[index]) << ")\n";
     a += addend[index];
 }
 
