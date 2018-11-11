@@ -167,7 +167,8 @@ int main( int argc, const char * argv[] )
     // argument reduction
     FLT a   = 68.44513890321;
     FP  afp = cordic.to_fp( a );
-    cordic.reduce_angle( afp );
+    uint32_t quadrant;
+    cordic.reduce_angle( afp, quadrant );
     FLT s  = std::sin( a );
     FLT sr = std::sin( cordic.to_flt(afp) );
     std::cout << "\nsin(" << a << ")=" << s << " sin(" << cordic.to_flt(afp) << ")=" << sr << "\n";

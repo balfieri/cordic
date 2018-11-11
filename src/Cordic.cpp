@@ -45,6 +45,7 @@ struct Cordic<T,INT_W,FRAC_W>::Impl
     T                           log10_div_e;                    // log(10) / e
 
     std::unique_ptr<T[]>        reduce_angle_addend;            // for each possible integer value, an addend to help normalize
+    std::unique_ptr<uint32_t[]> reduce_angle_quadrant;          // 00,01,02,03
 };
 
 //-----------------------------------------------------
@@ -593,7 +594,7 @@ T Cordic<T,INT_W,FRAC_W>::atanh2( const T& y, const T& x, bool do_reduce ) const
 }
 
 template< typename T, int INT_W, int FRAC_W >
-void Cordic<T,INT_W,FRAC_W>::reduce_angle( T& a ) const
+void Cordic<T,INT_W,FRAC_W>::reduce_angle( T& a, uint32_t& quad ) const
 {
     //-----------------------------------------------------
     // First get a to be positive.
@@ -605,15 +606,18 @@ void Cordic<T,INT_W,FRAC_W>::reduce_angle( T& a ) const
     // Next figure out which LUT value to use.
     //-----------------------------------------------------
     const T MAX_INT  = (1 << INT_W)-1;
-    T * addend = impl->reduce_angle_addend.get();
+    T *        addend   = impl->reduce_angle_addend.get();
+    uint32_t * quadrant = impl->reduce_angle_quadrant.get();
     if ( addend == nullptr ) {
         //-----------------------------------------------------
         // Construct LUT that maps int bits to value to add to get back in range.
         //-----------------------------------------------------
         dassert( INT_W < 14 && "too many cases to worry about" );
         uint32_t N = 1 << (1+INT_W);
-        addend = new T[N];
-        impl->reduce_angle_addend = std::unique_ptr<T[]>( addend );
+        addend   = new T[N];
+        quadrant = new uint32_t[N];
+        impl->reduce_angle_addend   = std::unique_ptr<T[]>( addend );
+        impl->reduce_angle_quadrant = std::unique_ptr<uint32_t[]>( quadrant );
 
         const highres PI       = M_PI;
         const highres PI_DIV_2 = PI / 2.0;
@@ -624,8 +628,9 @@ void Cordic<T,INT_W,FRAC_W>::reduce_angle( T& a ) const
             std::cout << "cnt_i=" << cnt_i << "\n";
             highres add_f = highres(cnt_i) * PI_DIV_2;
             if ( i > 0 ) add_f = -add_f;
-            addend[i] = to_fp( add_f );
-            std::cout << "addend[" << i << "]=" << to_flt(addend[i]) << "\n";
+            addend[i]   = to_fp( add_f );
+            quadrant[i] = cnt_i % 4;
+            std::cout << "cnt_i=" << cnt_i << " addend[" << i << "]=" << to_flt(addend[i]) << " quadrant=" << quadrant[i] << "\n";
         }
     }
 
@@ -633,8 +638,9 @@ void Cordic<T,INT_W,FRAC_W>::reduce_angle( T& a ) const
     // Use LUT to find addend.
     //-----------------------------------------------------
     T index = (a >> FRAC_W) & MAX_INT;
+    quad = quadrant[index];
     std::cout << "a=0x" << std::hex << a << std::dec << " index=" << index << " addend=0x" << std::hex << addend[index] <<
-                 " (" << to_flt(addend[index]) << ")\n";
+                 " (" << to_flt(addend[index]) << ") quadrant=" << quad << "\n";
     a += addend[index];
 }
 
