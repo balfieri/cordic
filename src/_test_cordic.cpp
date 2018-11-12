@@ -164,13 +164,22 @@ int main( int argc, const char * argv[] )
     do_op22("rect_to_polar(x,y)", cordic.rect_to_polar,rect_to_polar, x, y );
     do_op22("polar_to_rect(x,y)", cordic.polar_to_rect,polar_to_rect, x, y );
 
-    // argument reduction
-    FLT a   = 68.44513890321;
-    FP  afp = cordic.to_fp( a );
-    uint32_t quadrant;
-    cordic.reduce_angle( afp, quadrant );
-    FLT s  = std::sin( a );
-    FLT sr = std::sin( cordic.to_flt(afp) );
-    std::cout << "\nsin(" << a << ")=" << s << " sin(" << cordic.to_flt(afp) << ")=" << sr << "\n";
+    // sin/cos angle reduction
+    //
+    FLT MAX = FLT((1 << INT_W)-1) + 0.999999;
+    FLT MIN = -MAX;
+    FLT INCR = M_PI / 17;
+    for( FLT a = MIN; a <= MAX; a += INCR )
+    {
+        FP afp = cordic.to_fp( a );
+        uint32_t quadrant;
+        cordic.reduce_angle( afp, quadrant );
+        FLT s  = std::sin( a );
+        FLT sr = (quadrant&1) ? std::cos( cordic.to_flt(afp) ) : std::sin( cordic.to_flt(afp) );
+        if ( quadrant >= 2 ) sr = -sr;
+        FLT err = std::abs( sr - s );
+        std::cout << "\nsin(" << a << ")=" << s << "\nsin(" << cordic.to_flt(afp) << ")=" << sr << " quadrant=" << quadrant << 
+                     "\ndifference=" << err << ((err <= TOL) ? "(good)" : "(BAD)") << "\n";
+    }
     return 0;
 }

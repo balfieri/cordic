@@ -625,12 +625,12 @@ void Cordic<T,INT_W,FRAC_W>::reduce_angle( T& a, uint32_t& quad ) const
         {
             highres cnt   = highres(i) / PI_DIV_2;
             T       cnt_i = cnt;
-            std::cout << "cnt_i=" << cnt_i << "\n";
+            if ( debug ) std::cout << "cnt_i=" << cnt_i << "\n";
             highres add_f = highres(cnt_i) * PI_DIV_2;
             if ( i > 0 ) add_f = -add_f;
             addend[i]   = to_fp( add_f );
             quadrant[i] = cnt_i % 4;
-            std::cout << "cnt_i=" << cnt_i << " addend[" << i << "]=" << to_flt(addend[i]) << " quadrant=" << quadrant[i] << "\n";
+            if ( debug ) std::cout << "cnt_i=" << cnt_i << " addend[" << i << "]=" << to_flt(addend[i]) << " quadrant=" << quadrant[i] << "\n";
         }
     }
 
@@ -639,8 +639,9 @@ void Cordic<T,INT_W,FRAC_W>::reduce_angle( T& a, uint32_t& quad ) const
     //-----------------------------------------------------
     T index = (a >> FRAC_W) & MAX_INT;
     quad = quadrant[index];
-    std::cout << "a=0x" << std::hex << a << std::dec << " index=" << index << " addend=0x" << std::hex << addend[index] <<
-                 " (" << to_flt(addend[index]) << ") quadrant=" << quad << "\n";
+    if ( a_sign ) quad = 3 - quad;
+    if ( debug ) std::cout << "a=0x" << std::hex << a << std::dec << " index=" << index << " addend=0x" << std::hex << addend[index] <<
+                              " (" << to_flt(addend[index]) << ") quadrant=" << quad << "\n";
     a += addend[index];
 }
 
