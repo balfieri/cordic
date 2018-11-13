@@ -152,7 +152,7 @@ int main( int argc, const char * argv[] )
     do_op2( "atan2(y,x)",       cordic.atan2,   std::atan2,     y, x );
     do_op1( "sinh(x)",          cordic.sinh,    std::sinh,      x    );
     do_op1( "cosh(x)",          cordic.cosh,    std::cosh,      x    );
-    do_op12("sinh_cosh(x)",     cordic.sinh_cosh,sinh_cosh,      x    );
+    do_op12("sinh_cosh(x)",     cordic.sinh_cosh,sinh_cosh,     x    );
     do_op1( "tanh(x)",          cordic.tanh,    std::tanh,      x    );
     do_op1( "asinh(x)",         cordic.asinh,   std::asinh,     x    );
     do_op1( "acosh(x)",         cordic.acosh,   std::acosh,     1.591370341781322 );
@@ -172,18 +172,22 @@ int main( int argc, const char * argv[] )
     for( FLT a = MIN; a <= MAX; a += INCR )
     {
         FP afp = cordic.to_fp( a );
+        bool a_sign = a < 0;
+        if ( a_sign ) afp = -afp;
         uint32_t quadrant;
         cordic.reduce_angle( afp, quadrant );
         FLT s  = std::sin( a );
         FLT sr = (quadrant&1) ? std::cos( cordic.to_flt(afp) ) : std::sin( cordic.to_flt(afp) );
-        if ( quadrant >= 2 ) sr = -sr;
+        if ( (quadrant >= 2) != a_sign ) sr = -sr;
         FLT err = std::abs( sr - s );
         std::cout << "\nsin(" << a << ")=" << s << "\nsin(" << cordic.to_flt(afp) << ")=" << sr << " quadrant=" << quadrant << 
                      "\ndifference=" << err << ((err <= TOL) ? "(good)" : "(BAD)") << "\n";
+        dassert( err <= TOL );
     }
 
     do_op2( "x*y",              cordic.mul,     mul,            0.0001, 1.999999 );
     do_op2( "x/y",              cordic.div,     div,            0.0003, 1.999999 );
+    do_op2( "x/y",              cordic.div,     div,            0.0003, 0.000555 );
 
     return 0;
 }

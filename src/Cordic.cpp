@@ -597,14 +597,9 @@ template< typename T, int INT_W, int FRAC_W >
 void Cordic<T,INT_W,FRAC_W>::reduce_angle( T& a, uint32_t& quad ) const
 {
     //-----------------------------------------------------
-    // First get a to be positive.
-    //-----------------------------------------------------
-    bool a_sign = a < 0;
-    if ( a_sign ) a = -a;
-
-    //-----------------------------------------------------
     // Next figure out which LUT value to use.
     //-----------------------------------------------------
+    dassert( a >= 0 );
     const T MAX_INT  = (1 << INT_W)-1;
     T *        addend   = impl->reduce_angle_addend.get();
     uint32_t * quadrant = impl->reduce_angle_quadrant.get();
@@ -639,7 +634,6 @@ void Cordic<T,INT_W,FRAC_W>::reduce_angle( T& a, uint32_t& quad ) const
     //-----------------------------------------------------
     T index = (a >> FRAC_W) & MAX_INT;
     quad = quadrant[index];
-    if ( a_sign ) quad = 3 - quad;
     if ( debug ) std::cout << "a=0x" << std::hex << a << std::dec << " index=" << index << " addend=0x" << std::hex << addend[index] <<
                               " (" << to_flt(addend[index]) << ") quadrant=" << quad << "\n";
     a += addend[index];

@@ -152,7 +152,7 @@ public:
     //-----------------------------------------------------
     // Argument Reduction (Normalization) Routines
     //-----------------------------------------------------
-    void reduce_angle( T& a, uint32_t& quadrant ) const;
+    void reduce_angle( T& a, uint32_t& quadrant ) const;                                             // a must be non-negative
 
 private:
     class Impl;
