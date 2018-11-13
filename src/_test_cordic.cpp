@@ -26,7 +26,7 @@ using FLT = double;
 using FP  = int64_t;
 constexpr int INT_W  = 7;
 constexpr int FRAC_W = 56;
-constexpr FLT TOL = 1.0 / FLT( 1LL << (FRAC_W/4) ); 
+constexpr FLT TOL = 1.0 / FLT( 1LL << (FRAC_W/2) ); 
 
 #define do_op1( str, cordic_fn, exp_fn, fltx )                          \
 {                                                                       \

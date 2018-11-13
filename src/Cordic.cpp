@@ -318,8 +318,8 @@ void Cordic<T,INT_W,FRAC_W,FLT>::hyperbolic_vectoring( const T& x0, const T& y0,
 
         if ( i == next_dup_i ) {
             // for hyperbolic, we must duplicate iterations 4, 13, 40, 121, ..., 3*i+1
-            i--;
             next_dup_i = 3*i + 1;
+            i--;
         }
     }
 }
