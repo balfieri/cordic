@@ -76,10 +76,11 @@ Cordic<T,INT_W,FRAC_W,FLT>::Cordic( uint32_t nc, uint32_t nh, uint32_t nl )
     for( uint32_t i = 0; i <= n_max; i++ )
     {
         FLT a  = std::atan( pow2 );
-        FLT ah = std::atanh( pow2 );
         if ( i <= nc ) impl->circular_atan[i]    = T( a    * FLT( T(1) << T(FRAC_W) ) );
-        if ( i <= nh ) impl->hyperbolic_atanh[i] = T( ah   * FLT( T(1) << T(FRAC_W) ) );
         if ( i <= nl ) impl->linear_pow2[i]      = T( pow2 * FLT( T(1) << T(FRAC_W) ) );
+        FLT ah = std::atanh( pow2 );
+        //FLT ah = 0.5 * std::log( (1.0+pow2) / (1-pow2) );
+        if ( i <= nh ) impl->hyperbolic_atanh[i] = T( ah   * FLT( T(1) << T(FRAC_W) ) );
         if ( i <= nc ) gain_inv *= std::cos( a );
 
         if ( i != 0 && i <= nh ) {
@@ -90,10 +91,10 @@ Cordic<T,INT_W,FRAC_W,FLT>::Cordic( uint32_t nc, uint32_t nh, uint32_t nl )
                 next_dup_i = 3*i + 1;
             }
         }
+        pow2 /= 2.0;
 
         if ( debug ) printf( "i=%2d a=%30.27g ah=%30.27g y=%30.27g gain_inv=%30.27g gainh_inv=%30.27g\n", i, double(a), double(ah), double(pow2), double(gain_inv), double(gainh_inv) );
 
-        pow2 /= 2.0;
     }
 
     // now convert those last two to fixed-point
@@ -277,8 +278,8 @@ void Cordic<T,INT_W,FRAC_W,FLT>::hyperbolic_rotation( const T& x0, const T& y0, 
 
         if ( i == next_dup_i ) {
             // for hyperbolic, we must duplicate iterations 4, 13, 40, 121, ..., 3*i+1
-            i--;
             next_dup_i = 3*i + 1;
+            i--;
         }
     }
 }
@@ -402,7 +403,7 @@ T Cordic<T,INT_W,FRAC_W,FLT>::div( const T& y, const T& x, const T addend, bool 
 template< typename T, int INT_W, int FRAC_W, typename FLT >
 T Cordic<T,INT_W,FRAC_W,FLT>::sqrt( const T& x, bool do_reduce ) const
 { 
-    // sqrt( (x+0.25)^2 - (x-0.25)^2 )
+    // sqrt( (x+0.25)^2 - (x-0.25)^2 ) = normh( x+0.25, x-0.25 )
     return normh( x + QUARTER, x - QUARTER );
 }
 

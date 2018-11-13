@@ -153,8 +153,8 @@ public:
     // Argument Reduction (Normalization) Routines
     //-----------------------------------------------------
     void reduce_angle( T& a, uint32_t& quadrant ) const;                                             // a must be non-negative
-    void reduce_mul_args( T& x, T& y, uint32_t lshift ) const;                                       // x and y must be non-negative
-    void reduce_div_args( T& x, T& y, uint32_t lshift ) const;                                       // x and y must be non-negative
+    void reduce_mul_args( T& x, T& y, uint32_t& lshift ) const;                                      // x and y must be non-negative
+    void reduce_div_args( T& x, T& y, uint32_t& lshift ) const;                                      // x and y must be non-negative
     void reduce_sqrt_arg( T& x, uint32_t& lshift ) const;                                            // x must be non-negative
 
 private:
