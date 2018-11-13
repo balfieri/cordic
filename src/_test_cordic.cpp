@@ -181,5 +181,9 @@ int main( int argc, const char * argv[] )
         std::cout << "\nsin(" << a << ")=" << s << "\nsin(" << cordic.to_flt(afp) << ")=" << sr << " quadrant=" << quadrant << 
                      "\ndifference=" << err << ((err <= TOL) ? "(good)" : "(BAD)") << "\n";
     }
+
+    do_op2( "x*y",              cordic.mul,     mul,            0.0001, 1.999999 );
+    do_op2( "x/y",              cordic.div,     div,            0.0003, 1.999999 );
+
     return 0;
 }
