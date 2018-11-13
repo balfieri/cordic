@@ -27,9 +27,7 @@
 // INT_W  = integer width to left of fixed decimal point (not including sign)
 // FRAC_W = fraction width to right of fixed decimal point
 //
-using highres = double;
-
-template< typename T, int INT_W, int FRAC_W >              
+template< typename T, int INT_W, int FRAC_W, typename FLT=double >              
 class Cordic
 {
 public:
@@ -50,13 +48,15 @@ public:
     const T ONE     = T(1) << T(FRAC_W);
     const T QUARTER = T(1) << T(FRAC_W-2);
 
-    T       to_fp( highres x ) const;
-    highres to_flt( const T& x ) const;
+    T       to_fp( FLT x ) const;
+    FLT     to_flt( const T& x ) const;
 
     uint32_t n_circular( void ) const;
     uint32_t n_linear( void ) const;
     uint32_t n_hyperbolic( void ) const;
 
+    T gain( void ) const;               // circular
+    T gainh( void ) const;              // hyperbolic
     T one_over_gain( void ) const;      // circular
     T one_over_gainh( void ) const;     // hyperbolic
 
@@ -153,6 +153,9 @@ public:
     // Argument Reduction (Normalization) Routines
     //-----------------------------------------------------
     void reduce_angle( T& a, uint32_t& quadrant ) const;                                             // a must be non-negative
+    void reduce_mul_args( T& x, T& y, uint32_t lshift ) const;                                       // x and y must be non-negative
+    void reduce_div_args( T& x, T& y, uint32_t lshift ) const;                                       // x and y must be non-negative
+    void reduce_sqrt_arg( T& x, uint32_t& lshift ) const;                                            // x must be non-negative
 
 private:
     class Impl;

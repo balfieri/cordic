@@ -188,6 +188,12 @@ int main( int argc, const char * argv[] )
     do_op2( "x*y",              cordic.mul,     mul,            0.0001, 1.999999 );
     do_op2( "x/y",              cordic.div,     div,            0.0003, 1.999999 );
     do_op2( "x/y",              cordic.div,     div,            0.0003, 0.000555 );
+    do_op1( "sqrt(1.99999)",    cordic.sqrt,    sqrt,           1.99999 );
+    do_op1( "exp(0.5)",         cordic.exp,     exp,            0.5 );
+    do_op1( "exp(1)",           cordic.exp,     exp,            1.0 );
+    do_op1( "log(2.71)",        cordic.log,     log,            2.71 );
+    do_op1( "log(1.00)",        cordic.log,     log,            1.00 );
+    do_op1( "log(0.50)",        cordic.log,     log,            0.50 );
 
     return 0;
 }

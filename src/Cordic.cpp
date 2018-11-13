@@ -25,17 +25,19 @@ static constexpr bool debug = false;
 //-----------------------------------------------------
 // INTERNAL IMPL STRUCTURE 
 //-----------------------------------------------------
-template< typename T, int INT_W, int FRAC_W >
-struct Cordic<T,INT_W,FRAC_W>::Impl
+template< typename T, int INT_W, int FRAC_W, typename FLT >
+struct Cordic<T,INT_W,FRAC_W,FLT>::Impl
 {
     uint32_t                    nc;
     uint32_t                    nh;
     uint32_t                    nl;
 
     std::unique_ptr<T[]>        circular_atan;                  // circular atan values
+    T                           circular_gain;                  // circular gain
     T                           circular_one_over_gain;         // circular 1/gain
 
     std::unique_ptr<T[]>        hyperbolic_atanh;               // hyperbolic atanh values
+    T                           hyperbolic_gain;                // hyperbolic gain
     T                           hyperbolic_one_over_gain;       // hyperbolic 1/gain
 
     std::unique_ptr<T[]>        linear_pow2;                    // linear 2^(-i) values
@@ -51,8 +53,8 @@ struct Cordic<T,INT_W,FRAC_W>::Impl
 //-----------------------------------------------------
 // Constructor
 //-----------------------------------------------------
-template< typename T, int INT_W, int FRAC_W >
-Cordic<T,INT_W,FRAC_W>::Cordic( uint32_t nc, uint32_t nh, uint32_t nl )
+template< typename T, int INT_W, int FRAC_W, typename FLT >
+Cordic<T,INT_W,FRAC_W,FLT>::Cordic( uint32_t nc, uint32_t nh, uint32_t nl )
 {
     impl = std::make_unique<Impl>();
 
@@ -65,19 +67,19 @@ Cordic<T,INT_W,FRAC_W>::Cordic( uint32_t nc, uint32_t nh, uint32_t nl )
     impl->linear_pow2      = std::unique_ptr<T[]>( new T[nl+1] );
 
     // compute atan/atanh table and gains in high-resolution floating point
-    highres pow2  = 1.0;
-    highres gain_inv  = 1.0;
-    highres gainh_inv = 1.0;
+    FLT pow2  = 1.0;
+    FLT gain_inv  = 1.0;
+    FLT gainh_inv = 1.0;
     uint32_t n_max = (nh > nc)    ? nh : nc;
              n_max = (nl > n_max) ? nl : n_max;
     uint32_t next_dup_i = 4;     // for hyperbolic 
     for( uint32_t i = 0; i <= n_max; i++ )
     {
-        highres a  = std::atan( pow2 );
-        highres ah = std::atanh( pow2 );
-        if ( i <= nc ) impl->circular_atan[i]    = T( a    * highres( T(1) << T(FRAC_W) ) );
-        if ( i <= nh ) impl->hyperbolic_atanh[i] = T( ah   * highres( T(1) << T(FRAC_W) ) );
-        if ( i <= nl ) impl->linear_pow2[i]      = T( pow2 * highres( T(1) << T(FRAC_W) ) );
+        FLT a  = std::atan( pow2 );
+        FLT ah = std::atanh( pow2 );
+        if ( i <= nc ) impl->circular_atan[i]    = T( a    * FLT( T(1) << T(FRAC_W) ) );
+        if ( i <= nh ) impl->hyperbolic_atanh[i] = T( ah   * FLT( T(1) << T(FRAC_W) ) );
+        if ( i <= nl ) impl->linear_pow2[i]      = T( pow2 * FLT( T(1) << T(FRAC_W) ) );
         if ( i <= nc ) gain_inv *= std::cos( a );
 
         if ( i != 0 && i <= nh ) {
@@ -95,17 +97,19 @@ Cordic<T,INT_W,FRAC_W>::Cordic( uint32_t nc, uint32_t nh, uint32_t nl )
     }
 
     // now convert those last two to fixed-point
-    impl->circular_one_over_gain   = T( gain_inv  * highres( T(1) << T(FRAC_W) ) );
-    impl->hyperbolic_one_over_gain = T( gainh_inv * highres( T(1) << T(FRAC_W) ) );
+    impl->circular_gain            = T( 1.0/gain_inv  * FLT( T(1) << T(FRAC_W) ) );
+    impl->circular_one_over_gain   = T(     gain_inv  * FLT( T(1) << T(FRAC_W) ) );
+    impl->hyperbolic_gain          = T( 1.0/gainh_inv * FLT( T(1) << T(FRAC_W) ) );
+    impl->hyperbolic_one_over_gain = T(     gainh_inv * FLT( T(1) << T(FRAC_W) ) );
 
     // constants
-    impl->log2        = T( std::log( highres( 2  ) )       * highres( T(1) << T(FRAC_W) ) );
-    impl->log10       = T( std::log( highres( 10 ) )       * highres( T(1) << T(FRAC_W) ) );
-    impl->log10_div_e = T( std::log( highres( 10 ) / M_E ) * highres( T(1) << T(FRAC_W) ) );
+    impl->log2        = T( std::log( FLT( 2  ) )       * FLT( T(1) << T(FRAC_W) ) );
+    impl->log10       = T( std::log( FLT( 10 ) )       * FLT( T(1) << T(FRAC_W) ) );
+    impl->log10_div_e = T( std::log( FLT( 10 ) / M_E ) * FLT( T(1) << T(FRAC_W) ) );
 }
 
-template< typename T, int INT_W, int FRAC_W >
-Cordic<T,INT_W,FRAC_W>::~Cordic( void )
+template< typename T, int INT_W, int FRAC_W, typename FLT >
+Cordic<T,INT_W,FRAC_W,FLT>::~Cordic( void )
 {
     impl = nullptr;
 }
@@ -113,44 +117,56 @@ Cordic<T,INT_W,FRAC_W>::~Cordic( void )
 //-----------------------------------------------------
 // Queries
 //-----------------------------------------------------
-template< typename T, int INT_W, int FRAC_W >
-T Cordic<T,INT_W,FRAC_W>::to_fp( highres x ) const
+template< typename T, int INT_W, int FRAC_W, typename FLT >
+T Cordic<T,INT_W,FRAC_W,FLT>::to_fp( FLT x ) const
 {
-    return T( x * highres(T(1) << T(FRAC_W)) );
+    return T( x * FLT(T(1) << T(FRAC_W)) );
 }
 
-template< typename T, int INT_W, int FRAC_W >
-highres Cordic<T,INT_W,FRAC_W>::to_flt( const T& x ) const
+template< typename T, int INT_W, int FRAC_W, typename FLT >
+FLT Cordic<T,INT_W,FRAC_W,FLT>::to_flt( const T& x ) const
 {
-    return highres( x ) / highres(T(1) << T(FRAC_W));
+    return FLT( x ) / FLT(T(1) << T(FRAC_W));
 }
 
-template< typename T, int INT_W, int FRAC_W >
-uint32_t Cordic<T,INT_W,FRAC_W>::n_circular( void ) const
+template< typename T, int INT_W, int FRAC_W, typename FLT >
+uint32_t Cordic<T,INT_W,FRAC_W,FLT>::n_circular( void ) const
 {
     return impl->nc;
 }
 
-template< typename T, int INT_W, int FRAC_W >
-uint32_t Cordic<T,INT_W,FRAC_W>::n_hyperbolic( void ) const
+template< typename T, int INT_W, int FRAC_W, typename FLT >
+uint32_t Cordic<T,INT_W,FRAC_W,FLT>::n_hyperbolic( void ) const
 {
     return impl->nh;
 }
 
-template< typename T, int INT_W, int FRAC_W >
-uint32_t Cordic<T,INT_W,FRAC_W>::n_linear( void ) const
+template< typename T, int INT_W, int FRAC_W, typename FLT >
+uint32_t Cordic<T,INT_W,FRAC_W,FLT>::n_linear( void ) const
 {
     return impl->nl;
 }
 
-template< typename T, int INT_W, int FRAC_W >
-T Cordic<T,INT_W,FRAC_W>::one_over_gain( void ) const
+template< typename T, int INT_W, int FRAC_W, typename FLT >
+T Cordic<T,INT_W,FRAC_W,FLT>::gain( void ) const
+{
+    return impl->circular_gain;
+}
+
+template< typename T, int INT_W, int FRAC_W, typename FLT >
+T Cordic<T,INT_W,FRAC_W,FLT>::gainh( void ) const
+{
+    return impl->hyperbolic_gain;
+}
+
+template< typename T, int INT_W, int FRAC_W, typename FLT >
+T Cordic<T,INT_W,FRAC_W,FLT>::one_over_gain( void ) const
 {
     return impl->circular_one_over_gain;
 }
 
-template< typename T, int INT_W, int FRAC_W >
-T Cordic<T,INT_W,FRAC_W>::one_over_gainh( void ) const
+template< typename T, int INT_W, int FRAC_W, typename FLT >
+T Cordic<T,INT_W,FRAC_W,FLT>::one_over_gainh( void ) const
 {
     return impl->hyperbolic_one_over_gain;
 }
@@ -158,8 +174,8 @@ T Cordic<T,INT_W,FRAC_W>::one_over_gainh( void ) const
 //-----------------------------------------------------
 // The CORDIC Functions
 //-----------------------------------------------------
-template< typename T, int INT_W, int FRAC_W >
-void Cordic<T,INT_W,FRAC_W>::circular_rotation( const T& x0, const T& y0, const T& z0, T& x, T& y, T& z ) const
+template< typename T, int INT_W, int FRAC_W, typename FLT >
+void Cordic<T,INT_W,FRAC_W,FLT>::circular_rotation( const T& x0, const T& y0, const T& z0, T& x, T& y, T& z ) const
 {
     //-----------------------------------------------------
     // d = (z >= 0) ? 1 : -1
@@ -192,8 +208,8 @@ void Cordic<T,INT_W,FRAC_W>::circular_rotation( const T& x0, const T& y0, const 
     }
 }
 
-template< typename T, int INT_W, int FRAC_W >
-void Cordic<T,INT_W,FRAC_W>::circular_vectoring( const T& x0, const T& y0, const T& z0, T& x, T& y, T& z ) const
+template< typename T, int INT_W, int FRAC_W, typename FLT >
+void Cordic<T,INT_W,FRAC_W,FLT>::circular_vectoring( const T& x0, const T& y0, const T& z0, T& x, T& y, T& z ) const
 {
     //-----------------------------------------------------
     // d = (xy < 0) ? 1 : -1
@@ -226,8 +242,8 @@ void Cordic<T,INT_W,FRAC_W>::circular_vectoring( const T& x0, const T& y0, const
     }
 }
 
-template< typename T, int INT_W, int FRAC_W >
-void Cordic<T,INT_W,FRAC_W>::hyperbolic_rotation( const T& x0, const T& y0, const T& z0, T& x, T& y, T& z ) const
+template< typename T, int INT_W, int FRAC_W, typename FLT >
+void Cordic<T,INT_W,FRAC_W,FLT>::hyperbolic_rotation( const T& x0, const T& y0, const T& z0, T& x, T& y, T& z ) const
 {
     //-----------------------------------------------------
     // d = (z >= 0) ? 1 : -1
@@ -267,8 +283,8 @@ void Cordic<T,INT_W,FRAC_W>::hyperbolic_rotation( const T& x0, const T& y0, cons
     }
 }
 
-template< typename T, int INT_W, int FRAC_W >
-void Cordic<T,INT_W,FRAC_W>::hyperbolic_vectoring( const T& x0, const T& y0, const T& z0, T& x, T& y, T& z ) const
+template< typename T, int INT_W, int FRAC_W, typename FLT >
+void Cordic<T,INT_W,FRAC_W,FLT>::hyperbolic_vectoring( const T& x0, const T& y0, const T& z0, T& x, T& y, T& z ) const
 {
     //-----------------------------------------------------
     // d = (xy < 0) ? 1 : -1
@@ -307,8 +323,8 @@ void Cordic<T,INT_W,FRAC_W>::hyperbolic_vectoring( const T& x0, const T& y0, con
     }
 }
 
-template< typename T, int INT_W, int FRAC_W >
-void Cordic<T,INT_W,FRAC_W>::linear_rotation( const T& x0, const T& y0, const T& z0, T& x, T& y, T& z ) const
+template< typename T, int INT_W, int FRAC_W, typename FLT >
+void Cordic<T,INT_W,FRAC_W,FLT>::linear_rotation( const T& x0, const T& y0, const T& z0, T& x, T& y, T& z ) const
 {
     //-----------------------------------------------------
     // d = (z >= 0) ? 1 : -1
@@ -337,8 +353,8 @@ void Cordic<T,INT_W,FRAC_W>::linear_rotation( const T& x0, const T& y0, const T&
     }
 }
 
-template< typename T, int INT_W, int FRAC_W >
-void Cordic<T,INT_W,FRAC_W>::linear_vectoring( const T& x0, const T& y0, const T& z0, T& x, T& y, T& z ) const
+template< typename T, int INT_W, int FRAC_W, typename FLT >
+void Cordic<T,INT_W,FRAC_W,FLT>::linear_vectoring( const T& x0, const T& y0, const T& z0, T& x, T& y, T& z ) const
 {
     //-----------------------------------------------------
     // d = (y <= 0) ? 1 : -1
@@ -367,234 +383,234 @@ void Cordic<T,INT_W,FRAC_W>::linear_vectoring( const T& x0, const T& y0, const T
     }
 }
 
-template< typename T, int INT_W, int FRAC_W >
-T Cordic<T,INT_W,FRAC_W>::mul( const T& x, const T& y, const T addend, bool do_reduce ) const
+template< typename T, int INT_W, int FRAC_W, typename FLT >
+T Cordic<T,INT_W,FRAC_W,FLT>::mul( const T& x, const T& y, const T addend, bool do_reduce ) const
 {
     T xx, yy, zz;
     linear_rotation( x, addend, y, xx, yy, zz );
     return yy;
 }
 
-template< typename T, int INT_W, int FRAC_W >
-T Cordic<T,INT_W,FRAC_W>::div( const T& y, const T& x, const T addend, bool do_reduce ) const
+template< typename T, int INT_W, int FRAC_W, typename FLT >
+T Cordic<T,INT_W,FRAC_W,FLT>::div( const T& y, const T& x, const T addend, bool do_reduce ) const
 {
     T xx, yy, zz;
     linear_vectoring( x, y, addend, xx, yy, zz );
     return zz;
 }
 
-template< typename T, int INT_W, int FRAC_W >
-T Cordic<T,INT_W,FRAC_W>::sqrt( const T& x, bool do_reduce ) const
+template< typename T, int INT_W, int FRAC_W, typename FLT >
+T Cordic<T,INT_W,FRAC_W,FLT>::sqrt( const T& x, bool do_reduce ) const
 { 
     // sqrt( (x+0.25)^2 - (x-0.25)^2 )
     return normh( x + QUARTER, x - QUARTER );
 }
 
-template< typename T, int INT_W, int FRAC_W >
-T Cordic<T,INT_W,FRAC_W>::exp( const T& x, bool do_reduce ) const
+template< typename T, int INT_W, int FRAC_W, typename FLT >
+T Cordic<T,INT_W,FRAC_W,FLT>::exp( const T& x, bool do_reduce ) const
 { 
     T xx, yy, zz;
     hyperbolic_rotation( one_over_gainh(), one_over_gainh(), x, xx, yy, zz );
     return xx;
 }
 
-template< typename T, int INT_W, int FRAC_W >
-T Cordic<T,INT_W,FRAC_W>::pow( const T& b, const T& x, bool do_reduce ) const
+template< typename T, int INT_W, int FRAC_W, typename FLT >
+T Cordic<T,INT_W,FRAC_W,FLT>::pow( const T& b, const T& x, bool do_reduce ) const
 { 
     return exp( mul( x, log( b ), do_reduce ), false );
 }
 
-template< typename T, int INT_W, int FRAC_W >
-T Cordic<T,INT_W,FRAC_W>::pow2( const T& x, bool do_reduce ) const
+template< typename T, int INT_W, int FRAC_W, typename FLT >
+T Cordic<T,INT_W,FRAC_W,FLT>::pow2( const T& x, bool do_reduce ) const
 { 
     return exp( mul( x, impl->log2, do_reduce ), false );
 }
 
-template< typename T, int INT_W, int FRAC_W >
-T Cordic<T,INT_W,FRAC_W>::pow10( const T& x, bool do_reduce ) const
+template< typename T, int INT_W, int FRAC_W, typename FLT >
+T Cordic<T,INT_W,FRAC_W,FLT>::pow10( const T& x, bool do_reduce ) const
 { 
     // log10 is too large for mul; we use log(10/e) then add 1 after mul()
     return exp( mul( x, impl->log10_div_e, do_reduce ) + ONE, do_reduce );
 }
 
-template< typename T, int INT_W, int FRAC_W >
-T Cordic<T,INT_W,FRAC_W>::log( const T& x, bool do_reduce ) const
+template< typename T, int INT_W, int FRAC_W, typename FLT >
+T Cordic<T,INT_W,FRAC_W,FLT>::log( const T& x, bool do_reduce ) const
 { 
     return atanh2( x-ONE, x+ONE, do_reduce ) << 1;
 }
 
-template< typename T, int INT_W, int FRAC_W >
-T Cordic<T,INT_W,FRAC_W>::logb( const T& x, const T& b, bool do_reduce ) const
+template< typename T, int INT_W, int FRAC_W, typename FLT >
+T Cordic<T,INT_W,FRAC_W,FLT>::logb( const T& x, const T& b, bool do_reduce ) const
 { 
     return div( log(x, do_reduce), log(b, do_reduce), false );
 }
 
-template< typename T, int INT_W, int FRAC_W >
-T Cordic<T,INT_W,FRAC_W>::log2( const T& x, bool do_reduce ) const
+template< typename T, int INT_W, int FRAC_W, typename FLT >
+T Cordic<T,INT_W,FRAC_W,FLT>::log2( const T& x, bool do_reduce ) const
 { 
     return div( log(x, do_reduce), impl->log2, do_reduce );
 }
 
-template< typename T, int INT_W, int FRAC_W >
-T Cordic<T,INT_W,FRAC_W>::log10( const T& x, bool do_reduce ) const
+template< typename T, int INT_W, int FRAC_W, typename FLT >
+T Cordic<T,INT_W,FRAC_W,FLT>::log10( const T& x, bool do_reduce ) const
 { 
     return div( log(x, do_reduce), impl->log10, do_reduce );
 }
 
-template< typename T, int INT_W, int FRAC_W >
-T Cordic<T,INT_W,FRAC_W>::sin( const T& x, bool do_reduce ) const
+template< typename T, int INT_W, int FRAC_W, typename FLT >
+T Cordic<T,INT_W,FRAC_W,FLT>::sin( const T& x, bool do_reduce ) const
 { 
     T xx, yy, zz;
     circular_rotation( one_over_gain(), ZERO, x, xx, yy, zz );
     return yy;
 }
 
-template< typename T, int INT_W, int FRAC_W >
-T Cordic<T,INT_W,FRAC_W>::cos( const T& x, bool do_reduce ) const
+template< typename T, int INT_W, int FRAC_W, typename FLT >
+T Cordic<T,INT_W,FRAC_W,FLT>::cos( const T& x, bool do_reduce ) const
 { 
     T xx, yy, zz;
     circular_rotation( one_over_gain(), ZERO, x, xx, yy, zz );
     return xx;
 }
 
-template< typename T, int INT_W, int FRAC_W >
-void Cordic<T,INT_W,FRAC_W>::sin_cos( const T& x, T& si, T& co, bool do_reduce ) const             
+template< typename T, int INT_W, int FRAC_W, typename FLT >
+void Cordic<T,INT_W,FRAC_W,FLT>::sin_cos( const T& x, T& si, T& co, bool do_reduce ) const             
 { 
     T zz;
     circular_rotation( one_over_gain(), ZERO, x, co, si, zz );
 }
 
-template< typename T, int INT_W, int FRAC_W >
-T Cordic<T,INT_W,FRAC_W>::tan( const T& x, bool do_reduce ) const
+template< typename T, int INT_W, int FRAC_W, typename FLT >
+T Cordic<T,INT_W,FRAC_W,FLT>::tan( const T& x, bool do_reduce ) const
 { 
     T si, co;
     sin_cos( x, si, co, do_reduce );
     return div( si, co );
 }
 
-template< typename T, int INT_W, int FRAC_W >
-T Cordic<T,INT_W,FRAC_W>::asin( const T& x, bool do_reduce ) const
+template< typename T, int INT_W, int FRAC_W, typename FLT >
+T Cordic<T,INT_W,FRAC_W,FLT>::asin( const T& x, bool do_reduce ) const
 { 
     return atan2( x, normh( ONE, x, do_reduce ), do_reduce );
 }
 
-template< typename T, int INT_W, int FRAC_W >
-T Cordic<T,INT_W,FRAC_W>::acos( const T& x, bool do_reduce ) const
+template< typename T, int INT_W, int FRAC_W, typename FLT >
+T Cordic<T,INT_W,FRAC_W,FLT>::acos( const T& x, bool do_reduce ) const
 { 
     return atan2( normh( ONE, x, do_reduce ), x, do_reduce );
 }
 
-template< typename T, int INT_W, int FRAC_W >
-T Cordic<T,INT_W,FRAC_W>::atan( const T& x, bool do_reduce ) const
+template< typename T, int INT_W, int FRAC_W, typename FLT >
+T Cordic<T,INT_W,FRAC_W,FLT>::atan( const T& x, bool do_reduce ) const
 { 
     T xx, yy, zz;
     circular_vectoring( ONE, x, ZERO, xx, yy, zz );
     return zz;
 }
 
-template< typename T, int INT_W, int FRAC_W >
-T Cordic<T,INT_W,FRAC_W>::atan2( const T& y, const T& x, bool do_reduce ) const
+template< typename T, int INT_W, int FRAC_W, typename FLT >
+T Cordic<T,INT_W,FRAC_W,FLT>::atan2( const T& y, const T& x, bool do_reduce ) const
 { 
     T xx, yy, zz;
     circular_vectoring( x, y, ZERO, xx, yy, zz );
     return zz;
 }
 
-template< typename T, int INT_W, int FRAC_W >
-void Cordic<T,INT_W,FRAC_W>::polar_to_rect( const T& r, const T& a, T& x, T& y, bool do_reduce ) const
+template< typename T, int INT_W, int FRAC_W, typename FLT >
+void Cordic<T,INT_W,FRAC_W,FLT>::polar_to_rect( const T& r, const T& a, T& x, T& y, bool do_reduce ) const
 {
     T xx, yy, zz;
     circular_rotation( r, ZERO, a, xx, yy, zz );
-    x = mul( xx, one_over_gain(), do_reduce );
-    y = mul( yy, one_over_gain(), do_reduce );
+    x = div( xx, gain(), do_reduce );
+    y = div( yy, gain(), do_reduce );
 }
 
-template< typename T, int INT_W, int FRAC_W >
-void Cordic<T,INT_W,FRAC_W>::rect_to_polar( const T& x, const T& y, T& r, T& a, bool do_reduce ) const
+template< typename T, int INT_W, int FRAC_W, typename FLT >
+void Cordic<T,INT_W,FRAC_W,FLT>::rect_to_polar( const T& x, const T& y, T& r, T& a, bool do_reduce ) const
 {
     T rr;
     T yy;
     circular_vectoring( x, y, ZERO, rr, yy, a );
-    r = mul( rr, one_over_gain(), do_reduce );
+    r = div( rr, gain(), do_reduce );
 }
 
-template< typename T, int INT_W, int FRAC_W >
-T Cordic<T,INT_W,FRAC_W>::norm( const T& x, const T& y, bool do_reduce ) const
+template< typename T, int INT_W, int FRAC_W, typename FLT >
+T Cordic<T,INT_W,FRAC_W,FLT>::norm( const T& x, const T& y, bool do_reduce ) const
 {
     T xx, yy, zz;
     circular_vectoring( x, y, ZERO, xx, yy, zz );
-    return mul( xx, one_over_gain(), do_reduce );
+    return div( xx, gain(), do_reduce );
 }
 
-template< typename T, int INT_W, int FRAC_W >
-T Cordic<T,INT_W,FRAC_W>::normh( const T& x, const T& y, bool do_reduce ) const
+template< typename T, int INT_W, int FRAC_W, typename FLT >
+T Cordic<T,INT_W,FRAC_W,FLT>::normh( const T& x, const T& y, bool do_reduce ) const
 {
     T xx, yy, zz;
     hyperbolic_vectoring( x, y, ZERO, xx, yy, zz );
-    return mul( xx, one_over_gainh(), do_reduce );
+    return div( xx, gainh(), do_reduce );
 }
 
-template< typename T, int INT_W, int FRAC_W >
-T Cordic<T,INT_W,FRAC_W>::sinh( const T& x, bool do_reduce ) const
+template< typename T, int INT_W, int FRAC_W, typename FLT >
+T Cordic<T,INT_W,FRAC_W,FLT>::sinh( const T& x, bool do_reduce ) const
 { 
     T xx, yy, zz;
     hyperbolic_rotation( one_over_gainh(), ZERO, x, xx, yy, zz );
     return yy;
 }
 
-template< typename T, int INT_W, int FRAC_W >
-T Cordic<T,INT_W,FRAC_W>::cosh( const T& x, bool do_reduce ) const
+template< typename T, int INT_W, int FRAC_W, typename FLT >
+T Cordic<T,INT_W,FRAC_W,FLT>::cosh( const T& x, bool do_reduce ) const
 { 
     T xx, yy, zz;
     hyperbolic_rotation( one_over_gainh(), ZERO, x, xx, yy, zz );
     return xx;
 }
 
-template< typename T, int INT_W, int FRAC_W >
-void Cordic<T,INT_W,FRAC_W>::sinh_cosh( const T& x, T& sih, T& coh, bool do_reduce ) const
+template< typename T, int INT_W, int FRAC_W, typename FLT >
+void Cordic<T,INT_W,FRAC_W,FLT>::sinh_cosh( const T& x, T& sih, T& coh, bool do_reduce ) const
 { 
     T zz;
     hyperbolic_rotation( one_over_gainh(), ZERO, x, coh, sih, zz );
 }
 
-template< typename T, int INT_W, int FRAC_W >
-T Cordic<T,INT_W,FRAC_W>::tanh( const T& x, bool do_reduce ) const
+template< typename T, int INT_W, int FRAC_W, typename FLT >
+T Cordic<T,INT_W,FRAC_W,FLT>::tanh( const T& x, bool do_reduce ) const
 { 
     T sih, coh;
     sinh_cosh( x, sih, coh, do_reduce );
     return div( sih, coh );
 }
 
-template< typename T, int INT_W, int FRAC_W >
-T Cordic<T,INT_W,FRAC_W>::asinh( const T& x, bool do_reduce ) const
+template< typename T, int INT_W, int FRAC_W, typename FLT >
+T Cordic<T,INT_W,FRAC_W,FLT>::asinh( const T& x, bool do_reduce ) const
 { 
     return log( x + norm( ONE, x, do_reduce ), do_reduce );
 }
 
-template< typename T, int INT_W, int FRAC_W >
-T Cordic<T,INT_W,FRAC_W>::acosh( const T& x, bool do_reduce ) const
+template< typename T, int INT_W, int FRAC_W, typename FLT >
+T Cordic<T,INT_W,FRAC_W,FLT>::acosh( const T& x, bool do_reduce ) const
 { 
     return log( x + normh( x, ONE, do_reduce ), do_reduce );
 }
 
-template< typename T, int INT_W, int FRAC_W >
-T Cordic<T,INT_W,FRAC_W>::atanh( const T& x, bool do_reduce ) const
+template< typename T, int INT_W, int FRAC_W, typename FLT >
+T Cordic<T,INT_W,FRAC_W,FLT>::atanh( const T& x, bool do_reduce ) const
 { 
     T xx, yy, zz;
     hyperbolic_vectoring( ONE, x, ZERO, xx, yy, zz );
     return zz;
 }
 
-template< typename T, int INT_W, int FRAC_W >
-T Cordic<T,INT_W,FRAC_W>::atanh2( const T& y, const T& x, bool do_reduce ) const             
+template< typename T, int INT_W, int FRAC_W, typename FLT >
+T Cordic<T,INT_W,FRAC_W,FLT>::atanh2( const T& y, const T& x, bool do_reduce ) const             
 { 
     T xx, yy, zz;
     hyperbolic_vectoring( x, y, ZERO, xx, yy, zz );
     return zz;
 }
 
-template< typename T, int INT_W, int FRAC_W >
-void Cordic<T,INT_W,FRAC_W>::reduce_angle( T& a, uint32_t& quad ) const
+template< typename T, int INT_W, int FRAC_W, typename FLT >
+void Cordic<T,INT_W,FRAC_W,FLT>::reduce_angle( T& a, uint32_t& quad ) const
 {
     //-----------------------------------------------------
     // Next figure out which LUT value to use.
@@ -614,14 +630,14 @@ void Cordic<T,INT_W,FRAC_W>::reduce_angle( T& a, uint32_t& quad ) const
         impl->reduce_angle_addend   = std::unique_ptr<T[]>( addend );
         impl->reduce_angle_quadrant = std::unique_ptr<uint32_t[]>( quadrant );
 
-        const highres PI       = M_PI;
-        const highres PI_DIV_2 = PI / 2.0;
+        const FLT PI       = M_PI;
+        const FLT PI_DIV_2 = PI / 2.0;
         for( T i = 0; i <= MAX_INT; i++ )
         {
-            highres cnt   = highres(i) / PI_DIV_2;
-            T       cnt_i = cnt;
+            FLT cnt = FLT(i) / PI_DIV_2;
+            T   cnt_i = cnt;
             if ( debug ) std::cout << "cnt_i=" << cnt_i << "\n";
-            highres add_f = highres(cnt_i) * PI_DIV_2;
+            FLT add_f = FLT(cnt_i) * PI_DIV_2;
             if ( i > 0 ) add_f = -add_f;
             addend[i]   = to_fp( add_f );
             quadrant[i] = cnt_i % 4;
