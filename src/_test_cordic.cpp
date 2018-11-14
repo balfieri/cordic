@@ -164,6 +164,16 @@ int main( int argc, const char * argv[] )
     do_op22("rect_to_polar(x,y)", cordic.rect_to_polar,rect_to_polar, x, y );
     do_op22("polar_to_rect(x,y)", cordic.polar_to_rect,polar_to_rect, x, y );
 
+    do_op2( "x*y",              cordic.mul,     mul,            0.0001, 1.999999 );
+    do_op2( "x/y",              cordic.div,     div,            0.0003, 1.999999 );
+    do_op2( "x/y",              cordic.div,     div,            0.0003, 0.000555 );
+    do_op1( "sqrt(1.99999)",    cordic.sqrt,    sqrt,           1.99999 );
+    do_op1( "exp(0.5)",         cordic.exp,     exp,            0.5 );
+    do_op1( "exp(1)",           cordic.exp,     exp,            1.0 );
+    do_op1( "log(2.71)",        cordic.log,     log,            2.71 );
+    do_op1( "log(1.00)",        cordic.log,     log,            1.00 );
+    do_op1( "log(0.50)",        cordic.log,     log,            0.50 );
+
     // sin/cos angle reduction
     //
     FLT MAX = FLT((1 << INT_W)-1) + 0.999999;
@@ -184,16 +194,6 @@ int main( int argc, const char * argv[] )
                      "\ndifference=" << err << ((err <= TOL) ? "(good)" : "(BAD)") << "\n";
         dassert( err <= TOL );
     }
-
-    do_op2( "x*y",              cordic.mul,     mul,            0.0001, 1.999999 );
-    do_op2( "x/y",              cordic.div,     div,            0.0003, 1.999999 );
-    do_op2( "x/y",              cordic.div,     div,            0.0003, 0.000555 );
-    do_op1( "sqrt(1.99999)",    cordic.sqrt,    sqrt,           1.99999 );
-    do_op1( "exp(0.5)",         cordic.exp,     exp,            0.5 );
-    do_op1( "exp(1)",           cordic.exp,     exp,            1.0 );
-    do_op1( "log(2.71)",        cordic.log,     log,            2.71 );
-    do_op1( "log(1.00)",        cordic.log,     log,            1.00 );
-    do_op1( "log(0.50)",        cordic.log,     log,            0.50 );
 
     return 0;
 }
