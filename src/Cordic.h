@@ -47,6 +47,7 @@ public:
     const T ZERO    = 0;
     const T ONE     = T(1) << T(FRAC_W);
     const T QUARTER = T(1) << T(FRAC_W-2);
+    const uint32_t MAX_INT = (1 << INT_W)-1;
 
     T       to_fp( FLT x ) const;
     FLT     to_flt( const T& x ) const;
@@ -159,6 +160,8 @@ public:
     void reduce_mul_args( T& x, T& y, int32_t& x_lshift, int32_t& y_lshift ) const;             // reduce_arg x and y
     void reduce_div_args( T& x, T& y, int32_t& x_lshift, int32_t& y_lshift ) const;             // reduce_arg x, normalize_arg y
     void reduce_sqrt_arg( T& x, int32_t& x_lshift ) const;                                      // reduce_arg but lshift must pow-of-2
+    void reduce_exp_arg( FLT b, T& x, T& factor ) const;                                        // b=const_base, multiply exp(x) by factor
+    void reduce_log_arg( FLT b, T& x, T& addend ) const;                                        // b=const_base, add addend to log(x) 
     void reduce_norm_args( T& x, T& y, int32_t& lshift ) const;                                 // reduce_arg x and y with same lshift
 
 private:

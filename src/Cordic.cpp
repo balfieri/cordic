@@ -48,6 +48,7 @@ struct Cordic<T,INT_W,FRAC_W,FLT>::Impl
 
     std::unique_ptr<T[]>        reduce_angle_addend;            // for each possible integer value, an addend to help normalize
     std::unique_ptr<uint32_t[]> reduce_angle_quadrant;          // 00,01,02,03
+    std::unique_ptr<FLT[]>      reduce_exp_factor;              // for each possible integer value, exp(i)
 };
 
 //-----------------------------------------------------
@@ -108,8 +109,7 @@ Cordic<T,INT_W,FRAC_W,FLT>::Cordic( uint32_t nc, uint32_t nh, uint32_t nl )
     impl->log10       = T( std::log( FLT( 10 ) )       * FLT( T(1) << T(FRAC_W) ) );
     impl->log10_div_e = T( std::log( FLT( 10 ) / M_E ) * FLT( T(1) << T(FRAC_W) ) );
 
-    // construct LUT usdd by reduce_angle()
-    const T MAX_INT  = (1 << INT_W)-1;
+    // construct LUT used by reduce_angle()
     dassert( INT_W < 14 && "too many cases to worry about" );
     uint32_t N = 1 << (1+INT_W);
     T *        addend   = new T[N];
@@ -128,6 +128,14 @@ Cordic<T,INT_W,FRAC_W,FLT>::Cordic( uint32_t nc, uint32_t nh, uint32_t nl )
         addend[i]   = to_fp( add_f );
         quadrant[i] = cnt_i % 4;
         if ( debug ) std::cout << "cnt_i=" << cnt_i << " addend[" << i << "]=" << to_flt(addend[i]) << " quadrant=" << quadrant[i] << "\n";
+    }
+
+    // construct LUT used by reduce_exp_arg()
+    FLT * factor = new FLT[N];
+    impl->reduce_exp_factor = std::unique_ptr<FLT[]>( factor );
+    for( T i = 0; i <= MAX_INT; i++ )
+    {
+        factor[i] = std::exp(FLT(i));
     }
 }
 
@@ -639,8 +647,7 @@ void Cordic<T,INT_W,FRAC_W,FLT>::reduce_angle( T& a, uint32_t& quad ) const
     // Use LUT to find addend.
     //-----------------------------------------------------
     dassert( a >= 0 );
-    const T MAX_INT  = (1 << INT_W)-1;
-    T *        addend   = impl->reduce_angle_addend.get();
+    const T *  addend   = impl->reduce_angle_addend.get();
     uint32_t * quadrant = impl->reduce_angle_quadrant.get();
 
     T index = (a >> FRAC_W) & MAX_INT;
@@ -706,6 +713,29 @@ void Cordic<T,INT_W,FRAC_W,FLT>::reduce_sqrt_arg( T& x, int32_t& x_lshift ) cons
     }
     x_lshift = power;
     x >>= x_lshift;
+}
+
+template< typename T, int INT_W, int FRAC_W, typename FLT >
+void Cordic<T,INT_W,FRAC_W,FLT>::reduce_exp_arg( FLT b, T& x, T& factor ) const 
+{
+    //-----------------------------------------------------
+    // Assume: x = i + f  (integer plus fraction)
+    // exp(x) = exp(i) * exp(f)
+    // pow(b,x) = log(b) * exp(x) = [log(b)*exp(i)] * exp(f)
+    //
+    // exp(i) comes for a pre-built LUT kept in FLT
+    // so we can multiply it by log(b) before converting to type T.
+    //-----------------------------------------------------
+    const FLT * factors_f = impl->reduce_exp_factor.get();
+    T   index    = (x >> FRAC_W) & MAX_INT;
+    FLT factor_f = std::log(b) * factors_f[index];
+    factor       = to_fp( factor_f );
+    x           &= (T(1) << FRAC_W)-T(1); // fraction only
+}
+
+template< typename T, int INT_W, int FRAC_W, typename FLT >
+void Cordic<T,INT_W,FRAC_W,FLT>::reduce_log_arg( FLT b, T& x, T& addend ) const 
+{
 }
 
 template< typename T, int INT_W, int FRAC_W, typename FLT >
