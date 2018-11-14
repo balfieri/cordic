@@ -734,8 +734,17 @@ void Cordic<T,INT_W,FRAC_W,FLT>::reduce_exp_arg( FLT b, T& x, T& factor ) const
 }
 
 template< typename T, int INT_W, int FRAC_W, typename FLT >
-void Cordic<T,INT_W,FRAC_W,FLT>::reduce_log_arg( FLT b, T& x, T& addend ) const 
+void Cordic<T,INT_W,FRAC_W,FLT>::reduce_log_arg( T& x, T& addend ) const 
 {
+    //-----------------------------------------------------
+    // log(ab) = log(a) + log(b)
+    // 
+    // So right-shift x using reduce_arg().
+    // Then addend = log(1 << shift).
+    //-----------------------------------------------------
+    int32_t x_lshift;
+    reduce_arg( x, x_lshift );
+    addend = std::log( 1 << x_lshift );
 }
 
 template< typename T, int INT_W, int FRAC_W, typename FLT >

@@ -161,7 +161,7 @@ public:
     void reduce_div_args( T& x, T& y, int32_t& x_lshift, int32_t& y_lshift ) const;             // reduce_arg x, normalize_arg y
     void reduce_sqrt_arg( T& x, int32_t& x_lshift ) const;                                      // reduce_arg but lshift must pow-of-2
     void reduce_exp_arg( FLT b, T& x, T& factor ) const;                                        // b=const_base, multiply exp(x) by factor
-    void reduce_log_arg( FLT b, T& x, T& addend ) const;                                        // b=const_base, add addend to log(x) 
+    void reduce_log_arg( T& x, T& addend ) const;                                               // reduce_arg x, addend to log(x) 
     void reduce_norm_args( T& x, T& y, int32_t& lshift ) const;                                 // reduce_arg x and y with same lshift
 
 private:
