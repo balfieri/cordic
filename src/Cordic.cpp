@@ -702,6 +702,7 @@ void Cordic<T,INT_W,FRAC_W,FLT>::reduce_sqrt_arg( T& x, int32_t& x_lshift ) cons
     //-----------------------------------------------------
     // Reduce without right-shifting x yet.
     // Then round the x_lshift up to pow-of-2.
+    // And *then* shift.
     //-----------------------------------------------------
     reduce_arg( x, x_lshift, false );   
     int32_t power = 1;
@@ -710,6 +711,22 @@ void Cordic<T,INT_W,FRAC_W,FLT>::reduce_sqrt_arg( T& x, int32_t& x_lshift ) cons
         power <<= 1;
     }
     x_lshift = power;
+    x >>= x_lshift;
+}
+
+template< typename T, int INT_W, int FRAC_W, typename FLT >
+void Cordic<T,INT_W,FRAC_W,FLT>::reduce_norm_args( T& x, T& y, int32_t& lshift ) const
+{
+    //-----------------------------------------------------
+    // Must shift both x and y by max( x_lshift, y_lshift ).
+    //-----------------------------------------------------
+    int32_t x_lshift;
+    int32_t y_lshift;
+    reduce_arg( x, x_lshift, false );   
+    reduce_arg( y, y_lshift, false );   
+    lshift = (x_lshift > y_lshift) ? x_lshift : y_lshift;
+    x >>= lshift;
+    y >>= lshift;
 }
 
 template class Cordic<int64_t, 7, 56>;
