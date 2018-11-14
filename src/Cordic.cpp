@@ -656,4 +656,60 @@ void Cordic<T,INT_W,FRAC_W,FLT>::reduce_angle( T& a, uint32_t& quad ) const
     a += addend[index];
 }
 
+template< typename T, int INT_W, int FRAC_W, typename FLT >
+void Cordic<T,INT_W,FRAC_W,FLT>::reduce_arg( T& x, int32_t& x_lshift, bool shift_x, bool normalize ) const
+{
+    dassert( x >= 0 );
+    T other = T(1) << FRAC_W;
+    x_lshift = 0;
+    while( x > other ) 
+    {
+        x_lshift++;
+        if ( shift_x ) {
+            x >>= 1;
+        } else {
+            other <<= 1;
+        }
+    }
+    while( normalize && x < ONE )
+    {
+        x_lshift--;
+        if ( shift_x ) {
+            x <<= 1;
+        } else {
+            other >>= 1;
+        }
+    }
+}
+
+template< typename T, int INT_W, int FRAC_W, typename FLT >
+void Cordic<T,INT_W,FRAC_W,FLT>::reduce_mul_args( T& x, T& y, int32_t& x_lshift, int32_t& y_lshift ) const
+{
+    reduce_arg( x, x_lshift );
+    reduce_arg( y, y_lshift );
+}
+
+template< typename T, int INT_W, int FRAC_W, typename FLT >
+void Cordic<T,INT_W,FRAC_W,FLT>::reduce_div_args( T& x, T& y, int32_t& x_lshift, int32_t& y_lshift ) const
+{
+    reduce_arg( x, x_lshift );
+    reduce_arg( y, y_lshift, true, true );
+}
+
+template< typename T, int INT_W, int FRAC_W, typename FLT >
+void Cordic<T,INT_W,FRAC_W,FLT>::reduce_sqrt_arg( T& x, int32_t& x_lshift ) const
+{
+    //-----------------------------------------------------
+    // Reduce without right-shifting x yet.
+    // Then round the x_lshift up to pow-of-2.
+    //-----------------------------------------------------
+    reduce_arg( x, x_lshift, false );   
+    int32_t power = 1;
+    while( power < x_lshift )
+    {
+        power <<= 1;
+    }
+    x_lshift = power;
+}
+
 template class Cordic<int64_t, 7, 56>;
