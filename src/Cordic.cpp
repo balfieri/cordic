@@ -452,6 +452,14 @@ T Cordic<T,INT_W,FRAC_W,FLT>::pow( const T& b, const T& x, bool do_reduce ) cons
 }
 
 template< typename T, int INT_W, int FRAC_W, typename FLT >
+T Cordic<T,INT_W,FRAC_W,FLT>::powc( const FLT& b, const T& x, bool do_reduce ) const
+{ 
+    const FLT log_b_f = std::log( b );
+    const T   log_b   = to_fp( log_b_f );
+    return exp( mul( x, log_b, do_reduce ), false );
+}
+
+template< typename T, int INT_W, int FRAC_W, typename FLT >
 T Cordic<T,INT_W,FRAC_W,FLT>::pow2( const T& x, bool do_reduce ) const
 { 
     return exp( mul( x, impl->log2, do_reduce ), false );
@@ -474,6 +482,14 @@ template< typename T, int INT_W, int FRAC_W, typename FLT >
 T Cordic<T,INT_W,FRAC_W,FLT>::logb( const T& x, const T& b, bool do_reduce ) const
 { 
     return div( log(x, do_reduce), log(b, do_reduce), false );
+}
+
+template< typename T, int INT_W, int FRAC_W, typename FLT >
+T Cordic<T,INT_W,FRAC_W,FLT>::logc( const T& x, const FLT& b, bool do_reduce ) const
+{ 
+    const FLT one_over_log_b_f = FLT(1) / std::log( b );
+    const T   one_over_log_b   = to_fp( one_over_log_b_f );
+    return mul( log(x, do_reduce), one_over_log_b, false );
 }
 
 template< typename T, int INT_W, int FRAC_W, typename FLT >

@@ -120,10 +120,12 @@ public:
     T    sqrt( const T& x, bool do_reduce=true ) const;                                         // sqrt(x)
     T    exp( const T& x, bool do_reduce=true ) const;                                          // e^x
     T    pow( const T& b, const T& x, bool do_reduce=true ) const;                              // exp(x * log(b))              (3)
+    T    powc( const FLT& b, const T& x, bool do_reduce=true ) const;                           // exp(x * log(b))  b=const     (2)
     T    pow2( const T& x, bool do_reduce=true ) const;                                         // exp(x * log(2))              (2)
     T    pow10( const T& x, bool do_reduce=true ) const;                                        // exp(x * log(10))             (2)
     T    log( const T& x, bool do_reduce=true ) const;                                          // 2*atan2(x-1, x+1)    
     T    logb( const T& x, const T& b, bool do_reduce=true ) const;                             // log(x)/log(b)                (3)
+    T    logc( const T& x, const FLT& b, bool do_reduce=true ) const;                           // log(x)/log(b)    b=const     (2)
     T    log2( const T& x, bool do_reduce=true ) const;                                         // log(x)/log(2)                (2)
     T    log10( const T& x, bool do_reduce=true ) const;                                        // log(x)/log(10)               (2)
 
