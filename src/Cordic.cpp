@@ -462,14 +462,13 @@ T Cordic<T,INT_W,FRAC_W,FLT>::powc( const FLT& b, const T& x, bool do_reduce ) c
 template< typename T, int INT_W, int FRAC_W, typename FLT >
 T Cordic<T,INT_W,FRAC_W,FLT>::pow2( const T& x, bool do_reduce ) const
 { 
-    return exp( mul( x, impl->log2, do_reduce ), false );
+    return powc( 2.0, x, do_reduce );
 }
 
 template< typename T, int INT_W, int FRAC_W, typename FLT >
 T Cordic<T,INT_W,FRAC_W,FLT>::pow10( const T& x, bool do_reduce ) const
 { 
-    // log10 is too large for mul; we use log(10/e) then add 1 after mul()
-    return exp( mul( x, impl->log10_div_e, do_reduce ) + ONE, do_reduce );
+    return powc( 10.0, x, do_reduce );
 }
 
 template< typename T, int INT_W, int FRAC_W, typename FLT >
@@ -495,13 +494,13 @@ T Cordic<T,INT_W,FRAC_W,FLT>::logc( const T& x, const FLT& b, bool do_reduce ) c
 template< typename T, int INT_W, int FRAC_W, typename FLT >
 T Cordic<T,INT_W,FRAC_W,FLT>::log2( const T& x, bool do_reduce ) const
 { 
-    return div( log(x, do_reduce), impl->log2, do_reduce );
+    return logc( x, 2.0, do_reduce );
 }
 
 template< typename T, int INT_W, int FRAC_W, typename FLT >
 T Cordic<T,INT_W,FRAC_W,FLT>::log10( const T& x, bool do_reduce ) const
 { 
-    return div( log(x, do_reduce), impl->log10, do_reduce );
+    return logc( x, 10.0, do_reduce );
 }
 
 template< typename T, int INT_W, int FRAC_W, typename FLT >
