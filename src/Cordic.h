@@ -153,6 +153,9 @@ public:
     //-----------------------------------------------------
     // Argument Reduction (Normalization) Routines
     //
+    // If you take the default above for do_reduce=true, then
+    // you need not call these yourself.
+    //
     // All inputs must be non-negative.
     //-----------------------------------------------------
     void reduce_angle( T& a, uint32_t& quadrant ) const;                                        // to 0 .. pi/2
