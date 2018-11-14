@@ -107,6 +107,28 @@ Cordic<T,INT_W,FRAC_W,FLT>::Cordic( uint32_t nc, uint32_t nh, uint32_t nl )
     impl->log2        = T( std::log( FLT( 2  ) )       * FLT( T(1) << T(FRAC_W) ) );
     impl->log10       = T( std::log( FLT( 10 ) )       * FLT( T(1) << T(FRAC_W) ) );
     impl->log10_div_e = T( std::log( FLT( 10 ) / M_E ) * FLT( T(1) << T(FRAC_W) ) );
+
+    // construct LUT usdd by reduce_angle()
+    const T MAX_INT  = (1 << INT_W)-1;
+    dassert( INT_W < 14 && "too many cases to worry about" );
+    uint32_t N = 1 << (1+INT_W);
+    T *        addend   = new T[N];
+    uint32_t * quadrant = new uint32_t[N];
+    impl->reduce_angle_addend   = std::unique_ptr<T[]>( addend );
+    impl->reduce_angle_quadrant = std::unique_ptr<uint32_t[]>( quadrant );
+    const FLT PI       = M_PI;
+    const FLT PI_DIV_2 = PI / 2.0;
+    for( T i = 0; i <= MAX_INT; i++ )
+    {
+        FLT cnt = FLT(i) / PI_DIV_2;
+        T   cnt_i = cnt;
+        if ( debug ) std::cout << "cnt_i=" << cnt_i << "\n";
+        FLT add_f = FLT(cnt_i) * PI_DIV_2;
+        if ( i > 0 ) add_f = -add_f;
+        addend[i]   = to_fp( add_f );
+        quadrant[i] = cnt_i % 4;
+        if ( debug ) std::cout << "cnt_i=" << cnt_i << " addend[" << i << "]=" << to_flt(addend[i]) << " quadrant=" << quadrant[i] << "\n";
+    }
 }
 
 template< typename T, int INT_W, int FRAC_W, typename FLT >
@@ -614,41 +636,13 @@ template< typename T, int INT_W, int FRAC_W, typename FLT >
 void Cordic<T,INT_W,FRAC_W,FLT>::reduce_angle( T& a, uint32_t& quad ) const
 {
     //-----------------------------------------------------
-    // Next figure out which LUT value to use.
+    // Use LUT to find addend.
     //-----------------------------------------------------
     dassert( a >= 0 );
     const T MAX_INT  = (1 << INT_W)-1;
     T *        addend   = impl->reduce_angle_addend.get();
     uint32_t * quadrant = impl->reduce_angle_quadrant.get();
-    if ( addend == nullptr ) {
-        //-----------------------------------------------------
-        // Construct LUT that maps int bits to value to add to get back in range.
-        //-----------------------------------------------------
-        dassert( INT_W < 14 && "too many cases to worry about" );
-        uint32_t N = 1 << (1+INT_W);
-        addend   = new T[N];
-        quadrant = new uint32_t[N];
-        impl->reduce_angle_addend   = std::unique_ptr<T[]>( addend );
-        impl->reduce_angle_quadrant = std::unique_ptr<uint32_t[]>( quadrant );
 
-        const FLT PI       = M_PI;
-        const FLT PI_DIV_2 = PI / 2.0;
-        for( T i = 0; i <= MAX_INT; i++ )
-        {
-            FLT cnt = FLT(i) / PI_DIV_2;
-            T   cnt_i = cnt;
-            if ( debug ) std::cout << "cnt_i=" << cnt_i << "\n";
-            FLT add_f = FLT(cnt_i) * PI_DIV_2;
-            if ( i > 0 ) add_f = -add_f;
-            addend[i]   = to_fp( add_f );
-            quadrant[i] = cnt_i % 4;
-            if ( debug ) std::cout << "cnt_i=" << cnt_i << " addend[" << i << "]=" << to_flt(addend[i]) << " quadrant=" << quadrant[i] << "\n";
-        }
-    }
-
-    //-----------------------------------------------------
-    // Use LUT to find addend.
-    //-----------------------------------------------------
     T index = (a >> FRAC_W) & MAX_INT;
     quad = quadrant[index];
     if ( debug ) std::cout << "a=0x" << std::hex << a << std::dec << " index=" << index << " addend=0x" << std::hex << addend[index] <<
