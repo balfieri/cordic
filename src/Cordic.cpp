@@ -473,7 +473,7 @@ T Cordic<T,INT_W,FRAC_W,FLT>::exp( const T& _x, bool do_reduce ) const
 template< typename T, int INT_W, int FRAC_W, typename FLT >
 T Cordic<T,INT_W,FRAC_W,FLT>::pow( const T& b, const T& x, bool do_reduce ) const
 { 
-    return exp( mul( x, log( b ), do_reduce ), false );
+    return exp( mul( x, log( b ), do_reduce ), do_reduce );
 }
 
 template< typename T, int INT_W, int FRAC_W, typename FLT >
@@ -481,7 +481,7 @@ T Cordic<T,INT_W,FRAC_W,FLT>::powc( const FLT& b, const T& x, bool do_reduce ) c
 { 
     const FLT log_b_f = std::log( b );
     const T   log_b   = to_fp( log_b_f );
-    return exp( mul( x, log_b, do_reduce ), false );
+    return exp( mul( x, log_b, do_reduce ), do_reduce );
 }
 
 template< typename T, int INT_W, int FRAC_W, typename FLT >
@@ -499,7 +499,7 @@ T Cordic<T,INT_W,FRAC_W,FLT>::pow10( const T& x, bool do_reduce ) const
 template< typename T, int INT_W, int FRAC_W, typename FLT >
 T Cordic<T,INT_W,FRAC_W,FLT>::log( const T& x, bool do_reduce ) const
 { 
-    dassert( !do_reduce );
+    // LEFT OFF HERE
     return atanh2( x-ONE, x+ONE, do_reduce ) << 1;
 }
 
