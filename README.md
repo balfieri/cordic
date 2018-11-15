@@ -20,10 +20,6 @@ $ make _test_cordic.run
 </pre>
 
 <p>
-TODO: add argument minimization and many more test cases
-</p>
-
-<p>
 Bob Alfieri<br>
 Chapel Hill, NC
 </p>
