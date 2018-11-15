@@ -115,42 +115,42 @@ public:
     // do_reduce=true means that arguments need to be reduced (normalized).
     //-----------------------------------------------------
 
-    T    mul( const T& x, const T& y, const T addend = T(0), bool do_reduce=true ) const;       // x*y + addend
-    T    div( const T& y, const T& x, const T addend = T(0), bool do_reduce=true ) const;       // y/x + addend
-    T    sqrt( const T& x, bool do_reduce=true ) const;                                         // sqrt(x)
-    T    exp( const T& x, bool do_reduce=true ) const;                                          // e^x
-    T    pow( const T& b, const T& x, bool do_reduce=true ) const;                              // exp(x * log(b))              (3)
-    T    powc( const FLT& b, const T& x, bool do_reduce=true ) const;                           // exp(x * log(b))  b=const     (2)
-    T    pow2( const T& x, bool do_reduce=true ) const;                                         // exp(x * log(2))              (2)
-    T    pow10( const T& x, bool do_reduce=true ) const;                                        // exp(x * log(10))             (2)
-    T    log( const T& x, bool do_reduce=true ) const;                                          // 2*atan2(x-1, x+1)    
-    T    logb( const T& x, const T& b, bool do_reduce=true ) const;                             // log(x)/log(b)                (3)
-    T    logc( const T& x, const FLT& b, bool do_reduce=true ) const;                           // log(x)/log(b)    b=const     (2)
-    T    log2( const T& x, bool do_reduce=true ) const;                                         // log(x)/log(2)                (2)
-    T    log10( const T& x, bool do_reduce=true ) const;                                        // log(x)/log(10)               (2)
+    T    mul( const T& x, const T& y, const T addend = T(0), bool do_reduce=false ) const;      // x*y + addend
+    T    div( const T& y, const T& x, const T addend = T(0), bool do_reduce=false ) const;      // y/x + addend
+    T    sqrt( const T& x, bool do_reduce=false ) const;                                        // sqrt(x)
+    T    exp( const T& x, bool do_reduce=false ) const;                                         // e^x
+    T    pow( const T& b, const T& x, bool do_reduce=false ) const;                             // exp(x * log(b))              (3)
+    T    powc( const FLT& b, const T& x, bool do_reduce=false ) const;                          // exp(x * log(b))  b=const     (2)
+    T    pow2( const T& x, bool do_reduce=false ) const;                                        // exp(x * log(2))              (2)
+    T    pow10( const T& x, bool do_reduce=false ) const;                                       // exp(x * log(10))             (2)
+    T    log( const T& x, bool do_reduce=false ) const;                                         // 2*atan2(x-1, x+1)    
+    T    logb( const T& x, const T& b, bool do_reduce=false ) const;                            // log(x)/log(b)                (3)
+    T    logc( const T& x, const FLT& b, bool do_reduce=false ) const;                          // log(x)/log(b)    b=const     (2)
+    T    log2( const T& x, bool do_reduce=false ) const;                                        // log(x)/log(2)                (2)
+    T    log10( const T& x, bool do_reduce=false ) const;                                       // log(x)/log(10)               (2)
 
-    T    sin( const T& x, bool do_reduce=true ) const;                                          // sin(x)
-    T    cos( const T& x, bool do_reduce=true ) const;                                          // cos(x)
-    void sin_cos( const T& x, T& si, T& co, bool do_reduce=true ) const;                        // si=sin(x), co=cos(x)
-    T    tan( const T& x, bool do_reduce=true ) const;                                          // sin(x) / cos(x)              (2)
-    T    asin( const T& x, bool do_reduce=true ) const;                                         // atan2(x, sqrt(1 - x^2))      (2)
-    T    acos( const T& x, bool do_reduce=true ) const;                                         // atan2(sqrt(1 - x^2), x)      (2)
-    T    atan( const T& x, bool do_reduce=true ) const;                                         // atan(x)
-    T    atan2( const T& y, const T& x, bool do_reduce=true ) const;                            // atan2(y, x)                  
+    T    sin( const T& x, bool do_reduce=false ) const;                                         // sin(x)
+    T    cos( const T& x, bool do_reduce=false ) const;                                         // cos(x)
+    void sin_cos( const T& x, T& si, T& co, bool do_reduce=false ) const;                       // si=sin(x), co=cos(x)
+    T    tan( const T& x, bool do_reduce=false ) const;                                         // sin(x) / cos(x)              (2)
+    T    asin( const T& x, bool do_reduce=false ) const;                                        // atan2(x, sqrt(1 - x^2))      (2)
+    T    acos( const T& x, bool do_reduce=false ) const;                                        // atan2(sqrt(1 - x^2), x)      (2)
+    T    atan( const T& x, bool do_reduce=false ) const;                                        // atan(x)
+    T    atan2( const T& y, const T& x, bool do_reduce=false ) const;                           // atan2(y, x)                  
 
-    void polar_to_rect( const T& r, const T& a, T& x, T& y, bool do_reduce=true ) const;        // x=r*cos(a), y=r*sin(a)
-    void rect_to_polar( const T& x, const T& y, T& r, T& a, bool do_reduce=true ) const;        // r=sqrt(x^2 + y^2), a=atan2(y, x)
-    T    norm( const T& x, const T& y, bool do_reduce=true ) const;                             // sqrt(x^2 + y^2)
-    T    normh( const T& x, const T& y, bool do_reduce=true ) const;                            // sqrt(x^2 - y^2)
+    void polar_to_rect( const T& r, const T& a, T& x, T& y, bool do_reduce=false ) const;       // x=r*cos(a), y=r*sin(a)
+    void rect_to_polar( const T& x, const T& y, T& r, T& a, bool do_reduce=false ) const;       // r=sqrt(x^2 + y^2), a=atan2(y, x)
+    T    norm( const T& x, const T& y, bool do_reduce=false ) const;                            // sqrt(x^2 + y^2)
+    T    normh( const T& x, const T& y, bool do_reduce=false ) const;                           // sqrt(x^2 - y^2)
 
-    T    sinh( const T& x, bool do_reduce=true ) const;                                         // sinh(x)
-    T    cosh( const T& x, bool do_reduce=true ) const;                                         // cosh(x)
-    void sinh_cosh( const T& x, T& sih, T& coh, bool do_reduce=true ) const;                    // sih=sinh(x), coh=cosh(x)
-    T    tanh( const T& x, bool do_reduce=true ) const;                                         // sinh(x) / cosh(x)            (2)
-    T    asinh( const T& x, bool do_reduce=true ) const;                                        // log(x + sqrt(1 + x^2))       (2)
-    T    acosh( const T& x, bool do_reduce=true ) const;                                        // log(x + sqrt(x^2 - 1))       (2)
-    T    atanh( const T& x, bool do_reduce=true ) const;                                        // atanh(x)
-    T    atanh2( const T& y, const T& x, bool do_reduce=true ) const;                           // atanh2(y, x)
+    T    sinh( const T& x, bool do_reduce=false ) const;                                        // sinh(x)
+    T    cosh( const T& x, bool do_reduce=false ) const;                                        // cosh(x)
+    void sinh_cosh( const T& x, T& sih, T& coh, bool do_reduce=false ) const;                   // sih=sinh(x), coh=cosh(x)
+    T    tanh( const T& x, bool do_reduce=false ) const;                                        // sinh(x) / cosh(x)            (2)
+    T    asinh( const T& x, bool do_reduce=false ) const;                                       // log(x + sqrt(1 + x^2))       (2)
+    T    acosh( const T& x, bool do_reduce=false ) const;                                       // log(x + sqrt(x^2 - 1))       (2)
+    T    atanh( const T& x, bool do_reduce=false ) const;                                       // atanh(x)
+    T    atanh2( const T& y, const T& x, bool do_reduce=false ) const;                          // atanh2(y, x)
 
     //-----------------------------------------------------
     // Argument Reduction (Normalization) Routines
