@@ -160,7 +160,6 @@ public:
     //
     // All inputs must be non-negative.
     //-----------------------------------------------------
-    void reduce_angle( T& a, uint32_t& quadrant ) const;                                        // to 0 .. pi/2
     void reduce_arg( T& x, int32_t& x_lshift, bool shift_x=true, bool normalize=false ) const;  // 0.0 .. <2.0
     void reduce_mul_args( T& x, T& y, int32_t& x_lshift, int32_t& y_lshift ) const;             // reduce_arg x and y
     void reduce_div_args( T& x, T& y, int32_t& x_lshift, int32_t& y_lshift ) const;             // reduce_arg x, normalize_arg y
@@ -168,6 +167,7 @@ public:
     void reduce_exp_arg( FLT b, T& x, T& factor ) const;                                        // b=const_base, multiply exp(x) by factor
     void reduce_log_arg( T& x, T& addend ) const;                                               // reduce_arg x, addend to log(x) 
     void reduce_norm_args( T& x, T& y, int32_t& lshift ) const;                                 // reduce_arg x and y with same lshift
+    void reduce_angle( T& a, uint32_t& quadrant ) const;                                        // to 0 .. pi/2
 
 private:
     class Impl;

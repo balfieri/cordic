@@ -673,27 +673,55 @@ T Cordic<T,INT_W,FRAC_W,FLT>::normh( const T& _x, const T& _y, bool do_reduce ) 
 }
 
 template< typename T, int INT_W, int FRAC_W, typename FLT >
-T Cordic<T,INT_W,FRAC_W,FLT>::sinh( const T& x, bool do_reduce ) const
+T Cordic<T,INT_W,FRAC_W,FLT>::sinh( const T& _x, bool do_reduce ) const
 { 
-    // LEFT OFF HERE
+    T x = _x;
+    uint32_t quadrant;
+    if ( do_reduce ) reduce_angle( x, quadrant );
+
     T xx, yy, zz;
     hyperbolic_rotation( one_over_gainh(), ZERO, x, xx, yy, zz );
+    if ( do_reduce ) {
+        if ( quadrant&1 )    yy = xx;      // use cos
+        if ( quadrant >= 2 ) yy = -yy;
+    }
     return yy;
 }
 
 template< typename T, int INT_W, int FRAC_W, typename FLT >
-T Cordic<T,INT_W,FRAC_W,FLT>::cosh( const T& x, bool do_reduce ) const
+T Cordic<T,INT_W,FRAC_W,FLT>::cosh( const T& _x, bool do_reduce ) const
 { 
+    T x = _x;
+    uint32_t quadrant;
+    if ( do_reduce ) reduce_angle( x, quadrant );
+
     T xx, yy, zz;
     hyperbolic_rotation( one_over_gainh(), ZERO, x, xx, yy, zz );
+    if ( do_reduce ) {
+        if ( quadrant&1 )    xx = yy;      // use sin
+        if ( quadrant == 1 || quadrant == 2 ) xx = -xx;
+    }
     return xx;
 }
 
 template< typename T, int INT_W, int FRAC_W, typename FLT >
-void Cordic<T,INT_W,FRAC_W,FLT>::sinh_cosh( const T& x, T& sih, T& coh, bool do_reduce ) const
+void Cordic<T,INT_W,FRAC_W,FLT>::sinh_cosh( const T& _x, T& sih, T& coh, bool do_reduce ) const
 { 
+    T x = _x;
+    uint32_t quadrant;
+    if ( do_reduce ) reduce_angle( x, quadrant );
+
     T zz;
     hyperbolic_rotation( one_over_gainh(), ZERO, x, coh, sih, zz );
+    if ( do_reduce ) {
+        if ( quadrant&1 ) {
+            T tmp = coh;
+            coh = sih;
+            sih = tmp;
+        }
+        if ( quadrant == 1 || quadrant == 2 ) coh = -coh;
+        if ( quadrant >= 2 ) sih = -sih;
+    }
 }
 
 template< typename T, int INT_W, int FRAC_W, typename FLT >
@@ -701,7 +729,7 @@ T Cordic<T,INT_W,FRAC_W,FLT>::tanh( const T& x, bool do_reduce ) const
 { 
     T sih, coh;
     sinh_cosh( x, sih, coh, do_reduce );
-    return div( sih, coh );
+    return div( sih, coh, do_reduce );
 }
 
 template< typename T, int INT_W, int FRAC_W, typename FLT >
@@ -719,6 +747,7 @@ T Cordic<T,INT_W,FRAC_W,FLT>::acosh( const T& x, bool do_reduce ) const
 template< typename T, int INT_W, int FRAC_W, typename FLT >
 T Cordic<T,INT_W,FRAC_W,FLT>::atanh( const T& x, bool do_reduce ) const
 { 
+    dassert( !do_reduce && "TODO" );
     T xx, yy, zz;
     hyperbolic_vectoring( ONE, x, ZERO, xx, yy, zz );
     return zz;
@@ -727,26 +756,10 @@ T Cordic<T,INT_W,FRAC_W,FLT>::atanh( const T& x, bool do_reduce ) const
 template< typename T, int INT_W, int FRAC_W, typename FLT >
 T Cordic<T,INT_W,FRAC_W,FLT>::atanh2( const T& y, const T& x, bool do_reduce ) const             
 { 
+    dassert( !do_reduce && "TODO" );
     T xx, yy, zz;
     hyperbolic_vectoring( x, y, ZERO, xx, yy, zz );
     return zz;
-}
-
-template< typename T, int INT_W, int FRAC_W, typename FLT >
-void Cordic<T,INT_W,FRAC_W,FLT>::reduce_angle( T& a, uint32_t& quad ) const
-{
-    //-----------------------------------------------------
-    // Use LUT to find addend.
-    //-----------------------------------------------------
-    dassert( a >= 0 );
-    const T *  addend   = impl->reduce_angle_addend.get();
-    uint32_t * quadrant = impl->reduce_angle_quadrant.get();
-
-    T index = (a >> FRAC_W) & MAX_INT;
-    quad = quadrant[index];
-    if ( debug ) std::cout << "a=0x" << std::hex << a << std::dec << " index=" << index << " addend=0x" << std::hex << addend[index] <<
-                              " (" << to_flt(addend[index]) << ") quadrant=" << quad << "\n";
-    a += addend[index];
 }
 
 template< typename T, int INT_W, int FRAC_W, typename FLT >
@@ -852,6 +865,23 @@ void Cordic<T,INT_W,FRAC_W,FLT>::reduce_norm_args( T& x, T& y, int32_t& lshift )
     lshift = (x_lshift > y_lshift) ? x_lshift : y_lshift;
     x >>= lshift;
     y >>= lshift;
+}
+
+template< typename T, int INT_W, int FRAC_W, typename FLT >
+void Cordic<T,INT_W,FRAC_W,FLT>::reduce_angle( T& a, uint32_t& quad ) const
+{
+    //-----------------------------------------------------
+    // Use LUT to find addend.
+    //-----------------------------------------------------
+    dassert( a >= 0 );
+    const T *  addend   = impl->reduce_angle_addend.get();
+    uint32_t * quadrant = impl->reduce_angle_quadrant.get();
+
+    T index = (a >> FRAC_W) & MAX_INT;
+    quad = quadrant[index];
+    if ( debug ) std::cout << "a=0x" << std::hex << a << std::dec << " index=" << index << " addend=0x" << std::hex << addend[index] <<
+                              " (" << to_flt(addend[index]) << ") quadrant=" << quad << "\n";
+    a += addend[index];
 }
 
 template class Cordic<int64_t, 7, 56>;
