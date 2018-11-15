@@ -113,7 +113,7 @@ public:
     //
     // (2) means requires 2 applications of a CORDIC algorithm.
     //
-    // do_reduce=true means that arguments need to be reduced (normalized).
+    // do_reduce=true means that arguments need to be range-reduced.
     //-----------------------------------------------------
 
     T    mul( const T& x, const T& y, const T addend = T(0), bool do_reduce=false ) const;      // x*y + addend
@@ -154,7 +154,7 @@ public:
     T    atanh2( const T& y, const T& x, bool do_reduce=false ) const;                          // atanh2(y, x)
 
     //-----------------------------------------------------
-    // Argument Reduction (Normalization) Routines
+    // Argument Range Reduction Routines
     //
     // If you take the default above for do_reduce=true, then
     // you need not call these yourself.
