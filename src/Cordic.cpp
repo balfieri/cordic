@@ -497,16 +497,21 @@ T Cordic<T,INT_W,FRAC_W,FLT>::pow10( const T& x, bool do_reduce ) const
 }
 
 template< typename T, int INT_W, int FRAC_W, typename FLT >
-T Cordic<T,INT_W,FRAC_W,FLT>::log( const T& x, bool do_reduce ) const
+T Cordic<T,INT_W,FRAC_W,FLT>::log( const T& _x, bool do_reduce ) const
 { 
-    // LEFT OFF HERE
-    return atanh2( x-ONE, x+ONE, do_reduce ) << 1;
+    T x = _x;
+    dassert( x > 0 );
+    T addend;
+    if ( do_reduce ) reduce_log_arg( x, addend );
+    T lg = atanh2( x-ONE, x+ONE, do_reduce ) << 1;
+    if ( do_reduce ) lg += addend;
+    return lg;
 }
 
 template< typename T, int INT_W, int FRAC_W, typename FLT >
 T Cordic<T,INT_W,FRAC_W,FLT>::logb( const T& x, const T& b, bool do_reduce ) const
 { 
-    return div( log(x, do_reduce), log(b, do_reduce), false );
+    return div( log(x, do_reduce), log(b, do_reduce), do_reduce );
 }
 
 template< typename T, int INT_W, int FRAC_W, typename FLT >
@@ -514,7 +519,7 @@ T Cordic<T,INT_W,FRAC_W,FLT>::logc( const T& x, const FLT& b, bool do_reduce ) c
 { 
     const FLT one_over_log_b_f = FLT(1) / std::log( b );
     const T   one_over_log_b   = to_fp( one_over_log_b_f );
-    return mul( log(x, do_reduce), one_over_log_b, false );
+    return mul( log(x, do_reduce), one_over_log_b, do_reduce );
 }
 
 template< typename T, int INT_W, int FRAC_W, typename FLT >
@@ -530,26 +535,55 @@ T Cordic<T,INT_W,FRAC_W,FLT>::log10( const T& x, bool do_reduce ) const
 }
 
 template< typename T, int INT_W, int FRAC_W, typename FLT >
-T Cordic<T,INT_W,FRAC_W,FLT>::sin( const T& x, bool do_reduce ) const
+T Cordic<T,INT_W,FRAC_W,FLT>::sin( const T& _x, bool do_reduce ) const
 { 
+    T x = _x;
+    uint32_t quadrant;
+    if ( do_reduce ) reduce_angle( x, quadrant );
+
     T xx, yy, zz;
     circular_rotation( one_over_gain(), ZERO, x, xx, yy, zz );
+    if ( do_reduce ) {
+        if ( quadrant&1 )    yy = xx;      // use cos
+        if ( quadrant >= 2 ) yy = -yy;
+    }
     return yy;
 }
 
 template< typename T, int INT_W, int FRAC_W, typename FLT >
-T Cordic<T,INT_W,FRAC_W,FLT>::cos( const T& x, bool do_reduce ) const
+T Cordic<T,INT_W,FRAC_W,FLT>::cos( const T& _x, bool do_reduce ) const
 { 
+    T x = _x;
+    uint32_t quadrant;
+    if ( do_reduce ) reduce_angle( x, quadrant );
+
     T xx, yy, zz;
     circular_rotation( one_over_gain(), ZERO, x, xx, yy, zz );
+    if ( do_reduce ) {
+        if ( quadrant&1 )    xx = yy;      // use sin
+        if ( quadrant == 1 || quadrant == 2 ) xx = -xx;
+    }
     return xx;
 }
 
 template< typename T, int INT_W, int FRAC_W, typename FLT >
-void Cordic<T,INT_W,FRAC_W,FLT>::sin_cos( const T& x, T& si, T& co, bool do_reduce ) const             
+void Cordic<T,INT_W,FRAC_W,FLT>::sin_cos( const T& _x, T& si, T& co, bool do_reduce ) const             
 { 
+    T x = _x;
+    uint32_t quadrant;
+    if ( do_reduce ) reduce_angle( x, quadrant );
+
     T zz;
     circular_rotation( one_over_gain(), ZERO, x, co, si, zz );
+    if ( do_reduce ) {
+        if ( quadrant&1 ) {
+            T tmp = co;
+            co = si;
+            si = tmp;
+        }
+        if ( quadrant == 1 || quadrant == 2 ) co = -co;
+        if ( quadrant >= 2 ) si = -si;
+    }
 }
 
 template< typename T, int INT_W, int FRAC_W, typename FLT >
@@ -557,7 +591,7 @@ T Cordic<T,INT_W,FRAC_W,FLT>::tan( const T& x, bool do_reduce ) const
 { 
     T si, co;
     sin_cos( x, si, co, do_reduce );
-    return div( si, co );
+    return div( si, co, do_reduce );
 }
 
 template< typename T, int INT_W, int FRAC_W, typename FLT >
