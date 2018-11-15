@@ -26,6 +26,7 @@
 // T      = some signed integer type that can hold fixed-point values (e.g., int64_t)
 // INT_W  = integer width to left of fixed decimal point (not including sign)
 // FRAC_W = fraction width to right of fixed decimal point
+// FLT    = some floating-point type that can hold constants of the desired precision (default is double)
 //
 template< typename T, int INT_W, int FRAC_W, typename FLT=double >              
 class Cordic
