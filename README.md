@@ -21,8 +21,6 @@ This is all open-source.  Refer to the LICENSE.md for licensing details.
 To build and run the test on Linux, Cygwin, or macOS:
 </p>
 <pre>
-$ cd src
-$ make
 $ make _test_cordic.run
 </pre>
 

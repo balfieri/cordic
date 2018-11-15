@@ -10,4 +10,4 @@ LIBS = \
 PROGS = \
 	_test_cordic.exe \
 
-include ../make/common.mk
+include common.mk

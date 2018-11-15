@@ -35,9 +35,8 @@ CFLAGS += -Wold-style-cast -Woverloaded-virtual -Wredundant-decls -Wshadow -Wsig
 CFLAGS += -Wswitch-default -Wundef 
 CFLAGS += -fno-strict-aliasing
 CFLAGS += -fdiagnostics-color=never 
-CFLAGS += -mavx2 -mfma -march=haswell -g -O3
-CFLAGS += -I. -I../lib -I/home/tools/lapack-3.7.1/LAPACKE/include
-LFLAGS  = -g -lm -lz -lstdc++ -lpthread -rdynamic -fdiagnostics-color=always 
+CFLAGS += -I. 
+LFLAGS  = -g -lm -lz -lstdc++ -rdynamic -fdiagnostics-color=always 
 DRUN    = gdb -tui
 
 
@@ -46,9 +45,8 @@ DRUN    = gdb -tui
 ############################
 ifeq ($(OS), Linux)
 
-GLUT_DIR = /home/utils/freeglut-2.8.1
-CFLAGS = -Wall -Werror -pedantic -Wno-long-long -Wno-deprecated -O3 -g -DEMULATE_BUFFERS -I../base -I${GLUT_DIR}/include
-LFLAGS = -g -lm -lz -lstdc++ -lGL -lglut -lGLU -L${GLUT_DIR}/lib
+CFLAGS = -Wall -Werror -pedantic -Wno-long-long -Wno-deprecated -O3 -g 
+LFLAGS = -g -lm -lz -lstdc++ 
 
 ############################
 # MACOS OVERRIDES
@@ -58,8 +56,8 @@ ifeq ($(OS), Darwin)
 
 CC = clang
 LD = clang -w
-CFLAGS += -Wno-unknown-warning-option -Wno-unused-command-line-argument -Wno-unused-parameter -Wno-shift-count-negative -DEMULATE_BUFFERS -DGLUT_ONLY  -I../base -I/usr/include/malloc/ -DNO_MALLOC_H -DUSE_POSIX_MEMALIGN -Wno-deprecated-declarations
-LFLAGS = -g -lm -lz -lstdc++ -framework OpenGl -framework GLUT -framework CoreFoundation -framework IOKit -framework Carbon -framework CoreGraphics -framework Cocoa
+CFLAGS += -Wno-unknown-warning-option -Wno-unused-command-line-argument -Wno-unused-parameter -Wno-shift-count-negative -Wno-deprecated-declarations
+LFLAGS = -g -lm -lz -lstdc++ 
 DRUN   = lldb -s .gdbinit
 
 ############################
@@ -68,8 +66,8 @@ DRUN   = lldb -s .gdbinit
 else
 ifneq (,$(findstring CYGWIN, $(OS)))
 
-CFLAGS = -Wall -Werror -pedantic -O3 -g -DEMULATE_BUFFERS -I../base
-LFLAGS = -g -lm -lz -lstdc++ -lGL -lglu32 -lglut
+CFLAGS = -Wall -Werror -pedantic -O3 -g 
+LFLAGS = -g -lm -lz -lstdc++ 
 
 else
 $(error Unknown O/S: $(OS))
