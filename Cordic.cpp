@@ -630,18 +630,23 @@ void Cordic<T,INT_W,FRAC_W,FLT>::polar_to_rect( const T& r, const T& a, T& x, T&
     dassert( !do_reduce && "TODO" );
     T xx, yy, zz;
     circular_rotation( r, ZERO, a, xx, yy, zz );
-    x = div( xx, gain(), do_reduce );
-    y = div( yy, gain(), do_reduce );
+    x = mul( xx, one_over_gain(), do_reduce );
+    y = mul( yy, one_over_gain(), do_reduce );
 }
 
 template< typename T, int INT_W, int FRAC_W, typename FLT >
-void Cordic<T,INT_W,FRAC_W,FLT>::rect_to_polar( const T& x, const T& y, T& r, T& a, bool do_reduce ) const
+void Cordic<T,INT_W,FRAC_W,FLT>::rect_to_polar( const T& _x, const T& _y, T& r, T& a, bool do_reduce ) const
 {
-    dassert( !do_reduce && "TODO" );
+    T x = _x;
+    T y = _y;
+    int32_t lshift;
+    if ( do_reduce ) reduce_norm_args( x, y, lshift );
+
     T rr;
     T yy;
     circular_vectoring( x, y, ZERO, rr, yy, a );
-    r = div( rr, gain(), do_reduce );
+    if ( do_reduce ) rr <<= lshift;
+    r = mul( rr, one_over_gain(), do_reduce );
 }
 
 template< typename T, int INT_W, int FRAC_W, typename FLT >
