@@ -458,6 +458,20 @@ T Cordic<T,INT_W,FRAC_W,FLT>::sqrt( const T& _x, bool do_reduce ) const
 }
 
 template< typename T, int INT_W, int FRAC_W, typename FLT >
+T Cordic<T,INT_W,FRAC_W,FLT>::one_over_sqrt( const T& _x, bool do_reduce ) const
+{ 
+    T x = _x;
+    int32_t x_lshift;
+    if ( do_reduce ) reduce_sqrt_arg( x, x_lshift );
+
+    // do basic 1/sqrt for now
+    // try pow( x, -0.5 ) later
+    T n = div( ONE, sqrt( x, do_reduce ), false );
+    if ( do_reduce ) n >>= x_lshift;
+    return n;
+}
+
+template< typename T, int INT_W, int FRAC_W, typename FLT >
 T Cordic<T,INT_W,FRAC_W,FLT>::exp( const T& _x, bool do_reduce ) const
 { 
     T x = _x;

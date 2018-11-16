@@ -110,6 +110,7 @@ constexpr FLT TOL = 1.0 / FLT( 1LL << (FRAC_W/2) );
 
 FLT mul( FLT x, FLT y ) { return x*y; }
 FLT div( FLT x, FLT y ) { return x/y; }
+FLT one_over_sqrt( FLT x ) { return 1.0 / std::sqrt( x ); }
 FLT pow2( FLT x )       { return std::pow( 2.0, x ); }
 FLT pow10( FLT x )      { return std::pow( 10.0, x ); }
 FLT logb( FLT x, FLT y ){ return std::log( x ) / std::log( y ); }
@@ -134,6 +135,7 @@ int main( int argc, const char * argv[] )
     do_op2( "x*y",              cordic.mul,     mul,            x, y );
     do_op2( "y/x",              cordic.div,     div,            y, x );
     do_op1( "sqrt(x)",          cordic.sqrt,    std::sqrt,      x    );
+    do_op1( "one_over_sqrt(x)", cordic.one_over_sqrt, one_over_sqrt, x );
     do_op1( "exp(x)",           cordic.exp,     std::exp,       x    );
     do_op2( "pow(x,y)",         cordic.pow,     std::pow,       x, y );
     do_op1( "pow2(x)",          cordic.pow2,    pow2,           x    );
