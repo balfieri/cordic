@@ -826,16 +826,11 @@ void Cordic<T,INT_W,FRAC_W,FLT>::reduce_sqrt_arg( T& x, int32_t& x_lshift ) cons
 {
     //-----------------------------------------------------
     // Reduce without right-shifting x yet.
-    // Then round the x_lshift up to pow-of-2.
+    // Then round the x_lshift up to even number.
     // And *then* shift.
     //-----------------------------------------------------
     reduce_arg( x, x_lshift, false );   
-    int32_t power = 1;
-    while( power < x_lshift )
-    {
-        power <<= 1;
-    }
-    x_lshift = power;
+    if ( x_lshift & 1 ) x_lshift <<= 1;
     x >>= x_lshift;
 }
 
