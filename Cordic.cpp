@@ -49,6 +49,7 @@ struct Cordic<T,INT_W,FRAC_W,FLT>::Impl
     std::unique_ptr<T[]>        reduce_angle_addend;            // for each possible integer value, an addend to help normalize
     std::unique_ptr<uint32_t[]> reduce_angle_quadrant;          // 00,01,02,03
     std::unique_ptr<FLT[]>      reduce_exp_factor;              // for each possible integer value, exp(i)
+    std::unique_ptr<T[]>        reduce_log_addend;              // for each possible lshift value, log( 1 << lshift )
 };
 
 //-----------------------------------------------------
@@ -136,6 +137,14 @@ Cordic<T,INT_W,FRAC_W,FLT>::Cordic( uint32_t nc, uint32_t nh, uint32_t nl )
     for( T i = 0; i <= MAX_INT; i++ )
     {
         factor[i] = std::exp(FLT(i));
+    }
+
+    // construct LUT used by reduce_log_arg()
+    addend = new T[INT_W];
+    impl->reduce_log_addend = std::unique_ptr<T[]>( addend );
+    for( T i = 0; i <= INT_W; i++ )
+    {
+        addend[i] = (i == 0) ? to_fp( 0.0 ) : std::log( double(1 << i) );
     }
 }
 
@@ -847,7 +856,7 @@ void Cordic<T,INT_W,FRAC_W,FLT>::reduce_exp_arg( FLT b, T& x, T& factor ) const
     //-----------------------------------------------------
     const FLT * factors_f = impl->reduce_exp_factor.get();
     T   index    = (x >> FRAC_W) & MAX_INT;
-    FLT factor_f = std::log(b) * factors_f[index];
+    FLT factor_f = std::log(b) * factors_f[index];   // could build per-b factors_f[] LUT with multiply already done
     factor       = to_fp( factor_f );
     x           &= (T(1) << FRAC_W)-T(1); // fraction only
 }
@@ -863,7 +872,9 @@ void Cordic<T,INT_W,FRAC_W,FLT>::reduce_log_arg( T& x, T& addend ) const
     //-----------------------------------------------------
     int32_t x_lshift;
     reduce_arg( x, x_lshift );
-    addend = std::log( 1 << x_lshift );
+    const T * addends = impl->reduce_log_addend.get();
+    addend = to_fp( addends[x_lshift] );
+    x += addend;
 }
 
 template< typename T, int INT_W, int FRAC_W, typename FLT >
@@ -899,3 +910,4 @@ void Cordic<T,INT_W,FRAC_W,FLT>::reduce_angle( T& a, uint32_t& quad ) const
 }
 
 template class Cordic<int64_t, 7, 56>;
+
