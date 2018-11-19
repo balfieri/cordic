@@ -830,7 +830,7 @@ void Cordic<T,INT_W,FRAC_W,FLT>::reduce_sqrt_arg( T& x, int32_t& x_lshift ) cons
     // And *then* shift.
     //-----------------------------------------------------
     reduce_arg( x, x_lshift, false );   
-    if ( x_lshift & 1 ) x_lshift <<= 1;
+    if ( x_lshift & 1 ) x_lshift++;
     x >>= x_lshift;
 }
 
