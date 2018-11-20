@@ -108,8 +108,30 @@ constexpr FLT TOL = 1.0 / FLT( 1LL << (FRAC_W/2) );
     dassert( flterr2 <= TOL );			                        \
 }    
 
+#define do_op3( str, cordic_fn, exp_fn, fltx, flty, fltw, do_reduce )   \
+{                                                                       \
+    FP  fpx  = cordic.to_fp( fltx );			                \
+    FP  fpy  = cordic.to_fp( flty );			                \
+    FP  fpw  = cordic.to_fp( fltw );			                \
+    FP  fpz  = cordic_fn( fpx, fpy, fpw, do_reduce );	                \
+    FLT fltz = cordic.to_flt( fpz );			                \
+    FLT flte = exp_fn( fltx, flty, fltw );			        \
+    FLT flterr = std::abs( flte-fltz );			                \
+			                                                \
+    std::cout.precision(24);			                        \
+    std::cout << #str << "\n";			                        \
+    std::cout << "Input:    " << std::setw(30) << fltx << "(x) " << flty << "(y) " << fltw << "(w)\n"; \
+    std::cout << "Expected: " << std::setw(30) << flte << "\n";		\
+    std::cout << "Actual:   " << std::setw(30) << fltz << "\n";		\
+    std::cout << "Diff:     " << std::setw(30) << flterr << "\n\n";	\
+    dassert( flterr <= TOL );			                        \
+}    
+
+FLT mad( FLT x, FLT y, FLT w ) { return x*y + w; }
 FLT mul( FLT x, FLT y ) { return x*y; }
+FLT dad( FLT x, FLT y, FLT w ) { return x/y + w; }
 FLT div( FLT x, FLT y ) { return x/y; }
+FLT one_over( FLT x )   { return 1.0/x; }
 FLT one_over_sqrt( FLT x ) { return 1.0 / std::sqrt( x ); }
 FLT pow2( FLT x )       { return std::pow( 2.0, x ); }
 FLT pow10( FLT x )      { return std::pow( 10.0, x ); }
@@ -135,10 +157,14 @@ int main( int argc, const char * argv[] )
 
         FLT x = 0.681807431807431031;
         FLT y = 0.810431798013170871;
+        FLT w = 0.103301038084310970;
         FLT b = M_E * 1.1;
 
+        do_op3( "x*y + w",          cordic.mad,     mad,            x, y, w, do_reduce );
         do_op2( "x*y",              cordic.mul,     mul,            x, y, do_reduce );
+        do_op3( "y/x + w",          cordic.dad,     dad,            y, x, w, do_reduce );
         do_op2( "y/x",              cordic.div,     div,            y, x, do_reduce );
+        do_op1( "1/x",              cordic.one_over,one_over,       x   , do_reduce );
         do_op1( "sqrt(x)",          cordic.sqrt,    std::sqrt,      x   , do_reduce );
         do_op1( "one_over_sqrt(x)", cordic.one_over_sqrt, one_over_sqrt, x, do_reduce );
         do_op1( "exp(x)",           cordic.exp,     std::exp,       x   , do_reduce );
