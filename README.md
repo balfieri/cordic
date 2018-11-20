@@ -18,10 +18,10 @@ This is all open-source.  Refer to the LICENSE.md for licensing details.
 </p>
 
 <p>
-To build and run the test on Linux, Cygwin, or macOS:
+To build and run the test (test_cordic.cpp) on Linux, Cygwin, or macOS:
 </p>
 <pre>
-$ make _test_cordic.run
+doit.test
 </pre>
 
 <p>

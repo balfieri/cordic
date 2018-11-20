@@ -35,6 +35,7 @@
 #include <cmath>
 #include <iostream>
 #include <iomanip>
+#include <memory>
 
 //------------------------------------------
 // Debugging
