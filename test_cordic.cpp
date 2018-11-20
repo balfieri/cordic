@@ -154,21 +154,21 @@ int main( int argc, const char * argv[] )
         do_op1( "tan(x)",           cordic.tan,     std::tan,       x   , do_reduce );
         do_op1( "asin(x)",          cordic.asin,    std::asin,      x   , do_reduce );
         do_op1( "acos(x)",          cordic.acos,    std::acos,      x   , do_reduce );
-        do_op1( "atan(x)",          cordic.atan,    std::atan,      x   , do_reduce );
-        do_op2( "atan2(y,x)",       cordic.atan2,   std::atan2,     y, x, do_reduce );
+        do_op1( "atan(x)",          cordic.atan,    std::atan,      x   , false );
+        do_op2( "atan2(y,x)",       cordic.atan2,   std::atan2,     y, x, false );
         do_op1( "sinh(x)",          cordic.sinh,    std::sinh,      x   , do_reduce );
         do_op1( "cosh(x)",          cordic.cosh,    std::cosh,      x   , do_reduce );
         do_op12("sinh_cosh(x)",     cordic.sinh_cosh,sinh_cosh,     x   , do_reduce );
         do_op1( "tanh(x)",          cordic.tanh,    std::tanh,      x   , do_reduce );
         do_op1( "asinh(x)",         cordic.asinh,   std::asinh,     x   , do_reduce );
         do_op1( "acosh(x)",         cordic.acosh,   std::acosh,     1.591370341781322, do_reduce );
-        do_op1( "atanh(x)",         cordic.atanh,   std::atanh,     x   , do_reduce );
-        do_op2( "atanh2(y,x)",      cordic.atanh2,  atanh2,         0.456728943106177373, 0.709831990704326039, do_reduce );
+        do_op1( "atanh(x)",         cordic.atanh,   std::atanh,     x   , false );
+        do_op2( "atanh2(y,x)",      cordic.atanh2,  atanh2,         0.456728943106177373, 0.709831990704326039, false );
         do_op2( "norm(x,y)",        cordic.norm,    norm,           x, y, do_reduce );
         do_op2( "normh(x,y)",       cordic.normh,   normh,          0.708473170947310947, 0.556728943106177373, do_reduce );
 
         do_op22("rect_to_polar(x,y)", cordic.rect_to_polar,rect_to_polar, x, y, do_reduce );
-        do_op22("polar_to_rect(x,y)", cordic.polar_to_rect,polar_to_rect, x, y, do_reduce );
+        do_op22("polar_to_rect(x,y)", cordic.polar_to_rect,polar_to_rect, x, y, false );
 
         do_op2( "x*y",              cordic.mul,     mul,            0.0001, 1.999999, do_reduce );
         do_op2( "x/y",              cordic.div,     div,            0.0003, 1.999999, do_reduce );
