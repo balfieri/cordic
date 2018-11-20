@@ -544,6 +544,7 @@ T Cordic<T,INT_W,FRAC_W,FLT>::log( const T& _x, bool do_reduce ) const
     if ( do_reduce ) reduce_log_arg( x, addend );
     T lg = atanh2( x-ONE, x+ONE, false ) << 1;
     if ( do_reduce ) lg += addend;
+    if ( debug ) std::cout << "log: x_orig=" << to_flt(_x) << " reduced_x=" << to_flt(x) << " log=" << to_flt(lg) << "\n";
     return lg;
 }
 
@@ -924,15 +925,15 @@ void Cordic<T,INT_W,FRAC_W,FLT>::reduce_log_arg( T& x, T& addend ) const
     //-----------------------------------------------------
     // log(ab) = log(a) + log(b)
     // 
-    // So right-shift x using reduce_arg().
+    // Normalize x so that it's in 1.00 .. 2.00.
     // Then addend = log(1 << shift).
     //-----------------------------------------------------
     T x_orig = x;
     int32_t x_lshift;
-    reduce_arg( x, x_lshift, false );
+    reduce_arg( x, x_lshift, true, true );
+    dassert( x_lshift >= 0 && "reduce_log_arg must currently be non-negative" );
     const T * addends = impl->reduce_log_addend.get();
     addend = addends[x_lshift];
-    x -= addend;
     if ( debug ) std::cout << "reduce_log_arg: x_orig=" << to_flt(x_orig) << " x_reduced=" << to_flt(x) << " addend=" << to_flt(addend) << "\n"; 
 }
 

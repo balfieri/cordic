@@ -37,11 +37,11 @@ constexpr FLT TOL = 1.0 / FLT( 1LL << (FRAC_W/2) );
     FLT flterr = std::abs( flte-fltz );			                \
 			                                                \
     std::cout.precision(24);			                        \
-    std::cout << "\n" << #str << "\n";			                \
+    std::cout << #str << "\n";			                        \
     std::cout << "Input:    " << std::setw(30) << fltx << "(fltx)\n";	\
     std::cout << "Expected: " << std::setw(30) << flte << "\n";		\
     std::cout << "Actual:   " << std::setw(30) << fltz << "\n";		\
-    std::cout << "Diff:     " << std::setw(30) << flterr << "\n";	\
+    std::cout << "Diff:     " << std::setw(30) << flterr << "\n\n";	\
     dassert( flterr <= TOL );			                        \
 }    
 
@@ -58,11 +58,11 @@ constexpr FLT TOL = 1.0 / FLT( 1LL << (FRAC_W/2) );
     FLT flterr2 = std::abs( flte2-fltz2 );			        \
 			                                                \
     std::cout.precision(24);			                        \
-    std::cout << "\n" << #str << "\n";			                \
+    std::cout << #str << "\n";			                        \
     std::cout << "Input:    " << std::setw(30) << fltx << "(fltx)\n";	\
     std::cout << "Expected: " << std::setw(30) << flte1 << "," << flte2 << "\n"; \
     std::cout << "Actual:   " << std::setw(30) << fltz1 << "," << fltz2 << "\n"; \
-    std::cout << "Diff:     " << std::setw(30) << flterr1 << "," << flterr2 << "\n"; \
+    std::cout << "Diff:     " << std::setw(30) << flterr1 << "," << flterr2 << "\n\n"; \
     dassert( flterr1 <= TOL );			                        \
     dassert( flterr2 <= TOL );			                        \
 }    
@@ -77,11 +77,11 @@ constexpr FLT TOL = 1.0 / FLT( 1LL << (FRAC_W/2) );
     FLT flterr = std::abs( flte-fltz );			                \
 			                                                \
     std::cout.precision(24);			                        \
-    std::cout << "\n" << #str << "\n";			                \
+    std::cout << #str << "\n";			                        \
     std::cout << "Input:    " << std::setw(30) << fltx << "(x) " << flty << "(y)\n"; \
     std::cout << "Expected: " << std::setw(30) << flte << "\n";		\
     std::cout << "Actual:   " << std::setw(30) << fltz << "\n";		\
-    std::cout << "Diff:     " << std::setw(30) << flterr << "\n";	\
+    std::cout << "Diff:     " << std::setw(30) << flterr << "\n\n";	\
     dassert( flterr <= TOL );			                        \
 }    
 
@@ -99,11 +99,11 @@ constexpr FLT TOL = 1.0 / FLT( 1LL << (FRAC_W/2) );
     FLT flterr2 = std::abs( flte2-fltz2 );			        \
 			                                                \
     std::cout.precision(24);			                        \
-    std::cout << "\n" << #str << "\n";			                \
+    std::cout << #str << "\n";			                        \
     std::cout << "Input:    " << std::setw(30) << fltx << "(fltx) " << flty << "(flty)\n"; \
     std::cout << "Expected: " << std::setw(30) << flte1 << "," << flte2 << "\n"; \
     std::cout << "Actual:   " << std::setw(30) << fltz1 << "," << fltz2 << "\n"; \
-    std::cout << "Diff:     " << std::setw(30) << flterr1 << "," << flterr2 << "\n"; \
+    std::cout << "Diff:     " << std::setw(30) << flterr1 << "," << flterr2 << "\n\n"; \
     dassert( flterr1 <= TOL );			                        \
     dassert( flterr2 <= TOL );			                        \
 }    
@@ -144,7 +144,7 @@ int main( int argc, const char * argv[] )
         do_op1( "exp(x)",           cordic.exp,     std::exp,       x   , do_reduce );
         do_op2( "pow(x,y)",         cordic.pow,     std::pow,       b, y, do_reduce );
         do_op1( "pow2(x)",          cordic.pow2,    pow2,           x   , do_reduce );
-    //  do_op1( "pow10(x)",         cordic.pow10,   pow10,          x   , do_reduce );
+        do_op1( "pow10(x)",         cordic.pow10,   pow10,          x   , true      );
         do_op1( "log(x)",           cordic.log,     std::log,       x   , do_reduce );
         do_op2( "logb(x,b)",        cordic.logb,    logb,           b, y, do_reduce );
         do_op1( "log2(x)",          cordic.log2,    log2,           x   , do_reduce );
