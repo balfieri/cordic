@@ -145,8 +145,10 @@ Cordic<T,INT_W,FRAC_W,FLT>::Cordic( uint32_t nc, uint32_t nh, uint32_t nl )
     impl->reduce_log_addend = std::unique_ptr<T[]>( addend );
     for( int32_t i = -FRAC_W; i <= INT_W; i++ )
     {
-        addend[FRAC_W+i] = to_fp( std::log( double( 1 << i ) ) );
-        if ( debug ) std::cout << "reduce_log_arg LUT: addend[" << i << "]=" << to_flt(addend[i]) << "\n";
+        double addend_f = std::log( std::pow( 2.0, double( i ) ) );
+        addend[FRAC_W+i] = to_fp( addend_f );
+        std::cout << "addend[]=0x" << std::hex << addend[FRAC_W+i] << "\n" << std::dec;
+        if ( debug ) std::cout << "reduce_log_arg LUT: addend[" << i << "]=" << to_flt(addend[FRAC_W+i]) << " addend_f=" << addend_f << "\n";
     }
 }
 
@@ -160,15 +162,27 @@ Cordic<T,INT_W,FRAC_W,FLT>::~Cordic( void )
 // Queries
 //-----------------------------------------------------
 template< typename T, int INT_W, int FRAC_W, typename FLT >
-T Cordic<T,INT_W,FRAC_W,FLT>::to_fp( FLT x ) const
+T Cordic<T,INT_W,FRAC_W,FLT>::to_fp( FLT _x ) const
 {
-    return T( x * FLT(T(1) << T(FRAC_W)) );
+    FLT x = _x;
+    bool is_neg = x < 0.0;
+    if ( is_neg ) x = -x;
+    T x_fp = x * FLT(T(1) << T(FRAC_W));
+    //std::cout << "to_fp: abs(x)=" << x << " x_fp=0x" << std::hex << x_fp << std::dec << " to_flt=" << to_flt(x_fp) << "\n";
+    if ( is_neg ) x_fp = -x_fp;
+    return x_fp;
 }
 
 template< typename T, int INT_W, int FRAC_W, typename FLT >
-FLT Cordic<T,INT_W,FRAC_W,FLT>::to_flt( const T& x ) const
+FLT Cordic<T,INT_W,FRAC_W,FLT>::to_flt( const T& _x ) const
 {
-    return FLT( x ) / FLT(T(1) << T(FRAC_W));
+    T x = _x;
+    bool is_neg = x < 0;
+    if ( is_neg ) x = -x;
+    FLT x_f = FLT( x ) / std::pow( 2.0, FRAC_W );
+    //std::cout << "to_flt: abs(x)=0x" << std::hex << x << " x_f=" << std::dec << x_f << "\n";
+    if ( is_neg ) x_f = -x_f;
+    return x_f;
 }
 
 template< typename T, int INT_W, int FRAC_W, typename FLT >

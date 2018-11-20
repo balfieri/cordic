@@ -173,7 +173,7 @@ int main( int argc, const char * argv[] )
         do_op1(  "pow2(x)",          cordic.pow2,    pow2,           x   , do_reduce );
         do_op1(  "pow10(x)",         cordic.pow10,   pow10,          x   , true      );
         do_op1(  "log(x)",           cordic.log,     std::log,       x   , true      );
-        do_op2(  "logb(x,b)",        cordic.logb,    logb,           b, y, true      );
+        do_op2(  "logb(x,b)",        cordic.logb,    logb,           1.76380274379013, 1.439028043178590, true );
         do_op1(  "log2(x)",          cordic.log2,    log2,           x   , true      );
         do_op1(  "log10(x)",         cordic.log10,   log10,          x   , true      );
 
