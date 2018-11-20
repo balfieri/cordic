@@ -141,11 +141,11 @@ Cordic<T,INT_W,FRAC_W,FLT>::Cordic( uint32_t nc, uint32_t nh, uint32_t nl )
     }
 
     // construct LUT used by reduce_log_arg()
-    addend = new T[INT_W];
+    addend = new T[FRAC_W+INT_W];
     impl->reduce_log_addend = std::unique_ptr<T[]>( addend );
-    for( T i = 0; i <= INT_W; i++ )
+    for( int32_t i = -FRAC_W; i <= INT_W; i++ )
     {
-        addend[i] = to_fp( std::log( double( 1 << i ) ) );
+        addend[FRAC_W+i] = to_fp( std::log( double( 1 << i ) ) );
         if ( debug ) std::cout << "reduce_log_arg LUT: addend[" << i << "]=" << to_flt(addend[i]) << "\n";
     }
 }
@@ -957,9 +957,8 @@ void Cordic<T,INT_W,FRAC_W,FLT>::reduce_log_arg( T& x, T& addend ) const
     T x_orig = x;
     int32_t x_lshift;
     reduce_arg( x, x_lshift, true, true );
-    dassert( x_lshift >= 0 && "reduce_log_arg must currently be non-negative" );
     const T * addends = impl->reduce_log_addend.get();
-    addend = addends[x_lshift];
+    addend = addends[FRAC_W+x_lshift];
     if ( debug ) std::cout << "reduce_log_arg: x_orig=" << to_flt(x_orig) << " x_reduced=" << to_flt(x) << " addend=" << to_flt(addend) << "\n"; 
 }
 
