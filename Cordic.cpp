@@ -128,7 +128,7 @@ Cordic<T,INT_W,FRAC_W,FLT>::Cordic( uint32_t nc, uint32_t nh, uint32_t nl )
         if ( i > 0 ) add_f = -add_f;
         addend[i]   = to_fp( add_f );
         quadrant[i] = cnt_i % 4;
-        if ( debug ) std::cout << "cnt_i=" << cnt_i << " addend[" << i << "]=" << to_flt(addend[i]) << " quadrant=" << quadrant[i] << "\n";
+        if ( debug ) std::cout << "reduce_angle_arg LUT: cnt_i=" << cnt_i << " addend[" << i << "]=" << to_flt(addend[i]) << " quadrant=" << quadrant[i] << "\n";
     }
 
     // construct LUT used by reduce_exp_arg()
@@ -137,6 +137,7 @@ Cordic<T,INT_W,FRAC_W,FLT>::Cordic( uint32_t nc, uint32_t nh, uint32_t nl )
     for( T i = 0; i <= MAX_INT; i++ )
     {
         factor[i] = std::exp(FLT(i));
+        if ( debug ) std::cout << "reduce_exp_arg LUT: factor[" << i << "]=" << factor[i] << "\n";
     }
 
     // construct LUT used by reduce_log_arg()
@@ -144,7 +145,8 @@ Cordic<T,INT_W,FRAC_W,FLT>::Cordic( uint32_t nc, uint32_t nh, uint32_t nl )
     impl->reduce_log_addend = std::unique_ptr<T[]>( addend );
     for( T i = 0; i <= INT_W; i++ )
     {
-        addend[i] = (i == 0) ? to_fp( 0.0 ) : std::log( double(1 << i) );
+        addend[i] = to_fp( std::log( double( 1 << i ) ) );
+        if ( debug ) std::cout << "reduce_log_arg LUT: addend[" << i << "]=" << to_flt(addend[i]) << "\n";
     }
 }
 
@@ -505,7 +507,7 @@ T Cordic<T,INT_W,FRAC_W,FLT>::pow( const T& b, const T& x, bool do_reduce ) cons
 { 
     dassert( b >= 0 && "pow b must be non-negative" );
     dassert( x >= 0 && "pow x must be non-negative" );
-    return exp( mul( x, log( b ), do_reduce ), do_reduce );
+    return exp( mul( x, log( b, true ), do_reduce ), do_reduce );
 }
 
 template< typename T, int INT_W, int FRAC_W, typename FLT >
@@ -514,6 +516,7 @@ T Cordic<T,INT_W,FRAC_W,FLT>::powc( const FLT& b, const T& x, bool do_reduce ) c
     dassert( b >= 0.0 && "powc b must be non-negative" );
     dassert( x >= 0   && "powc x must be non-negative" );
     const FLT log_b_f = std::log( b );
+    dassert( log_b_f >= 0.0 && "powc log(b) must be non-negative" );
     const T   log_b   = to_fp( log_b_f );
     return exp( mul( x, log_b, do_reduce ), do_reduce );
 }
@@ -867,6 +870,7 @@ void Cordic<T,INT_W,FRAC_W,FLT>::reduce_arg( T& x, int32_t& x_lshift, bool shift
 template< typename T, int INT_W, int FRAC_W, typename FLT >
 void Cordic<T,INT_W,FRAC_W,FLT>::reduce_mul_args( T& x, T& y, int32_t& x_lshift, int32_t& y_lshift ) const
 {
+    if ( debug ) std::cout << "reduce_mul_args: x_orig=" << x << " y_orig=" << y << "\n";
     reduce_arg( x, x_lshift );
     reduce_arg( y, y_lshift );
 }
@@ -874,6 +878,7 @@ void Cordic<T,INT_W,FRAC_W,FLT>::reduce_mul_args( T& x, T& y, int32_t& x_lshift,
 template< typename T, int INT_W, int FRAC_W, typename FLT >
 void Cordic<T,INT_W,FRAC_W,FLT>::reduce_div_args( T& x, T& y, int32_t& x_lshift, int32_t& y_lshift ) const
 {
+    if ( debug ) std::cout << "reduce_div_args: x_orig=" << x << " y_orig=" << y << "\n";
     reduce_arg( x, x_lshift );
     reduce_arg( y, y_lshift, true, true );
 }
@@ -924,11 +929,11 @@ void Cordic<T,INT_W,FRAC_W,FLT>::reduce_log_arg( T& x, T& addend ) const
     //-----------------------------------------------------
     T x_orig = x;
     int32_t x_lshift;
-    reduce_arg( x, x_lshift );
+    reduce_arg( x, x_lshift, false );
     const T * addends = impl->reduce_log_addend.get();
-    addend = to_fp( addends[x_lshift] );
-    x += addend;
-    if ( debug ) std::cout << "reduce_log_arg: x_orig=" << to_flt(x_orig) << " x_reduced=" << to_flt(x) << " addend=" << addend << "\n"; 
+    addend = addends[x_lshift];
+    x -= addend;
+    if ( debug ) std::cout << "reduce_log_arg: x_orig=" << to_flt(x_orig) << " x_reduced=" << to_flt(x) << " addend=" << to_flt(addend) << "\n"; 
 }
 
 template< typename T, int INT_W, int FRAC_W, typename FLT >

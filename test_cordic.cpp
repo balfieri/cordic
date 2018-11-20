@@ -135,17 +135,18 @@ int main( int argc, const char * argv[] )
 
         FLT x = 0.681807431807431031;
         FLT y = 0.810431798013170871;
+        FLT b = M_E * 1.1;
 
         do_op2( "x*y",              cordic.mul,     mul,            x, y, do_reduce );
         do_op2( "y/x",              cordic.div,     div,            y, x, do_reduce );
         do_op1( "sqrt(x)",          cordic.sqrt,    std::sqrt,      x   , do_reduce );
         do_op1( "one_over_sqrt(x)", cordic.one_over_sqrt, one_over_sqrt, x, do_reduce );
         do_op1( "exp(x)",           cordic.exp,     std::exp,       x   , do_reduce );
-        do_op2( "pow(x,y)",         cordic.pow,     std::pow,       x, y, do_reduce );
+        do_op2( "pow(x,y)",         cordic.pow,     std::pow,       b, y, do_reduce );
         do_op1( "pow2(x)",          cordic.pow2,    pow2,           x   , do_reduce );
     //  do_op1( "pow10(x)",         cordic.pow10,   pow10,          x   , do_reduce );
         do_op1( "log(x)",           cordic.log,     std::log,       x   , do_reduce );
-        do_op2( "logb(x,b)",        cordic.logb,    logb,           x, y, do_reduce );
+        do_op2( "logb(x,b)",        cordic.logb,    logb,           b, y, do_reduce );
         do_op1( "log2(x)",          cordic.log2,    log2,           x   , do_reduce );
         do_op1( "log10(x)",         cordic.log10,   log10,          x   , do_reduce );
         do_op1( "sin(x)",           cordic.sin,     std::sin,       x   , do_reduce );
