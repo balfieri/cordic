@@ -441,6 +441,8 @@ T Cordic<T,INT_W,FRAC_W,FLT>::mad( const T& _x, const T& _y, const T addend, boo
     linear_rotation( x, do_reduce ? ZERO : addend, y, xx, yy, zz );
     if ( do_reduce ) yy <<= x_lshift + y_lshift;
     if ( do_reduce ) yy += addend;
+    if ( debug ) std::cout << "mad: x_orig=" << to_flt(x) << " y_orig=" << to_flt(y) << " addend=" << to_flt(addend) << " yy=" << to_flt(yy) << 
+                                  " x_lshift=" << x_lshift << " y_lshift=" << y_lshift << "\n";
     return yy;
 }
 
@@ -466,6 +468,8 @@ T Cordic<T,INT_W,FRAC_W,FLT>::dad( const T& _y, const T& _x, const T addend, boo
     linear_vectoring( x, y, do_reduce ? ZERO : addend, xx, yy, zz );
     if ( do_reduce ) zz <<= x_lshift - y_lshift;
     if ( do_reduce ) zz += addend;
+    if ( debug ) std::cout << "dad: x_orig=" << to_flt(x) << " y_orig=" << to_flt(y) << " addend=" << to_flt(addend) << " zz=" << to_flt(yy) << 
+                                  " x_lshift=" << x_lshift << " y_lshift=" << y_lshift << "\n";
     return zz;
 }
 
@@ -893,7 +897,7 @@ void Cordic<T,INT_W,FRAC_W,FLT>::reduce_arg( T& x, int32_t& x_lshift, bool shift
 template< typename T, int INT_W, int FRAC_W, typename FLT >
 void Cordic<T,INT_W,FRAC_W,FLT>::reduce_mul_args( T& x, T& y, int32_t& x_lshift, int32_t& y_lshift ) const
 {
-    if ( debug ) std::cout << "reduce_mul_args: x_orig=" << x << " y_orig=" << y << "\n";
+    if ( debug ) std::cout << "reduce_mul_args: x_orig=" << to_flt(x) << " y_orig=" << to_flt(y) << "\n";
     reduce_arg( x, x_lshift );
     reduce_arg( y, y_lshift );
 }
@@ -901,7 +905,7 @@ void Cordic<T,INT_W,FRAC_W,FLT>::reduce_mul_args( T& x, T& y, int32_t& x_lshift,
 template< typename T, int INT_W, int FRAC_W, typename FLT >
 void Cordic<T,INT_W,FRAC_W,FLT>::reduce_div_args( T& x, T& y, int32_t& x_lshift, int32_t& y_lshift ) const
 {
-    if ( debug ) std::cout << "reduce_div_args: x_orig=" << x << " y_orig=" << y << "\n";
+    if ( debug ) std::cout << "reduce_div_args: x_orig=" << to_flt(x) << " y_orig=" << to_flt(y) << "\n";
     reduce_arg( x, x_lshift );
     reduce_arg( y, y_lshift, true, true );
 }
