@@ -116,10 +116,14 @@ public:
     // do_reduce=true means that arguments need to be range-reduced.
     //-----------------------------------------------------
 
-    T    mul( const T& x, const T& y, const T addend = T(0), bool do_reduce=false ) const;      // x*y + addend
-    T    div( const T& y, const T& x, const T addend = T(0), bool do_reduce=false ) const;      // y/x + addend
+    T    mad( const T& x, const T& y, const T addend, bool do_reduce=false ) const;             // x*y + addend
+    T    mul( const T& x, const T& y, bool do_reduce=false ) const;                             // x*y 
+    T    dad( const T& y, const T& x, const T addend = T(0), bool do_reduce=false ) const;      // y/x + addend
+    T    div( const T& y, const T& x, bool do_reduce=false ) const;                             // y/x
+    T    one_over( const T& x, bool do_reduce=false ) const;                                    // 1/x
     T    sqrt( const T& x, bool do_reduce=false ) const;                                        // normh( x+0.25, x-0.25 )
     T    one_over_sqrt( const T& x, bool do_reduce=false ) const;                               // 1/sqrt 
+
     T    exp( const T& x, bool do_reduce=false ) const;                                         // e^x
     T    pow( const T& b, const T& x, bool do_reduce=false ) const;                             // exp(x * log(b))              (3)
     T    powc( const FLT& b, const T& x, bool do_reduce=false ) const;                          // exp(x * log(b))  b=const     (2)

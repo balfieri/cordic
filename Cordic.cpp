@@ -426,37 +426,59 @@ void Cordic<T,INT_W,FRAC_W,FLT>::linear_vectoring( const T& x0, const T& y0, con
 }
 
 template< typename T, int INT_W, int FRAC_W, typename FLT >
-T Cordic<T,INT_W,FRAC_W,FLT>::mul( const T& _x, const T& _y, const T addend, bool do_reduce ) const
+T Cordic<T,INT_W,FRAC_W,FLT>::mad( const T& _x, const T& _y, const T addend, bool do_reduce ) const
 {
     T x = _x;
     T y = _y;
-    dassert( x >= 0 && "mul x must be non-negative" );
-    dassert( y >= 0 && "mul y must be non-negative" );
+    dassert( x >= 0 && "mad x must be non-negative" );
+    dassert( y >= 0 && "mad y must be non-negative" );
+    dassert( do_reduce || addend >= 0 && "mad addend must be non-negative" );
     int32_t x_lshift;
     int32_t y_lshift;
     if ( do_reduce ) reduce_mul_args( x, y, x_lshift, y_lshift );
 
     T xx, yy, zz;
-    linear_rotation( x, addend, y, xx, yy, zz );
+    linear_rotation( x, do_reduce ? ZERO : addend, y, xx, yy, zz );
     if ( do_reduce ) yy <<= x_lshift + y_lshift;
+    if ( do_reduce ) yy += addend;
     return yy;
 }
 
 template< typename T, int INT_W, int FRAC_W, typename FLT >
-T Cordic<T,INT_W,FRAC_W,FLT>::div( const T& _y, const T& _x, const T addend, bool do_reduce ) const
+T Cordic<T,INT_W,FRAC_W,FLT>::mul( const T& x, const T& y, bool do_reduce ) const
+{
+    return mad( x, y, ZERO, do_reduce );
+}
+
+template< typename T, int INT_W, int FRAC_W, typename FLT >
+T Cordic<T,INT_W,FRAC_W,FLT>::dad( const T& _y, const T& _x, const T addend, bool do_reduce ) const
 {
     T x = _x;
     T y = _y;
-    dassert( x >= 0 && "div x must be non-negative" );
-    dassert( y > 0  && "div y must be positive" );
+    dassert( y >= 0  && "dad y must be non-negative" );
+    dassert( x > 0 && "dad x must be positive" );
+    dassert( do_reduce || addend >= 0 && "dad addend must be non-negative" );
     int32_t x_lshift;
     int32_t y_lshift;
     if ( do_reduce ) reduce_div_args( x, y, x_lshift, y_lshift );
 
     T xx, yy, zz;
-    linear_vectoring( x, y, addend, xx, yy, zz );
+    linear_vectoring( x, y, do_reduce ? ZERO : addend, xx, yy, zz );
     if ( do_reduce ) zz <<= x_lshift - y_lshift;
+    if ( do_reduce ) zz += addend;
     return zz;
+}
+
+template< typename T, int INT_W, int FRAC_W, typename FLT >
+T Cordic<T,INT_W,FRAC_W,FLT>::div( const T& y, const T& x, bool do_reduce ) const
+{
+    return dad( y, x, ZERO, do_reduce );
+}
+
+template< typename T, int INT_W, int FRAC_W, typename FLT >
+T Cordic<T,INT_W,FRAC_W,FLT>::one_over( const T& x, bool do_reduce ) const
+{
+    return div( ONE, x, do_reduce );
 }
 
 template< typename T, int INT_W, int FRAC_W, typename FLT >
