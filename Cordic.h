@@ -169,7 +169,7 @@ public:
     void reduce_exp_arg( FLT b, T& x, T& factor ) const;                                        // b=const_base, multiply exp(x) by factor
     void reduce_log_arg( T& x, T& addend ) const;                                               // reduce_arg x, addend to log(x) 
     void reduce_norm_args( T& x, T& y, int32_t& lshift ) const;                                 // reduce_arg x and y with same lshift
-    void reduce_angle( T& a, uint32_t& quadrant ) const;                                        // to 0 .. pi/2
+    void reduce_angle_arg( T& a, uint32_t& quadrant ) const;                                    // to 0 .. pi/2
 
 private:
     class Impl;

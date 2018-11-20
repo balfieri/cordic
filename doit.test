@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 
-my $debug_level = shift @ARGV || 0;
+my $debug_level = shift @ARGV || 1;
 my $other_args  = join( " ", @ARGV );
 my $use_float   = 0;
 
