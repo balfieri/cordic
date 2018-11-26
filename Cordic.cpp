@@ -612,9 +612,14 @@ T Cordic<T,INT_W,FRAC_W,FLT>::logc( const T& x, const FLT& b, bool do_reduce ) c
 { 
     dassert( x >= 0  && "logc x must be non-negative" );
     dassert( b > 0.0 && "logc b must be positive" );
-    const FLT one_over_log_b_f = FLT(1) / std::log( b );
-    const T   one_over_log_b   = to_fp( one_over_log_b_f );
-    return mul( log(x, do_reduce), one_over_log_b, do_reduce );
+    const FLT  one_over_log_b_f = FLT(1) / std::log( b );
+    const T    one_over_log_b   = to_fp( one_over_log_b_f );
+          T    log_x            = log( x, do_reduce );
+    const bool log_x_sign       = log_x < 0;
+    if ( log_x_sign ) log_x = -log_x;
+    T z = mul( log_x, one_over_log_b, do_reduce );
+    if ( log_x_sign ) z = -z;
+    return z;
 }
 
 template< typename T, int INT_W, int FRAC_W, typename FLT >
