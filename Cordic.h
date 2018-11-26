@@ -23,44 +23,59 @@
 
 #include "Misc.h"
 
-// T      = some signed integer type that can hold fixed-point values (e.g., int64_t)
+// T      = some signed integer type that can hold fixed-point values (default is int64_t)
+// FLT    = some floating-point type that can hold constants of the desired precision (default is double)
 // INT_W  = integer width to left of fixed decimal point (not including sign)
 // FRAC_W = fraction width to right of fixed decimal point
-// FLT    = some floating-point type that can hold constants of the desired precision (default is double)
 //
-template< typename T, int INT_W, int FRAC_W, typename FLT=double >              
+template< typename T=int64_t, typename FLT=double >              
 class Cordic
 {
 public:
     //-----------------------------------------------------
     // Constructor
     //
-    // nc == number of iterations for circular
-    // nh == number of iterations for hyperbolic
-    // nl == number of iterations for linear
+    // INT_W  = fixed-point integer width
+    // FRAC_W = fixed-point fraction width
+    // 1+INT_W+FRAC_W must fit in T
+    //
+    // nc == number of iterations for circular   (0 == use FRAC_W)
+    // nh == number of iterations for hyperbolic (0 == use FRAC_W)
+    // nl == number of iterations for linear     (0 == use FRAC_W)
     //-----------------------------------------------------
-    Cordic( uint32_t nc=FRAC_W, uint32_t nh=FRAC_W, uint32_t nl=FRAC_W );
+    Cordic( uint32_t int_w, uint32_t frac_w, uint32_t nc=0, uint32_t nh=0, uint32_t nl=0 );
     ~Cordic();
 
     //-----------------------------------------------------
-    // Queries
+    // Constants 
     //-----------------------------------------------------
-    const T ZERO    = 0;
-    const T ONE     = T(1) << T(FRAC_W);
-    const T QUARTER = T(1) << T(FRAC_W-2);
-    const uint32_t MAX_INT = (1 << INT_W)-1;
-
-    T       to_fp( FLT x ) const;
-    FLT     to_flt( const T& x ) const;
-
-    uint32_t n_circular( void ) const;
-    uint32_t n_linear( void ) const;
-    uint32_t n_hyperbolic( void ) const;
+    uint32_t _int_w( void ) const;
+    uint32_t _frac_w( void ) const;
+    T _maxint( void ) const;
+    T _zero( void ) const;
+    T _one( void ) const;
+    T _quarter( void ) const;
+    #define INT_W   _int_w()            // int_w from constructor
+    #define MAX_INT _maxint()           // (1 << INT_W)-1
+    #define FRAC_W  _frac_w()           // frac_w from constructor
+    #define ZERO    _zero()             // 0.0
+    #define ONE     _one()              // 1.0
+    #define QUARTER _quarter()          // 0.25
 
     T gain( void ) const;               // circular
     T gainh( void ) const;              // hyperbolic
     T one_over_gain( void ) const;      // circular
     T one_over_gainh( void ) const;     // hyperbolic
+
+    uint32_t n_circular( void ) const;
+    uint32_t n_linear( void ) const;
+    uint32_t n_hyperbolic( void ) const;
+
+    //-----------------------------------------------------
+    // Conversions
+    //-----------------------------------------------------
+    T       to_fp( FLT x ) const;
+    FLT     to_flt( const T& x ) const;
 
     //-----------------------------------------------------
     // The CORDIC functions
