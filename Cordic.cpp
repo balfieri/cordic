@@ -480,9 +480,18 @@ T Cordic<T,INT_W,FRAC_W,FLT>::dad( const T& _y, const T& _x, const T addend, boo
 
     T xx, yy, zz;
     linear_vectoring( x, y, do_reduce ? ZERO : addend, xx, yy, zz );
-    if ( do_reduce ) zz <<= x_lshift - y_lshift;
+    if ( debug ) std::cout << "dad: zz_preshift=" << to_flt(zz) << "\n";
+    if ( do_reduce ) {
+        int32_t lshift = x_lshift - y_lshift;
+        if ( lshift > 0 ) {
+            zz <<= lshift;
+        } else if ( lshift < 0 ) {
+            zz >>= -lshift;
+        }
+    }
+    if ( debug ) std::cout << "dad: zz_postshift=" << to_flt(zz) << "\n";
     if ( do_reduce ) zz += addend;
-    if ( debug ) std::cout << "dad: x_orig=" << to_flt(x) << " y_orig=" << to_flt(y) << " addend=" << to_flt(addend) << " zz=" << to_flt(yy) << 
+    if ( debug ) std::cout << "dad: x_orig=" << to_flt(x) << " y_orig=" << to_flt(y) << " addend=" << to_flt(addend) << " zz_final=" << to_flt(zz) << 
                                   " x_lshift=" << x_lshift << " y_lshift=" << y_lshift << "\n";
     return zz;
 }
@@ -920,8 +929,8 @@ template< typename T, int INT_W, int FRAC_W, typename FLT >
 void Cordic<T,INT_W,FRAC_W,FLT>::reduce_div_args( T& x, T& y, int32_t& x_lshift, int32_t& y_lshift ) const
 {
     if ( debug ) std::cout << "reduce_div_args: x_orig=" << to_flt(x) << " y_orig=" << to_flt(y) << "\n";
-    reduce_arg( x, x_lshift );
-    reduce_arg( y, y_lshift, true, true );
+    reduce_arg( x, x_lshift, true, true );
+    reduce_arg( y, y_lshift );
 }
 
 template< typename T, int INT_W, int FRAC_W, typename FLT >
