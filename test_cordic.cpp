@@ -181,10 +181,10 @@ int main( int argc, const char * argv[] )
         do_op1(  "cos(x)",           cordic.cos,     std::cos,       x   , do_reduce );
         do_op12( "sin_cos(x)",       cordic.sin_cos, sin_cos,        x   , do_reduce );
         do_op1(  "tan(x)",           cordic.tan,     std::tan,       x   , do_reduce );
-        do_op1(  "asin(x)",          cordic.asin,    std::asin,      x   , do_reduce );
-        do_op1(  "acos(x)",          cordic.acos,    std::acos,      x   , do_reduce );
-        do_op1(  "atan(x)",          cordic.atan,    std::atan,      x   , false );
-        do_op2(  "atan2(y,x)",       cordic.atan2,   std::atan2,     y, x, false );
+        do_op1(  "asin(x)",          cordic.asin,    std::asin,      x   , false     );
+        do_op1(  "acos(x)",          cordic.acos,    std::acos,      x   , false     );
+        do_op1(  "atan(x)",          cordic.atan,    std::atan,      x   , false     );
+        do_op2(  "atan2(y,x)",       cordic.atan2,   std::atan2,     y, x, false     );
         do_op1(  "sinh(x)",          cordic.sinh,    std::sinh,      x   , do_reduce );
         do_op1(  "cosh(x)",          cordic.cosh,    std::cosh,      x   , do_reduce );
         do_op12( "sinh_cosh(x)",     cordic.sinh_cosh,sinh_cosh,     x   , do_reduce );
