@@ -173,7 +173,7 @@ Cordic<T,FLT>::Cordic( uint32_t int_w, uint32_t frac_w, uint32_t nc, uint32_t nh
     {
         double addend_f = std::log( std::pow( 2.0, double( i ) ) );
         addend[FRAC_W+i] = to_fp( addend_f );
-        std::cout << "addend[]=0x" << std::hex << addend[FRAC_W+i] << "\n" << std::dec;
+        if ( debug ) std::cout << "addend[]=0x" << std::hex << addend[FRAC_W+i] << "\n" << std::dec;
         if ( debug ) std::cout << "reduce_log_arg LUT: addend[" << i << "]=" << to_flt(addend[FRAC_W+i]) << " addend_f=" << addend_f << "\n";
     }
 }
