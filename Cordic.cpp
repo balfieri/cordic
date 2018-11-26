@@ -50,6 +50,15 @@ struct Cordic<T,INT_W,FRAC_W,FLT>::Impl
     std::unique_ptr<uint32_t[]> reduce_angle_quadrant;          // 00,01,02,03
     std::unique_ptr<FLT[]>      reduce_exp_factor;              // for each possible integer value, exp(i)
     std::unique_ptr<T[]>        reduce_log_addend;              // for each possible lshift value, log( 1 << lshift )
+
+    inline void                 do_lshift( T& x, int32_t lshift ) const
+    {
+        if ( lshift > 0 ) {
+            x <<= lshift;
+        } else if ( lshift < 0 ) {
+            x >>= -lshift;
+        }
+    }
 };
 
 //-----------------------------------------------------
@@ -453,7 +462,7 @@ T Cordic<T,INT_W,FRAC_W,FLT>::mad( const T& _x, const T& _y, const T addend, boo
 
     T xx, yy, zz;
     linear_rotation( x, do_reduce ? ZERO : addend, y, xx, yy, zz );
-    if ( do_reduce ) yy <<= x_lshift + y_lshift;
+    if ( do_reduce ) impl->do_lshift( yy, x_lshift + y_lshift );
     if ( do_reduce ) yy += addend;
     if ( debug ) std::cout << "mad: x_orig=" << to_flt(x) << " y_orig=" << to_flt(y) << " addend=" << to_flt(addend) << " yy=" << to_flt(yy) << 
                                   " x_lshift=" << x_lshift << " y_lshift=" << y_lshift << "\n";
@@ -481,14 +490,7 @@ T Cordic<T,INT_W,FRAC_W,FLT>::dad( const T& _y, const T& _x, const T addend, boo
     T xx, yy, zz;
     linear_vectoring( x, y, do_reduce ? ZERO : addend, xx, yy, zz );
     if ( debug ) std::cout << "dad: zz_preshift=" << to_flt(zz) << "\n";
-    if ( do_reduce ) {
-        int32_t lshift = x_lshift - y_lshift;
-        if ( lshift > 0 ) {
-            zz <<= lshift;
-        } else if ( lshift < 0 ) {
-            zz >>= -lshift;
-        }
-    }
+    if ( do_reduce ) impl->do_lshift( zz, y_lshift-x_lshift );
     if ( debug ) std::cout << "dad: zz_postshift=" << to_flt(zz) << "\n";
     if ( do_reduce ) zz += addend;
     if ( debug ) std::cout << "dad: x_orig=" << to_flt(x) << " y_orig=" << to_flt(y) << " addend=" << to_flt(addend) << " zz_final=" << to_flt(zz) << 
@@ -518,7 +520,7 @@ T Cordic<T,INT_W,FRAC_W,FLT>::sqrt( const T& _x, bool do_reduce ) const
 
     // sqrt( (x+0.25)^2 - (x-0.25)^2 ) = normh( x+0.25, x-0.25 )
     T n = normh( x + QUARTER, x - QUARTER );
-    if ( do_reduce ) n <<= x_lshift;
+    if ( do_reduce ) impl->do_lshift( n, x_lshift );
     return n;
 }
 
@@ -753,7 +755,7 @@ void Cordic<T,INT_W,FRAC_W,FLT>::rect_to_polar( const T& _x, const T& _y, T& r, 
     T rr;
     T yy;
     circular_vectoring( x, y, ZERO, rr, yy, a );
-    if ( do_reduce ) rr <<= lshift;
+    if ( do_reduce ) impl->do_lshift( rr, lshift );
     r = mul( rr, one_over_gain(), do_reduce );
 }
 
@@ -769,7 +771,7 @@ T Cordic<T,INT_W,FRAC_W,FLT>::norm( const T& _x, const T& _y, bool do_reduce ) c
 
     T xx, yy, zz;
     circular_vectoring( x, y, ZERO, xx, yy, zz );
-    if ( do_reduce ) xx <<= lshift;
+    if ( do_reduce ) impl->do_lshift( xx, lshift );
     return mul( xx, one_over_gain(), do_reduce );  
 }
 
@@ -786,7 +788,7 @@ T Cordic<T,INT_W,FRAC_W,FLT>::normh( const T& _x, const T& _y, bool do_reduce ) 
 
     T xx, yy, zz;
     hyperbolic_vectoring( x, y, ZERO, xx, yy, zz );
-    if ( do_reduce ) xx <<= lshift;
+    if ( do_reduce ) impl->do_lshift( xx, lshift );
     return mul( xx, one_over_gainh(), do_reduce ); 
 }
 
