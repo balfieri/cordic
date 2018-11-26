@@ -20,7 +20,11 @@
 //
 #include "Cordic.h"
 
+#ifdef DEBUG_LEVEL
 static constexpr uint32_t debug = DEBUG_LEVEL;
+#else
+static constexpr uint32_t debug = 0;
+#endif
 
 //-----------------------------------------------------
 // INTERNAL IMPL STRUCTURE 
