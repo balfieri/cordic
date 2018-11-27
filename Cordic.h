@@ -33,9 +33,9 @@ public:
     //-----------------------------------------------------
     // Constructor
     //
-    // INT_W  = fixed-point integer width
-    // FRAC_W = fixed-point fraction width
-    // 1+INT_W+FRAC_W must fit in T
+    // int_w  = fixed-point integer width
+    // frac_w = fixed-point fraction width
+    // 1+int_w+frac_w must fit in T
     //
     // do_reduce indicates whether Cordic routines should first do argument reduction.
     // If you need a mix, then please allocate two different Cordic objects with different settings.
@@ -52,18 +52,18 @@ public:
     //-----------------------------------------------------
     uint32_t int_w( void ) const;
     uint32_t frac_w( void ) const;
-    T maxint( void ) const;
-    T zero( void ) const;
-    T one( void ) const;
-    T quarter( void ) const;
+    T maxint( void ) const;             // largest positive integer
+    T zero( void ) const;               // 0.0
+    T one( void ) const;                // 1.0
+    T quarter( void ) const;            // 0.25
     T gain( void ) const;               // circular
     T gainh( void ) const;              // hyperbolic
     T one_over_gain( void ) const;      // circular
     T one_over_gainh( void ) const;     // hyperbolic
 
-    uint32_t n_circular( void ) const;
-    uint32_t n_linear( void ) const;
-    uint32_t n_hyperbolic( void ) const;
+    uint32_t n_circular( void ) const;  // nc
+    uint32_t n_linear( void ) const;    // nh
+    uint32_t n_hyperbolic( void ) const;// nl
 
     //-----------------------------------------------------
     // Conversions
@@ -180,9 +180,10 @@ public:
     //-----------------------------------------------------
     // Argument Range Reduction Routines
     //
-    // If your Cordic object was allocated with do_cordic==false (default), then
+    // If your Cordic object was allocated with do_reduce==false, then
     // you are still free to call these routines to perform reduction where you want.
-    // However, it's easier to just allocate another Cordic object with do_cordic=true.
+    // However, it's easier to just allocate another Cordic object with do_reduce=true
+    // and use the appropriate one depending on whether you want reduction or not.
     //
     // All inputs must be non-negative.
     //-----------------------------------------------------
