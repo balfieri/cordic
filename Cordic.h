@@ -47,19 +47,12 @@ public:
     //-----------------------------------------------------
     // Constants 
     //-----------------------------------------------------
-    uint32_t _int_w( void ) const;
-    uint32_t _frac_w( void ) const;
-    T _maxint( void ) const;
-    T _zero( void ) const;
-    T _one( void ) const;
-    T _quarter( void ) const;
-    #define INT_W   _int_w()            // int_w from constructor
-    #define MAX_INT _maxint()           // (1 << INT_W)-1
-    #define FRAC_W  _frac_w()           // frac_w from constructor
-    #define ZERO    _zero()             // 0.0
-    #define ONE     _one()              // 1.0
-    #define QUARTER _quarter()          // 0.25
-
+    uint32_t int_w( void ) const;
+    uint32_t frac_w( void ) const;
+    T maxint( void ) const;
+    T zero( void ) const;
+    T one( void ) const;
+    T quarter( void ) const;
     T gain( void ) const;               // circular
     T gainh( void ) const;              // hyperbolic
     T one_over_gain( void ) const;      // circular
