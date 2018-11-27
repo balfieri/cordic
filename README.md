@@ -19,9 +19,8 @@ the entire value is 0 or a special number.
 
 <p>
 CORDIC was invented in the 1950's.  There is nothing novel or proprietary here.  This is intended
-for tutorial purposes only.  That said, as the library gets tested thoroughly, it might be good
-enough for some production code or as a reference for a production chip implementation.  
-It's not ready for that currently.
+for tutorial purposes only. You should not assume that the library is bug-free or accurate enough
+for use as a production reference model.
 </p>
 
 <p>
