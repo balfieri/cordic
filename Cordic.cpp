@@ -141,7 +141,7 @@ Cordic<T,FLT>::Cordic( uint32_t int_w, uint32_t frac_w, uint32_t nc, uint32_t nh
     impl->log10_div_e = T( std::log( FLT( 10 ) / M_E ) * FLT( T(1) << T(FRAC_W) ) );
 
     // construct LUT used by reduce_angle()
-    dassert( INT_W < 14 && "too many cases to worry about" );
+    cassert( INT_W < 14 && "too many cases to worry about" );
     uint32_t N = 1 << (1+INT_W);
     T *        addend   = new T[N];
     uint32_t * quadrant = new uint32_t[N];
@@ -513,9 +513,9 @@ T Cordic<T,FLT>::mad( const T& _x, const T& _y, const T addend, bool do_reduce )
 {
     T x = _x;
     T y = _y;
-    dassert( x >= 0 && "mad x must be non-negative" );
-    dassert( y >= 0 && "mad y must be non-negative" );
-    dassert( do_reduce || addend >= 0 && "mad addend must be non-negative" );
+    cassert( x >= 0 && "mad x must be non-negative" );
+    cassert( y >= 0 && "mad y must be non-negative" );
+    cassert( do_reduce || addend >= 0 && "mad addend must be non-negative" );
     int32_t x_lshift;
     int32_t y_lshift;
     if ( do_reduce ) reduce_mul_args( x, y, x_lshift, y_lshift );
@@ -540,9 +540,9 @@ T Cordic<T,FLT>::dad( const T& _y, const T& _x, const T addend, bool do_reduce )
 {
     T x = _x;
     T y = _y;
-    dassert( y >= 0  && "dad y must be non-negative" );
-    dassert( x > 0 && "dad x must be positive" );
-    dassert( do_reduce || addend >= 0 && "dad addend must be non-negative" );
+    cassert( y >= 0  && "dad y must be non-negative" );
+    cassert( x > 0 && "dad x must be positive" );
+    cassert( do_reduce || addend >= 0 && "dad addend must be non-negative" );
     int32_t x_lshift;
     int32_t y_lshift;
     if ( do_reduce ) reduce_div_args( x, y, x_lshift, y_lshift );
@@ -574,7 +574,7 @@ template< typename T, typename FLT >
 T Cordic<T,FLT>::sqrt( const T& _x, bool do_reduce ) const
 { 
     T x = _x;
-    dassert( x >= 0 && "sqrt x must be non-negative" );
+    cassert( x >= 0 && "sqrt x must be non-negative" );
     int32_t x_lshift;
     if ( do_reduce ) reduce_sqrt_arg( x, x_lshift );
 
@@ -588,7 +588,7 @@ template< typename T, typename FLT >
 T Cordic<T,FLT>::one_over_sqrt( const T& _x, bool do_reduce ) const
 { 
     T x = _x;
-    dassert( x > 0 && "one_over_sqrt x must be positive" );
+    cassert( x > 0 && "one_over_sqrt x must be positive" );
     int32_t x_lshift;
     if ( do_reduce ) reduce_sqrt_arg( x, x_lshift );
 
@@ -603,7 +603,7 @@ template< typename T, typename FLT >
 T Cordic<T,FLT>::exp( const T& _x, bool do_reduce ) const
 { 
     T x = _x;
-    dassert( x >= 0 && "exp x must be non-negative" );
+    cassert( x >= 0 && "exp x must be non-negative" );
     T factor;
     if ( do_reduce ) reduce_exp_arg( M_E, x, factor );
 
@@ -616,18 +616,18 @@ T Cordic<T,FLT>::exp( const T& _x, bool do_reduce ) const
 template< typename T, typename FLT >
 T Cordic<T,FLT>::pow( const T& b, const T& x, bool do_reduce ) const
 { 
-    dassert( b >= 0 && "pow b must be non-negative" );
-    dassert( x >= 0 && "pow x must be non-negative" );
+    cassert( b >= 0 && "pow b must be non-negative" );
+    cassert( x >= 0 && "pow x must be non-negative" );
     return exp( mul( x, log( b, true ), do_reduce ), do_reduce );
 }
 
 template< typename T, typename FLT >
 T Cordic<T,FLT>::powc( const FLT& b, const T& x, bool do_reduce ) const
 { 
-    dassert( b >= 0.0 && "powc b must be non-negative" );
-    dassert( x >= 0   && "powc x must be non-negative" );
+    cassert( b >= 0.0 && "powc b must be non-negative" );
+    cassert( x >= 0   && "powc x must be non-negative" );
     const FLT log_b_f = std::log( b );
-    dassert( log_b_f >= 0.0 && "powc log(b) must be non-negative" );
+    cassert( log_b_f >= 0.0 && "powc log(b) must be non-negative" );
     const T   log_b   = to_fp( log_b_f );
     return exp( mul( x, log_b, do_reduce ), do_reduce );
 }
@@ -635,14 +635,14 @@ T Cordic<T,FLT>::powc( const FLT& b, const T& x, bool do_reduce ) const
 template< typename T, typename FLT >
 T Cordic<T,FLT>::pow2( const T& x, bool do_reduce ) const
 { 
-    dassert( x >= 0 && "pow2 x must be non-negative" );
+    cassert( x >= 0 && "pow2 x must be non-negative" );
     return powc( 2.0, x, do_reduce );
 }
 
 template< typename T, typename FLT >
 T Cordic<T,FLT>::pow10( const T& x, bool do_reduce ) const
 { 
-    dassert( x >= 0 && "pow10 x must be non-negative" );
+    cassert( x >= 0 && "pow10 x must be non-negative" );
     return powc( 10.0, x, do_reduce );
 }
 
@@ -650,7 +650,7 @@ template< typename T, typename FLT >
 T Cordic<T,FLT>::log( const T& _x, bool do_reduce ) const
 { 
     T x = _x;
-    dassert( x >= 0 && "log x must be non-negative" );
+    cassert( x >= 0 && "log x must be non-negative" );
     T addend;
     if ( do_reduce ) reduce_log_arg( x, addend );
     T lg = atanh2( x-ONE, x+ONE, false ) << 1;
@@ -662,16 +662,16 @@ T Cordic<T,FLT>::log( const T& _x, bool do_reduce ) const
 template< typename T, typename FLT >
 T Cordic<T,FLT>::logb( const T& x, const T& b, bool do_reduce ) const
 { 
-    dassert( x >= 0 && "logb x must be non-negative" );
-    dassert( b > 0  && "logb b must be positive" );
+    cassert( x >= 0 && "logb x must be non-negative" );
+    cassert( b > 0  && "logb b must be positive" );
     return div( log(x, do_reduce), log(b, do_reduce), do_reduce );
 }
 
 template< typename T, typename FLT >
 T Cordic<T,FLT>::logc( const T& x, const FLT& b, bool do_reduce ) const
 { 
-    dassert( x >= 0  && "logc x must be non-negative" );
-    dassert( b > 0.0 && "logc b must be positive" );
+    cassert( x >= 0  && "logc x must be non-negative" );
+    cassert( b > 0.0 && "logc b must be positive" );
     const FLT  one_over_log_b_f = FLT(1) / std::log( b );
     const T    one_over_log_b   = to_fp( one_over_log_b_f );
           T    log_x            = log( x, do_reduce );
@@ -685,14 +685,14 @@ T Cordic<T,FLT>::logc( const T& x, const FLT& b, bool do_reduce ) const
 template< typename T, typename FLT >
 T Cordic<T,FLT>::log2( const T& x, bool do_reduce ) const
 { 
-    dassert( x >= 0 && "log2 x must be non-negative" );
+    cassert( x >= 0 && "log2 x must be non-negative" );
     return logc( x, 2.0, do_reduce );
 }
 
 template< typename T, typename FLT >
 T Cordic<T,FLT>::log10( const T& x, bool do_reduce ) const
 { 
-    dassert( x >= 0 && "log10 x must be non-negative" );
+    cassert( x >= 0 && "log10 x must be non-negative" );
     return logc( x, 10.0, do_reduce );
 }
 
@@ -700,7 +700,7 @@ template< typename T, typename FLT >
 T Cordic<T,FLT>::sin( const T& _x, bool do_reduce ) const
 { 
     T x = _x;
-    dassert( x >= 0 && "sin x must be non-negative" );
+    cassert( x >= 0 && "sin x must be non-negative" );
     uint32_t quadrant;
     if ( do_reduce ) reduce_angle_arg( x, quadrant );
 
@@ -717,7 +717,7 @@ template< typename T, typename FLT >
 T Cordic<T,FLT>::cos( const T& _x, bool do_reduce ) const
 { 
     T x = _x;
-    dassert( x >= 0 && "cos x must be non-negative" );
+    cassert( x >= 0 && "cos x must be non-negative" );
     uint32_t quadrant;
     if ( do_reduce ) reduce_angle_arg( x, quadrant );
 
@@ -734,7 +734,7 @@ template< typename T, typename FLT >
 void Cordic<T,FLT>::sin_cos( const T& _x, T& si, T& co, bool do_reduce ) const             
 { 
     T x = _x;
-    dassert( x >= 0 && "sin_cos x must be non-negative" );
+    cassert( x >= 0 && "sin_cos x must be non-negative" );
     uint32_t quadrant;
     if ( do_reduce ) reduce_angle_arg( x, quadrant );
 
@@ -754,7 +754,7 @@ void Cordic<T,FLT>::sin_cos( const T& _x, T& si, T& co, bool do_reduce ) const
 template< typename T, typename FLT >
 T Cordic<T,FLT>::tan( const T& x, bool do_reduce ) const
 { 
-    dassert( x >= 0 && "tan x must be non-negative" );
+    cassert( x >= 0 && "tan x must be non-negative" );
     T si, co;
     sin_cos( x, si, co, do_reduce );
     return div( si, co, do_reduce );
@@ -763,22 +763,22 @@ T Cordic<T,FLT>::tan( const T& x, bool do_reduce ) const
 template< typename T, typename FLT >
 T Cordic<T,FLT>::asin( const T& x, bool do_reduce ) const
 { 
-    dassert( x >= 0 && "asin x must be non-negative" );
+    cassert( x >= 0 && "asin x must be non-negative" );
     return atan2( x, normh( ONE, x, do_reduce ), do_reduce );
 }
 
 template< typename T, typename FLT >
 T Cordic<T,FLT>::acos( const T& x, bool do_reduce ) const
 { 
-    dassert( x >= 0 && "acos x must be non-negative" );
+    cassert( x >= 0 && "acos x must be non-negative" );
     return atan2( normh( ONE, x, do_reduce ), x, do_reduce );
 }
 
 template< typename T, typename FLT >
 T Cordic<T,FLT>::atan( const T& x, bool do_reduce ) const
 { 
-    dassert( x >= 0 && "atan x must be non-negative" );
-    dassert( !do_reduce && "TODO" );
+    cassert( x >= 0 && "atan x must be non-negative" );
+    cassert( !do_reduce && "TODO" );
     T xx, yy, zz;
     circular_vectoring( ONE, x, ZERO, xx, yy, zz );
     return zz;
@@ -787,9 +787,9 @@ T Cordic<T,FLT>::atan( const T& x, bool do_reduce ) const
 template< typename T, typename FLT >
 T Cordic<T,FLT>::atan2( const T& y, const T& x, bool do_reduce ) const
 { 
-    dassert( y >= 0 && "atan2 y must be non-negative" );
-    dassert( x > 0  && "atan2 x must be positive" );
-    dassert( !do_reduce && "TODO" );
+    cassert( y >= 0 && "atan2 y must be non-negative" );
+    cassert( x > 0  && "atan2 x must be positive" );
+    cassert( !do_reduce && "TODO" );
     T xx, yy, zz;
     circular_vectoring( x, y, ZERO, xx, yy, zz );
     return zz;
@@ -798,9 +798,9 @@ T Cordic<T,FLT>::atan2( const T& y, const T& x, bool do_reduce ) const
 template< typename T, typename FLT >
 void Cordic<T,FLT>::polar_to_rect( const T& r, const T& a, T& x, T& y, bool do_reduce ) const
 {
-    dassert( r >= 0 && "polar_to_rect r must be non-negative" );
-    dassert( a >= 0 && "polar_to_rect a must be non-negative" );
-    dassert( !do_reduce && "TODO" );
+    cassert( r >= 0 && "polar_to_rect r must be non-negative" );
+    cassert( a >= 0 && "polar_to_rect a must be non-negative" );
+    cassert( !do_reduce && "TODO" );
     T xx, yy, zz;
     circular_rotation( r, ZERO, a, xx, yy, zz );
     x = mul( xx, one_over_gain(), do_reduce );
@@ -812,8 +812,8 @@ void Cordic<T,FLT>::rect_to_polar( const T& _x, const T& _y, T& r, T& a, bool do
 {
     T x = _x;
     T y = _y;
-    dassert( x >= 0 && "rect_to_polar x must be non-negative" );
-    dassert( y >= 0 && "rect_to_polar y must be non-negative" );
+    cassert( x >= 0 && "rect_to_polar x must be non-negative" );
+    cassert( y >= 0 && "rect_to_polar y must be non-negative" );
     int32_t lshift;
     if ( do_reduce ) reduce_norm_args( x, y, lshift );
 
@@ -829,8 +829,8 @@ T Cordic<T,FLT>::norm( const T& _x, const T& _y, bool do_reduce ) const
 {
     T x = _x;
     T y = _y;
-    dassert( x >= 0 && "norm x must be non-negative" );
-    dassert( y >= 0 && "norm y must be non-negative" );
+    cassert( x >= 0 && "norm x must be non-negative" );
+    cassert( y >= 0 && "norm y must be non-negative" );
     int32_t lshift;
     if ( do_reduce ) reduce_norm_args( x, y, lshift );
 
@@ -845,9 +845,9 @@ T Cordic<T,FLT>::normh( const T& _x, const T& _y, bool do_reduce ) const
 {
     T x = _x;
     T y = _y;
-    dassert( x >= 0 && "normh x must be non-negative" );
-    dassert( y >= 0 && "normh y must be non-negative" );
-    dassert( x >= y && "normh x must >= y" );
+    cassert( x >= 0 && "normh x must be non-negative" );
+    cassert( y >= 0 && "normh y must be non-negative" );
+    cassert( x >= y && "normh x must >= y" );
     int32_t lshift;
     if ( do_reduce ) reduce_norm_args( x, y, lshift );
 
@@ -861,7 +861,7 @@ template< typename T, typename FLT >
 T Cordic<T,FLT>::sinh( const T& _x, bool do_reduce ) const
 { 
     T x = _x;
-    dassert( x >= 0 && "sinh x must be non-negative" );
+    cassert( x >= 0 && "sinh x must be non-negative" );
     uint32_t quadrant;
     if ( do_reduce ) reduce_angle_arg( x, quadrant );
 
@@ -878,7 +878,7 @@ template< typename T, typename FLT >
 T Cordic<T,FLT>::cosh( const T& _x, bool do_reduce ) const
 { 
     T x = _x;
-    dassert( x >= 0 && "cosh x must be non-negative" );
+    cassert( x >= 0 && "cosh x must be non-negative" );
     uint32_t quadrant;
     if ( do_reduce ) reduce_angle_arg( x, quadrant );
 
@@ -895,7 +895,7 @@ template< typename T, typename FLT >
 void Cordic<T,FLT>::sinh_cosh( const T& _x, T& sih, T& coh, bool do_reduce ) const
 { 
     T x = _x;
-    dassert( x >= 0 && "sinh_cosh x must be non-negative" );
+    cassert( x >= 0 && "sinh_cosh x must be non-negative" );
     uint32_t quadrant;
     if ( do_reduce ) reduce_angle_arg( x, quadrant );
 
@@ -916,7 +916,7 @@ template< typename T, typename FLT >
 T Cordic<T,FLT>::tanh( const T& x, bool do_reduce ) const
 { 
     T sih, coh;
-    dassert( x >= 0 && "tanh x must be non-negative" );
+    cassert( x >= 0 && "tanh x must be non-negative" );
     sinh_cosh( x, sih, coh, do_reduce );
     return div( sih, coh, do_reduce );
 }
@@ -924,22 +924,22 @@ T Cordic<T,FLT>::tanh( const T& x, bool do_reduce ) const
 template< typename T, typename FLT >
 T Cordic<T,FLT>::asinh( const T& x, bool do_reduce ) const
 { 
-    dassert( x >= 0 && "asinh x must be non-negative" );
+    cassert( x >= 0 && "asinh x must be non-negative" );
     return log( x + norm( ONE, x, do_reduce ), do_reduce );
 }
 
 template< typename T, typename FLT >
 T Cordic<T,FLT>::acosh( const T& x, bool do_reduce ) const
 { 
-    dassert( x >= 0 && "acosh x must be non-negative" );
+    cassert( x >= 0 && "acosh x must be non-negative" );
     return log( x + normh( x, ONE, do_reduce ), do_reduce );
 }
 
 template< typename T, typename FLT >
 T Cordic<T,FLT>::atanh( const T& x, bool do_reduce ) const
 { 
-    dassert( x >= 0 && "atanh x must be non-negative" );
-    dassert( !do_reduce && "TODO" );
+    cassert( x >= 0 && "atanh x must be non-negative" );
+    cassert( !do_reduce && "TODO" );
     T xx, yy, zz;
     hyperbolic_vectoring( ONE, x, ZERO, xx, yy, zz );
     return zz;
@@ -948,9 +948,9 @@ T Cordic<T,FLT>::atanh( const T& x, bool do_reduce ) const
 template< typename T, typename FLT >
 T Cordic<T,FLT>::atanh2( const T& y, const T& x, bool do_reduce ) const             
 { 
-    dassert( y >= 0 && "atanh y must be non-negative" );
-    dassert( x >  0 && "atanh x must be positive" );
-    dassert( !do_reduce && "TODO" );
+    cassert( y >= 0 && "atanh y must be non-negative" );
+    cassert( x >  0 && "atanh x must be positive" );
+    cassert( !do_reduce && "TODO" );
     T xx, yy, zz;
     hyperbolic_vectoring( x, y, ZERO, xx, yy, zz );
     return zz;
@@ -960,7 +960,7 @@ template< typename T, typename FLT >
 void Cordic<T,FLT>::reduce_arg( T& x, int32_t& x_lshift, bool shift_x, bool normalize ) const
 {
     T x_orig = x;
-    dassert( x >= 0 );
+    cassert( x >= 0 );
     T other = T(1) << FRAC_W;
     x_lshift = 0;
     while( x > other ) 
@@ -1078,7 +1078,7 @@ void Cordic<T,FLT>::reduce_angle_arg( T& a, uint32_t& quad ) const
     // Use LUT to find addend.
     //-----------------------------------------------------
     const T a_orig = a;
-    dassert( a >= 0 );
+    cassert( a >= 0 );
     const T *  addend   = impl->reduce_angle_addend.get();
     uint32_t * quadrant = impl->reduce_angle_quadrant.get();
 

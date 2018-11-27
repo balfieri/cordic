@@ -40,6 +40,6 @@
 //------------------------------------------
 // Debugging
 //------------------------------------------
-#define dassert(expr) if ( !(expr) ) { printf( "ERROR: assertion failure: '%s' at %s:%d\n", #expr, __FILE__, __LINE__ ); exit( 1 ); }
+#define cassert(expr) if ( !(expr) ) { printf( "ERROR: assertion failure: '%s' at %s:%d\n", #expr, __FILE__, __LINE__ ); exit( 1 ); }
 
 #endif

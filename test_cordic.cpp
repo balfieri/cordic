@@ -42,7 +42,7 @@ constexpr FLT TOL = 1.0 / FLT( 1LL << (frac_w-8) );     // would like this to be
     std::cout << "Expected: " << std::setw(30) << flte << "\n";		\
     std::cout << "Actual:   " << std::setw(30) << fltz << "\n";		\
     std::cout << "Diff:     " << std::setw(30) << flterr << "\n\n";	\
-    dassert( flterr <= TOL );			                        \
+    cassert( flterr <= TOL );			                        \
 }    
 
 #define do_op12( str, cordic_fn, exp_fn, fltx, do_reduce )              \
@@ -63,8 +63,8 @@ constexpr FLT TOL = 1.0 / FLT( 1LL << (frac_w-8) );     // would like this to be
     std::cout << "Expected: " << std::setw(30) << flte1 << "," << flte2 << "\n"; \
     std::cout << "Actual:   " << std::setw(30) << fltz1 << "," << fltz2 << "\n"; \
     std::cout << "Diff:     " << std::setw(30) << flterr1 << "," << flterr2 << "\n\n"; \
-    dassert( flterr1 <= TOL );			                        \
-    dassert( flterr2 <= TOL );			                        \
+    cassert( flterr1 <= TOL );			                        \
+    cassert( flterr2 <= TOL );			                        \
 }    
 
 #define do_op2( str, cordic_fn, exp_fn, fltx, flty, do_reduce )         \
@@ -82,7 +82,7 @@ constexpr FLT TOL = 1.0 / FLT( 1LL << (frac_w-8) );     // would like this to be
     std::cout << "Expected: " << std::setw(30) << flte << "\n";		\
     std::cout << "Actual:   " << std::setw(30) << fltz << "\n";		\
     std::cout << "Diff:     " << std::setw(30) << flterr << "\n\n";	\
-    dassert( flterr <= TOL );			                        \
+    cassert( flterr <= TOL );			                        \
 }    
 
 #define do_op22( str, cordic_fn, exp_fn, fltx, flty, do_reduce )        \
@@ -104,8 +104,8 @@ constexpr FLT TOL = 1.0 / FLT( 1LL << (frac_w-8) );     // would like this to be
     std::cout << "Expected: " << std::setw(30) << flte1 << "," << flte2 << "\n"; \
     std::cout << "Actual:   " << std::setw(30) << fltz1 << "," << fltz2 << "\n"; \
     std::cout << "Diff:     " << std::setw(30) << flterr1 << "," << flterr2 << "\n\n"; \
-    dassert( flterr1 <= TOL );			                        \
-    dassert( flterr2 <= TOL );			                        \
+    cassert( flterr1 <= TOL );			                        \
+    cassert( flterr2 <= TOL );			                        \
 }    
 
 #define do_op3( str, cordic_fn, exp_fn, fltx, flty, fltw, do_reduce )   \
@@ -124,7 +124,7 @@ constexpr FLT TOL = 1.0 / FLT( 1LL << (frac_w-8) );     // would like this to be
     std::cout << "Expected: " << std::setw(30) << flte << "\n";		\
     std::cout << "Actual:   " << std::setw(30) << fltz << "\n";		\
     std::cout << "Diff:     " << std::setw(30) << flterr << "\n\n";	\
-    dassert( flterr <= TOL );			                        \
+    cassert( flterr <= TOL );			                        \
 }    
 
 FLT mad( FLT x, FLT y, FLT w ) { return x*y + w; }
