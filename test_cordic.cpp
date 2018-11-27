@@ -28,11 +28,12 @@ constexpr int int_w = 7;
 constexpr int frac_w = 56;
 constexpr FLT TOL = 1.0 / FLT( 1LL << (frac_w-8) );     // would like this to be much smaller
 
-#define do_op1( str, cordic_fn, exp_fn, fltx, do_reduce )               \
+#define do_op1( str, c_fn, exp_fn, fltx, do_reduce )                    \
 {                                                                       \
-    FP  fpx  = cordic.to_fp( fltx );			                \
-    FP  fpz  = cordic_fn( fpx, do_reduce );		                \
-    FLT fltz = cordic.to_flt( fpz );	                                \
+    auto c = do_reduce ? cordicr : cordicnr;                            \
+    FP  fpx  = c->to_fp( fltx );			                \
+    FP  fpz  = c->c_fn( fpx );		                                \
+    FLT fltz = c->to_flt( fpz );	                                \
     FLT flte = exp_fn( fltx );			                        \
     FLT flterr = std::abs( flte-fltz );			                \
 			                                                \
@@ -45,13 +46,14 @@ constexpr FLT TOL = 1.0 / FLT( 1LL << (frac_w-8) );     // would like this to be
     cassert( flterr <= TOL );			                        \
 }    
 
-#define do_op12( str, cordic_fn, exp_fn, fltx, do_reduce )              \
+#define do_op12( str, c_fn, exp_fn, fltx, do_reduce )                   \
 {                                                                       \
-    FP  fpx  = cordic.to_fp( fltx );			                \
+    auto c = do_reduce ? cordicr : cordicnr;                            \
+    FP  fpx  = c->to_fp( fltx );			                \
     FP  fpz1, fpz2;                                                     \
-    cordic_fn( fpx, fpz1, fpz2, do_reduce );		                \
-    FLT fltz1 = cordic.to_flt( fpz1 );		                        \
-    FLT fltz2 = cordic.to_flt( fpz2 );		                        \
+    c->c_fn( fpx, fpz1, fpz2 );		                                \
+    FLT fltz1 = c->to_flt( fpz1 );		                        \
+    FLT fltz2 = c->to_flt( fpz2 );		                        \
     FLT flte1, flte2;                                                   \
     exp_fn( fltx, flte1, flte2 );			                \
     FLT flterr1 = std::abs( flte1-fltz1 );			        \
@@ -67,12 +69,13 @@ constexpr FLT TOL = 1.0 / FLT( 1LL << (frac_w-8) );     // would like this to be
     cassert( flterr2 <= TOL );			                        \
 }    
 
-#define do_op2( str, cordic_fn, exp_fn, fltx, flty, do_reduce )         \
+#define do_op2( str, c_fn, exp_fn, fltx, flty, do_reduce )              \
 {                                                                       \
-    FP  fpx  = cordic.to_fp( fltx );			                \
-    FP  fpy  = cordic.to_fp( flty );			                \
-    FP  fpz  = cordic_fn( fpx, fpy, do_reduce );	                \
-    FLT fltz = cordic.to_flt( fpz );			                \
+    auto c = do_reduce ? cordicr : cordicnr;                            \
+    FP  fpx  = c->to_fp( fltx );			                \
+    FP  fpy  = c->to_fp( flty );			                \
+    FP  fpz  = c_fn( fpx, fpy );	                                \
+    FLT fltz = c->to_flt( fpz );			                \
     FLT flte = exp_fn( fltx, flty );			                \
     FLT flterr = std::abs( flte-fltz );			                \
 			                                                \
@@ -85,14 +88,15 @@ constexpr FLT TOL = 1.0 / FLT( 1LL << (frac_w-8) );     // would like this to be
     cassert( flterr <= TOL );			                        \
 }    
 
-#define do_op22( str, cordic_fn, exp_fn, fltx, flty, do_reduce )        \
+#define do_op22( str, c_fn, exp_fn, fltx, flty, do_reduce )             \
 {                                                                       \
-    FP  fpx  = cordic.to_fp( fltx );			                \
-    FP  fpy  = cordic.to_fp( flty );			                \
+    auto c = do_reduce ? cordicr : cordicnr;                            \
+    FP  fpx  = c->to_fp( fltx );			                \
+    FP  fpy  = c->to_fp( flty );			                \
     FP  fpz1, fpz2;                                                     \
-    cordic_fn( fpx, fpy, fpz1, fpz2, do_reduce );	                \
-    FLT fltz1 = cordic.to_flt( fpz1 );		                        \
-    FLT fltz2 = cordic.to_flt( fpz2 );		                        \
+    c_fn( fpx, fpy, fpz1, fpz2 );	                                \
+    FLT fltz1 = c->to_flt( fpz1 );		                        \
+    FLT fltz2 = c->to_flt( fpz2 );		                        \
     FLT flte1, flte2;                                                   \
     exp_fn( fltx, flty, flte1, flte2 );			                \
     FLT flterr1 = std::abs( flte1-fltz1 );			        \
@@ -108,13 +112,14 @@ constexpr FLT TOL = 1.0 / FLT( 1LL << (frac_w-8) );     // would like this to be
     cassert( flterr2 <= TOL );			                        \
 }    
 
-#define do_op3( str, cordic_fn, exp_fn, fltx, flty, fltw, do_reduce )   \
+#define do_op3( str, c_fn, exp_fn, fltx, flty, fltw, do_reduce )        \
 {                                                                       \
-    FP  fpx  = cordic.to_fp( fltx );			                \
-    FP  fpy  = cordic.to_fp( flty );			                \
-    FP  fpw  = cordic.to_fp( fltw );			                \
-    FP  fpz  = cordic_fn( fpx, fpy, fpw, do_reduce );	                \
-    FLT fltz = cordic.to_flt( fpz );			                \
+    auto c = do_reduce ? cordicr : cordicnr;                            \
+    FP  fpx  = c->to_fp( fltx );			                \
+    FP  fpy  = c->to_fp( flty );			                \
+    FP  fpw  = c->to_fp( fltw );			                \
+    FP  fpz  = c_fn( fpx, fpy, fpw );	                                \
+    FLT fltz = c->to_flt( fpz );			                \
     FLT flte = exp_fn( fltx, flty, fltw );			        \
     FLT flterr = std::abs( flte-fltz );			                \
 			                                                \
@@ -148,7 +153,8 @@ void polar_to_rect( FLT r, FLT a, FLT& x, FLT& y ) { x = r*std::cos( a ); y = r*
 
 int main( int argc, const char * argv[] )
 {
-    Cordic<FP, FLT> cordic( int_w, frac_w );
+    Cordic<FP, FLT> * cordicr  = new Cordic( int_w, frac_w, true );     // with arg reduction
+    Cordic<FP, FLT> * cordicnr = new Cordic( int_w, frac_w, false );    // without arg reduction
     std::cout << "tol: " << TOL << "\n";
 
     for( uint32_t i = 0; i < 2; i++ )
@@ -160,44 +166,45 @@ int main( int argc, const char * argv[] )
         FLT w = 0.103301038084310970;
         FLT b = M_E * 1.1;
 
-        do_op3(  "x*y + w",          cordic.mad,     mad,            x, y, w, do_reduce );
-        do_op2(  "x*y",              cordic.mul,     mul,            x, y, do_reduce );
-        do_op3(  "y/x + w",          cordic.dad,     dad,            y, x, w, do_reduce );
-        do_op2(  "y/x",              cordic.div,     div,            y, x, do_reduce );
-        do_op1(  "1/x",              cordic.one_over,one_over,       x   , do_reduce );
-        do_op1(  "sqrt(x)",          cordic.sqrt,    std::sqrt,      x   , do_reduce );
-        do_op1(  "one_over_sqrt(x)", cordic.one_over_sqrt, one_over_sqrt, x, do_reduce );
+        //                          cordic   reference
+        do_op3(  "x*y + w",          mad,     mad,            x, y, w, do_reduce );
+        do_op2(  "x*y",              mul,     mul,            x, y, do_reduce );
+        do_op3(  "y/x + w",          dad,     dad,            y, x, w, do_reduce );
+        do_op2(  "y/x",              div,     div,            y, x, do_reduce );
+        do_op1(  "1/x",              one_over,one_over,       x   , do_reduce );
+        do_op1(  "sqrt(x)",          sqrt,    std::sqrt,      x   , do_reduce );
+        do_op1(  "one_over_sqrt(x)", one_over_sqrt, one_over_sqrt, x, do_reduce );
         
-        do_op1(  "exp(x)",           cordic.exp,     std::exp,       x   , do_reduce );
-        do_op2(  "pow(x,y)",         cordic.pow,     std::pow,       b, y, do_reduce );
-        do_op1(  "pow2(x)",          cordic.pow2,    pow2,           x   , do_reduce );
-        do_op1(  "pow10(x)",         cordic.pow10,   pow10,          x   , true      );
-        do_op1(  "log(x)",           cordic.log,     std::log,       x   , true      );
-        do_op2(  "logb(x,b)",        cordic.logb,    logb,           1.76380274379013, 1.439028043178590, true );
-        do_op1(  "log2(x)",          cordic.log2,    log2,           x   , true      );
-        do_op1(  "log10(x)",         cordic.log10,   log10,          x   , true      );
+        do_op1(  "exp(x)",           exp,     std::exp,       x   , do_reduce );
+        do_op2(  "pow(x,y)",         pow,     std::pow,       b, y, do_reduce );
+        do_op1(  "pow2(x)",          pow2,    pow2,           x   , do_reduce );
+        do_op1(  "pow10(x)",         pow10,   pow10,          x   , true      );
+        do_op1(  "log(x)",           log,     std::log,       x   , true      );
+        do_op2(  "logb(x,b)",        logb,    logb,           1.76380274379013, 1.439028043178590, true );
+        do_op1(  "log2(x)",          log2,    log2,           x   , true      );
+        do_op1(  "log10(x)",         log10,   log10,          x   , true      );
 
-        do_op1(  "sin(x)",           cordic.sin,     std::sin,       x   , do_reduce );
-        do_op1(  "cos(x)",           cordic.cos,     std::cos,       x   , do_reduce );
-        do_op12( "sin_cos(x)",       cordic.sin_cos, sin_cos,        x   , do_reduce );
-        do_op1(  "tan(x)",           cordic.tan,     std::tan,       x   , do_reduce );
-        do_op1(  "asin(x)",          cordic.asin,    std::asin,      x   , false     );
-        do_op1(  "acos(x)",          cordic.acos,    std::acos,      x   , false     );
-        do_op1(  "atan(x)",          cordic.atan,    std::atan,      x   , false     );
-        do_op2(  "atan2(y,x)",       cordic.atan2,   std::atan2,     y, x, false     );
-        do_op1(  "sinh(x)",          cordic.sinh,    std::sinh,      x   , do_reduce );
-        do_op1(  "cosh(x)",          cordic.cosh,    std::cosh,      x   , do_reduce );
-        do_op12( "sinh_cosh(x)",     cordic.sinh_cosh,sinh_cosh,     x   , do_reduce );
-        do_op1(  "tanh(x)",          cordic.tanh,    std::tanh,      x   , do_reduce );
-        do_op1(  "asinh(x)",         cordic.asinh,   std::asinh,     x   , do_reduce );
-        do_op1(  "acosh(x)",         cordic.acosh,   std::acosh,     1.591370341781322, do_reduce );
-        do_op1(  "atanh(x)",         cordic.atanh,   std::atanh,     x   , false );
-        do_op2(  "atanh2(y,x)",      cordic.atanh2,  atanh2,         0.456728943106177373, 0.709831990704326039, false );
-        do_op2(  "norm(x,y)",        cordic.norm,    norm,           x, y, do_reduce );
-        do_op2(  "normh(x,y)",       cordic.normh,   normh,          0.708473170947310947, 0.556728943106177373, do_reduce );
+        do_op1(  "sin(x)",           sin,     std::sin,       x   , do_reduce );
+        do_op1(  "cos(x)",           cos,     std::cos,       x   , do_reduce );
+        do_op12( "sin_cos(x)",       sin_cos, sin_cos,        x   , do_reduce );
+        do_op1(  "tan(x)",           tan,     std::tan,       x   , do_reduce );
+        do_op1(  "asin(x)",          asin,    std::asin,      x   , false     );
+        do_op1(  "acos(x)",          acos,    std::acos,      x   , false     );
+        do_op1(  "atan(x)",          atan,    std::atan,      x   , false     );
+        do_op2(  "atan2(y,x)",       atan2,   std::atan2,     y, x, false     );
+        do_op1(  "sinh(x)",          sinh,    std::sinh,      x   , do_reduce );
+        do_op1(  "cosh(x)",          cosh,    std::cosh,      x   , do_reduce );
+        do_op12( "sinh_cosh(x)",     sinh_cosh,sinh_cosh,     x   , do_reduce );
+        do_op1(  "tanh(x)",          tanh,    std::tanh,      x   , do_reduce );
+        do_op1(  "asinh(x)",         asinh,   std::asinh,     x   , do_reduce );
+        do_op1(  "acosh(x)",         acosh,   std::acosh,     1.591370341781322, do_reduce );
+        do_op1(  "atanh(x)",         atanh,   std::atanh,     x   , false );
+        do_op2(  "atanh2(y,x)",      atanh2,  atanh2,         0.456728943106177373, 0.709831990704326039, false );
+        do_op2(  "norm(x,y)",        norm,    norm,           x, y, do_reduce );
+        do_op2(  "normh(x,y)",       normh,   normh,          0.708473170947310947, 0.556728943106177373, do_reduce );
 
-        do_op22( "rect_to_polar(x,y)", cordic.rect_to_polar, rect_to_polar, x, y, do_reduce );
-        do_op22( "polar_to_rect(x,y)", cordic.polar_to_rect, polar_to_rect, x, y, false );
+        do_op22( "rect_to_polar(x,y)", rect_to_polar, rect_to_polar, x, y, do_reduce );
+        do_op22( "polar_to_rect(x,y)", polar_to_rect, polar_to_rect, x, y, false );
     }
 
     return 0;

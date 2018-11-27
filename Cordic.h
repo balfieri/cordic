@@ -37,11 +37,14 @@ public:
     // FRAC_W = fixed-point fraction width
     // 1+INT_W+FRAC_W must fit in T
     //
+    // do_reduce indicates whether Cordic routines should first do argument reduction.
+    // If you need a mix, then please allocate two different Cordic objects with different settings.
+    //
     // nc == number of iterations for circular   (0 == use FRAC_W)
     // nh == number of iterations for hyperbolic (0 == use FRAC_W)
     // nl == number of iterations for linear     (0 == use FRAC_W)
     //-----------------------------------------------------
-    Cordic( uint32_t int_w, uint32_t frac_w, uint32_t nc=0, uint32_t nh=0, uint32_t nl=0 );
+    Cordic( uint32_t int_w, uint32_t frac_w, bool do_reduce=true, uint32_t nc=0, uint32_t nh=0, uint32_t nl=0 );
     ~Cordic();
 
     //-----------------------------------------------------
@@ -118,57 +121,56 @@ public:
     // Well-Known Math Functions Implemented Using CORDIC
     //
     // (2) means requires 2 applications of a CORDIC algorithm.
-    //
-    // do_reduce=true means that arguments need to be range-reduced.
     //-----------------------------------------------------
 
-    T    mad( const T& x, const T& y, const T addend, bool do_reduce=false ) const;             // x*y + addend
-    T    mul( const T& x, const T& y, bool do_reduce=false ) const;                             // x*y 
-    T    dad( const T& y, const T& x, const T addend = T(0), bool do_reduce=false ) const;      // y/x + addend
-    T    div( const T& y, const T& x, bool do_reduce=false ) const;                             // y/x
-    T    one_over( const T& x, bool do_reduce=false ) const;                                    // 1/x
-    T    sqrt( const T& x, bool do_reduce=false ) const;                                        // normh( x+0.25, x-0.25 )
-    T    one_over_sqrt( const T& x, bool do_reduce=false ) const;                               // 1/sqrt 
+    T    mad( const T& x, const T& y, const T addend ) const;             // x*y + addend
+    T    mul( const T& x, const T& y ) const;                             // x*y 
+    T    dad( const T& y, const T& x, const T addend = T(0) ) const;      // y/x + addend
+    T    div( const T& y, const T& x ) const;                             // y/x
+    T    one_over( const T& x ) const;                                    // 1/x
+    T    sqrt( const T& x ) const;                                        // normh( x+0.25, x-0.25 )
+    T    one_over_sqrt( const T& x ) const;                               // 1/sqrt 
 
-    T    exp( const T& x, bool do_reduce=false ) const;                                         // e^x
-    T    pow( const T& b, const T& x, bool do_reduce=false ) const;                             // exp(x * log(b))              (3)
-    T    powc( const FLT& b, const T& x, bool do_reduce=false ) const;                          // exp(x * log(b))  b=const     (2)
-    T    pow2( const T& x, bool do_reduce=false ) const;                                        // exp(x * log(2))              (2)
-    T    pow10( const T& x, bool do_reduce=false ) const;                                       // exp(x * log(10))             (2)
-    T    log( const T& x, bool do_reduce=false ) const;                                         // 2*atan2(x-1, x+1)    
-    T    logb( const T& x, const T& b, bool do_reduce=false ) const;                            // log(x)/log(b)                (3)
-    T    logc( const T& x, const FLT& b, bool do_reduce=false ) const;                          // log(x)/log(b)    b=const     (2)
-    T    log2( const T& x, bool do_reduce=false ) const;                                        // log(x)/log(2)                (2)
-    T    log10( const T& x, bool do_reduce=false ) const;                                       // log(x)/log(10)               (2)
+    T    exp( const T& x ) const;                                         // e^x
+    T    pow( const T& b, const T& x ) const;                             // exp(x * log(b))              (3)
+    T    powc( const FLT& b, const T& x ) const;                          // exp(x * log(b))  b=const     (2)
+    T    pow2( const T& x ) const;                                        // exp(x * log(2))              (2)
+    T    pow10( const T& x ) const;                                       // exp(x * log(10))             (2)
+    T    log( const T& x ) const;                                         // 2*atan2(x-1, x+1)    
+    T    logb( const T& x, const T& b ) const;                            // log(x)/log(b)                (3)
+    T    logc( const T& x, const FLT& b ) const;                          // log(x)/log(b)    b=const     (2)
+    T    log2( const T& x ) const;                                        // log(x)/log(2)                (2)
+    T    log10( const T& x ) const;                                       // log(x)/log(10)               (2)
 
-    T    sin( const T& x, bool do_reduce=false ) const;                                         // sin(x)
-    T    cos( const T& x, bool do_reduce=false ) const;                                         // cos(x)
-    void sin_cos( const T& x, T& si, T& co, bool do_reduce=false ) const;                       // si=sin(x), co=cos(x)
-    T    tan( const T& x, bool do_reduce=false ) const;                                         // sin(x) / cos(x)              (2)
-    T    asin( const T& x, bool do_reduce=false ) const;                                        // atan2(x, sqrt(1 - x^2))      (2)
-    T    acos( const T& x, bool do_reduce=false ) const;                                        // atan2(sqrt(1 - x^2), x)      (2)
-    T    atan( const T& x, bool do_reduce=false ) const;                                        // atan(x)
-    T    atan2( const T& y, const T& x, bool do_reduce=false ) const;                           // atan2(y, x)                  
+    T    sin( const T& x ) const;                                         // sin(x)
+    T    cos( const T& x ) const;                                         // cos(x)
+    void sin_cos( const T& x, T& si, T& co ) const;                       // si=sin(x), co=cos(x)
+    T    tan( const T& x ) const;                                         // sin(x) / cos(x)              (2)
+    T    asin( const T& x ) const;                                        // atan2(x, sqrt(1 - x^2))      (2)
+    T    acos( const T& x ) const;                                        // atan2(sqrt(1 - x^2), x)      (2)
+    T    atan( const T& x ) const;                                        // atan(x)
+    T    atan2( const T& y, const T& x ) const;                           // atan2(y, x)                  
 
-    void polar_to_rect( const T& r, const T& a, T& x, T& y, bool do_reduce=false ) const;       // x=r*cos(a), y=r*sin(a)
-    void rect_to_polar( const T& x, const T& y, T& r, T& a, bool do_reduce=false ) const;       // r=sqrt(x^2 + y^2), a=atan2(y, x)
-    T    norm( const T& x, const T& y, bool do_reduce=false ) const;                            // sqrt(x^2 + y^2)
-    T    normh( const T& x, const T& y, bool do_reduce=false ) const;                           // sqrt(x^2 - y^2)
+    void polar_to_rect( const T& r, const T& a, T& x, T& y ) const;       // x=r*cos(a), y=r*sin(a)
+    void rect_to_polar( const T& x, const T& y, T& r, T& a ) const;       // r=sqrt(x^2 + y^2), a=atan2(y, x)
+    T    norm( const T& x, const T& y ) const;                            // sqrt(x^2 + y^2)
+    T    normh( const T& x, const T& y ) const;                           // sqrt(x^2 - y^2)
 
-    T    sinh( const T& x, bool do_reduce=false ) const;                                        // sinh(x)
-    T    cosh( const T& x, bool do_reduce=false ) const;                                        // cosh(x)
-    void sinh_cosh( const T& x, T& sih, T& coh, bool do_reduce=false ) const;                   // sih=sinh(x), coh=cosh(x)
-    T    tanh( const T& x, bool do_reduce=false ) const;                                        // sinh(x) / cosh(x)            (2)
-    T    asinh( const T& x, bool do_reduce=false ) const;                                       // log(x + sqrt(1 + x^2))       (2)
-    T    acosh( const T& x, bool do_reduce=false ) const;                                       // log(x + sqrt(x^2 - 1))       (2)
-    T    atanh( const T& x, bool do_reduce=false ) const;                                       // atanh(x)
-    T    atanh2( const T& y, const T& x, bool do_reduce=false ) const;                          // atanh2(y, x)
+    T    sinh( const T& x ) const;                                        // sinh(x)
+    T    cosh( const T& x ) const;                                        // cosh(x)
+    void sinh_cosh( const T& x, T& sih, T& coh ) const;                   // sih=sinh(x), coh=cosh(x)
+    T    tanh( const T& x ) const;                                        // sinh(x) / cosh(x)            (2)
+    T    asinh( const T& x ) const;                                       // log(x + sqrt(1 + x^2))       (2)
+    T    acosh( const T& x ) const;                                       // log(x + sqrt(x^2 - 1))       (2)
+    T    atanh( const T& x ) const;                                       // atanh(x)
+    T    atanh2( const T& y, const T& x ) const;                          // atanh2(y, x)
 
     //-----------------------------------------------------
     // Argument Range Reduction Routines
     //
-    // If you take the default above for do_reduce=true, then
-    // you need not call these yourself.
+    // If your Cordic object was allocated with do_cordic==false (default), then
+    // you are still free to call these routines to perform reduction where you want.
+    // However, it's easier to just allocate another Cordic object with do_cordic=true.
     //
     // All inputs must be non-negative.
     //-----------------------------------------------------
