@@ -511,24 +511,30 @@ void Cordic<T,FLT>::linear_vectoring( const T& x0, const T& y0, const T& z0, T& 
 }
 
 template< typename T, typename FLT >
-T Cordic<T,FLT>::mad( const T& _x, const T& _y, const T addend ) const
+T Cordic<T,FLT>::mad( const T& _x, const T& _y, const T addend, bool do_reduce ) const
 {
     T x = _x;
     T y = _y;
     cassert( x >= 0 && "mad x must be non-negative" );
     cassert( y >= 0 && "mad y must be non-negative" );
-    cassert( impl->do_reduce || addend >= 0 && "mad addend must be non-negative" );
+    cassert( do_reduce || addend >= 0 && "mad addend must be non-negative" );
     int32_t x_lshift;
     int32_t y_lshift;
-    if ( impl->do_reduce ) reduce_mul_args( x, y, x_lshift, y_lshift );
+    if ( do_reduce ) reduce_mul_args( x, y, x_lshift, y_lshift );
 
     T xx, yy, zz;
-    linear_rotation( x, impl->do_reduce ? zero() : addend, y, xx, yy, zz );
-    if ( impl->do_reduce ) impl->do_lshift( yy, x_lshift + y_lshift );
-    if ( impl->do_reduce ) yy += addend;
+    linear_rotation( x, do_reduce ? zero() : addend, y, xx, yy, zz );
+    if ( do_reduce ) impl->do_lshift( yy, x_lshift + y_lshift );
+    if ( do_reduce ) yy += addend;
     if ( debug ) std::cout << "mad: x_orig=" << to_flt(x) << " y_orig=" << to_flt(y) << " addend=" << to_flt(addend) << " yy=" << to_flt(yy) << 
                                   " x_lshift=" << x_lshift << " y_lshift=" << y_lshift << "\n";
     return yy;
+}
+
+template< typename T, typename FLT >
+T Cordic<T,FLT>::mad( const T& _x, const T& _y, const T addend ) const
+{
+    return mad( _x, _y, addend, impl->do_reduce );
 }
 
 template< typename T, typename FLT >
@@ -538,32 +544,50 @@ T Cordic<T,FLT>::mul( const T& x, const T& y ) const
 }
 
 template< typename T, typename FLT >
-T Cordic<T,FLT>::dad( const T& _y, const T& _x, const T addend ) const
+T Cordic<T,FLT>::mul( const T& x, const T& y, bool do_reduce ) const
+{
+    return mad( x, y, zero(), do_reduce );
+}
+
+template< typename T, typename FLT >
+T Cordic<T,FLT>::dad( const T& _y, const T& _x, const T addend, bool do_reduce ) const
 {
     T x = _x;
     T y = _y;
     cassert( y >= 0  && "dad y must be non-negative" );
     cassert( x > 0 && "dad x must be positive" );
-    cassert( impl->do_reduce || addend >= 0 && "dad addend must be non-negative" );
+    cassert( do_reduce || addend >= 0 && "dad addend must be non-negative" );
     int32_t x_lshift;
     int32_t y_lshift;
-    if ( impl->do_reduce ) reduce_div_args( x, y, x_lshift, y_lshift );
+    if ( do_reduce ) reduce_div_args( x, y, x_lshift, y_lshift );
 
     T xx, yy, zz;
-    linear_vectoring( x, y, impl->do_reduce ? zero() : addend, xx, yy, zz );
+    linear_vectoring( x, y, do_reduce ? zero() : addend, xx, yy, zz );
     if ( debug ) std::cout << "dad: zz_preshift=" << to_flt(zz) << "\n";
-    if ( impl->do_reduce ) impl->do_lshift( zz, y_lshift-x_lshift );
+    if ( do_reduce ) impl->do_lshift( zz, y_lshift-x_lshift );
     if ( debug ) std::cout << "dad: zz_postshift=" << to_flt(zz) << "\n";
-    if ( impl->do_reduce ) zz += addend;
+    if ( do_reduce ) zz += addend;
     if ( debug ) std::cout << "dad: x_orig=" << to_flt(x) << " y_orig=" << to_flt(y) << " addend=" << to_flt(addend) << " zz_final=" << to_flt(zz) << 
                                   " x_lshift=" << x_lshift << " y_lshift=" << y_lshift << "\n";
     return zz;
 }
 
 template< typename T, typename FLT >
+T Cordic<T,FLT>::dad( const T& _y, const T& _x, const T addend ) const
+{
+    return dad( _y, _x, addend, impl->do_reduce );
+}
+
+template< typename T, typename FLT >
 T Cordic<T,FLT>::div( const T& y, const T& x ) const
 {
-    return dad( y, x, zero() )'
+    return dad( y, x, zero() );
+}
+
+template< typename T, typename FLT >
+T Cordic<T,FLT>::div( const T& y, const T& x, bool do_reduce ) const
+{
+    return dad( y, x, zero(), do_reduce );
 }
 
 template< typename T, typename FLT >
@@ -596,7 +620,7 @@ T Cordic<T,FLT>::one_over_sqrt( const T& _x ) const
 
     // do basic 1/sqrt for now
     // try pow( x, -0.5 ) later
-    T n = div( one(), sqrt( x ) );
+    T n = div( one(), sqrt( x ), false );
     if ( impl->do_reduce ) n >>= x_lshift;
     return n;
 }
@@ -611,7 +635,7 @@ T Cordic<T,FLT>::exp( const T& _x ) const
 
     T xx, yy, zz;
     hyperbolic_rotation( one_over_gainh(), one_over_gainh(), x, xx, yy, zz );
-    if ( impl->do_reduce ) xx = mul( xx, factor );
+    if ( impl->do_reduce ) xx = mul( xx, factor, true );
     return xx;
 }
 
@@ -649,16 +673,22 @@ T Cordic<T,FLT>::pow10( const T& x ) const
 }
 
 template< typename T, typename FLT >
-T Cordic<T,FLT>::log( const T& _x ) const
+T Cordic<T,FLT>::log( const T& _x, bool do_reduce ) const
 { 
     T x = _x;
     cassert( x >= 0 && "log x must be non-negative" );
     T addend;
-    if ( impl->do_reduce ) reduce_log_arg( x, addend );
+    if ( do_reduce ) reduce_log_arg( x, addend );
     T lg = atanh2( x-one(), x+one(), false ) << 1;
-    if ( impl->do_reduce ) lg += addend;
+    if ( do_reduce ) lg += addend;
     if ( debug ) std::cout << "log: x_orig=" << to_flt(_x) << " reduced_x=" << to_flt(x) << " log=" << to_flt(lg) << "\n";
     return lg;
+}
+
+template< typename T, typename FLT >
+T Cordic<T,FLT>::log( const T& _x ) const
+{ 
+    return log( _x, impl->do_reduce );
 }
 
 template< typename T, typename FLT >
@@ -780,14 +810,14 @@ template< typename T, typename FLT >
 T Cordic<T,FLT>::atan( const T& x ) const
 { 
     cassert( x >= 0 && "atan x must be non-negative" );
-    cassert( !do_reduce && "TODO" );
+    cassert( !impl->do_reduce && "TODO" );
     T xx, yy, zz;
     circular_vectoring( one(), x, zero(), xx, yy, zz );
     return zz;
 }
 
 template< typename T, typename FLT >
-T Cordic<T,FLT>::atan2( const T& y, const T& x ) const
+T Cordic<T,FLT>::atan2( const T& y, const T& x, bool do_reduce ) const
 { 
     cassert( y >= 0 && "atan2 y must be non-negative" );
     cassert( x > 0  && "atan2 x must be positive" );
@@ -798,11 +828,17 @@ T Cordic<T,FLT>::atan2( const T& y, const T& x ) const
 }
 
 template< typename T, typename FLT >
+T Cordic<T,FLT>::atan2( const T& y, const T& x ) const
+{ 
+    return atan2( y, x, impl->do_reduce );
+}
+
+template< typename T, typename FLT >
 void Cordic<T,FLT>::polar_to_rect( const T& r, const T& a, T& x, T& y ) const
 {
     cassert( r >= 0 && "polar_to_rect r must be non-negative" );
     cassert( a >= 0 && "polar_to_rect a must be non-negative" );
-    cassert( !do_reduce && "TODO" );
+    cassert( !impl->do_reduce && "TODO" );
     T xx, yy, zz;
     circular_rotation( r, zero(), a, xx, yy, zz );
     x = mul( xx, one_over_gain() );
@@ -941,14 +977,14 @@ template< typename T, typename FLT >
 T Cordic<T,FLT>::atanh( const T& x ) const
 { 
     cassert( x >= 0 && "atanh x must be non-negative" );
-    cassert( !do_reduce && "TODO" );
+    cassert( !impl->do_reduce && "TODO" );
     T xx, yy, zz;
     hyperbolic_vectoring( one(), x, zero(), xx, yy, zz );
     return zz;
 }
 
 template< typename T, typename FLT >
-T Cordic<T,FLT>::atanh2( const T& y, const T& x ) const             
+T Cordic<T,FLT>::atanh2( const T& y, const T& x, bool do_reduce ) const             
 { 
     cassert( y >= 0 && "atanh y must be non-negative" );
     cassert( x >  0 && "atanh x must be positive" );
@@ -956,6 +992,12 @@ T Cordic<T,FLT>::atanh2( const T& y, const T& x ) const
     T xx, yy, zz;
     hyperbolic_vectoring( x, y, zero(), xx, yy, zz );
     return zz;
+}
+
+template< typename T, typename FLT >
+T Cordic<T,FLT>::atanh2( const T& y, const T& x ) const             
+{ 
+    return atanh2( y, x, impl->do_reduce );
 }
 
 template< typename T, typename FLT >

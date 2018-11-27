@@ -74,7 +74,7 @@ constexpr FLT TOL = 1.0 / FLT( 1LL << (frac_w-8) );     // would like this to be
     auto c = do_reduce ? cordicr : cordicnr;                            \
     FP  fpx  = c->to_fp( fltx );			                \
     FP  fpy  = c->to_fp( flty );			                \
-    FP  fpz  = c_fn( fpx, fpy );	                                \
+    FP  fpz  = c->c_fn( fpx, fpy );	                                \
     FLT fltz = c->to_flt( fpz );			                \
     FLT flte = exp_fn( fltx, flty );			                \
     FLT flterr = std::abs( flte-fltz );			                \
@@ -94,7 +94,7 @@ constexpr FLT TOL = 1.0 / FLT( 1LL << (frac_w-8) );     // would like this to be
     FP  fpx  = c->to_fp( fltx );			                \
     FP  fpy  = c->to_fp( flty );			                \
     FP  fpz1, fpz2;                                                     \
-    c_fn( fpx, fpy, fpz1, fpz2 );	                                \
+    c->c_fn( fpx, fpy, fpz1, fpz2 );	                                \
     FLT fltz1 = c->to_flt( fpz1 );		                        \
     FLT fltz2 = c->to_flt( fpz2 );		                        \
     FLT flte1, flte2;                                                   \
@@ -118,7 +118,7 @@ constexpr FLT TOL = 1.0 / FLT( 1LL << (frac_w-8) );     // would like this to be
     FP  fpx  = c->to_fp( fltx );			                \
     FP  fpy  = c->to_fp( flty );			                \
     FP  fpw  = c->to_fp( fltw );			                \
-    FP  fpz  = c_fn( fpx, fpy, fpw );	                                \
+    FP  fpz  = c->c_fn( fpx, fpy, fpw );	                        \
     FLT fltz = c->to_flt( fpz );			                \
     FLT flte = exp_fn( fltx, flty, fltw );			        \
     FLT flterr = std::abs( flte-fltz );			                \
