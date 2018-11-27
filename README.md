@@ -36,6 +36,11 @@ doit.test
 </pre>
 
 <p>
+Besides thorough testing, I would like to add support for complex numbers and associated math operations,
+taking advantage of known identities where possible to optimize the functions.
+</p>
+
+<p>
 Bob Alfieri<br>
 Chapel Hill, NC
 </p>
