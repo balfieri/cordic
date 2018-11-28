@@ -18,6 +18,10 @@ for use as a production reference model.
 </p>
 
 <p>
+<b>Therefore, this is all open-source.  Refer to the LICENSE.md for licensing details.</b>
+</p>
+
+<p>
 The library currently assumes that values are stored as fixed-point with user-defined integer width (int_w) and fraction width (frac_w).  
 The fixed-point container type T must be a signed integer at least as wide as 1+int_w+frac_w.  [A fixed-point number stores
 the sign in the most-significant bit, followed by the int_w binary integer bits, followed by the frac_w binary fraction bits 
@@ -66,10 +70,6 @@ floating-point encodings only.
 Flush-To-Zero (FTZ) means that any time an operation would produce a denom (again, a number smaller than the smallest normalized
 number), it is changed to zero.
 Denorm-As-Zero (DAZ) means that any denorm input to an operation is first changed to zero.
-</p>
-
-<p>
-<b>This is all open-source.  Refer to the LICENSE.md for licensing details.</b>
 </p>
 
 <p>
