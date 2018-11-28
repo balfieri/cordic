@@ -43,7 +43,7 @@ doit.test
 </pre>
 
 <p>
-Currently, test_cordic.cpp does its own checking with a tolerance.  In the near future, I'd like to have
+Currently, test_cordic.cpp does its own checking within a small tolerance.  In the near future, I'd like to have
 the Cordic.cpp library itself do optional checking of computations.
 </p>
 
