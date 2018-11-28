@@ -27,7 +27,7 @@ The fixed-point container type T must be a signed integer at least as wide as 1+
 the sign in the most-significant bit, followed by the int_w binary integer bits, followed by the frac_w binary fraction bits 
 in the least-significant
 bits.  If T is larger than the required number of bits, the extra upper bits are assumed to contain replications of the sign bit
-(1=negative, 0=non-negative).]
+(1=negative, 0=non-negative).  In other words, fixed-point values are stored in 2's-complement integer containers, so -A == ~A + 1.]
 </p>
 
 <p>
