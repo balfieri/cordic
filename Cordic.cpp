@@ -852,7 +852,7 @@ void Cordic<T,FLT>::polar_to_rect( const T& r, const T& a, T& x, T& y ) const
     cassert( !impl->do_reduce && "TODO" );
     T xx, yy, zz;
     circular_rotation( r, zero(), a, xx, yy, zz );
-    x = mul( xx, one_over_gain() );
+    x = mul( xx, one_over_gain() );  // TODO: multiply r once to avoid these?
     y = mul( yy, one_over_gain() );
 }
 
