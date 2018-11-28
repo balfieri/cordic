@@ -14,15 +14,15 @@ bits.  If T is larger than the required number of bits, the extra upper bits are
 </p>
 
 <p>
+By default, this code automatically performs appropriate argument range reductions, but it can be turned off if you
+know that the inputs to the math functions are in the proper range.
+</p>
+
+<p>
 At some point in the near future, the library will be enhanced to allow T to represent IEEE floating-point numbers with
 arbitrary exponent width (exp_w). So the library will allow T to be fixed-point OR floating-point.
 However only one of int_w or exp_w may be non-zero.  In floating-point numbers, the integer part is assumed to be 1 unless
 the entire value is 0 or a special number.
-</p>
-
-<p>
-By default, this code automatically performs appropriate argument range reductions, but it can be turned off if you
-know that the inputs to the math functions are in the proper range.
 </p>
 
 <p>
