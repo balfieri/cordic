@@ -50,8 +50,8 @@ the Cordic.cpp library itself do optional checking of computations.
 </p>
 
 <p>
-Besides thoroughly testing this code, I would like to add support for complex numbers and associated math operations,
-taking advantage of known identities where possible to optimize the functions.
+We need to add a "cordreal" real number class that follows all the rules of any C++ floating-point class but uses Cordic 
+as its underlying implementation.
 </p>
 
 <p>
