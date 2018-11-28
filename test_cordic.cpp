@@ -18,7 +18,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 //
-// test_cordic.cpp - test Cordic math
+// test_cordic.cpp - black-box test of Cordic.h math functions
 //
 #include "Cordic.h"
 
