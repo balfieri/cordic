@@ -6,7 +6,7 @@ be reduced to a small range of values, typically 1.0 .. 2.0.
 </p>
 
 <p>
-This repository contains some C++ code that shows how to implement CORDIC math.  See Cordic.h.
+This repository contains some C++ code that shows how to implement CORDIC math. <b>See Cordic.h.</b>
 The library currently assumes that values are stored as fixed-point with user-defined integer width (int_w) and fraction width (frac_w).  
 The fixed-point container type T must be a signed integer at least as wide as 1+int_w+frac_w.  A fixed-point number stores
 the sign in the most-significant bit, followed by the int_w integer bits, followed by the frac_w fraction bits in the least-significant
@@ -32,7 +32,7 @@ for use as a production reference model.
 </p>
 
 <p>
-This is all open-source.  Refer to the LICENSE.md for licensing details.
+<b>This is all open-source.  Refer to the LICENSE.md for licensing details.</b>
 </p>
 
 <p>
