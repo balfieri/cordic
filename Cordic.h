@@ -88,8 +88,8 @@ public:
     T    norm( const T& x, const T& y ) const;                            // sqrt(x^2 + y^2)
     T    normh( const T& x, const T& y ) const;                           // sqrt(x^2 - y^2)
 
-    T    sinh( const T& x ) const;                                        // sinh(x)
-    T    cosh( const T& x ) const;                                        // cosh(x)
+    T    sinh( const T& x ) const;                                        // sinh(x), also (e^x - e^-x)/2
+    T    cosh( const T& x ) const;                                        // cosh(x), also (e^x + e^-x)/2
     void sinh_cosh( const T& x, T& sih, T& coh ) const;                   // sih=sinh(x), coh=cosh(x)
     T    tanh( const T& x ) const;                                        // sinh(x) / cosh(x)            (2)
     T    asinh( const T& x ) const;                                       // log(x + sqrt(1 + x^2))       (2)
