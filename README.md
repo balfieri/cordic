@@ -36,7 +36,7 @@ for use as a production reference model.
 </p>
 
 <p>
-To build and run the test (test_cordic.cpp) on Linux, Cygwin, or macOS:
+To build and run the test, <b>test_cordic.cpp</b> on Linux, Cygwin, or macOS:
 </p>
 <pre>
 doit.test
