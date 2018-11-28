@@ -20,9 +20,10 @@ know that the inputs to the math functions are in the proper range.
 
 <p>
 At some point in the near future, the library will be enhanced to allow T to represent IEEE floating-point numbers with
-arbitrary exponent width (exp_w). So the library will allow T to be fixed-point OR floating-point.
-However only one of int_w or exp_w may be non-zero.  In floating-point numbers, the integer part is assumed to be 1 unless
-the entire value is 0 or a special number.
+arbitrary exponent width (exp_w). So the library will allow T to hold fixed-point OR floating-point encodings including - but not
+limited to - standard IEEE floating-point formats such as float and double.
+Only one of int_w or exp_w may be non-zero.  In floating-point numbers, the integer part is assumed to be an implicit '1' unless
+the entire value is 0 or a special number such as +Infinity or -Infinity. So int_w is 0 for floating-point.
 </p>
 
 <p>
