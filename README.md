@@ -1,4 +1,8 @@
 <p>
+This repository contains some C++ code that shows how to implement CORDIC math. <b>See Cordic.h.</b>
+</p>
+
+<p>
 Addition, subtraction, and multiplication are relatively easy tasks to implement in a computer chip.  Divide, sqrt(), and other
 transcendental functions are challenging even when high precision is not required.  CORDIC math makes it easy and cheap to implement
 these complicated math functions by using a simple sequence of shifts and adds.  The only complication is that inputs need to 
@@ -6,7 +10,14 @@ be reduced to a small range of values, typically 1.0 .. 2.0.
 </p>
 
 <p>
-This repository contains some C++ code that shows how to implement CORDIC math. <b>See Cordic.h.</b>
+CORDIC was invented in the 1950's and first used in the navigation system of the B-38 bomber, which did not
+even have a built-in multiply instruction.  Prior to that, navigation systems used analog computers.
+There is nothing novel or proprietary here.  This code is intended
+for tutorial purposes only. You should not assume that the library is bug-free or accurate enough
+for use as a production reference model.
+</p>
+
+<p>
 The library currently assumes that values are stored as fixed-point with user-defined integer width (int_w) and fraction width (frac_w).  
 The fixed-point container type T must be a signed integer at least as wide as 1+int_w+frac_w.  [A fixed-point number stores
 the sign in the most-significant bit, followed by the int_w integer bits, followed by the frac_w fraction bits in the least-significant
@@ -31,11 +42,16 @@ Conversely, fixed-point numbers naturally have no exponent and exp_w is 0.
 </p>
 
 <p>
-CORDIC was invented in the 1950's and first used in the navigation system of the B-38 bomber, which did not
-even have a built-in multiply instruction.  Prior to that, navigation systems used analog computers.
-There is nothing novel or proprietary here.  This code is intended
-for tutorial purposes only. You should not assume that the library is bug-free or accurate enough
-for use as a production reference model.
+Currently, fixed-point numbers have no way to indicate a value outside the implied range.  We will likely add
+an option to mark a number as +Infinity, -Infinity, or NaN.  We can add an alternative option
+option to flush large numbers to +/- Infinity and NaNs to zero.
+</p>
+
+<p>
+Anothing thing that is not currently handled is the different IEEE rounding modes: round-to-nearest (currently what we do), 
+round-toward-zero, round-toward-plus-infinity, round-toward-minus-infinity.  There's another one worth doing
+called round-away-from-zero (aka round-toward-plus-or-minus-infinity). The rounding mode would be set
+during the constructor and used for all operations.
 </p>
 
 <p>
@@ -50,13 +66,14 @@ doit.test
 </pre>
 
 <p>
-Currently, test_cordic.cpp does its own checking within a small tolerance.  In the near future, I'd like to have
-the Cordic.cpp library itself do optional checking of computations.
+Currently, test_cordic.cpp does its own checking within a small tolerance.  In the near future, we'd like to have
+the Cordic.cpp library itself do optional checking of computations so that tests can focus exclusively on generating
+new test cases.
 </p>
 
 <p>
 We need to add a "cordreal" real number class that follows all the rules of any C++ floating-point number but uses Cordic 
-as its underlying implementation. Note that there will be no need to do anything special for complex numbers.  C++ complex<> 
+as its underlying implementation. Note that there will be no need to do anything special for complex numbers. The C++ complex<> 
 class and associated math functions fall out naturally by using complex&lt;cordreal&gt;.
 </p>
 
