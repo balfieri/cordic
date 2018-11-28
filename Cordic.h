@@ -53,8 +53,8 @@ public:
     //-----------------------------------------------------
     // Well-Known Math Functions Implemented Using CORDIC
     //
-    // (2) means requires 2 applications of a CORDIC algorithm.
-    //-----------------------------------------------------
+    // (2) means requires 2 applications of a CORDIC algorithm.              functionality
+    //-----------------------------------------------------               ---------------------------
     T    mad( const T& x, const T& y, const T addend ) const;             // x*y + addend
     T    mul( const T& x, const T& y ) const;                             // x*y 
     T    dad( const T& y, const T& x, const T addend = T(0) ) const;      // y/x + addend
@@ -184,7 +184,7 @@ public:
     void linear_vectoring( const T& x0, const T& y0, const T& z0, T& x, T& y, T& z ) const;
 
     //-----------------------------------------------------
-    // These are used internally, but making them available publically.
+    // These version are used internally, but making them available publically.
     // In general, you should only call the earlier routines.
     //-----------------------------------------------------
     T    mad( const T& x, const T& y, const T addend, bool do_reduce ) const; // same but override do_reduce
