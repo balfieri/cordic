@@ -10,7 +10,8 @@ This repository contains some C++ code that shows how to implement CORDIC math. 
 The library currently assumes that values are stored as fixed-point with user-defined integer width (int_w) and fraction width (frac_w).  
 The fixed-point container type T must be a signed integer at least as wide as 1+int_w+frac_w.  A fixed-point number stores
 the sign in the most-significant bit, followed by the int_w integer bits, followed by the frac_w fraction bits in the least-significant
-bits.  If T is larger than the required number of bits, the extra upper bits are assumed to contain the sign (1=negative, 0=non-negative).
+bits.  If T is larger than the required number of bits, the extra upper bits are assumed to contain replications of the sign 
+(1=negative, 0=non-negative).
 </p>
 
 <p>
