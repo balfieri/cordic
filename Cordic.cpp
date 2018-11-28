@@ -1078,8 +1078,9 @@ void Cordic<T,FLT>::reduce_exp_arg( FLT b, T& x, T& factor ) const
     // exp(x) = exp(i) * exp(f)
     // pow(b,x) = log(b) * exp(x) = [log(b)*exp(i)] * exp(f)
     //
-    // exp(i) comes for a pre-built LUT kept in FLT
-    // so we can multiply it by log(b) before converting to type T.
+    // exp(i) comes from a pre-built LUT kept in FLT
+    // so we can multiply it by log(b) before converting to type T and
+    // then multiplying by exp(f).
     //-----------------------------------------------------
     T x_orig = x;
     const FLT * factors_f = impl->reduce_exp_factor.get();
