@@ -100,9 +100,10 @@ public:
     //-----------------------------------------------------
     // Conversions
     //-----------------------------------------------------
-    T       to_fp( FLT x ) const;
-    FLT     to_flt( const T& x ) const;
+    T       to_fp( FLT x ) const;               // float to fixed-point
+    FLT     to_flt( const T& x ) const;         // fixed-point to float
 
+    T       make_fp( bool sign, T i, T f );     // make a fixed-point value using sign, integer part i, and fractional part f
 
 
     //-----------------------------------------------------

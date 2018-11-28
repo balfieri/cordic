@@ -298,6 +298,17 @@ FLT Cordic<T,FLT>::to_flt( const T& _x ) const
     return x_f;
 }
 
+template< typename T, typename FLT >
+T Cordic<T,FLT>::make_fp( bool sign, T i, T f )
+{
+    cassert( i >= 0 && i <= maxint()               && "make_fp integer part must be in range 0 .. maxint()" );
+    cassert( f >= 0 && f <= ((T(1) << frac_w())-1) && "make_fp fractional part must be in range 0 .. (1 << frac_w)-1" );
+
+    return (T(sign) << (int_w() + frac_w())) |
+           (T(i)    << frac_w())             |
+           (T(f)    << 0);
+}
+
 //-----------------------------------------------------
 // The CORDIC Functions
 //-----------------------------------------------------
