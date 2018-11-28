@@ -35,17 +35,16 @@ At some point in the near future, the library will be enhanced to allow T to hol
 arbitrary exponent width (exp_w). So the library will allow T (still an integer container) to hold 
 fixed-point OR floating-point encodings including, but not
 limited to, standard IEEE floating-point formats such as float (fp32), double (fp64), quadruple (fp128), half (fp16), and quarter (fp8).
-Only one of int_w or exp_w may be non-zero.  In IEEE floating-point numbers, the fraction is assumed to have an implied '1' before the 
-decimal point, which makes it a normalized number.  One exception is when
+Only one of int_w or exp_w may be non-zero.  In IEEE floating-point numbers, int_w is 0 because the binary fraction is 
+assumed to have an implied '1' before the 
+binary point, which is known as a normalized number (e.g., 1.110110 * 2^24).  One exception is when
 the value is less than the smallest normalized number 1.0 * 2^MIN_EXP, which makes it a denormalized number or "denorm." Other special
 numbers include +Infinity (e.g., from 1/0), -Infinity (e.g., from -1/0), or NaN (not a number, e.g., from sqrt(-1)), which 
 are identified using special encodings of the exponent.
-So int_w is 0 for floating-point numbers.
-Conversely, fixed-point numbers naturally have no exponent and exp_w is 0.
 </p>
 
 <p>
-Currently, fixed-point numbers naturally support denorms (they are all denorms), but have no way to indicate a value 
+Currently, fixed-point numbers (no exponents) naturally support denorms (they are all denorms), but have no way to indicate a value 
 outside their allowed range.  We will add
 an option to mark a number as +Infinity, -Infinity, or NaN.  We will add an alternative option
 to gracefully flush large numbers to +/- "max value" and NaNs to zero.
@@ -56,13 +55,15 @@ Another thing that is not currently handled is the different IEEE rounding modes
 and what one normally expects), 
 round-toward-zero, round-toward-plus-infinity, round-toward-minus-infinity.  There's another one worth doing
 called round-away-from-zero (aka round-toward-plus-or-minus-infinity). The rounding mode would be set
-during the constructor and used for all operations.
+during the constructor and used for all operations.  These modes will be implemented for both fixed-point and floating-point
+encodings.
 </p>
 
 <p>
-On a related note, there are a couple other options supported in most floating-point libraries that we'll need to add.
-Flush-To-Zero (FTZ) means that any time an operation would produce a denom (again, a number smaller than the smallest number with
-implied 1 in the mantissa), it is changed to zero.
+On a related note, there are a couple other options supported in most floating-point libraries that we'll need to add for
+floating-point encodings only.
+Flush-To-Zero (FTZ) means that any time an operation would produce a denom (again, a number smaller than the smallest normalized
+number), it is changed to zero.
 Denorm-As-Zero (DAZ) means that any denorm input to an operation is first changed to zero.
 </p>
 
