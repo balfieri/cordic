@@ -44,11 +44,12 @@ Conversely, fixed-point numbers naturally have no exponent and exp_w is 0.
 <p>
 Currently, fixed-point numbers have no way to indicate a value outside the implied range.  We will likely add
 an option to mark a number as +Infinity, -Infinity, or NaN.  We can add an alternative option
-option to flush large numbers to +/- Infinity and NaNs to zero.
+to gracefully flush large numbers to +/- "max value" and NaNs to zero.
 </p>
 
 <p>
-Anothing thing that is not currently handled is the different IEEE rounding modes: round-to-nearest (currently what we do), 
+Another thing that is not currently handled is the different IEEE rounding modes: round-to-nearest (currently what we do
+and what one normally expects), 
 round-toward-zero, round-toward-plus-infinity, round-toward-minus-infinity.  There's another one worth doing
 called round-away-from-zero (aka round-toward-plus-or-minus-infinity). The rounding mode would be set
 during the constructor and used for all operations.
