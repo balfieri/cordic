@@ -25,8 +25,9 @@ arbitrary exponent width (exp_w). So the library will allow T (still an integer 
 fixed-point OR floating-point encodings including, but not
 limited to, standard IEEE floating-point formats such as float (fp32), double (fp64), half (fp16), and quarter (fp8).
 Only one of int_w or exp_w may be non-zero.  In IEEE floating-point numbers, the integer part is assumed to be an implicit '1' unless
-the entire value is 0 or a special number such as +Infinity, -Infinity, or NaN (not a number). So int_w is 0 for floating-point numbers.
-Conversely, fixed-point numbers naturally have no exponent.
+the value is less than 1.0 (which is called a denorm) or a special number such as +Infinity, -Infinity, or NaN (not a number). 
+So int_w is 0 for floating-point numbers.
+Conversely, fixed-point numbers naturally have no exponent and exp_w is 0.
 </p>
 
 <p>
