@@ -56,7 +56,7 @@ the Cordic.cpp library itself do optional checking of computations.
 <p>
 We need to add a "cordreal" real number class that follows all the rules of any C++ floating-point number but uses Cordic 
 as its underlying implementation. Note that there will be no need to do anything special for complex numbers.  C++ complex<> 
-class and associated math functions fall out naturally by using complex<cordreal>.
+class and associated math functions fall out naturally by using complex&lt;cordreal&gt;.
 </p>
 
 <p>
