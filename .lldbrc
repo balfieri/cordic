@@ -1,0 +1,3 @@
+settings set stop-line-count-before 30
+settings set stop-line-count-after  30
+b _exit
