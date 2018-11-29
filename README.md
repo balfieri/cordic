@@ -73,14 +73,14 @@ Denorm-As-Zero (DAZ) means that any denorm input to an operation is first change
 </p>
 
 <p>
-To build and run the test, <b>test_cordic.cpp</b>, on Linux, Cygwin, or macOS:
+To build and run the basic "smoke" test, <b>test_basic.cpp</b>, on Linux, Cygwin, or macOS:
 </p>
 <pre>
 doit.test
 </pre>
 
 <p>
-Currently, test_cordic.cpp does its own checking within a small tolerance.  In the near future, we'd like to have
+Currently, test_basic.cpp does its own checking within a small tolerance.  In the near future, we'd like to have
 the Cordic.cpp library itself do optional checking of computations so that tests can focus exclusively on generating
 new test cases.
 </p>

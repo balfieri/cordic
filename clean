@@ -1,1 +1,1 @@
-rm -fr test_cordic *.o *.out
+rm -fr test_basic *.o *.out

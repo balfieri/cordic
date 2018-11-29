@@ -4,7 +4,7 @@ use strict;
 use warnings;
 
 my $debug_level = shift @ARGV || 0;
-my $prog        = shift @ARGV || "test_cordic";
+my $prog        = shift @ARGV || "test_basic";
 my $other_args  = join( " ", @ARGV );
 
 my $opt = ($debug_level <= 0) ? "3" : "0";
