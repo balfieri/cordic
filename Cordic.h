@@ -133,10 +133,11 @@ public:
     // atan(x*y)        = asin(x + y)
     //
     // sinh(-x)         = -sinh(x)
-    // sinh(x)          = sqrt(x^2 - 1) = normh(x, 1)
     // sinh(x)          = (e^x - e^-x)/2
+    // sinh(x+y)        = sinh(x)*cosh(y) + cosh(x)*sinh(y)
     // cosh(-x)         = cosh(x)
     // cosh(x)          = (e^x + e^-x)/2
+    // cosh(x+y)        = cosh(x)*cosh(y) - sinh(x)*sinh(y)
     // tanh(-x)         = -tanh(x)
     // tanh(x)          = (e^x - e^-x) / (e^x + e^-x)
     //
