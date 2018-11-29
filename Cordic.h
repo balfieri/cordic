@@ -74,23 +74,23 @@ public:
     T    log2( const T& x ) const;                                        // log(x)/log(2)                (2)
     T    log10( const T& x ) const;                                       // log(x)/log(10)               (2)
 
-    T    sin( const T& x ) const;                                         // sin(x)
-    T    cos( const T& x ) const;                                         // cos(x)
-    void sin_cos( const T& x, T& si, T& co ) const;                       // si=sin(x), co=cos(x)
+    T    sin( const T& x, const T * r=nullptr  ) const;                   // r*sin(x)                   (default r is 1)
+    T    cos( const T& x, const T * r=nullptr ) const;                    // r*cos(x)                   (default r is 1)
+    void sin_cos( const T& x, T& si, T& co, const T * r=nullptr ) const;  // si=r*sin(x), co=r*cos(x)   (default r is 1)
     T    tan( const T& x ) const;                                         // sin(x) / cos(x)              (2)
     T    asin( const T& x ) const;                                        // atan2(x, sqrt(1 - x^2))      (2)
     T    acos( const T& x ) const;                                        // atan2(sqrt(1 - x^2), x)      (2)
     T    atan( const T& x ) const;                                        // atan(x)
     T    atan2( const T& y, const T& x ) const;                           // atan2(y, x)                  
 
-    void polar_to_rect( const T& r, const T& a, T& x, T& y ) const;       // x=r*cos(a), y=r*sin(a)
+    void polar_to_rect( const T& r, const T& a, T& x, T& y ) const;       // sin_cos(a, x, y, &r)  
     void rect_to_polar( const T& x, const T& y, T& r, T& a ) const;       // r=sqrt(x^2 + y^2), a=atan2(y, x)
     T    norm( const T& x, const T& y ) const;                            // sqrt(x^2 + y^2)
     T    normh( const T& x, const T& y ) const;                           // sqrt(x^2 - y^2)
 
-    T    sinh( const T& x ) const;                                        // sinh(x), also (e^x - e^-x)/2
-    T    cosh( const T& x ) const;                                        // cosh(x), also (e^x + e^-x)/2
-    void sinh_cosh( const T& x, T& sih, T& coh ) const;                   // sih=sinh(x), coh=cosh(x)
+    T    sinh( const T& x, const T * r=nullptr ) const;                   // r*sinh(x), also r*(e^x - e^-x)/2  (default r is 1)
+    T    cosh( const T& x, const T * r=nullptr ) const;                   // r*cosh(x), also r*(e^x + e^-x)/2  (default r is 1)
+    void sinh_cosh( const T& x, T& sih, T& coh, const T * r=nullptr ) const;// sih=r*sinh(x), coh=r*cosh(x)    (default r is 1)
     T    tanh( const T& x ) const;                                        // sinh(x) / cosh(x)            (2)
     T    asinh( const T& x ) const;                                       // log(x + sqrt(1 + x^2))       (2)
     T    acosh( const T& x ) const;                                       // log(x + sqrt(x^2 - 1))       (2)
@@ -104,7 +104,7 @@ public:
     FLT     to_flt( const T& x ) const;         // fixed-point to float
 
     T       make_fp( bool sign, T i, T f );     // make a fixed-point value using sign, integer part i, and fractional part f
-
+//  T       make_flt( bool sign, T exp, T f );  // make a floating-point value using sign, exponent part, and fractional part
 
     //-----------------------------------------------------
     //-----------------------------------------------------
@@ -203,17 +203,15 @@ public:
     // you are still free to call these routines to perform reduction where you want.
     // However, it's easier to just allocate another Cordic object with do_reduce=true
     // and use the appropriate one depending on whether you want reduction or not.
-    //
-    // All inputs must be non-negative.
     //-----------------------------------------------------
-    void reduce_arg( T& x, int32_t& x_lshift, bool shift_x=true, bool normalize=false ) const;  // 0.0 .. <2.0
-    void reduce_mul_args( T& x, T& y, int32_t& x_lshift, int32_t& y_lshift ) const;             // reduce_arg x and y
-    void reduce_div_args( T& x, T& y, int32_t& x_lshift, int32_t& y_lshift ) const;             // reduce_arg x, normalize_arg y
+    void reduce_arg( T& x, int32_t& x_lshift, bool& sign, bool shift_x=true, bool normalize=false ) const; // 0.0 .. <2.0
+    void reduce_mul_args( T& x, T& y, int32_t& x_lshift, int32_t& y_lshift, bool& sign ) const; // reduce_arg x and y
+    void reduce_div_args( T& x, T& y, int32_t& x_lshift, int32_t& y_lshift, bool& sign ) const; // reduce_arg x, normalize_arg y
     void reduce_sqrt_arg( T& x, int32_t& x_lshift ) const;                                      // reduce_arg but lshift must pow-of-2
-    void reduce_exp_arg( FLT b, T& x, T& factor ) const;                                        // b=const_base, multiply exp(x) by factor
+    void reduce_exp_arg( FLT b, T& x, T& factor, bool& sign ) const;                            // b=const_base, mul/div exp(x) by factor
     void reduce_log_arg( T& x, T& addend ) const;                                               // reduce_arg x, addend to log(x) 
     void reduce_norm_args( T& x, T& y, int32_t& lshift ) const;                                 // reduce_arg x and y with same lshift
-    void reduce_angle_arg( T& a, uint32_t& quadrant ) const;                                    // to 0 .. pi/2
+    void reduce_angle_arg( T& a, uint32_t& quadrant, bool& sign ) const;                        // to 0 .. pi/2
 
 private:
     class Impl;

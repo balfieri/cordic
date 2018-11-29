@@ -1,5 +1,5 @@
 .DS_Store
-test_cordic
+test_basic
 *.exe
 *.o
 *.out
