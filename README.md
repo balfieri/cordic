@@ -18,7 +18,7 @@ for use as a production reference model.
 </p>
 
 <p>
-<b>Therefore, this is all open-source.  Refer to the LICENSE.md for licensing details.</b>
+<b>This is all open-source.  Refer to the LICENSE.md for licensing details.</b>
 </p>
 
 <p>
