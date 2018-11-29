@@ -62,6 +62,7 @@ struct Cordic<T,FLT>::Impl
     std::unique_ptr<uint32_t[]> reduce_angle_quadrant;          // 00,01,02,03
     std::unique_ptr<FLT[]>      reduce_exp_factor;              // for each possible integer value, exp(i)
     std::unique_ptr<T[]>        reduce_log_addend;              // for each possible lshift value, log( 1 << lshift )
+    std::unique_ptr<T[]>        reduce_atan_addend;             // for each possible signed lshift value, asin( 1 << lshift )
 
     inline void                 do_lshift( T& x, int32_t lshift ) const
     {
@@ -818,18 +819,7 @@ T Cordic<T,FLT>::acos( const T& x ) const
 template< typename T, typename FLT >
 T Cordic<T,FLT>::atan( const T& x ) const
 { 
-    return atan2( x, one() );
-}
-
-template< typename T, typename FLT >
-T Cordic<T,FLT>::atan2( const T& y, const T& x, bool do_reduce ) const
-{ 
-    cassert( y >= 0 && "atan2 y must be non-negative" );
-    cassert( x > 0  && "atan2 x must be positive" );
-    cassert( !do_reduce && "TODO" );
-    T xx, yy, zz;
-    circular_vectoring( x, y, zero(), xx, yy, zz );
-    return zz;
+    return atan2( x, one(), impl->do_reduce, true );
 }
 
 template< typename T, typename FLT >
@@ -839,24 +829,61 @@ T Cordic<T,FLT>::atan2( const T& y, const T& x ) const
 }
 
 template< typename T, typename FLT >
+T Cordic<T,FLT>::atan2( const T& _y, const T& _x, bool do_reduce, bool x_is_one, T * rr ) const
+{ 
+    T y = _y;
+    T x = _x;
+
+    //-----------------------------------------------------
+    // Identities:
+    //     Assume: y/x = p*f  (power of 2 times fraction)
+    //     atan(p*f) = asin(p + f) = PI - asin(p) - asin(f)
+    // Strategy:
+    //     reduce y and x for division
+    //     f = y/x                          // which is done by CORDIC
+    //     log2(p) = y_lshift + x_lshift    // note: can be negative
+    //     index a LUT using log2(p) and pull out precomputed PI - asin(p)
+    //
+    // Note: there has to be a better way to do this.  The divide really sucks.
+    //-----------------------------------------------------
+    int32_t y_lshift;
+    int32_t x_lshift;
+    bool    sign = false;
+    if ( do_reduce ) {
+        if ( x_is_one ) {
+            x_lshift = 0;
+            reduce_arg( y, y_lshift, sign );
+        } else {
+            reduce_div_args( y, x, y_lshift, x_lshift, sign );
+        }
+    }
+    T * addends = impl->reduce_atan_addend.get();
+    int32_t index = y_lshift + x_lshift + int_w();
+    cassert( index >= 0 && index < 2*int_2() );
+    const T addend = addends[index];
+
+    T xx, yy, zz;
+    circular_vectoring( x, y, zero(), xx, yy, zz );
+    if ( do_reduce ) {
+        zz = addend - zz;
+        if ( sign ) zz = -zz;
+    }
+    if ( rr != nullptr ) {
+        *rr = mul( xx, one_over_gain(), false );
+    }
+    return zz;
+}
+
+template< typename T, typename FLT >
 void Cordic<T,FLT>::polar_to_rect( const T& r, const T& a, T& x, T& y ) const
 {
     sin_cos( a, x, y, &r );
 }
 
 template< typename T, typename FLT >
-void Cordic<T,FLT>::rect_to_polar( const T& _x, const T& _y, T& r, T& a ) const
+void Cordic<T,FLT>::rect_to_polar( const T& x, const T& y, T& r, T& a ) const
 {
-    T x = _x;
-    T y = _y;
-    int32_t lshift;
-    if ( impl->do_reduce ) reduce_norm_args( x, y, lshift ); // TODO: this is not right
-
-    T rr;
-    T yy;
-    circular_vectoring( x, y, zero(), rr, yy, a );
-    r = mul( rr, one_over_gain() );
-    if ( impl->do_reduce ) impl->do_lshift( r, lshift );
+    a = atan2( y, x, false, &r );
 }
 
 template< typename T, typename FLT >
@@ -953,7 +980,7 @@ T Cordic<T,FLT>::tanh( const T& x ) const
 template< typename T, typename FLT >
 T Cordic<T,FLT>::asinh( const T& x ) const
 { 
-    return log( x + norm( one(), x ) );
+    return log( x + norm( x, one() ) );
 }
 
 template< typename T, typename FLT >
@@ -965,22 +992,37 @@ T Cordic<T,FLT>::acosh( const T& x ) const
 template< typename T, typename FLT >
 T Cordic<T,FLT>::atanh( const T& x ) const
 { 
-    return atanh2( one(), x );
-}
-
-template< typename T, typename FLT >
-T Cordic<T,FLT>::atanh2( const T& y, const T& x, bool do_reduce ) const             
-{ 
-    T xx, yy, zz;
-    // TODO: do reduction
-    hyperbolic_vectoring( x, y, zero(), xx, yy, zz );
-    return zz;
+    return atanh2( x, one(), impl->do_reduce, true );
 }
 
 template< typename T, typename FLT >
 T Cordic<T,FLT>::atanh2( const T& y, const T& x ) const             
 { 
     return atanh2( y, x, impl->do_reduce );
+}
+
+template< typename T, typename FLT >
+T Cordic<T,FLT>::atanh2( const T& y, const T& x, bool do_reduce, bool x_is_one ) const             
+{ 
+    T y = _y;
+    T x = _x;
+
+    //-----------------------------------------------------
+    // Identities:
+    //     atan(-x) = -atan(x)
+    //     abs(y/x) must be between 0 and 1
+    //-----------------------------------------------------
+    int32_t y_lshift = 0;
+    int32_t x_lshift = 0;
+    bool    sign = false;
+    if ( do_reduce ) reduce_div_args( y, x, y_lshift, x_lshift, sign );
+    int32_t lshift = x_lshift + y_lshift;
+    cassert( lshift == 0 && "atanh2: abs(y/x) must be between 0 and 1" );
+
+    T xx, yy, zz;
+    hyperbolic_vectoring( x, y, zero(), xx, yy, zz );
+    if ( sign ) zz = -zz;
+    return zz;
 }
 
 template< typename T, typename FLT >
@@ -1087,7 +1129,7 @@ void Cordic<T,FLT>::reduce_log_arg( T& x, T& addend ) const
     // log(ab) = log(a) + log(b)
     // 
     // Normalize x so that it's in 1.00 .. 2.00.
-    // Then addend = log(1 << shift).
+    // Then addend = log(1 << lshift).
     //-----------------------------------------------------
     cassert( x >= 0 && "log argument may not be negative for fixed-point numbers" );
     T x_orig = x;
