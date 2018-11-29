@@ -818,11 +818,7 @@ T Cordic<T,FLT>::acos( const T& x ) const
 template< typename T, typename FLT >
 T Cordic<T,FLT>::atan( const T& x ) const
 { 
-    cassert( x >= 0 && "atan x must be non-negative" );
-    cassert( !impl->do_reduce && "TODO" );
-    T xx, yy, zz;
-    circular_vectoring( one(), x, zero(), xx, yy, zz );
-    return zz;
+    return atan2( x, one() );
 }
 
 template< typename T, typename FLT >
@@ -976,6 +972,7 @@ template< typename T, typename FLT >
 T Cordic<T,FLT>::atanh2( const T& y, const T& x, bool do_reduce ) const             
 { 
     T xx, yy, zz;
+    // TODO: do reduction
     hyperbolic_vectoring( x, y, zero(), xx, yy, zz );
     return zz;
 }

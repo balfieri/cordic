@@ -51,6 +51,14 @@ public:
     ~Cordic();
 
     //-----------------------------------------------------
+    // Conversions
+    //-----------------------------------------------------
+    T       to_fp( FLT x ) const;               // float to fixed-point
+    FLT     to_flt( const T& x ) const;         // fixed-point to float
+
+    T       make_fp( bool sign, T i, T f );     // encode a fixed-point value using sign, integer part i, and fractional part f
+
+    //-----------------------------------------------------
     // Well-Known Math Functions Implemented Using CORDIC
     //
     // (2) means requires 2 applications of a CORDIC algorithm.              functionality
@@ -98,13 +106,22 @@ public:
     T    atanh2( const T& y, const T& x ) const;                          // atanh2(y, x)
 
     //-----------------------------------------------------
-    // Conversions
+    // Cool Identities
+    //
+    // exp(x+y)         = exp(x) * exp(y)
+    // log(x)           = 2*atan2(x-1, x+1)              
+    // log(x*y)         = log(x) + log(y)
+    // sqrt(x)          = sqrt( (x+0.25)^2 - (x-0.25)^2 ) = normh(...)
+    // asin(x)          = atan2(x, sqrt(1 - x^2))
+    // asin(x+y)        = PI - asin(x) - asin(y)
+    // acos(x)          = atan2(sqrt(1 - x^2), x)
+    // acos(x+y)        = -PI/2 + asin(x) + asin(y)
+    // atan(x*y)        = asin(x + y)
+    // sinh(x)          = (e^x - e^-x)/2
+    // cosh(x)          = (e^x + e^-x)/2
+    // asinh(x)         = log(x + sqrt(1 + x^2))
+    // acosh(x)         = log(x + sqrt(x^2 - 1))
     //-----------------------------------------------------
-    T       to_fp( FLT x ) const;               // float to fixed-point
-    FLT     to_flt( const T& x ) const;         // fixed-point to float
-
-    T       make_fp( bool sign, T i, T f );     // make a fixed-point value using sign, integer part i, and fractional part f
-//  T       make_flt( bool sign, T exp, T f );  // make a floating-point value using sign, exponent part, and fractional part
 
     //-----------------------------------------------------
     //-----------------------------------------------------
