@@ -239,7 +239,7 @@ public:
     T    dad( const T& y, const T& x, const T addend, bool do_reduce ) const; // same but override do_reduce
     T    div( const T& y, const T& x, bool do_reduce ) const;             // same but override do_reduce
     T    log( const T& x, bool do_reduce ) const;                         // 2*atan2(x-1, x+1, do_reduce)    
-    T    atan2(  const T& y, const T& x, bool do_reduce, bool x_is_one=false ) const; // same but override do_reduce 
+    T    atan2(  const T& y, const T& x, bool do_reduce, bool x_is_one=false, T * r=nullptr ) const; // same but override do_reduce 
     T    atanh2( const T& y, const T& x, bool do_reduce, bool x_is_one=false ) const; // same but override do_reduce
 
     //-----------------------------------------------------

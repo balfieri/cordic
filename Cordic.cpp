@@ -829,7 +829,7 @@ T Cordic<T,FLT>::atan2( const T& y, const T& x ) const
 }
 
 template< typename T, typename FLT >
-T Cordic<T,FLT>::atan2( const T& _y, const T& _x, bool do_reduce, bool x_is_one, T * rr ) const
+T Cordic<T,FLT>::atan2( const T& _y, const T& _x, bool do_reduce, bool x_is_one, T * r ) const
 { 
     T y = _y;
     T x = _x;
@@ -858,8 +858,9 @@ T Cordic<T,FLT>::atan2( const T& _y, const T& _x, bool do_reduce, bool x_is_one,
         }
     }
     T * addends = impl->reduce_atan_addend.get();
-    int32_t index = y_lshift + x_lshift + int_w();
-    cassert( index >= 0 && index < 2*int_2() );
+    int32_t int_width = int_w();
+    int32_t index = y_lshift + x_lshift + int_width;
+    cassert( index >= 0 && index < 2*int_width );
     const T addend = addends[index];
 
     T xx, yy, zz;
@@ -868,8 +869,8 @@ T Cordic<T,FLT>::atan2( const T& _y, const T& _x, bool do_reduce, bool x_is_one,
         zz = addend - zz;
         if ( sign ) zz = -zz;
     }
-    if ( rr != nullptr ) {
-        *rr = mul( xx, one_over_gain(), false );
+    if ( r != nullptr ) {
+        *r = mul( xx, one_over_gain(), false );
     }
     return zz;
 }
@@ -883,7 +884,7 @@ void Cordic<T,FLT>::polar_to_rect( const T& r, const T& a, T& x, T& y ) const
 template< typename T, typename FLT >
 void Cordic<T,FLT>::rect_to_polar( const T& x, const T& y, T& r, T& a ) const
 {
-    a = atan2( y, x, false, &r );
+    a = atan2( y, x, true, false, &r );
 }
 
 template< typename T, typename FLT >
@@ -1002,7 +1003,7 @@ T Cordic<T,FLT>::atanh2( const T& y, const T& x ) const
 }
 
 template< typename T, typename FLT >
-T Cordic<T,FLT>::atanh2( const T& y, const T& x, bool do_reduce, bool x_is_one ) const             
+T Cordic<T,FLT>::atanh2( const T& _y, const T& _x, bool do_reduce, bool x_is_one ) const             
 { 
     T y = _y;
     T x = _x;
@@ -1011,6 +1012,9 @@ T Cordic<T,FLT>::atanh2( const T& y, const T& x, bool do_reduce, bool x_is_one )
     // Identities:
     //     atan(-x) = -atan(x)
     //     abs(y/x) must be between 0 and 1
+    // Strategy:
+    //     reduce y and x for division
+    //     sum of their lshifts should be 0
     //-----------------------------------------------------
     int32_t y_lshift = 0;
     int32_t x_lshift = 0;
