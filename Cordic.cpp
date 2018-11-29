@@ -943,10 +943,10 @@ void Cordic<T,FLT>::sinh_cosh( const T& _x, T& sih, T& coh, const T * _r ) const
     //
     // sinh(-x)         = -sinh(x)
     // sinh(x)          = (e^x - e^-x)/2
-    // sinh(x+y)        = sinh(x)*cosh(y) + cosh(x)*sinh(y)
+    // sinh(x+y)        = sinh(x)*cosh(y) + cosh(x)*sinh(y)     <--
     // cosh(-x)         = cosh(x)
     // cosh(x)          = (e^x + e^-x)/2
-    // cosh(x+y)        = cosh(x)*cosh(y) - sinh(x)*sinh(y)
+    // cosh(x+y)        = cosh(x)*cosh(y) - sinh(x)*sinh(y)     <--
     // x = gain*(x0*cosh(z0) + y0*sinh(z0))
     // y = gain*(y0*cosh(z0) + x0*sinh(z0))
     //

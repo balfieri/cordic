@@ -108,7 +108,9 @@ public:
     //-----------------------------------------------------
     // Useful Identities
     //
+    // exp(x)           = sinh(x) + cosh(x)
     // exp(x+y)         = exp(x) * exp(y)
+    // exp(ix)          = cos(x) + i*sin(x)                             (i = sqrt(-1))
     // log(x)           = 2*atan2(x-1, x+1)              
     // log(x)           = atanh2(x^2 - 1, x^2 + 1) 
     // log(x*y)         = log(x) + log(y)
@@ -124,7 +126,6 @@ public:
     //
     // asin(-x)         = -asin(x)
     // asin(x)          = atan2(x, sqrt(1 - x^2))
-    // asin(x+y)        = 
     // acos(-x)         = acos(-x)
     // acos(x)          = atan2(sqrt(1 - x^2), x)
     // acos(x+y)        = PI/2 - asin(x+y)
