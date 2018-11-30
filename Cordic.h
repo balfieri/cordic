@@ -104,7 +104,7 @@ public:
     T    atanh2( const T& y, const T& x ) const;                          // atanh2(y, x)
 
     //-----------------------------------------------------
-    // Useful Identities (for the collector)
+    // Interesting Identities (for the curious)
     //
     // exp(x)           = sinh(x) + cosh(x)
     // exp(x+y)         = exp(x) * exp(y)
@@ -133,8 +133,18 @@ public:
     // acos(x)          = atan2(sqrt(1 - x^2), x)
     // acos(x+y)        = PI/2 - asin(x+y)
     // atan(-x)         = -atan(x)
-    // atan(x+y)        = atan((x+y) / (1 - x*y))
-    // atan(x*y)        = asin(x + y)
+    // atan(1/x)        = PI/2 - atan(x)                        if x > 0
+    // atan(x)          = asin(x / sqrt(1 + x^2))
+    // atan(x)          = 2*atan(x / (1 + sqrt(1 + x^2)))
+    // atan2(y,x)       = atan(y/x)                             if x >  0 
+    // atan2(y,x)       = PI/2 - atan(x/y)                      if x <= 0 && y > 0
+    // atan2(y,x)       = -PI/2 - atan(x/y)                     if x <= 0 && y < 0
+    // atan2(y,x)       = atan(y/x) +/- PI                      if x <  0 && y == 0
+    // atan2(y,x)       = undefined                             if x == 0 and y = 0
+    // atan2(y,x)       = 2*atan(y / (sqrt(x^2 + y^2) + x))     if x >  0    else has rounding errors, so...
+    // atan2(y,x)       = 2*atan((sqrt(x^2 + y^2) - x) / y)     if x <= 0 && y != 0
+    // atan2(y,x)       = PI                                    if x <  0 && y == 0
+    // atan2(y,x)       = undefined                             if x == 0 && y == 0
     //
     // sinh(-x)         = -sinh(x)
     // sinh(x)          = (e^x - e^-x)/2

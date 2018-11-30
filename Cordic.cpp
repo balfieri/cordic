@@ -191,9 +191,11 @@ Cordic<T,FLT>::Cordic( uint32_t int_w, uint32_t frac_w, bool do_reduce, uint32_t
     impl->reduce_atan2_addend = std::unique_ptr<T[]>( addend );
     for( int32_t i = -int_w; i <= int32_t(int_w); i++ )
     {
-        double addend_f = M_PI - std::asin( std::pow( 2.0, double( i ) ) );
+        double p_f      = std::pow( 2.0, double(i) );
+        double asin_f   = std::asin( p_f );
+        double addend_f = M_PI - asin_f;
         addend[int_w+i] = to_fp( addend_f );
-        if ( debug ) std::cout << "addend[]=0x" << std::hex << addend[int_w+i] << "\n" << std::dec;
+        if ( debug ) std::cout << "i=" << i << " p_f=" << p_f << " asin_f=" << asin_f << " addend_f=" << addend_f << " addend[]=0x" << std::hex << addend[int_w+i] << "\n" << std::dec;
         if ( debug ) std::cout << "reduce_atan2_arg LUT: addend[" << i << "]=" << to_flt(addend[int_w+i]) << " addend_f=" << addend_f << "\n";
     }
 }
@@ -1185,6 +1187,7 @@ void Cordic<T,FLT>::reduce_atan2_args( T& y, T& x, bool x_is_one, T& addend, boo
     cassert( index >= 0 && index < 2*int_width );
     addend = addends[index];    // PI - asin(1 << (y_lshift+x_lshift))
     if ( debug ) std::cout << "reduce_atan2_args: xy_orig=[" << to_flt(x_orig) << "," << to_flt(y_orig) << "]" << 
+                          " xy_lshift=[" << x_lshift << "," << y_lshift << "] index=" << index << 
                           " xy_reduced=[" << to_flt(x) << "," << to_flt(y) << "] addend=" << to_flt(addend) << " sign=" << sign << "\n";
 }
 
