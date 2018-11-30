@@ -756,7 +756,7 @@ T Cordic<T,FLT>::cos( const T& x, const T * r ) const
 template< typename T, typename FLT >
 void Cordic<T,FLT>::sin_cos( const T& x, T& si, T& co, const T * r ) const             
 {
-    sin_cos( x, si, co, true, true, r );
+    sin_cos( x, si, co, impl->do_reduce, true, true, r );
 }
 
 template< typename T, typename FLT >
@@ -905,7 +905,7 @@ T Cordic<T,FLT>::sinh( const T& x, const T * r ) const
 { 
     T sih;
     T coh;
-    sinh_cosh( x, sih, coh, r );
+    sinh_cosh( x, sih, coh, impl->do_reduce, true, false, r );
     return sih;
 }
 
@@ -914,12 +914,18 @@ T Cordic<T,FLT>::cosh( const T& x, const T * r ) const
 { 
     T sih;
     T coh;
-    sinh_cosh( x, sih, coh, r );
+    sinh_cosh( x, sih, coh, impl->do_reduce, false, true, r );
     return coh;
 }
 
 template< typename T, typename FLT >
-void Cordic<T,FLT>::sinh_cosh( const T& _x, T& sih, T& coh, const T * _r ) const
+void Cordic<T,FLT>::sinh_cosh( const T& x, T& sih, T& coh, const T * r ) const
+{ 
+    sinh_cosh( x, sih, coh, impl->do_reduce, true, true, r );
+}
+
+template< typename T, typename FLT >
+void Cordic<T,FLT>::sinh_cosh( const T& _x, T& sih, T& coh, bool do_reduce, bool need_sih, bool need_coh, const T * _r ) const
 { 
     // some identities I'll need soon to finish this:
     //
@@ -935,31 +941,31 @@ void Cordic<T,FLT>::sinh_cosh( const T& _x, T& sih, T& coh, const T * _r ) const
     T x = _x;
     uint32_t quadrant;
     bool sign;
-    if ( impl->do_reduce ) reduce_sin_cos_arg( x, quadrant, sign );  // TODO: this is not the right reduction for large x
+    if ( do_reduce ) reduce_sin_cos_arg( x, quadrant, sign );  // TODO: this is not the right reduction for large x
 
     T r = one_over_gainh();
     int32_t r_lshift;
     bool r_sign = false;
     if ( _r != nullptr ) {
         r = *_r;
-        if ( impl->do_reduce ) reduce_arg( r, r_lshift, r_sign );
+        if ( do_reduce ) reduce_arg( r, r_lshift, r_sign );
         r = mul( r, one_over_gainh(), false );  // should not need to reduce
     }
 
     T zz;
     hyperbolic_rotation( r, zero(), x, coh, sih, zz );
-    if ( impl->do_reduce ) {
+    if ( do_reduce ) {
         if ( quadrant&1 ) {
             T tmp = coh;
             coh = sih;
             sih = tmp;
         }
         if ( _r != nullptr ) {
-            sih <<= r_lshift;
-            coh <<= r_lshift;
+            if ( need_sih ) sih <<= r_lshift;
+            if ( need_coh ) coh <<= r_lshift;
         }
-        if ( r_sign ^ (quadrant >= 2) )                  sih = -sih;
-        if ( r_sign ^ (quadrant == 1 || quadrant == 2) ) coh = -coh;
+        if ( need_sih && (r_sign ^ (quadrant >= 2)) )                  sih = -sih;
+        if ( need_coh && (r_sign ^ (quadrant == 1 || quadrant == 2)) ) coh = -coh;
     }
 }
 
