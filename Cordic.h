@@ -243,6 +243,8 @@ public:
     T    log( const T& x, bool do_reduce ) const;                         // 2*atan2(x-1, x+1, do_reduce)    
     T    atan2(  const T& y, const T& x, bool do_reduce, bool x_is_one=false, T * r=nullptr ) const; // same but override do_reduce 
     T    atanh2( const T& y, const T& x, bool do_reduce, bool x_is_one=false ) const; // same but override do_reduce
+    void sin_cos( const T& x, T& si, T& co, bool do_reduce, bool need_si=true, bool need_co=true, const T * r=nullptr ) const;
+    void sinh_cosh( const T& x, T& sih, T& coh, bool do_reduce, bool need_sih=true, bool need_coh=true, const T * r=nullptr ) const;
 
     //-----------------------------------------------------
     // Argument Range Reduction Routines
@@ -260,7 +262,8 @@ public:
     void reduce_log_arg( T& x, T& addend ) const;                                               // reduce_arg x, addend to log(x) 
     void reduce_atan2_args( T& y, T& x, bool x_is_one, T& addend, bool& sign ) const;           // reduces y and x, addend for atan2()
     void reduce_norm_args( T& x, T& y, int32_t& lshift ) const;                                 // reduce_arg x and y with same lshift
-    void reduce_sincos_arg( T& a, uint32_t& quadrant, bool& sign ) const;                       // to 0 .. pi/2
+    void reduce_sin_cos_arg( T& a, uint32_t& quadrant, bool& sign ) const;                      // to 0 .. pi/2
+    void reduce_sinh_cosh_arg( T& x, uint32_t& quadrant, bool& sign ) const;                    // to 0 .. pi/2
 
 private:
     class Impl;
