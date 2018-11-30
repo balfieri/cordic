@@ -58,6 +58,8 @@ struct Cordic<T,FLT>::Impl
 
     std::unique_ptr<T[]>        reduce_sin_cos_addend;          // for each possible integer value, an addend to help normalize
     std::unique_ptr<uint32_t[]> reduce_sin_cos_quadrant;        // 00,01,02,03
+    std::unique_ptr<T[]>        reduce_sinh_cosh_sinh_i;        // for each possible integer value, sinh(i)
+    std::unique_ptr<T[]>        reduce_sinh_cosh_cosh_i;        // for each possible integer value, cosh(i)
     std::unique_ptr<FLT[]>      reduce_exp_factor;              // for each possible integer value, exp(i)
     std::unique_ptr<T[]>        reduce_log_addend;              // for each possible lshift value, log( 1 << lshift )
     std::unique_ptr<T[]>        reduce_atan2_addend;            // for each possible signed lshift value, asin( 1 << lshift )
@@ -135,13 +137,17 @@ Cordic<T,FLT>::Cordic( uint32_t int_w, uint32_t frac_w, bool do_reduce, uint32_t
     impl->log10       = T( std::log( FLT( 10 ) )       * FLT( T(1) << T(frac_w) ) );
     impl->log10_div_e = T( std::log( FLT( 10 ) / M_E ) * FLT( T(1) << T(frac_w) ) );
 
-    // construct LUT used by reduce_sin_cos_arg()
+    // construct LUTs used by reduce_sin_cos_arg() and reduce_sinh_cosh_arg()
     cassert( int_w < 14 && "too many cases to worry about" );
     uint32_t N = 1 << (1+int_w);
     T *        addend   = new T[N];
     uint32_t * quadrant = new uint32_t[N];
+    T *        sinh_i   = new T[N];
+    T *        cosh_i   = new T[N];
     impl->reduce_sin_cos_addend   = std::unique_ptr<T[]>( addend );
     impl->reduce_sin_cos_quadrant = std::unique_ptr<uint32_t[]>( quadrant );
+    impl->reduce_sinh_cosh_sinh_i = std::unique_ptr<T[]>( sinh_i );
+    impl->reduce_sinh_cosh_cosh_i = std::unique_ptr<T[]>( cosh_i );
     const FLT PI       = M_PI;
     const FLT PI_DIV_2 = PI / 2.0;
     for( T i = 0; i <= maxint(); i++ )
@@ -154,6 +160,10 @@ Cordic<T,FLT>::Cordic( uint32_t int_w, uint32_t frac_w, bool do_reduce, uint32_t
         addend[i]   = to_fp( add_f );
         quadrant[i] = cnt_i % 4;
         if ( debug ) std::cout << "reduce_sin_cos_arg LUT: cnt_i=" << cnt_i << " addend[" << i << "]=" << to_flt(addend[i]) << " quadrant=" << quadrant[i] << "\n";
+
+        sinh_i[i] = std::sinh( double(i) );
+        cosh_i[i] = std::cosh( double(i) );
+        if ( debug ) std::cout << "reduce_sinh_cosh_arg LUT: sinh_i=" << to_flt(sinh_i) << " cosh_i=" << to_flt(cosh_i) << "\n";
     }
 
     // construct LUT used by reduce_exp_arg()
@@ -927,21 +937,23 @@ void Cordic<T,FLT>::sinh_cosh( const T& x, T& sih, T& coh, const T * r ) const
 template< typename T, typename FLT >
 void Cordic<T,FLT>::sinh_cosh( const T& _x, T& sih, T& coh, bool do_reduce, bool need_sih, bool need_coh, const T * _r ) const
 { 
-    // some identities I'll need soon to finish this:
-    //
-    // sinh(-x)         = -sinh(x)
-    // sinh(x)          = (e^x - e^-x)/2
-    // sinh(x+y)        = sinh(x)*cosh(y) + cosh(x)*sinh(y)     <--
-    // cosh(-x)         = cosh(x)
-    // cosh(x)          = (e^x + e^-x)/2
-    // cosh(x+y)        = cosh(x)*cosh(y) - sinh(x)*sinh(y)     <--
-    // x = gain*(x0*cosh(z0) + y0*sinh(z0))
-    // y = gain*(y0*cosh(z0) + x0*sinh(z0))
+    // Identities:
+    //     sinh(-x)         = -sinh(x)
+    //     sinh(x+y)        = sinh(x)*cosh(y) + cosh(x)*sinh(y)    
+    //     cosh(-x)         = cosh(x)
+    //     cosh(x+y)        = cosh(x)*cosh(y) - sinh(x)*sinh(y)     
+    // Strategy:
+    //     split abs(x) into i + f
+    //     use LUT for sinh(i) and cosh(i)
+    //     run cordic on f
+    //     do the multiplications
+    //     fix sign of sih
     //
     T x = _x;
-    uint32_t quadrant;
+    T sinh_i; 
+    T cosh_i;
     bool sign;
-    if ( do_reduce ) reduce_sin_cos_arg( x, quadrant, sign );  // TODO: this is not the right reduction for large x
+    if ( do_reduce ) reduce_sinh_cosh_arg( x, sinh_i, cosh_i, sign );  
 
     T r = one_over_gainh();
     int32_t r_lshift;
@@ -949,23 +961,21 @@ void Cordic<T,FLT>::sinh_cosh( const T& _x, T& sih, T& coh, bool do_reduce, bool
     if ( _r != nullptr ) {
         r = *_r;
         if ( do_reduce ) reduce_arg( r, r_lshift, r_sign );
-        r = mul( r, one_over_gainh(), false );  // should not need to reduce
+        r = mul( r, one_over_gainh(), false );  // should not need to reduce (I think)
     }
 
+    T sinh_f;
+    T cosh_f;
     T zz;
     hyperbolic_rotation( r, zero(), x, coh, sih, zz );
     if ( do_reduce ) {
-        if ( quadrant&1 ) {
-            T tmp = coh;
-            coh = sih;
-            sih = tmp;
+        if ( need_sih ) {
+            sih = mul( sinh_f, cosh_i, true ) + mul( cosh_f, sinh_i, true );
+            if ( sign ) sih = -sih;
         }
-        if ( _r != nullptr ) {
-            if ( need_sih ) sih <<= r_lshift;
-            if ( need_coh ) coh <<= r_lshift;
+        if ( need_coh ) {
+            coh = mul( cosh_f, cosh_i, true ) - mul( sinh_f, sinh_i, true );
         }
-        if ( need_sih && (r_sign ^ (quadrant >= 2)) )                  sih = -sih;
-        if ( need_coh && (r_sign ^ (quadrant == 1 || quadrant == 2)) ) coh = -coh;
     }
 }
 
@@ -1221,4 +1231,30 @@ void Cordic<T,FLT>::reduce_sin_cos_arg( T& a, uint32_t& quad, bool& sign ) const
     if ( debug ) std::cout << "reduce_sin_cos_arg: a_orig=" << to_flt(a_orig) << " a_reduced=" << to_flt(a) << " quadrant=" << quad << "\n"; 
 }
 
-template class Cordic<int64_t, double>;
+template< typename T, typename FLT >
+void Cordic<T,FLT>::reduce_sinh_cosh_arg( T& _x, T& sinh_i, T& cosh_i, bool& sign ) const
+{
+    //-----------------------------------------------------
+    // Identities:
+    //     sinh(-x)         = -sinh(x)
+    //     sinh(x+y)        = sinh(x)*cosh(y) + cosh(x)*sinh(y)    
+    //     cosh(-x)         = cosh(x)
+    //     cosh(x+y)        = cosh(x)*cosh(y) - sinh(x)*sinh(y)     
+    // Strategy:
+    //     split abs(x) into i + f
+    //     use LUT for sinh(i) and cosh(i)
+    //     run cordic on f
+    //     do the multiplications
+    //     fix sign of sih
+    //-----------------------------------------------------
+    T x = _x;
+    sign = x < 0;
+    if ( sign ) x = -x;
+
+    T i = x >> frac_w();
+    x   = x & ((1 << frac_w())-1);
+    const T *  sinh_i_vals = impl->reduce_sinh_cosh_sinh_i_.get();
+    const T *  cosh_i_vals = impl->reduce_sinh_cosh_cosh_i_.get();
+    sinh_i = sinh_i_vals[i];
+    cosh_i = cosh_i_vals[i];
+}
