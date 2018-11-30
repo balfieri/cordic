@@ -35,9 +35,7 @@ struct Cordic<T,FLT>::Impl
     uint32_t                    int_w;
     uint32_t                    frac_w;
     bool                        do_reduce;
-    uint32_t                    nc;
-    uint32_t                    nh;
-    uint32_t                    nl;
+    uint32_t                    n;
 
     T                           maxint;
     T                           zero;
@@ -78,11 +76,9 @@ struct Cordic<T,FLT>::Impl
 // Constructor
 //-----------------------------------------------------
 template< typename T, typename FLT >
-Cordic<T,FLT>::Cordic( uint32_t int_w, uint32_t frac_w, bool do_reduce, uint32_t nc, uint32_t nh, uint32_t nl )
+Cordic<T,FLT>::Cordic( uint32_t int_w, uint32_t frac_w, bool do_reduce, uint32_t n )
 {
-    if ( nc == 0 ) nc = frac_w;
-    if ( nh == 0 ) nh = frac_w;
-    if ( nl == 0 ) nl = frac_w;
+    if ( n == 0 ) n = frac_w;
 
     impl = std::make_unique<Impl>();
 
@@ -93,32 +89,28 @@ Cordic<T,FLT>::Cordic( uint32_t int_w, uint32_t frac_w, bool do_reduce, uint32_t
     impl->zero    = 0;
     impl->one     = T(1) << frac_w;
     impl->quarter = T(1) << (frac_w-2);
-    impl->nc      = nc;
-    impl->nh      = nh;
-    impl->nl      = nl;
+    impl->n       = n;
 
-    impl->circular_atan    = std::unique_ptr<T[]>( new T[nc+1] );
-    impl->hyperbolic_atanh = std::unique_ptr<T[]>( new T[nh+1] );
-    impl->linear_pow2      = std::unique_ptr<T[]>( new T[nl+1] );
+    impl->circular_atan    = std::unique_ptr<T[]>( new T[n+1] );
+    impl->hyperbolic_atanh = std::unique_ptr<T[]>( new T[n+1] );
+    impl->linear_pow2      = std::unique_ptr<T[]>( new T[n+1] );
 
     // compute atan/atanh table and gains in high-resolution floating point
     FLT pow2  = 1.0;
     FLT gain_inv  = 1.0;
     FLT gainh_inv = 1.0;
-    uint32_t n_max = (nh > nc)    ? nh : nc;
-             n_max = (nl > n_max) ? nl : n_max;
     uint32_t next_dup_i = 4;     // for hyperbolic 
-    for( uint32_t i = 0; i <= n_max; i++ )
+    for( uint32_t i = 0; i <= n; i++ )
     {
         FLT a  = std::atan( pow2 );
-        if ( i <= nc ) impl->circular_atan[i]    = T( a    * FLT( T(1) << T(frac_w) ) );
-        if ( i <= nl ) impl->linear_pow2[i]      = T( pow2 * FLT( T(1) << T(frac_w) ) );
+        impl->circular_atan[i]    = T( a    * FLT( T(1) << T(frac_w) ) );
+        impl->linear_pow2[i]      = T( pow2 * FLT( T(1) << T(frac_w) ) );
         FLT ah = std::atanh( pow2 );
         //FLT ah = 0.5 * std::log( (1.0+pow2) / (1-pow2) );
-        if ( i <= nh ) impl->hyperbolic_atanh[i] = T( ah   * FLT( T(1) << T(frac_w) ) );
-        if ( i <= nc ) gain_inv *= std::cos( a );
+        impl->hyperbolic_atanh[i] = T( ah   * FLT( T(1) << T(frac_w) ) );
+        gain_inv *= std::cos( a );
 
-        if ( i != 0 && i <= nh ) {
+        if ( i != 0 && i <= n ) {
             gainh_inv *= std::cosh( ah );
             if ( i == next_dup_i ) {
                 // for hyperbolic, we must duplicate iterations 4, 13, 40, 121, ..., 3*i+1
@@ -218,6 +210,12 @@ uint32_t Cordic<T,FLT>::frac_w( void ) const
 }
 
 template< typename T, typename FLT >
+uint32_t Cordic<T,FLT>::n( void ) const
+{
+    return impl->n;
+}
+
+template< typename T, typename FLT >
 T Cordic<T,FLT>::maxint( void ) const
 {
     return impl->maxint;
@@ -239,24 +237,6 @@ template< typename T, typename FLT >
 T Cordic<T,FLT>::quarter( void ) const
 {
     return impl->quarter;
-}
-
-template< typename T, typename FLT >
-uint32_t Cordic<T,FLT>::n_circular( void ) const
-{
-    return impl->nc;
-}
-
-template< typename T, typename FLT >
-uint32_t Cordic<T,FLT>::n_hyperbolic( void ) const
-{
-    return impl->nh;
-}
-
-template< typename T, typename FLT >
-uint32_t Cordic<T,FLT>::n_linear( void ) const
-{
-    return impl->nl;
 }
 
 template< typename T, typename FLT >
@@ -336,7 +316,7 @@ void Cordic<T,FLT>::circular_rotation( const T& x0, const T& y0, const T& z0, T&
     x = x0;
     y = y0;
     z = z0;
-    uint32_t n = impl->nc;
+    uint32_t n = impl->n;
     for( uint32_t i = 0; i <= n; i++ )
     {
         T xi;
@@ -370,7 +350,7 @@ void Cordic<T,FLT>::circular_vectoring( const T& x0, const T& y0, const T& z0, T
     x = x0;
     y = y0;
     z = z0;
-    uint32_t n = impl->nc;
+    uint32_t n = impl->n;
     for( uint32_t i = 0; i <= n; i++ )
     {
         T xi;
@@ -404,7 +384,7 @@ void Cordic<T,FLT>::hyperbolic_rotation( const T& x0, const T& y0, const T& z0, 
     x = x0;
     y = y0;
     z = z0;
-    uint32_t n = impl->nh;
+    uint32_t n = impl->n;
     uint32_t next_dup_i = 4;     
     for( uint32_t i = 1; i <= n; i++ )
     {
@@ -445,7 +425,7 @@ void Cordic<T,FLT>::hyperbolic_vectoring( const T& x0, const T& y0, const T& z0,
     x = x0;
     y = y0;
     z = z0;
-    uint32_t n = impl->nh;
+    uint32_t n = impl->n;
     uint32_t next_dup_i = 4;     
     for( uint32_t i = 1; i <= n; i++ )
     {
@@ -485,7 +465,7 @@ void Cordic<T,FLT>::linear_rotation( const T& x0, const T& y0, const T& z0, T& x
     x = x0;
     y = y0;
     z = z0;
-    uint32_t n = impl->nl;
+    uint32_t n = impl->n;
     for( uint32_t i = 0; i <= n; i++ )
     {
         if ( debug ) printf( "linear_rotation: i=%d xyz=[%f,%f,%f] test=%d\n", i, to_flt(x), to_flt(y), to_flt(z), int(z >= zero()) );
@@ -515,7 +495,7 @@ void Cordic<T,FLT>::linear_vectoring( const T& x0, const T& y0, const T& z0, T& 
     x = x0;
     y = y0;
     z = z0;
-    uint32_t n = impl->nl;
+    uint32_t n = impl->n;
     for( uint32_t i = 0; i <= n; i++ )
     {
         if ( debug ) printf( "linear_vectoring: i=%d xyz=[%f,%f,%f] test=%d\n", i, to_flt(x), to_flt(y), to_flt(z), int((x < zero()) != (y < zero())) );

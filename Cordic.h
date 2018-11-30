@@ -43,11 +43,9 @@ public:
     // If you need a mix of reduce and no-reduce, then please allocate two different Cordic objects with different do_reduce
     // settings but the same other parameters.
     //
-    // nc == number of iterations for circular   (0 == use FRAC_W)
-    // nh == number of iterations for hyperbolic (0 == use FRAC_W)
-    // nl == number of iterations for linear     (0 == use FRAC_W)
+    // n == number of iterations used during CORDIC proper (0 == default == frac_w)
     //-----------------------------------------------------
-    Cordic( uint32_t int_w, uint32_t frac_w, bool do_reduce=true, uint32_t nc=0, uint32_t nh=0, uint32_t nl=0 );
+    Cordic( uint32_t int_w, uint32_t frac_w, bool do_reduce=true, uint32_t n=0 );
     ~Cordic();
 
     //-----------------------------------------------------
@@ -173,6 +171,7 @@ public:
     //-----------------------------------------------------
     uint32_t int_w( void ) const;
     uint32_t frac_w( void ) const;
+    uint32_t n( void ) const;           // n
     T maxint( void ) const;             // largest positive integer
     T zero( void ) const;               // 0.0
     T one( void ) const;                // 1.0
@@ -181,10 +180,6 @@ public:
     T gainh( void ) const;              // hyperbolic
     T one_over_gain( void ) const;      // circular
     T one_over_gainh( void ) const;     // hyperbolic
-
-    uint32_t n_circular( void ) const;  // nc
-    uint32_t n_linear( void ) const;    // nh
-    uint32_t n_hyperbolic( void ) const;// nl
 
     //-----------------------------------------------------
     // The basic CORDIC functions that all the above math functions ultimately use.
