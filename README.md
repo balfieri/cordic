@@ -113,6 +113,11 @@ class and associated math functions fall out naturally by using complex&lt;cordr
 </p>
 
 <p>
+In the far future, we may want to support more exotic numeric formats, such as UNUM, which have variable lengths for components
+and keep track of accumulated error. These formats have yet to gain wide acceptance.
+</p>
+
+<p>
 Bob Alfieri<br>
 Chapel Hill, NC
 </p>
