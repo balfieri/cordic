@@ -6,7 +6,7 @@ This repository contains some C++ code that shows how to implement CORDIC math. 
 Addition, subtraction, and multiplication are relatively easy tasks to implement in a computer chip.  Divide, sqrt(), and other
 transcendental functions are challenging even when high precision is not required.  CORDIC math makes it easy and cheap to implement
 these complicated math functions by using a simple sequence of shifts and adds.  The only complication is that inputs need to 
-be reduced to a small range of values, typically 1.0 .. 2.0.  
+be reduced to a small range of values, typically 0.0 .. 2.0.
 </p>
 
 <p>
