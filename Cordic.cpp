@@ -1161,15 +1161,16 @@ void Cordic<T,FLT>::reduce_atan2_args( T& y, T& x, bool x_is_one, T& addend, boo
 {
     //-----------------------------------------------------
     // Identities:
-    //     Assume: y/x = p*f  (power of 2 times fraction)
-    //     atan(p*f) = asin(p + f) = PI - asin(p) - asin(f)
+    //     atan2(y,x)       = 2*atan(y / (sqrt(x^2 + y^2) + x))     if x >  0    (x < 0 can have inflated rounding errors, so...)
+    //     atan2(y,x)       = 2*atan((sqrt(x^2 + y^2) - x) / y)     if x <= 0 && y != 0
+    //     atan2(y,x)       = PI                                    if x <  0 && y == 0
+    //     atan2(y,x)       = undefined                             if x == 0 && y == 0
     // Strategy:
-    //     reduce y and x for division
-    //     f = y/x                          // which is done by CORDIC
-    //     log2(p) = y_lshift + x_lshift    // note: can be negative
-    //     index a LUT using log2(p) and pull out precomputed PI - asin(p)
+    //     Find power-of-two that we can factor out of both numerator and denominator.
+    //     Can use reduce_sqrt_arg() for that.  
+    //     Then do atan2() CORDIC on reduced x and y.
     //
-    // Note: there has to be a better way to do this.  The divide really sucks.
+    // TODO: Code below is wrong and needs to be changed to do above.
     //-----------------------------------------------------
     T y_orig = y;
     T x_orig = x;
