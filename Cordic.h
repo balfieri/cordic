@@ -140,6 +140,9 @@ public:
     // atan2(y,x)       = 2*atan((sqrt(x^2 + y^2) - x) / y)     if x <= 0 && y != 0
     // atan2(y,x)       = PI                                    if x <  0 && y == 0
     // atan2(y,x)       = undefined                             if x == 0 && y == 0
+    // PI               = 4*atan(1)	                        but low 2 bits will end up as 0 for a fixed-point number
+    // PI               = acos(-1)                              but that just uses atan
+    // PI               = pi()                                  function in this class to return a precomputed high-precision version
     //
     // sinh(-x)         = -sinh(x)
     // sinh(x)          = (e^x - e^-x)/2
@@ -160,7 +163,6 @@ public:
     // atanh(x)         = log((1+x)/(1-x))/2 = log(1+x)/2 - log(1-x)/2    (note: x must be between -1 and 1)
     // atanh(x)         = asinh(x / sqrt(1 - x^2)) 
     // atanh(x)         = +/- acosh(1 / sqrt(1 - x^2))
-    // PI               = 4*atan(1)
     //-----------------------------------------------------
 
     //-----------------------------------------------------
@@ -187,6 +189,8 @@ public:
     T zero( void ) const;               // 0.0
     T one( void ) const;                // 1.0
     T quarter( void ) const;            // 0.25
+    T pi( void ) const;                 // PI
+    T e( void ) const;                  // natural exponent
     T gain( void ) const;               // circular
     T gainh( void ) const;              // hyperbolic
     T one_over_gain( void ) const;      // circular

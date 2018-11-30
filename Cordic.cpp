@@ -41,6 +41,8 @@ struct Cordic<T,FLT>::Impl
     T                           zero;
     T                           one;
     T                           quarter;
+    T                           pi;
+    T                           e;
 
     std::unique_ptr<T[]>        circular_atan;                  // circular atan values
     T                           circular_gain;                  // circular gain
@@ -87,11 +89,14 @@ Cordic<T,FLT>::Cordic( uint32_t int_w, uint32_t frac_w, bool do_reduce, uint32_t
     impl->int_w   = int_w;
     impl->frac_w  = frac_w;
     impl->do_reduce = do_reduce;
+    impl->n       = n;
+
     impl->maxint  = (T(1) << int_w) - 1;
     impl->zero    = 0;
     impl->one     = T(1) << frac_w;
     impl->quarter = T(1) << (frac_w-2);
-    impl->n       = n;
+    impl->pi      = to_flt( std::acos( FLT(-1.0) ) );
+    impl->e       = to_flt( std::exp( FLT(1) ) );
 
     impl->circular_atan    = std::unique_ptr<T[]>( new T[n+1] );
     impl->hyperbolic_atanh = std::unique_ptr<T[]>( new T[n+1] );
@@ -249,6 +254,18 @@ template< typename T, typename FLT >
 T Cordic<T,FLT>::quarter( void ) const
 {
     return impl->quarter;
+}
+
+template< typename T, typename FLT >
+T Cordic<T,FLT>::pi( void ) const
+{
+    return impl->pi;
+}
+
+template< typename T, typename FLT >
+T Cordic<T,FLT>::e( void ) const
+{
+    return impl->e;
 }
 
 template< typename T, typename FLT >
