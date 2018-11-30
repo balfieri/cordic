@@ -846,22 +846,9 @@ T Cordic<T,FLT>::atan2( const T& _y, const T& _x, bool do_reduce, bool x_is_one,
     //
     // Note: there has to be a better way to do this.  The divide really sucks.
     //-----------------------------------------------------
-    int32_t y_lshift;
-    int32_t x_lshift;
-    bool    sign = false;
-    if ( do_reduce ) {
-        if ( x_is_one ) {
-            x_lshift = 0;
-            reduce_arg( y, y_lshift, sign );
-        } else {
-            reduce_div_args( y, x, y_lshift, x_lshift, sign );
-        }
-    }
-    T * addends = impl->reduce_atan_addend.get();
-    int32_t int_width = int_w();
-    int32_t index = y_lshift + x_lshift + int_width;
-    cassert( index >= 0 && index < 2*int_width );
-    const T addend = addends[index];
+    T    addend;
+    bool sign;
+    if ( do_reduce ) reduce_atan2_args( y, x, x_is_one, addend, sign );
 
     T xx, yy, zz;
     circular_vectoring( x, y, zero(), xx, yy, zz );
@@ -869,9 +856,7 @@ T Cordic<T,FLT>::atan2( const T& _y, const T& _x, bool do_reduce, bool x_is_one,
         zz = addend - zz;
         if ( sign ) zz = -zz;
     }
-    if ( r != nullptr ) {
-        *r = mul( xx, one_over_gain(), false );
-    }
+    if ( r != nullptr ) *r = mul( xx, one_over_gain(), false );
     return zz;
 }
 
@@ -1154,6 +1139,40 @@ void Cordic<T,FLT>::reduce_log_arg( T& x, T& addend ) const
     const T * addends = impl->reduce_log_addend.get();
     addend = addends[frac_w()+x_lshift];
     if ( debug ) std::cout << "reduce_log_arg: x_orig=" << to_flt(x_orig) << " x_reduced=" << to_flt(x) << " addend=" << to_flt(addend) << "\n"; 
+}
+
+template< typename T, typename FLT >
+void Cordic<T,FLT>::reduce_atan2_args( T& y, T& x, bool x_is_one, T& addend, bool& sign ) const
+{
+    //-----------------------------------------------------
+    // Identities:
+    //     Assume: y/x = p*f  (power of 2 times fraction)
+    //     atan(p*f) = asin(p + f) = PI - asin(p) - asin(f)
+    // Strategy:
+    //     reduce y and x for division
+    //     f = y/x                          // which is done by CORDIC
+    //     log2(p) = y_lshift + x_lshift    // note: can be negative
+    //     index a LUT using log2(p) and pull out precomputed PI - asin(p)
+    //
+    // Note: there has to be a better way to do this.  The divide really sucks.
+    //-----------------------------------------------------
+    T y_orig = y;
+    T x_orig = x;
+    int32_t y_lshift;
+    int32_t x_lshift;
+    if ( x_is_one ) {
+        x_lshift = 0;
+        reduce_arg( y, y_lshift, sign );
+    } else {
+        reduce_div_args( y, x, y_lshift, x_lshift, sign );
+    }
+    T * addends = impl->reduce_atan_addend.get();
+    int32_t int_width = int_w();
+    int32_t index = y_lshift + x_lshift + int_width;
+    cassert( index >= 0 && index < 2*int_width );
+    addend = addends[index];    // PI - asin(1 << (y_lshift+x_lshift))
+    if ( debug ) std::cout << "reduce_atan2_args: xy_orig=[" << to_flt(x_orig) << "," << to_flt(y_orig) << "]" << 
+                          " xy_reduced=[" << to_flt(x) << "," << to_flt(y) << "] addend=" << to_flt(addend) << " sign=" << sign << "\n";
 }
 
 template< typename T, typename FLT >

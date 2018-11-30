@@ -258,6 +258,7 @@ public:
     void reduce_sqrt_arg( T& x, int32_t& x_lshift ) const;                                      // reduce_arg but lshift must pow-of-2
     void reduce_exp_arg( FLT b, T& x, T& factor, bool& sign ) const;                            // b=const_base, mul/div exp(x) by factor
     void reduce_log_arg( T& x, T& addend ) const;                                               // reduce_arg x, addend to log(x) 
+    void reduce_atan2_args( T& y, T& x, bool x_is_one, T& addend, bool& sign ) const;           // reduces y and x, addend for atan2()
     void reduce_norm_args( T& x, T& y, int32_t& lshift ) const;                                 // reduce_arg x and y with same lshift
     void reduce_angle_arg( T& a, uint32_t& quadrant, bool& sign ) const;                        // to 0 .. pi/2
 
