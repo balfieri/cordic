@@ -104,12 +104,12 @@ public:
     T    atanh2( const T& y, const T& x ) const;                          // atanh2(y, x)
 
     //-----------------------------------------------------
-    // Useful Identities
+    // Useful Identities (for the collector)
     //
     // exp(x)           = sinh(x) + cosh(x)
     // exp(x+y)         = exp(x) * exp(y)
     // exp(ix)          = cos(x) + i*sin(x)                             (Eurler's Formula, i = sqrt(-1))
-    // exp(i*PI) + 1    = 0                                             (Euler's Identity falls out from previous)
+    // exp(i*PI) + 1    = 0                                             (Euler's Identity)
     // log(x)           = 2*atan2(x-1, x+1)              
     // log(x)           = atanh2(x^2 - 1, x^2 + 1) 
     // log(x*y)         = log(x) + log(y)
@@ -118,8 +118,12 @@ public:
     //
     // sin(-x)          = -sin(x)
     // sin(x+y)         = sin(x)*cos(y) + cos(x)*sin(y)
+    // sin(x)           = Im(e^(ix)) = (e^(ix) + e^(-ix)) / 2
+    // sin(ix)          = i*sinh(x)
     // cos(x+y)         = cos(x)*sin(y) - sin(x)*cos(y)
     // cos(-x)          = cos(x)
+    // cos(x)           = Re(e^(ix)) = (e^(ix) - e^(-ix)) / 2i
+    // cos(ix)          = cosh(x)
     // tan(-x)          = -tan(x)
     // tan(x+y)         = (tan(x) + tan(y)) / (1 - tan(x)*tan(y))
     //
