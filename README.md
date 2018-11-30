@@ -70,7 +70,7 @@ are identified using special encodings of the exponent.
 </p>
 
 <p>
-Currently, fixed-point numbers (no exponents) naturally support denorms (they are all denorms), but have no way to indicate a value 
+Currently, fixed-point numbers naturally support denorms (i.e., they are all denorms), but have no way to indicate a value 
 outside their allowed range.  We will add
 an option to mark a number as +Infinity, -Infinity, or NaN.  We will add an alternative option
 to gracefully flush large numbers to +/- "max value" and NaNs to zero.
