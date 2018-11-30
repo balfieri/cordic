@@ -108,7 +108,8 @@ public:
     //
     // exp(x)           = sinh(x) + cosh(x)
     // exp(x+y)         = exp(x) * exp(y)
-    // exp(ix)          = cos(x) + i*sin(x)                             (i = sqrt(-1))
+    // exp(ix)          = cos(x) + i*sin(x)                             (Eurler's Formula, i = sqrt(-1))
+    // exp(i*PI) + 1    = 0                                             (Euler's Identity falls out from previous)
     // log(x)           = 2*atan2(x-1, x+1)              
     // log(x)           = atanh2(x^2 - 1, x^2 + 1) 
     // log(x*y)         = log(x) + log(y)
