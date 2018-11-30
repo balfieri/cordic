@@ -31,7 +31,7 @@ bits.  If T is larger than the required number of bits, the extra upper bits are
 </p>
 
 <p>
-Here are some examples of fixed-point numbers.  1.3.8 means 1 sign bit (alway), 3 integer bits, and 8 fraction bits.
+Here are some examples of fixed-point numbers.  1.3.8 means 1 sign bit, 3 integer bits, and 8 fraction bits.
 </p>
 <pre>
 Format         value            binary (spaces added for readability)
