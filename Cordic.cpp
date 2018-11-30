@@ -62,7 +62,7 @@ struct Cordic<T,FLT>::Impl
     std::unique_ptr<uint32_t[]> reduce_angle_quadrant;          // 00,01,02,03
     std::unique_ptr<FLT[]>      reduce_exp_factor;              // for each possible integer value, exp(i)
     std::unique_ptr<T[]>        reduce_log_addend;              // for each possible lshift value, log( 1 << lshift )
-    std::unique_ptr<T[]>        reduce_atan_addend;             // for each possible signed lshift value, asin( 1 << lshift )
+    std::unique_ptr<T[]>        reduce_atan2_addend;            // for each possible signed lshift value, asin( 1 << lshift )
 
     inline void                 do_lshift( T& x, int32_t lshift ) const
     {
@@ -182,6 +182,17 @@ Cordic<T,FLT>::Cordic( uint32_t int_w, uint32_t frac_w, bool do_reduce, uint32_t
         addend[frac_w+i] = to_fp( addend_f );
         if ( debug ) std::cout << "addend[]=0x" << std::hex << addend[frac_w+i] << "\n" << std::dec;
         if ( debug ) std::cout << "reduce_log_arg LUT: addend[" << i << "]=" << to_flt(addend[frac_w+i]) << " addend_f=" << addend_f << "\n";
+    }
+
+    // construct LUT used by reduce_atan2_args()
+    addend = new T[2*int_w];
+    impl->reduce_atan2_addend = std::unique_ptr<T[]>( addend );
+    for( int32_t i = -int_w; i <= int32_t(int_w); i++ )
+    {
+        double addend_f = M_PI - std::asin( std::pow( 2.0, double( i ) ) );
+        addend[int_w+i] = to_fp( addend_f );
+        if ( debug ) std::cout << "addend[]=0x" << std::hex << addend[int_w+i] << "\n" << std::dec;
+        if ( debug ) std::cout << "reduce_atan2_arg LUT: addend[" << i << "]=" << to_flt(addend[int_w+i]) << " addend_f=" << addend_f << "\n";
     }
 }
 
@@ -1166,7 +1177,7 @@ void Cordic<T,FLT>::reduce_atan2_args( T& y, T& x, bool x_is_one, T& addend, boo
     } else {
         reduce_div_args( y, x, y_lshift, x_lshift, sign );
     }
-    T * addends = impl->reduce_atan_addend.get();
+    T * addends = impl->reduce_atan2_addend.get();
     int32_t int_width = int_w();
     int32_t index = y_lshift + x_lshift + int_width;
     cassert( index >= 0 && index < 2*int_width );
