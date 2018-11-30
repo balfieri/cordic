@@ -260,7 +260,7 @@ public:
     void reduce_log_arg( T& x, T& addend ) const;                                               // reduce_arg x, addend to log(x) 
     void reduce_atan2_args( T& y, T& x, bool x_is_one, T& addend, bool& sign ) const;           // reduces y and x, addend for atan2()
     void reduce_norm_args( T& x, T& y, int32_t& lshift ) const;                                 // reduce_arg x and y with same lshift
-    void reduce_angle_arg( T& a, uint32_t& quadrant, bool& sign ) const;                        // to 0 .. pi/2
+    void reduce_sincos_arg( T& a, uint32_t& quadrant, bool& sign ) const;                       // to 0 .. pi/2
 
 private:
     class Impl;

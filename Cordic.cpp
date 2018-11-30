@@ -56,8 +56,8 @@ struct Cordic<T,FLT>::Impl
     T                           log10;                          // log(10)
     T                           log10_div_e;                    // log(10) / e
 
-    std::unique_ptr<T[]>        reduce_angle_addend;            // for each possible integer value, an addend to help normalize
-    std::unique_ptr<uint32_t[]> reduce_angle_quadrant;          // 00,01,02,03
+    std::unique_ptr<T[]>        reduce_sincos_addend;            // for each possible integer value, an addend to help normalize
+    std::unique_ptr<uint32_t[]> reduce_sincos_quadrant;          // 00,01,02,03
     std::unique_ptr<FLT[]>      reduce_exp_factor;              // for each possible integer value, exp(i)
     std::unique_ptr<T[]>        reduce_log_addend;              // for each possible lshift value, log( 1 << lshift )
     std::unique_ptr<T[]>        reduce_atan2_addend;            // for each possible signed lshift value, asin( 1 << lshift )
@@ -135,13 +135,13 @@ Cordic<T,FLT>::Cordic( uint32_t int_w, uint32_t frac_w, bool do_reduce, uint32_t
     impl->log10       = T( std::log( FLT( 10 ) )       * FLT( T(1) << T(frac_w) ) );
     impl->log10_div_e = T( std::log( FLT( 10 ) / M_E ) * FLT( T(1) << T(frac_w) ) );
 
-    // construct LUT used by reduce_angle()
+    // construct LUT used by reduce_sincos_arg()
     cassert( int_w < 14 && "too many cases to worry about" );
     uint32_t N = 1 << (1+int_w);
     T *        addend   = new T[N];
     uint32_t * quadrant = new uint32_t[N];
-    impl->reduce_angle_addend   = std::unique_ptr<T[]>( addend );
-    impl->reduce_angle_quadrant = std::unique_ptr<uint32_t[]>( quadrant );
+    impl->reduce_sincos_addend   = std::unique_ptr<T[]>( addend );
+    impl->reduce_sincos_quadrant = std::unique_ptr<uint32_t[]>( quadrant );
     const FLT PI       = M_PI;
     const FLT PI_DIV_2 = PI / 2.0;
     for( T i = 0; i <= maxint(); i++ )
@@ -153,7 +153,7 @@ Cordic<T,FLT>::Cordic( uint32_t int_w, uint32_t frac_w, bool do_reduce, uint32_t
         if ( i > 0 ) add_f = -add_f;
         addend[i]   = to_fp( add_f );
         quadrant[i] = cnt_i % 4;
-        if ( debug ) std::cout << "reduce_angle_arg LUT: cnt_i=" << cnt_i << " addend[" << i << "]=" << to_flt(addend[i]) << " quadrant=" << quadrant[i] << "\n";
+        if ( debug ) std::cout << "reduce_sincos_arg LUT: cnt_i=" << cnt_i << " addend[" << i << "]=" << to_flt(addend[i]) << " quadrant=" << quadrant[i] << "\n";
     }
 
     // construct LUT used by reduce_exp_arg()
@@ -759,7 +759,7 @@ void Cordic<T,FLT>::sin_cos( const T& _x, T& si, T& co, const T * _r ) const
     T x = _x;
     uint32_t quadrant;
     bool x_sign;
-    if ( impl->do_reduce ) reduce_angle_arg( x, quadrant, x_sign );
+    if ( impl->do_reduce ) reduce_sincos_arg( x, quadrant, x_sign );
 
     T r = one_over_gain();
     int32_t r_lshift;
@@ -929,7 +929,7 @@ void Cordic<T,FLT>::sinh_cosh( const T& _x, T& sih, T& coh, const T * _r ) const
     T x = _x;
     uint32_t quadrant;
     bool sign;
-    if ( impl->do_reduce ) reduce_angle_arg( x, quadrant, sign );  // TODO: this is not the right reduction for large x
+    if ( impl->do_reduce ) reduce_sincos_arg( x, quadrant, sign );  // TODO: this is not the right reduction for large x
 
     T r = one_over_gainh();
     int32_t r_lshift;
@@ -1192,7 +1192,7 @@ void Cordic<T,FLT>::reduce_norm_args( T& x, T& y, int32_t& lshift ) const
 }
 
 template< typename T, typename FLT >
-void Cordic<T,FLT>::reduce_angle_arg( T& a, uint32_t& quad, bool& sign ) const
+void Cordic<T,FLT>::reduce_sincos_arg( T& a, uint32_t& quad, bool& sign ) const
 {
     //-----------------------------------------------------
     // Use LUT to find addend.
@@ -1200,13 +1200,13 @@ void Cordic<T,FLT>::reduce_angle_arg( T& a, uint32_t& quad, bool& sign ) const
     const T a_orig = a;
     sign = a < 0;
     if ( sign ) a = -a;
-    const T *  addend   = impl->reduce_angle_addend.get();
-    uint32_t * quadrant = impl->reduce_angle_quadrant.get();
+    const T *  addend   = impl->reduce_sincos_addend.get();
+    uint32_t * quadrant = impl->reduce_sincos_quadrant.get();
 
     T index = (a >> frac_w()) & maxint();
     quad = quadrant[index];
     a += addend[index];
-    if ( debug ) std::cout << "reduce_angle_arg: a_orig=" << to_flt(a_orig) << " a_reduced=" << to_flt(a) << " quadrant=" << quad << "\n"; 
+    if ( debug ) std::cout << "reduce_sincos_arg: a_orig=" << to_flt(a_orig) << " a_reduced=" << to_flt(a) << " quadrant=" << quad << "\n"; 
 }
 
 template class Cordic<int64_t, double>;
