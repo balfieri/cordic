@@ -163,7 +163,7 @@ Cordic<T,FLT>::Cordic( uint32_t int_w, uint32_t frac_w, bool do_reduce, uint32_t
 
         sinh_i[i] = std::sinh( double(i) );
         cosh_i[i] = std::cosh( double(i) );
-        if ( debug ) std::cout << "reduce_sinh_cosh_arg LUT: sinh_i=" << to_flt(sinh_i) << " cosh_i=" << to_flt(cosh_i) << "\n";
+        if ( debug ) std::cout << "reduce_sinh_cosh_arg LUT: sinh_i=" << to_flt(sinh_i[i]) << " cosh_i=" << to_flt(cosh_i[i]) << "\n";
     }
 
     // construct LUT used by reduce_exp_arg()
@@ -1253,8 +1253,10 @@ void Cordic<T,FLT>::reduce_sinh_cosh_arg( T& _x, T& sinh_i, T& cosh_i, bool& sig
 
     T i = x >> frac_w();
     x   = x & ((1 << frac_w())-1);
-    const T *  sinh_i_vals = impl->reduce_sinh_cosh_sinh_i_.get();
-    const T *  cosh_i_vals = impl->reduce_sinh_cosh_cosh_i_.get();
+    const T *  sinh_i_vals = impl->reduce_sinh_cosh_sinh_i.get();
+    const T *  cosh_i_vals = impl->reduce_sinh_cosh_cosh_i.get();
     sinh_i = sinh_i_vals[i];
     cosh_i = cosh_i_vals[i];
 }
+
+template class Cordic<int64_t, double>;
