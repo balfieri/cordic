@@ -23,11 +23,11 @@ for use as a production reference model.
 
 <p>
 The library currently assumes that values are stored as fixed-point with user-defined integer width (int_w) and fraction width (frac_w).  
-The fixed-point container type T must be a signed integer at least as wide as 1+int_w+frac_w.  [A fixed-point number stores
+The fixed-point container type T must be a signed integer at least as wide as 1+int_w+frac_w. A fixed-point number stores
 the sign in the most-significant bit, followed by the int_w binary integer bits, followed by the frac_w binary fraction bits 
 in the least-significant
 bits.  If T is larger than the required number of bits, the extra upper bits are assumed to contain replications of the sign bit
-(1=negative, 0=non-negative).  In other words, fixed-point values are stored in 2's-complement integer containers, so -A == ~A + 1.]
+(1=negative, 0=non-negative).  In other words, fixed-point values are stored in 2's-complement integer containers, so -A == ~A + 1.
 </p>
 
 <p>
@@ -47,6 +47,13 @@ Format         value            binary (spaces added for readability)
 <p>
 By default, this code automatically performs appropriate argument range reductions and post-CORDIC adjustments, 
 but it can be turned off if you know that the inputs to the math functions are in the proper range already.
+</p>
+
+<p>
+By default, the CORDIC routines perform frac_w iterations in order to arrive at frac_w precision.  You may, however,
+reduce the number of iterations by passing a different value for n to the constructor.  The numeric encoding
+will be the same, but the result will be less precise.  Again, two different Cordic() instances with idential parameters
+except for do_reduce and n can be used on an operation-by-operation basis.
 </p>
 
 <p>
