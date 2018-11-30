@@ -1161,10 +1161,10 @@ void Cordic<T,FLT>::reduce_atan2_args( T& y, T& x, bool x_is_one, T& addend, boo
 {
     //-----------------------------------------------------
     // Identities:
-    //     atan2(y,x)       = 2*atan(y / (sqrt(x^2 + y^2) + x))     if x >  0    (x < 0 can have inflated rounding errors, so...)
-    //     atan2(y,x)       = 2*atan((sqrt(x^2 + y^2) - x) / y)     if x <= 0 && y != 0
-    //     atan2(y,x)       = PI                                    if x <  0 && y == 0
     //     atan2(y,x)       = undefined                             if x == 0 && y == 0
+    //     atan2(y,x)       = PI                                    if x <  0 && y == 0
+    //     atan2(y,x)       = 2*atan(y / (sqrt(x^2 + y^2) + x))     if x >  0    
+    //     atan2(y,x)       = 2*atan((sqrt(x^2 + y^2) - x) / y)     if x <= 0 && y != 0
     // Strategy:
     //     Find power-of-two that we can factor out of both numerator and denominator.
     //     Can use reduce_sqrt_arg() for that.  
