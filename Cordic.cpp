@@ -94,8 +94,8 @@ Cordic<T,FLT>::Cordic( uint32_t int_w, uint32_t frac_w, bool do_reduce, uint32_t
     impl->quarter = T(1) << (frac_w-2);
     impl->pi      = to_flt( std::acos( FLT(-1.0) ) );
     impl->e       = to_flt( std::exp( FLT(1) ) );
-    impl->log2        = to_fp( std::log( FLT(  2 ) ) );
-    impl->log10       = to_fp( std::log( FLT( 10 ) ) );
+    impl->log2    = to_t( std::log( FLT(  2 ) ) );
+    impl->log10   = to_t( std::log( FLT( 10 ) ) );
 
     impl->circular_atan    = std::unique_ptr<T[]>( new T[n+1] );
     impl->hyperbolic_atanh = std::unique_ptr<T[]>( new T[n+1] );
@@ -131,10 +131,10 @@ Cordic<T,FLT>::Cordic( uint32_t int_w, uint32_t frac_w, bool do_reduce, uint32_t
     }
 
     // now convert those last two to fixed-point
-    impl->circular_gain            = to_fp( FLT(1)/gain_inv );
-    impl->circular_one_over_gain   = to_fp( gain_inv );
-    impl->hyperbolic_gain          = to_fp( FLT(1)/gainh_inv );
-    impl->hyperbolic_one_over_gain = to_fp( gainh_inv );
+    impl->circular_gain            = to_t( FLT(1)/gain_inv );
+    impl->circular_one_over_gain   = to_t( gain_inv );
+    impl->hyperbolic_gain          = to_t( FLT(1)/gainh_inv );
+    impl->hyperbolic_one_over_gain = to_t( gainh_inv );
     if ( debug ) std::cout << "circular_one_over_gain="   << to_flt(impl->circular_one_over_gain) << "\n";
     if ( debug ) std::cout << "hyperbolic_one_over_gain=" << to_flt(impl->hyperbolic_one_over_gain) << "\n";
 
@@ -158,7 +158,7 @@ Cordic<T,FLT>::Cordic( uint32_t int_w, uint32_t frac_w, bool do_reduce, uint32_t
         if ( debug ) std::cout << "cnt_i=" << cnt_i << "\n";
         FLT add_f = FLT(cnt_i) * PI_DIV_2;
         if ( i > 0 ) add_f = -add_f;
-        addend[i]   = to_fp( add_f );
+        addend[i]   = to_t( add_f );
         quadrant[i] = cnt_i % 4;
         if ( debug ) std::cout << "reduce_sin_cos_arg LUT: cnt_i=" << cnt_i << " addend[" << i << "]=" << to_flt(addend[i]) << " quadrant=" << quadrant[i] << "\n";
 
@@ -182,7 +182,7 @@ Cordic<T,FLT>::Cordic( uint32_t int_w, uint32_t frac_w, bool do_reduce, uint32_t
     for( int32_t i = -frac_w; i <= int32_t(int_w); i++ )
     {
         double addend_f = std::log( std::pow( 2.0, double( i ) ) );
-        addend[frac_w+i] = to_fp( addend_f );
+        addend[frac_w+i] = to_t( addend_f );
         if ( debug ) std::cout << "addend[]=0x" << std::hex << addend[frac_w+i] << "\n" << std::dec;
         if ( debug ) std::cout << "reduce_log_arg LUT: addend[" << i << "]=" << to_flt(addend[frac_w+i]) << " addend_f=" << addend_f << "\n";
     }
@@ -279,15 +279,15 @@ T Cordic<T,FLT>::one_over_gainh( void ) const
 // Conversion
 //-----------------------------------------------------
 template< typename T, typename FLT >
-T Cordic<T,FLT>::to_fp( FLT _x ) const
+T Cordic<T,FLT>::to_t( FLT _x ) const
 {
     FLT x = _x;
     bool is_neg = x < 0.0;
     if ( is_neg ) x = -x;
-    T x_fp = x * FLT( one() );
-    //std::cout << "to_fp: abs(x)=" << x << " x_fp=0x" << std::hex << x_fp << std::dec << " to_flt=" << to_flt(x_fp) << "\n";
-    if ( is_neg ) x_fp = -x_fp;
-    return x_fp;
+    T x_t = x * FLT( one() );
+    //std::cout << "to_t: abs(x)=" << x << " x_t=0x" << std::hex << x_t << std::dec << " to_flt=" << to_flt(x_t) << "\n";
+    if ( is_neg ) x_t = -x_t;
+    return x_t;
 }
 
 template< typename T, typename FLT >
@@ -679,7 +679,7 @@ T Cordic<T,FLT>::powc( const FLT& b, const T& x ) const
     cassert( b > 0 && "powc b must be positive" );
     const FLT log_b_f = std::log( b );
     cassert( log_b_f >= 0.0 && "powc log(b) must be non-negative" );
-    const T   log_b   = to_fp( log_b_f );
+    const T   log_b   = to_t( log_b_f );
     return exp( mul( x, log_b ) );
 }
 
@@ -726,7 +726,7 @@ T Cordic<T,FLT>::logc( const T& x, const FLT& b ) const
 { 
     cassert( b > 0.0 && "logc b must be positive" );
     const FLT  one_over_log_b_f = FLT(1) / std::log( b );
-    const T    one_over_log_b   = to_fp( one_over_log_b_f );
+    const T    one_over_log_b   = to_t( one_over_log_b_f );
           T    log_x            = log( x );
     const bool log_x_sign       = log_x < 0;
     if ( log_x_sign ) log_x = -log_x;
@@ -1163,7 +1163,7 @@ void Cordic<T,FLT>::reduce_exp_arg( FLT b, T& x, T& factor, bool& sign ) const
     if ( sign ) x = -x;
     T   index    = (x >> frac_w()) & maxint();
     FLT factor_f = std::log(b) * factors_f[index];   // could build per-b factors_f[] LUT with multiply already done
-    factor       = to_fp( factor_f );
+    factor       = to_t( factor_f );
     x           &= (T(1) << frac_w())-T(1); // fraction only
     if ( debug ) std::cout << "reduce_exp_arg: x_orig=" << to_flt(x_orig) << " x_reduced=" << to_flt(x) << " factor=" << factor << "\n"; 
 }

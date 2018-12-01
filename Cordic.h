@@ -51,8 +51,8 @@ public:
     //-----------------------------------------------------
     // Conversions
     //-----------------------------------------------------
-    T       to_fp( FLT x ) const;               // float to fixed-point
-    FLT     to_flt( const T& x ) const;         // fixed-point to float
+    T       to_t( FLT x ) const;                // FLT to T encoded value
+    FLT     to_flt( const T& x ) const;         // T encoded value to FLT
 
     T       make_fp( bool sign, T i, T f );     // encode a fixed-point value using sign, integer part i, and fractional part f
 
