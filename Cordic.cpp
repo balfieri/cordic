@@ -618,38 +618,16 @@ T Cordic<T,FLT>::one_over( const T& x ) const
 }
 
 template< typename T, typename FLT >
-T Cordic<T,FLT>::sqrt( const T& _x ) const
+T Cordic<T,FLT>::sqrt( const T& x ) const
 { 
-    //-----------------------------------------------------
-    // Use normh( x+0.25, x-0.25 ).
-    // However, if x is range-reduced, that 0.25
-    // needs to change to quarter() >> x_lshift;
-    //-----------------------------------------------------
-    T x = _x;
-    cassert( x >= 0 && "sqrt x must be non-negative" );
-    int32_t x_lshift;
-    if ( impl->do_reduce ) reduce_sqrt_arg( x, x_lshift );
-
-    T q = quarter();
-    if ( impl->do_reduce ) q >>= x_lshift;
-    T n = normh( x + q, x - q );
-    if ( impl->do_reduce ) impl->do_lshift( n, x_lshift );
-    return n;
+    return normh( x+quarter(), x-quarter() );
 }
 
 template< typename T, typename FLT >
-T Cordic<T,FLT>::one_over_sqrt( const T& _x ) const
+T Cordic<T,FLT>::one_over_sqrt( const T& x ) const
 { 
-    T x = _x;
-    cassert( x > 0 && "one_over_sqrt x must be positive" );
-    int32_t x_lshift;
-    if ( impl->do_reduce ) reduce_sqrt_arg( x, x_lshift );
-
-    // do basic 1/sqrt for now
-    // try pow( x, -0.5 ) later
-    T n = div( one(), sqrt( x ), false );
-    if ( impl->do_reduce ) n >>= x_lshift;
-    return n;
+    // later, have normh leave result normalized
+    return div( one(), normh( x+quarter(), x-quarter() ) );
 }
 
 template< typename T, typename FLT >
