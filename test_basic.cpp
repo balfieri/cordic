@@ -63,9 +63,9 @@ constexpr FLT TOL = 1.0 / FLT( 1LL << (frac_w-12) );     // would like this to b
     std::cout << #str << "\n";			                        \
     std::cout << "Reduce:   " << do_reduce << "\n";                     \
     std::cout << "Input:    " << std::setw(30) << fltx << "(fltx)\n";	\
-    std::cout << "Expected: " << std::setw(30) << flte1 << "," << flte2 << "\n"; \
-    std::cout << "Actual:   " << std::setw(30) << fltz1 << "," << fltz2 << "\n"; \
-    std::cout << "Diff:     " << std::setw(30) << flterr1 << "," << flterr2 << "\n\n"; \
+    std::cout << "Expected: " << std::setw(30) << flte1 << ", " << flte2 << "\n"; \
+    std::cout << "Actual:   " << std::setw(30) << fltz1 << ", " << fltz2 << "\n"; \
+    std::cout << "Diff:     " << std::setw(30) << flterr1 << ", " << flterr2 << "\n\n"; \
     cassert( flterr1 <= TOL );			                        \
     cassert( flterr2 <= TOL );			                        \
 }    
@@ -108,9 +108,9 @@ constexpr FLT TOL = 1.0 / FLT( 1LL << (frac_w-12) );     // would like this to b
     std::cout << #str << "\n";			                        \
     std::cout << "Reduce:   " << do_reduce << "\n";                     \
     std::cout << "Input:    " << std::setw(30) << fltx << "(fltx) " << flty << "(flty)\n"; \
-    std::cout << "Expected: " << std::setw(30) << flte1 << "," << flte2 << "\n"; \
-    std::cout << "Actual:   " << std::setw(30) << fltz1 << "," << fltz2 << "\n"; \
-    std::cout << "Diff:     " << std::setw(30) << flterr1 << "," << flterr2 << "\n\n"; \
+    std::cout << "Expected: " << std::setw(30) << flte1 << ", " << flte2 << "\n"; \
+    std::cout << "Actual:   " << std::setw(30) << fltz1 << ", " << fltz2 << "\n"; \
+    std::cout << "Diff:     " << std::setw(30) << flterr1 << ", " << flterr2 << "\n\n"; \
     cassert( flterr1 <= TOL );			                        \
     cassert( flterr2 <= TOL );			                        \
 }    

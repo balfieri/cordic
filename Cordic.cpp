@@ -895,7 +895,7 @@ T Cordic<T,FLT>::atan2( const T& _y, const T& _x, bool do_reduce, bool x_is_one,
 template< typename T, typename FLT >
 void Cordic<T,FLT>::polar_to_rect( const T& r, const T& a, T& x, T& y ) const
 {
-    sin_cos( a, x, y, &r );
+    sin_cos( a, y, x, &r );
 }
 
 template< typename T, typename FLT >
