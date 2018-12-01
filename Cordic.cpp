@@ -531,8 +531,6 @@ T Cordic<T,FLT>::mad( const T& _x, const T& _y, const T addend, bool do_reduce )
     T x = _x;
     T y = _y;
     if ( debug ) std::cout << "mad begin: x_orig=" << to_flt(x) << " y_orig=" << to_flt(y) << " addend=" << to_flt(addend) << " do_reduce=" << do_reduce << "\n";
-    cassert( x >= 0 && "mad x must be non-negative" );
-    cassert( y >= 0 && "mad y must be non-negative" );
     cassert( do_reduce || addend >= 0 && "mad addend must be non-negative" );
     int32_t x_lshift;
     int32_t y_lshift;

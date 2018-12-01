@@ -161,7 +161,6 @@ int main( int argc, const char * argv[] )
     Cordic<FP, FLT> * cordicnr = new Cordic( int_w, frac_w, false );    // without arg reduction
     std::cout << "tol: " << TOL << "\n";
 
-//  for( uint32_t i = 0; i < 2; i++ )
     for( uint32_t i = 0; i < 1; i++ )
     {
         bool do_reduce = i;

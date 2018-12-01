@@ -93,7 +93,7 @@ Denorm-As-Zero (DAZ) means that any denorm input to an operation is first change
 To install this on your computer, you'll need git and a C++ compiler, then:
 </p>
 <pre>
-git clone github.com/balfieri/cordic
+git clone https://github.com/balfieri/cordic
 cd cordic
 </pre>
 
@@ -103,6 +103,7 @@ To build and run the basic "smoke" test, <b>test_basic.cpp</b>, on Linux, Cygwin
 <pre>
 doit.test
 doit.test 1                             - run with debug spew 
+doit.test test_basic                    - same as doit.test
 </pre>
 
 <p>
