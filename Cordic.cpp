@@ -80,6 +80,7 @@ template< typename T, typename FLT >
 Cordic<T,FLT>::Cordic( uint32_t int_w, uint32_t frac_w, bool do_reduce, uint32_t n )
 {
     if ( n == 0 ) n = frac_w;
+    cassert( (1+int_w+frac_w) <= (sizeof( T ) * 8) && "1+int_w+frac_w does not fit in T container" );
 
     impl = std::make_unique<Impl>();
 
