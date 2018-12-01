@@ -12,13 +12,9 @@ be reduced to a small range of values, typically 0.0 .. 2.0.
 <p>
 CORDIC was invented in the 1950's and first used in the navigation system of the B-58 bomber, which did not
 even have a built-in multiply instruction.  Prior to that, navigation systems used analog computers.
-There is nothing novel or proprietary here.  This code is intended
-for tutorial purposes only. You should not assume that the library is bug-free or accurate enough
+There is nothing novel or proprietary here.  <b>This is all open-source.  Refer to the LICENSE.md for licensing details.</b>  
+This code is intended for tutorial purposes only. You should not assume that the library is bug-free or accurate enough
 for use as a production reference model.
-</p>
-
-<p>
-<b>This is all open-source.  Refer to the LICENSE.md for licensing details.</b>
 </p>
 
 <p>
