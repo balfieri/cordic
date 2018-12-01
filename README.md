@@ -71,13 +71,13 @@ are identified using special encodings of the exponent.
 
 <p>
 Currently, fixed-point numbers naturally support denorms (i.e., they are all denorms), but have no way to indicate a value 
-outside their allowed range.  We will add
-an option to mark a number as +Infinity, -Infinity, or NaN.  We will add an alternative option
+outside their allowed range.  The library needs
+an option to mark a number as +Infinity, -Infinity, or NaN.  An additional needed option is
 to gracefully flush large numbers to +/- "max value" and NaNs to zero.
 </p>
 
 <p>
-Another thing that is not currently handled is the different IEEE rounding modes: round-to-nearest (currently what we do
+Another thing that is not currently handled is the different IEEE rounding modes: round-to-nearest (currently behavior 
 and what one normally expects), 
 round-toward-zero, round-toward-plus-infinity, round-toward-minus-infinity.  There's another one worth doing
 called round-away-from-zero (aka round-toward-plus-or-minus-infinity). The rounding mode would be set
@@ -108,13 +108,13 @@ new test cases.
 </p>
 
 <p>
-We need to add a "cordreal" real number class that follows all the rules of any C++ floating-point number but uses Cordic 
+The library needs a "cordreal" real number class that follows all the rules of any C++ floating-point number but uses Cordic 
 as its underlying implementation. Note that there will be no need to do anything special for complex numbers. The C++ complex<> 
 class and associated math functions fall out naturally by using complex&lt;cordreal&gt;.
 </p>
 
 <p>
-In the far future, we may want to support more exotic numeric formats, such as UNUM, which have variable lengths for components
+In the far future, it may be desirable to support more exotic numeric formats, such as UNUM, which have variable lengths for components
 and keep track of accumulated error. These formats have yet to gain wide acceptance.
 </p>
 
