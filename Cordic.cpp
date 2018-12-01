@@ -43,6 +43,8 @@ struct Cordic<T,FLT>::Impl
     T                           quarter;
     T                           pi;
     T                           e;
+    T                           log2;                           // log(2)
+    T                           log10;                          // log(10)
 
     std::unique_ptr<T[]>        circular_atan;                  // circular atan values
     T                           circular_gain;                  // circular gain
@@ -53,10 +55,6 @@ struct Cordic<T,FLT>::Impl
     T                           hyperbolic_one_over_gain;       // hyperbolic 1/gain
 
     std::unique_ptr<T[]>        linear_pow2;                    // linear 2^(-i) values
-
-    T                           log2;                           // log(2)
-    T                           log10;                          // log(10)
-    T                           log10_div_e;                    // log(10) / e
 
     std::unique_ptr<T[]>        reduce_sin_cos_addend;          // for each possible integer value, an addend to help normalize
     std::unique_ptr<uint32_t[]> reduce_sin_cos_quadrant;        // 00,01,02,03
@@ -96,6 +94,8 @@ Cordic<T,FLT>::Cordic( uint32_t int_w, uint32_t frac_w, bool do_reduce, uint32_t
     impl->quarter = T(1) << (frac_w-2);
     impl->pi      = to_flt( std::acos( FLT(-1.0) ) );
     impl->e       = to_flt( std::exp( FLT(1) ) );
+    impl->log2        = to_fp( std::log( FLT(  2 ) ) );
+    impl->log10       = to_fp( std::log( FLT( 10 ) ) );
 
     impl->circular_atan    = std::unique_ptr<T[]>( new T[n+1] );
     impl->hyperbolic_atanh = std::unique_ptr<T[]>( new T[n+1] );
@@ -131,17 +131,12 @@ Cordic<T,FLT>::Cordic( uint32_t int_w, uint32_t frac_w, bool do_reduce, uint32_t
     }
 
     // now convert those last two to fixed-point
-    impl->circular_gain            = T( 1.0/gain_inv  * FLT( T(1) << T(frac_w) ) );
-    impl->circular_one_over_gain   = T(     gain_inv  * FLT( T(1) << T(frac_w) ) );
-    impl->hyperbolic_gain          = T( 1.0/gainh_inv * FLT( T(1) << T(frac_w) ) );
-    impl->hyperbolic_one_over_gain = T(     gainh_inv * FLT( T(1) << T(frac_w) ) );
+    impl->circular_gain            = to_fp( FLT(1)/gain_inv );
+    impl->circular_one_over_gain   = to_fp( gain_inv );
+    impl->hyperbolic_gain          = to_fp( FLT(1)/gainh_inv );
+    impl->hyperbolic_one_over_gain = to_fp( gainh_inv );
     if ( debug ) std::cout << "circular_one_over_gain="   << to_flt(impl->circular_one_over_gain) << "\n";
     if ( debug ) std::cout << "hyperbolic_one_over_gain=" << to_flt(impl->hyperbolic_one_over_gain) << "\n";
-
-    // constants
-    impl->log2        = T( std::log( FLT( 2  ) )       * FLT( T(1) << T(frac_w) ) );
-    impl->log10       = T( std::log( FLT( 10 ) )       * FLT( T(1) << T(frac_w) ) );
-    impl->log10_div_e = T( std::log( FLT( 10 ) / M_E ) * FLT( T(1) << T(frac_w) ) );
 
     // construct LUTs used by reduce_sin_cos_arg() and reduce_sinh_cosh_arg()
     cassert( int_w < 14 && "too many cases to worry about" );
