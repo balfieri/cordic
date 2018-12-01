@@ -30,8 +30,8 @@
 #define do_op1( str, c_fn, exp_fn, fltx, do_reduce )                    \
 {                                                                       \
     auto c = do_reduce ? cordicr : cordicnr;                            \
-    FP  fpx  = c->to_fp( fltx );			                \
-    FP  fpz  = c->c_fn( fpx );		                                \
+    T   fpx  = c->to_fp( fltx );			                \
+    T   fpz  = c->c_fn( fpx );		                                \
     FLT fltz = c->to_flt( fpz );	                                \
     FLT flte = exp_fn( fltx );			                        \
     FLT flterr = std::abs( flte-fltz );			                \
@@ -49,8 +49,8 @@
 #define do_op12( str, c_fn, exp_fn, fltx, do_reduce )                   \
 {                                                                       \
     auto c = do_reduce ? cordicr : cordicnr;                            \
-    FP  fpx  = c->to_fp( fltx );			                \
-    FP  fpz1, fpz2;                                                     \
+    T   fpx  = c->to_fp( fltx );			                \
+    T   fpz1, fpz2;                                                     \
     c->c_fn( fpx, fpz1, fpz2 );		                                \
     FLT fltz1 = c->to_flt( fpz1 );		                        \
     FLT fltz2 = c->to_flt( fpz2 );		                        \
@@ -73,9 +73,9 @@
 #define do_op2( str, c_fn, exp_fn, fltx, flty, do_reduce )              \
 {                                                                       \
     auto c = do_reduce ? cordicr : cordicnr;                            \
-    FP  fpx  = c->to_fp( fltx );			                \
-    FP  fpy  = c->to_fp( flty );			                \
-    FP  fpz  = c->c_fn( fpx, fpy );	                                \
+    T   fpx  = c->to_fp( fltx );			                \
+    T   fpy  = c->to_fp( flty );			                \
+    T   fpz  = c->c_fn( fpx, fpy );	                                \
     FLT fltz = c->to_flt( fpz );			                \
     FLT flte = exp_fn( fltx, flty );			                \
     FLT flterr = std::abs( flte-fltz );			                \
@@ -93,9 +93,9 @@
 #define do_op22( str, c_fn, exp_fn, fltx, flty, do_reduce )             \
 {                                                                       \
     auto c = do_reduce ? cordicr : cordicnr;                            \
-    FP  fpx  = c->to_fp( fltx );			                \
-    FP  fpy  = c->to_fp( flty );			                \
-    FP  fpz1, fpz2;                                                     \
+    T   fpx  = c->to_fp( fltx );			                \
+    T   fpy  = c->to_fp( flty );			                \
+    T   fpz1, fpz2;                                                     \
     c->c_fn( fpx, fpy, fpz1, fpz2 );	                                \
     FLT fltz1 = c->to_flt( fpz1 );		                        \
     FLT fltz2 = c->to_flt( fpz2 );		                        \
@@ -118,10 +118,10 @@
 #define do_op3( str, c_fn, exp_fn, fltx, flty, fltw, do_reduce )        \
 {                                                                       \
     auto c = do_reduce ? cordicr : cordicnr;                            \
-    FP  fpx  = c->to_fp( fltx );			                \
-    FP  fpy  = c->to_fp( flty );			                \
-    FP  fpw  = c->to_fp( fltw );			                \
-    FP  fpz  = c->c_fn( fpx, fpy, fpw );	                        \
+    T   fpx  = c->to_fp( fltx );			                \
+    T   fpy  = c->to_fp( flty );			                \
+    T   fpw  = c->to_fp( fltw );			                \
+    T   fpz  = c->c_fn( fpx, fpy, fpw );	                        \
     FLT fltz = c->to_flt( fpz );			                \
     FLT flte = exp_fn( fltx, flty, fltw );			        \
     FLT flterr = std::abs( flte-fltz );			                \

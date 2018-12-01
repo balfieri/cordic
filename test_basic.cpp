@@ -23,7 +23,7 @@
 #include "Cordic.h"
 
 using FLT = double;                                     // later, use a more precise float type
-using FP  = int64_t;                                    // T container
+using T   = int64_t;                                    // integer container to hold encoded numbers
 
 #include "test_helpers.h"                               // must be included after FLT is defined
 
@@ -60,8 +60,8 @@ int main( int argc, const char * argv[] )
     //---------------------------------------------------------------------------
     // Allocate do_reduce=true and do_reduce=false Cordic objects.
     //---------------------------------------------------------------------------
-    Cordic<FP, FLT> * cordicr  = new Cordic( int_w, frac_w, true );     // with arg reduction
-    Cordic<FP, FLT> * cordicnr = new Cordic( int_w, frac_w, false );    // without arg reduction
+    Cordic<T, FLT> * cordicr  = new Cordic( int_w, frac_w, true );     // with arg reduction
+    Cordic<T, FLT> * cordicnr = new Cordic( int_w, frac_w, false );    // without arg reduction
 
     //---------------------------------------------------------------------------
     // New and fixed bugs.
