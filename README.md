@@ -106,8 +106,8 @@ doit.test 1                             - run with debug spew
 </pre>
 
 <p>
-Currently, test_basic.cpp does its own checking within a small tolerance.  In the near future, we'd like to have
-the Cordic.cpp library itself do optional checking of computations so that tests can focus exclusively on generating
+Currently, test_basic.cpp does its own checking within a small tolerance.  In the near future, 
+Cordic.cpp should do optional checking of computations so that tests can focus exclusively on generating
 new test cases.
 </p>
 
