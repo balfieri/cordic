@@ -121,7 +121,7 @@ class and associated math functions fall out naturally by using complex&lt;cordr
 <p>
 In the far future, it may be desirable to support more exotic numeric formats, such as UNUM, which have variable lengths for components
 and keep track of accumulated error. These formats have yet to gain wide acceptance.  A nearer-term approach would be to have
-cordreal keep track of ranges and to the underlying fixed-point and floating-point representations as it goes.
+cordreal keep track of ranges and to change the underlying fixed-point and floating-point representations automatically.
 </p>
 
 <p>
