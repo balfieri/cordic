@@ -620,13 +620,19 @@ T Cordic<T,FLT>::one_over( const T& x ) const
 template< typename T, typename FLT >
 T Cordic<T,FLT>::sqrt( const T& _x ) const
 { 
+    //-----------------------------------------------------
+    // Use normh( x+0.25, x-0.25 ).
+    // However, if x is range-reduced, that 0.25
+    // needs to change to quarter() >> x_lshift;
+    //-----------------------------------------------------
     T x = _x;
     cassert( x >= 0 && "sqrt x must be non-negative" );
     int32_t x_lshift;
     if ( impl->do_reduce ) reduce_sqrt_arg( x, x_lshift );
 
-    // sqrt( (x+0.25)^2 - (x-0.25)^2 ) = normh( x+0.25, x-0.25 )
-    T n = normh( x + quarter(), x - quarter() );
+    T q = quarter();
+    if ( impl->do_reduce ) q >>= x_lshift;
+    T n = normh( x + q, x - q );
     if ( impl->do_reduce ) impl->do_lshift( n, x_lshift );
     return n;
 }
