@@ -75,10 +75,11 @@ int main( int argc, const char * argv[] )
     {
         do_reduce = i;
 
-        FLT x = 0.681807431807431031 + 3*i;
-        FLT y = 0.810431798013170871 + 3*i;
-        FLT w = 0.103301038084310970 + 3*i;
-        FLT b = M_E * 1.1;
+        FLT x  = 0.681807431807431031 + 3*i;
+        FLT xs = 0.681807431807431031 + 1.23*i;
+        FLT y  = 0.810431798013170871 + 3*i;
+        FLT w  = 0.103301038084310970 + 3*i;
+        FLT b  = M_E * 1.1;
 
         //                          cordic   reference
         do_op3(  "x*y + w",          mad,     mad,            x, y, w, do_reduce );
@@ -94,7 +95,7 @@ int main( int argc, const char * argv[] )
         do_op1(  "exp(x)",           exp,     std::exp,       x   , do_reduce );
         do_op2(  "pow(x,y)",         pow,     std::pow,       b, y, do_reduce );
         do_op1(  "pow2(x)",          pow2,    pow2,           x   , do_reduce );
-        do_op1(  "pow10(x)",         pow10,   pow10,          x   , true      );
+        do_op1(  "pow10(x)",         pow10,   pow10,          xs  , true      );
         do_op1(  "log(x)",           log,     std::log,       x   , true      );
         do_op2(  "logb(x,b)",        logb,    logb,           1.76380274379013, 1.439028043178590, true );
         do_op1(  "log2(x)",          log2,    log2,           x   , true      );
