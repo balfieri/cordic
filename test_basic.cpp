@@ -29,13 +29,36 @@ using FP  = int64_t;                                    // T container
 
 int main( int argc, const char * argv[] )
 {
-    const int int_w = 7;                                // fixed-point for now
-    const int frac_w = 56;                              // same as double
-    const FLT TOL = 1.0 / FLT( 1LL << (frac_w-12) );    // would like this to be much smaller
+    //---------------------------------------------------------------------------
+    // Process command-line arguments after applying defaults.
+    //---------------------------------------------------------------------------
+    int int_w = 7;                              // fixed-point for now
+    int frac_w = 56;                            // same as double
+    FLT TOL = 1.0 / FLT( 1LL << (frac_w-12) );  // would like this to be much smaller
+    uint32_t loop_cnt = 1;                      // by default, run through only first iteration of below loop
 
+    for( int i = 1; i < argc; i++ )
+    {
+        if ( strcmp( argv[i], "-int_w" ) == 0 ) {
+            int_w = std::atoi( argv[++i] );
+        } else if ( strcmp( argv[i], "-frac_w" ) == 0 ) {
+            frac_w = std::atoi( argv[++i] );
+        } else if ( strcmp( argv[i], "-tol" ) == 0 ) {
+            TOL = std::atof( argv[++i] );
+        } else if ( strcmp( argv[i], "-loop_cnt" ) == 0 ) {
+            loop_cnt = std::atoi( argv[++i] );
+        } else {
+            std::cout << "ERROR: unknown option " << argv[i] << "\n";
+            exit( 1 );
+        }
+    }
+    std::cout << "int_w=" << int_w << " frac_w=" << frac_w << " tol=" << TOL << "\n\n";
+
+    //---------------------------------------------------------------------------
+    // Allocate do_reduce=true and do_reduce=false Cordic objects.
+    //---------------------------------------------------------------------------
     Cordic<FP, FLT> * cordicr  = new Cordic( int_w, frac_w, true );     // with arg reduction
     Cordic<FP, FLT> * cordicnr = new Cordic( int_w, frac_w, false );    // without arg reduction
-    std::cout << "tol: " << TOL << "\n";
 
     //---------------------------------------------------------------------------
     // Put new bugs here, numbered, most recent first so that 
@@ -47,9 +70,8 @@ int main( int argc, const char * argv[] )
 
     //---------------------------------------------------------------------------
     // Run through all operations quickly with do_reduce=false and do_reduce=true.
-    // Not thorough at all.
     //---------------------------------------------------------------------------
-    for( uint32_t i = 0; i < 1; i++ )
+    for( uint32_t i = 0; i < loop_cnt; i++ )
     {
         do_reduce = i;
 
