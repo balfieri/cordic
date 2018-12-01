@@ -169,8 +169,9 @@ int main( int argc, const char * argv[] )
     // Put new bugs here, numbered, most recent first so that 
     // fixed bugs get added to this basic regression.
     //---------------------------------------------------------------------------
-    do_op2(  "2) mul",                   mul,    mul,           1.45, 0.4782,  true );
-    do_op1(  "1) log",                   log,    std::log,      1.53,          true );
+    bool do_reduce = true;      // let routines handle the general case
+    do_op2(  "2) mul",                   mul,    mul,           1.45, 0.4782,  do_reduce );
+    do_op1(  "1) log",                   log,    std::log,      1.53,          do_reduce );
 
     //---------------------------------------------------------------------------
     // Run through all operations quickly with do_reduce=false and do_reduce=true.
@@ -178,7 +179,7 @@ int main( int argc, const char * argv[] )
     //---------------------------------------------------------------------------
     for( uint32_t i = 0; i < 1; i++ )
     {
-        bool do_reduce = i;
+        do_reduce = i;
 
         FLT x = 0.681807431807431031 + 3*i;
         FLT y = 0.810431798013170871 + 3*i;
