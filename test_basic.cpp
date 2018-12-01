@@ -22,12 +22,14 @@
 //
 #include "Cordic.h"
 
-using FLT = double;
+using FLT = double;                                     // later, use a more precise float type
 using FP  = int64_t;
-constexpr int int_w = 7;
-constexpr int frac_w = 56;
-constexpr FLT TOL = 1.0 / FLT( 1LL << (frac_w-12) );     // would like this to be much smaller
+constexpr int int_w = 7;                                // fixed-point for now
+constexpr int frac_w = 56;                              // same as double
+constexpr FLT TOL = 1.0 / FLT( 1LL << (frac_w-12) );    // would like this to be much smaller
 
+// some useful macros to avoid redundant typing
+//
 #define do_op1( str, c_fn, exp_fn, fltx, do_reduce )                    \
 {                                                                       \
     auto c = do_reduce ? cordicr : cordicnr;                            \
@@ -136,22 +138,24 @@ constexpr FLT TOL = 1.0 / FLT( 1LL << (frac_w-12) );     // would like this to b
     cassert( flterr <= TOL );			                        \
 }    
 
-FLT mad( FLT x, FLT y, FLT w ) { return x*y + w; }
-FLT mul( FLT x, FLT y ) { return x*y; }
-FLT dad( FLT x, FLT y, FLT w ) { return x/y + w; }
-FLT div( FLT x, FLT y ) { return x/y; }
-FLT one_over( FLT x )   { return 1.0/x; }
-FLT one_over_sqrt( FLT x ) { return 1.0 / std::sqrt( x ); }
-FLT pow2( FLT x )       { return std::pow( 2.0, x ); }
-FLT pow10( FLT x )      { return std::pow( 10.0, x ); }
-FLT logb( FLT x, FLT y ){ return std::log( x ) / std::log( y ); }
-FLT log2( FLT x )       { return std::log( x ) / std::log( 2.0 ); }
-FLT log10( FLT x )      { return std::log( x ) / std::log( 10.0 ); }
+// FLT wrapper routines for those that are not in std::
+//
+FLT  mad( FLT x, FLT y, FLT w ) { return x*y + w; }
+FLT  mul( FLT x, FLT y ) { return x*y; }
+FLT  dad( FLT x, FLT y, FLT w ) { return x/y + w; }
+FLT  div( FLT x, FLT y ) { return x/y; }
+FLT  one_over( FLT x )   { return 1.0/x; }
+FLT  one_over_sqrt( FLT x ) { return 1.0 / std::sqrt( x ); }
+FLT  pow2( FLT x )       { return std::pow( 2.0, x ); }
+FLT  pow10( FLT x )      { return std::pow( 10.0, x ); }
+FLT  logb( FLT x, FLT y ){ return std::log( x ) / std::log( y ); }
+FLT  log2( FLT x )       { return std::log( x ) / std::log( 2.0 ); }
+FLT  log10( FLT x )      { return std::log( x ) / std::log( 10.0 ); }
 void sin_cos( FLT x, FLT& si, FLT& co ) { si = std::sin( x ); co = std::cos( x ); }
 void sinh_cosh( FLT x, FLT& si, FLT& co ) { si = std::sinh( x ); co = std::cosh( x ); }
-FLT atanh2( FLT y, FLT x ){ return std::atanh( y/x); }
-FLT norm( FLT x, FLT y ){ return std::sqrt( x*x + y*y ); }
-FLT normh( FLT x, FLT y ){ return std::sqrt( x*x - y*y ); }
+FLT  atanh2( FLT y, FLT x ){ return std::atanh( y/x); }
+FLT  norm( FLT x, FLT y ){ return std::sqrt( x*x + y*y ); }
+FLT  normh( FLT x, FLT y ){ return std::sqrt( x*x - y*y ); }
 void rect_to_polar( FLT x, FLT y, FLT& r, FLT& a ) { r = std::sqrt( x*x + y*y ); a = atan2( y, x ); }
 void polar_to_rect( FLT r, FLT a, FLT& x, FLT& y ) { x = r*std::cos( a ); y = r*std::sin( a ); }
 
@@ -161,6 +165,16 @@ int main( int argc, const char * argv[] )
     Cordic<FP, FLT> * cordicnr = new Cordic( int_w, frac_w, false );    // without arg reduction
     std::cout << "tol: " << TOL << "\n";
 
+    //---------------------------------------------------------------------------
+    // Put new bugs here, most recent first so that 
+    // fixed bugs get added to this basic regression.
+    //---------------------------------------------------------------------------
+    do_op1( "log",                      log,    std::log,       1.53,   true );
+
+    //---------------------------------------------------------------------------
+    // Run through all operations quickly with do_reduce=false and do_reduce=true.
+    // Not thorough at all.
+    //---------------------------------------------------------------------------
     for( uint32_t i = 0; i < 1; i++ )
     {
         bool do_reduce = i;
