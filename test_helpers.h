@@ -38,6 +38,7 @@
 			                                                \
     std::cout.precision(24);			                        \
     std::cout << #str << "\n";			                        \
+    std::cout << "Reduce:   " << do_reduce << "\n";                     \
     std::cout << "Input:    " << std::setw(30) << fltx << "(fltx)\n";	\
     std::cout << "Expected: " << std::setw(30) << flte << "\n";		\
     std::cout << "Actual:   " << std::setw(30) << fltz << "\n";		\
