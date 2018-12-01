@@ -135,6 +135,8 @@ Cordic<T,FLT>::Cordic( uint32_t int_w, uint32_t frac_w, bool do_reduce, uint32_t
     impl->circular_one_over_gain   = T(     gain_inv  * FLT( T(1) << T(frac_w) ) );
     impl->hyperbolic_gain          = T( 1.0/gainh_inv * FLT( T(1) << T(frac_w) ) );
     impl->hyperbolic_one_over_gain = T(     gainh_inv * FLT( T(1) << T(frac_w) ) );
+    if ( debug ) std::cout << "circular_one_over_gain="   << to_flt(impl->circular_one_over_gain) << "\n";
+    if ( debug ) std::cout << "hyperbolic_one_over_gain=" << to_flt(impl->hyperbolic_one_over_gain) << "\n";
 
     // constants
     impl->log2        = T( std::log( FLT( 2  ) )       * FLT( T(1) << T(frac_w) ) );
@@ -533,6 +535,7 @@ T Cordic<T,FLT>::mad( const T& _x, const T& _y, const T addend, bool do_reduce )
 {
     T x = _x;
     T y = _y;
+    if ( debug ) std::cout << "mad begin: x_orig=" << to_flt(x) << " y_orig=" << to_flt(y) << " addend=" << to_flt(addend) << " do_reduce=" << do_reduce << "\n";
     cassert( x >= 0 && "mad x must be non-negative" );
     cassert( y >= 0 && "mad y must be non-negative" );
     cassert( do_reduce || addend >= 0 && "mad addend must be non-negative" );
@@ -548,7 +551,7 @@ T Cordic<T,FLT>::mad( const T& _x, const T& _y, const T addend, bool do_reduce )
         yy += addend;
         if ( sign ) yy = -yy;
     }
-    if ( debug ) std::cout << "mad: x_orig=" << to_flt(x) << " y_orig=" << to_flt(y) << " addend=" << to_flt(addend) << " yy=" << to_flt(yy) << 
+    if ( debug ) std::cout << "mad end: x_orig=" << to_flt(x) << " y_orig=" << to_flt(y) << " addend=" << to_flt(addend) << " do_reduce=" << do_reduce << " yy=" << to_flt(yy) << 
                                   " x_lshift=" << x_lshift << " y_lshift=" << y_lshift << " sign=" << sign << "\n";
     return yy;
 }
@@ -576,6 +579,7 @@ T Cordic<T,FLT>::dad( const T& _y, const T& _x, const T addend, bool do_reduce )
 {
     T x = _x;
     T y = _y;
+    if ( debug ) std::cout << "dad begin: x_orig=" << to_flt(x) << " y_orig=" << to_flt(y) << " addend=" << to_flt(addend) << " do_reduce=" << do_reduce << "\n";
     cassert( y != 0  && "dad y must be non-zero" );
     cassert( x > 0 && "dad x must be positive" );
     cassert( do_reduce || addend >= 0 && "dad addend must be non-negative (need to fix this soon)" );
@@ -591,8 +595,8 @@ T Cordic<T,FLT>::dad( const T& _y, const T& _x, const T addend, bool do_reduce )
         zz += addend;
         if ( sign ) zz = -zz;
     }
-    if ( debug ) std::cout << "dad: x_orig=" << to_flt(x) << " y_orig=" << to_flt(y) << " addend=" << to_flt(addend) << " zz_final=" << to_flt(zz) << 
-                                  " x_lshift=" << x_lshift << " y_lshift=" << y_lshift << " sign=" << sign << "\n";
+    if ( debug ) std::cout << "dad end: x_orig=" << to_flt(x) << " y_orig=" << to_flt(y) << " addend=" << to_flt(addend) << " do_reduce=" << do_reduce <<
+                              " zz_final=" << to_flt(zz) << " x_lshift=" << x_lshift << " y_lshift=" << y_lshift << " sign=" << sign << "\n";
     return zz;
 }
 
