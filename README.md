@@ -98,6 +98,7 @@ To build and run the basic "smoke" test, <b>test_basic.cpp</b>, on Linux, Cygwin
 </p>
 <pre>
 doit.test
+doit.test 1                             - run with debug spew to help with debug
 </pre>
 
 <p>
