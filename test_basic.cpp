@@ -23,144 +23,16 @@
 #include "Cordic.h"
 
 using FLT = double;                                     // later, use a more precise float type
-using FP  = int64_t;
-constexpr int int_w = 7;                                // fixed-point for now
-constexpr int frac_w = 56;                              // same as double
-constexpr FLT TOL = 1.0 / FLT( 1LL << (frac_w-12) );    // would like this to be much smaller
+using FP  = int64_t;                                    // T container
 
-// some useful macros to avoid redundant typing
-//
-#define do_op1( str, c_fn, exp_fn, fltx, do_reduce )                    \
-{                                                                       \
-    auto c = do_reduce ? cordicr : cordicnr;                            \
-    FP  fpx  = c->to_fp( fltx );			                \
-    FP  fpz  = c->c_fn( fpx );		                                \
-    FLT fltz = c->to_flt( fpz );	                                \
-    FLT flte = exp_fn( fltx );			                        \
-    FLT flterr = std::abs( flte-fltz );			                \
-			                                                \
-    std::cout.precision(24);			                        \
-    std::cout << #str << "\n";			                        \
-    std::cout << "Input:    " << std::setw(30) << fltx << "(fltx)\n";	\
-    std::cout << "Expected: " << std::setw(30) << flte << "\n";		\
-    std::cout << "Actual:   " << std::setw(30) << fltz << "\n";		\
-    std::cout << "Diff:     " << std::setw(30) << flterr << "\n\n";	\
-    cassert( flterr <= TOL );			                        \
-}    
-
-#define do_op12( str, c_fn, exp_fn, fltx, do_reduce )                   \
-{                                                                       \
-    auto c = do_reduce ? cordicr : cordicnr;                            \
-    FP  fpx  = c->to_fp( fltx );			                \
-    FP  fpz1, fpz2;                                                     \
-    c->c_fn( fpx, fpz1, fpz2 );		                                \
-    FLT fltz1 = c->to_flt( fpz1 );		                        \
-    FLT fltz2 = c->to_flt( fpz2 );		                        \
-    FLT flte1, flte2;                                                   \
-    exp_fn( fltx, flte1, flte2 );			                \
-    FLT flterr1 = std::abs( flte1-fltz1 );			        \
-    FLT flterr2 = std::abs( flte2-fltz2 );			        \
-			                                                \
-    std::cout.precision(24);			                        \
-    std::cout << #str << "\n";			                        \
-    std::cout << "Reduce:   " << do_reduce << "\n";                     \
-    std::cout << "Input:    " << std::setw(30) << fltx << "(fltx)\n";	\
-    std::cout << "Expected: " << std::setw(30) << flte1 << ", " << flte2 << "\n"; \
-    std::cout << "Actual:   " << std::setw(30) << fltz1 << ", " << fltz2 << "\n"; \
-    std::cout << "Diff:     " << std::setw(30) << flterr1 << ", " << flterr2 << "\n\n"; \
-    cassert( flterr1 <= TOL );			                        \
-    cassert( flterr2 <= TOL );			                        \
-}    
-
-#define do_op2( str, c_fn, exp_fn, fltx, flty, do_reduce )              \
-{                                                                       \
-    auto c = do_reduce ? cordicr : cordicnr;                            \
-    FP  fpx  = c->to_fp( fltx );			                \
-    FP  fpy  = c->to_fp( flty );			                \
-    FP  fpz  = c->c_fn( fpx, fpy );	                                \
-    FLT fltz = c->to_flt( fpz );			                \
-    FLT flte = exp_fn( fltx, flty );			                \
-    FLT flterr = std::abs( flte-fltz );			                \
-			                                                \
-    std::cout.precision(24);			                        \
-    std::cout << #str << "\n";			                        \
-    std::cout << "Reduce:   " << do_reduce << "\n";                     \
-    std::cout << "Input:    " << std::setw(30) << fltx << "(x) " << flty << "(y)\n"; \
-    std::cout << "Expected: " << std::setw(30) << flte << "\n";		\
-    std::cout << "Actual:   " << std::setw(30) << fltz << "\n";		\
-    std::cout << "Diff:     " << std::setw(30) << flterr << "\n\n";	\
-    cassert( flterr <= TOL );			                        \
-}    
-
-#define do_op22( str, c_fn, exp_fn, fltx, flty, do_reduce )             \
-{                                                                       \
-    auto c = do_reduce ? cordicr : cordicnr;                            \
-    FP  fpx  = c->to_fp( fltx );			                \
-    FP  fpy  = c->to_fp( flty );			                \
-    FP  fpz1, fpz2;                                                     \
-    c->c_fn( fpx, fpy, fpz1, fpz2 );	                                \
-    FLT fltz1 = c->to_flt( fpz1 );		                        \
-    FLT fltz2 = c->to_flt( fpz2 );		                        \
-    FLT flte1, flte2;                                                   \
-    exp_fn( fltx, flty, flte1, flte2 );			                \
-    FLT flterr1 = std::abs( flte1-fltz1 );			        \
-    FLT flterr2 = std::abs( flte2-fltz2 );			        \
-			                                                \
-    std::cout.precision(24);			                        \
-    std::cout << #str << "\n";			                        \
-    std::cout << "Reduce:   " << do_reduce << "\n";                     \
-    std::cout << "Input:    " << std::setw(30) << fltx << "(fltx) " << flty << "(flty)\n"; \
-    std::cout << "Expected: " << std::setw(30) << flte1 << ", " << flte2 << "\n"; \
-    std::cout << "Actual:   " << std::setw(30) << fltz1 << ", " << fltz2 << "\n"; \
-    std::cout << "Diff:     " << std::setw(30) << flterr1 << ", " << flterr2 << "\n\n"; \
-    cassert( flterr1 <= TOL );			                        \
-    cassert( flterr2 <= TOL );			                        \
-}    
-
-#define do_op3( str, c_fn, exp_fn, fltx, flty, fltw, do_reduce )        \
-{                                                                       \
-    auto c = do_reduce ? cordicr : cordicnr;                            \
-    FP  fpx  = c->to_fp( fltx );			                \
-    FP  fpy  = c->to_fp( flty );			                \
-    FP  fpw  = c->to_fp( fltw );			                \
-    FP  fpz  = c->c_fn( fpx, fpy, fpw );	                        \
-    FLT fltz = c->to_flt( fpz );			                \
-    FLT flte = exp_fn( fltx, flty, fltw );			        \
-    FLT flterr = std::abs( flte-fltz );			                \
-			                                                \
-    std::cout.precision(24);			                        \
-    std::cout << #str << "\n";			                        \
-    std::cout << "Reduce:   " << do_reduce << "\n";                     \
-    std::cout << "Input:    " << std::setw(30) << fltx << "(x) " << flty << "(y) " << fltw << "(w)\n"; \
-    std::cout << "Expected: " << std::setw(30) << flte << "\n";		\
-    std::cout << "Actual:   " << std::setw(30) << fltz << "\n";		\
-    std::cout << "Diff:     " << std::setw(30) << flterr << "\n\n";	\
-    cassert( flterr <= TOL );			                        \
-}    
-
-// FLT wrapper routines for those that are not in std::
-//
-FLT  mad( FLT x, FLT y, FLT w ) { return x*y + w; }
-FLT  mul( FLT x, FLT y ) { return x*y; }
-FLT  dad( FLT x, FLT y, FLT w ) { return x/y + w; }
-FLT  div( FLT x, FLT y ) { return x/y; }
-FLT  one_over( FLT x )   { return 1.0/x; }
-FLT  one_over_sqrt( FLT x ) { return 1.0 / std::sqrt( x ); }
-FLT  pow2( FLT x )       { return std::pow( 2.0, x ); }
-FLT  pow10( FLT x )      { return std::pow( 10.0, x ); }
-FLT  logb( FLT x, FLT y ){ return std::log( x ) / std::log( y ); }
-FLT  log2( FLT x )       { return std::log( x ) / std::log( 2.0 ); }
-FLT  log10( FLT x )      { return std::log( x ) / std::log( 10.0 ); }
-void sin_cos( FLT x, FLT& si, FLT& co ) { si = std::sin( x ); co = std::cos( x ); }
-void sinh_cosh( FLT x, FLT& si, FLT& co ) { si = std::sinh( x ); co = std::cosh( x ); }
-FLT  atanh2( FLT y, FLT x ){ return std::atanh( y/x); }
-FLT  norm( FLT x, FLT y ){ return std::sqrt( x*x + y*y ); }
-FLT  normh( FLT x, FLT y ){ return std::sqrt( x*x - y*y ); }
-void rect_to_polar( FLT x, FLT y, FLT& r, FLT& a ) { r = std::sqrt( x*x + y*y ); a = atan2( y, x ); }
-void polar_to_rect( FLT r, FLT a, FLT& x, FLT& y ) { x = r*std::cos( a ); y = r*std::sin( a ); }
+#include "test_helpers.h"                               // must be included after FLT is defined
 
 int main( int argc, const char * argv[] )
 {
+    const int int_w = 7;                                // fixed-point for now
+    const int frac_w = 56;                              // same as double
+    const FLT TOL = 1.0 / FLT( 1LL << (frac_w-12) );    // would like this to be much smaller
+
     Cordic<FP, FLT> * cordicr  = new Cordic( int_w, frac_w, true );     // with arg reduction
     Cordic<FP, FLT> * cordicnr = new Cordic( int_w, frac_w, false );    // without arg reduction
     std::cout << "tol: " << TOL << "\n";
