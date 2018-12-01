@@ -35,6 +35,7 @@ int main( int argc, const char * argv[] )
     int int_w = 7;                              // fixed-point for now
     int frac_w = 56;                            // same as double
     FLT TOL = 1.0 / FLT( 1LL << (frac_w-12) );  // would like this to be much smaller
+    bool     new_bugs = false;                  // by default, don't run new bugs
     uint32_t loop_cnt = 1;                      // by default, run through only first iteration of below loop
 
     for( int i = 1; i < argc; i++ )
@@ -45,6 +46,8 @@ int main( int argc, const char * argv[] )
             frac_w = std::atoi( argv[++i] );
         } else if ( strcmp( argv[i], "-tol" ) == 0 ) {
             TOL = std::atof( argv[++i] );
+        } else if ( strcmp( argv[i], "-new_bugs" ) == 0 ) {
+            new_bugs = true;
         } else if ( strcmp( argv[i], "-loop_cnt" ) == 0 ) {
             loop_cnt = std::atoi( argv[++i] );
         } else {
@@ -61,10 +64,18 @@ int main( int argc, const char * argv[] )
     Cordic<FP, FLT> * cordicnr = new Cordic( int_w, frac_w, false );    // without arg reduction
 
     //---------------------------------------------------------------------------
-    // Put new bugs here, numbered, most recent first so that 
-    // fixed bugs get added to this basic regression.
+    // New and fixed bugs.
     //---------------------------------------------------------------------------
     bool do_reduce = true;      // let routines handle the general case
+    if ( new_bugs ) {
+        //---------------------------------------------------------------------------
+        // Put new bugs here, numbered, most recent first so that 
+        // fixed bugs get added to this basic regression.
+        //---------------------------------------------------------------------------
+    }
+    //---------------------------------------------------------------------------
+    // Put fixed bugs here so they get regressed.
+    //---------------------------------------------------------------------------
     do_op2(  "2) mul",                   mul,    mul,           1.45, 0.4782,  do_reduce );
     do_op1(  "1) log",                   log,    std::log,      1.53,          do_reduce );
 
