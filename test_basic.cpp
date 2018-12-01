@@ -69,8 +69,8 @@ int main( int argc, const char * argv[] )
     bool do_reduce = true;      // let routines handle the general case
     if ( new_bugs ) {
         //---------------------------------------------------------------------------
-        // Put new bugs here, numbered, most recent first so that 
-        // fixed bugs get added to this basic regression.
+        // Put new bugs here.
+        // Once fixed, they will be moved to below.
         //---------------------------------------------------------------------------
     }
     //---------------------------------------------------------------------------
