@@ -166,10 +166,11 @@ int main( int argc, const char * argv[] )
     std::cout << "tol: " << TOL << "\n";
 
     //---------------------------------------------------------------------------
-    // Put new bugs here, most recent first so that 
+    // Put new bugs here, numbered, most recent first so that 
     // fixed bugs get added to this basic regression.
     //---------------------------------------------------------------------------
-    do_op1( "log",                      log,    std::log,       1.53,   true );
+    do_op2(  "2) mul",                   mul,    mul,           1.45, 0.4782,  true );
+    do_op1(  "1) log",                   log,    std::log,      1.53,          true );
 
     //---------------------------------------------------------------------------
     // Run through all operations quickly with do_reduce=false and do_reduce=true.
