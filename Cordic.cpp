@@ -285,8 +285,8 @@ T Cordic<T,FLT>::to_t( FLT _x ) const
     FLT x = _x;
     bool is_neg = x < 0.0;
     if ( is_neg ) x = -x;
+    cassert( T(x) < (T(1) << int_w()) && "to_t: integer part of |x| does not fit in int_w bits" ); 
     T x_t = x * FLT( one() );
-    //std::cout << "to_t: abs(x)=" << x << " x_t=0x" << std::hex << x_t << std::dec << " to_flt=" << to_flt(x_t) << "\n";
     if ( is_neg ) x_t = -x_t;
     return x_t;
 }
@@ -298,7 +298,6 @@ FLT Cordic<T,FLT>::to_flt( const T& _x ) const
     bool is_neg = x < 0;
     if ( is_neg ) x = -x;
     FLT x_f = FLT( x ) / FLT( one() );
-    //std::cout << "to_flt: abs(x)=0x" << std::hex << x << " x_f=" << std::dec << x_f << "\n";
     if ( is_neg ) x_f = -x_f;
     return x_f;
 }
@@ -931,7 +930,7 @@ T Cordic<T,FLT>::normh( const T& _x, const T& _y ) const
 {
     T x = _x;
     T y = _y;
-    if ( debug ) std::cout << "normh begin: x=" << x << " y=" << y << " do_reduce=" << impl->do_reduce << "\n";
+    if ( debug ) std::cout << "normh begin: x=" << to_flt(x) << " y=" << to_flt(y) << " do_reduce=" << impl->do_reduce << "\n";
     int32_t lshift;
     if ( impl->do_reduce ) reduce_norm_args( x, y, lshift );
     cassert( x >= y && "normh abs(x) must be greater than abs(y)" );
@@ -940,7 +939,7 @@ T Cordic<T,FLT>::normh( const T& _x, const T& _y ) const
     hyperbolic_vectoring( x, y, zero(), xx, yy, zz );
     xx = mul( xx, one_over_gainh(), false );   // should not need to do reduction
     if ( impl->do_reduce ) impl->do_lshift( xx, lshift );
-    if ( debug ) std::cout << "normh end: x=" << x << " y=" << y << " do_reduce=" << impl->do_reduce << " xx=" << to_flt(xx) << "\n";
+    if ( debug ) std::cout << "normh end: x=" << to_flt(x) << " y=" << to_flt(y) << " do_reduce=" << impl->do_reduce << " xx=" << to_flt(xx) << "\n";
     return xx;
 }
 
