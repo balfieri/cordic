@@ -865,13 +865,15 @@ T Cordic<T,FLT>::atan2( const T& _y, const T& _x, bool do_reduce, bool x_is_one,
     if ( debug ) std::cout << "atan2 begin: y=" << to_flt(y) << " x=" << to_flt(x) << " do_reduce=" << do_reduce << " x_is_one=" << x_is_one << "\n";
     cassert( (x != 0 || y != 0) && "atan2: x or y needs to be non-zero for result to be defined" );
     T xx, yy, zz;
+    if ( r != nullptr ) *r = norm( _x, _y, do_reduce );  // optimize this later with below norm() of reduced x,y
     if ( do_reduce ) {
         bool y_sign;
         bool x_sign;
         bool is_pi;
         reduce_atan2_args( y, x, y_sign, x_sign, is_pi );
         if ( is_pi ) {
-            cassert( r != nullptr && "atan2: can't compute r when x < 0" );
+            if ( debug ) std::cout << "atan2 end: y=" << to_flt(_y) << " x=" << to_flt(_x) << " do_reduce=" << do_reduce << " x_is_one=" << x_is_one << 
+                                      " zz=PI" << " r=" << ((r != nullptr) ? to_flt(*r) : to_flt(zero())) << "\n";
             return pi();
         }
         const T norm_plus_x = norm( x, y, false ) + x;
@@ -890,7 +892,6 @@ T Cordic<T,FLT>::atan2( const T& _y, const T& _x, bool do_reduce, bool x_is_one,
     } else {
         circular_vectoring( x, y, zero(), xx, yy, zz );
     }
-    if ( r != nullptr ) *r = mul( xx, one_over_gain(), false );   // for rect_to_polar()
     if ( debug ) std::cout << "atan2 end: y=" << to_flt(_y) << " x=" << to_flt(_x) << " do_reduce=" << do_reduce << " x_is_one=" << x_is_one << 
                               " zz=" << to_flt(zz) << " r=" << ((r != nullptr) ? to_flt(*r) : to_flt(zero())) << "\n";
     return zz;
