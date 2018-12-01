@@ -18,7 +18,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 //
-// test_helpers.cpp - helper macros and wrapper functions used by all tests
+// test_helpers.h - helper macros and wrapper functions used by all tests
 //
 #ifndef _test_helpers_h
 #define _test_helpers_h
