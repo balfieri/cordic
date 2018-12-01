@@ -132,6 +132,7 @@ public:
     // acos(-x)         = acos(-x)
     // acos(x)          = atan2(sqrt(1 - x^2), x)
     // acos(x+y)        = PI/2 - asin(x+y)
+    // atan(x)          = atan2(x, 1)                           this is true only when second argument is > 0 (see below)
     // atan(-x)         = -atan(x)
     // atan(1/x)        = PI/2 - atan(x)                        if x > 0
     // atan(x)          = asin(x / sqrt(1 + x^2))
@@ -251,6 +252,7 @@ public:
     T    dad( const T& y, const T& x, const T addend, bool do_reduce ) const; // same but override do_reduce
     T    div( const T& y, const T& x, bool do_reduce ) const;             // same but override do_reduce
     T    log( const T& x, bool do_reduce ) const;                         // 2*atan2(x-1, x+1, do_reduce)    
+    T    norm( const T& _x, const T& _y, bool do_reduce ) const;          
     T    atan2(  const T& y, const T& x, bool do_reduce, bool x_is_one=false, T * r=nullptr ) const; // same but override do_reduce 
     T    atanh2( const T& y, const T& x, bool do_reduce, bool x_is_one=false ) const; // same but override do_reduce
     void sin_cos( const T& x, T& si, T& co, bool do_reduce, bool need_si=true, bool need_co=true, const T * r=nullptr ) const;
@@ -266,11 +268,11 @@ public:
     //-----------------------------------------------------
     void reduce_arg( T& x, int32_t& x_lshift, bool& sign, bool shift_x=true, bool normalize=false ) const; // 0.0 .. <2.0
     void reduce_mul_args( T& x, T& y, int32_t& x_lshift, int32_t& y_lshift, bool& sign ) const; // reduce_arg x and y
-    void reduce_div_args( T& x, T& y, int32_t& x_lshift, int32_t& y_lshift, bool& sign ) const; // reduce_arg x, normalize_arg y
+    void reduce_div_args( T& y, T& x, int32_t& y_lshift, int32_t& x_lshift, bool& sign ) const; // reduce_arg y, normalize_arg x
     void reduce_sqrt_arg( T& x, int32_t& x_lshift ) const;                                      // reduce_arg but lshift must pow-of-2
     void reduce_exp_arg( FLT b, T& x, T& factor, bool& sign ) const;                            // b=const_base, mul/div exp(x) by factor
     void reduce_log_arg( T& x, T& addend ) const;                                               // reduce_arg x, addend to log(x) 
-    void reduce_atan2_args( T& y, T& x, bool x_is_one, T& addend, bool& sign ) const;           // reduces y and x, addend for atan2()
+    void reduce_atan2_args( T& y, T& x, bool& y_sign, bool& x_sign, bool& is_pi ) const;        // reduce y and x
     void reduce_norm_args( T& x, T& y, int32_t& lshift ) const;                                 // reduce_arg x and y with same lshift
     void reduce_sin_cos_arg( T& a, uint32_t& quadrant, bool& sign ) const;                      // to 0 .. pi/2
     void reduce_sinh_cosh_arg( T& x, T& sinh_i, T& cosh_i, bool& sign ) const;                  // split x into i+f parts

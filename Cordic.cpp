@@ -64,7 +64,6 @@ struct Cordic<T,FLT>::Impl
     std::unique_ptr<T[]>        reduce_sinh_cosh_cosh_i;        // for each possible integer value, cosh(i)
     std::unique_ptr<FLT[]>      reduce_exp_factor;              // for each possible integer value, exp(i)
     std::unique_ptr<T[]>        reduce_log_addend;              // for each possible lshift value, log( 1 << lshift )
-    std::unique_ptr<T[]>        reduce_atan2_addend;            // for each possible signed lshift value, asin( 1 << lshift )
 
     inline void                 do_lshift( T& x, int32_t lshift ) const
     {
@@ -189,19 +188,6 @@ Cordic<T,FLT>::Cordic( uint32_t int_w, uint32_t frac_w, bool do_reduce, uint32_t
         addend[frac_w+i] = to_fp( addend_f );
         if ( debug ) std::cout << "addend[]=0x" << std::hex << addend[frac_w+i] << "\n" << std::dec;
         if ( debug ) std::cout << "reduce_log_arg LUT: addend[" << i << "]=" << to_flt(addend[frac_w+i]) << " addend_f=" << addend_f << "\n";
-    }
-
-    // construct LUT used by reduce_atan2_args()
-    addend = new T[2*int_w];
-    impl->reduce_atan2_addend = std::unique_ptr<T[]>( addend );
-    for( int32_t i = -int_w; i <= int32_t(int_w); i++ )
-    {
-        double p_f      = std::pow( 2.0, double(i) );
-        double asin_f   = std::asin( p_f );
-        double addend_f = M_PI - asin_f;
-        addend[int_w+i] = to_fp( addend_f );
-        if ( debug ) std::cout << "i=" << i << " p_f=" << p_f << " asin_f=" << asin_f << " addend_f=" << addend_f << " addend[]=0x" << std::hex << addend[int_w+i] << "\n" << std::dec;
-        if ( debug ) std::cout << "reduce_atan2_arg LUT: addend[" << i << "]=" << to_flt(addend[int_w+i]) << " addend_f=" << addend_f << "\n";
     }
 }
 
@@ -596,7 +582,7 @@ T Cordic<T,FLT>::dad( const T& _y, const T& _x, const T addend, bool do_reduce )
     int32_t x_lshift;
     int32_t y_lshift;
     bool    sign;
-    if ( do_reduce ) reduce_div_args( x, y, x_lshift, y_lshift, sign );
+    if ( do_reduce ) reduce_div_args( y, x, y_lshift, x_lshift, sign );
 
     T xx, yy, zz;
     linear_vectoring( x, y, do_reduce ? zero() : addend, xx, yy, zz );
@@ -862,27 +848,39 @@ T Cordic<T,FLT>::atan2( const T& _y, const T& _x, bool do_reduce, bool x_is_one,
 
     //-----------------------------------------------------
     // Identities:
-    //     Assume: y/x = p*f  (power of 2 times fraction)
-    //     atan(p*f) = asin(p + f) = PI - asin(p) - asin(f)
+    //     atan2(y,x)       = undefined                             if x == 0 && y == 0
+    //     atan2(y,x)       = PI                                    if x <  0 && y == 0
+    //     atan2(y,x)       = 2*atan(y / (sqrt(x^2 + y^2) + x))     if x >  0    
+    //     atan2(y,x)       = 2*atan((sqrt(x^2 + y^2) + |x|) / y)   if x <= 0 && y != 0
     // Strategy:
-    //     reduce y and x for division
-    //     f = y/x                          // which is done by CORDIC
-    //     log2(p) = y_lshift + x_lshift    // note: can be negative
-    //     index a LUT using log2(p) and pull out precomputed PI - asin(p)
-    //
-    // Note: there has to be a better way to do this.  The divide really sucks.
+    //     Use reduce_atan2_args() to reduce y and x and get y_sign and x_sign.
+    //     Return PI if we're done.
+    //     Do atan2( y, norm(x, y) + x ) << 1   if x > 0
+    //     Do atan2( norm(x, y) + x, y ) << 1   if <= 0
     //-----------------------------------------------------
-    T    addend;
-    bool sign;
-    if ( do_reduce ) reduce_atan2_args( y, x, x_is_one, addend, sign );
-
+    cassert( (x != 0 || y != 0) && "atan2: x or y needs to be non-zero for result to be defined" );
     T xx, yy, zz;
-    circular_vectoring( x, y, zero(), xx, yy, zz );
     if ( do_reduce ) {
-        zz = addend - zz;
-        if ( sign ) zz = -zz;
+        bool y_sign;
+        bool x_sign;
+        bool is_pi;
+        reduce_atan2_args( y, x, y_sign, x_sign, is_pi );
+        if ( is_pi ) {
+            cassert( r != nullptr && "atan2: can't compute r when x < 0" );
+            return pi();
+        }
+        const T norm_plus_x = norm( x, y, false ) + x;
+        if ( x > 0 ) {
+            circular_vectoring( norm_plus_x, y, zero(), xx, yy, zz );
+        } else {
+            circular_vectoring( y, norm_plus_x, zero(), xx, yy, zz );
+        }
+        zz <<= 1;
+        if ( y_sign ) zz = -zz;
+    } else {
+        circular_vectoring( x, y, zero(), xx, yy, zz );
     }
-    if ( r != nullptr ) *r = mul( xx, one_over_gain(), false );
+    if ( r != nullptr ) *r = mul( xx, one_over_gain(), false );   // for rect_to_polar()
     return zz;
 }
 
@@ -899,17 +897,23 @@ void Cordic<T,FLT>::rect_to_polar( const T& x, const T& y, T& r, T& a ) const
 }
 
 template< typename T, typename FLT >
-T Cordic<T,FLT>::norm( const T& _x, const T& _y ) const
+T Cordic<T,FLT>::norm( const T& x, const T& y ) const
+{
+    return norm( x, y, impl->do_reduce );
+}
+
+template< typename T, typename FLT >
+T Cordic<T,FLT>::norm( const T& _x, const T& _y, bool do_reduce ) const
 {
     T x = _x;
     T y = _y;
     int32_t lshift;
-    if ( impl->do_reduce ) reduce_norm_args( x, y, lshift );
+    if ( do_reduce ) reduce_norm_args( x, y, lshift );
 
     T xx, yy, zz;
     circular_vectoring( x, y, zero(), xx, yy, zz );
     xx = mul( xx, one_over_gain() );
-    if ( impl->do_reduce ) impl->do_lshift( xx, lshift );
+    if ( do_reduce ) impl->do_lshift( xx, lshift );
     return xx;
 }
 
@@ -1098,13 +1102,13 @@ void Cordic<T,FLT>::reduce_mul_args( T& x, T& y, int32_t& x_lshift, int32_t& y_l
 }
 
 template< typename T, typename FLT >
-void Cordic<T,FLT>::reduce_div_args( T& x, T& y, int32_t& x_lshift, int32_t& y_lshift, bool& sign ) const
+void Cordic<T,FLT>::reduce_div_args( T& y, T& x, int32_t& y_lshift, int32_t& x_lshift, bool& sign ) const
 {
     if ( debug ) std::cout << "reduce_div_args: x_orig=" << to_flt(x) << " y_orig=" << to_flt(y) << "\n";
     bool x_sign;
     bool y_sign;
-    reduce_arg( x, x_lshift, x_sign, true, true );
     reduce_arg( y, y_lshift, y_sign );
+    reduce_arg( x, x_lshift, x_sign, true, true );
     sign = x_sign ^ y_sign;
 }
 
@@ -1174,39 +1178,35 @@ void Cordic<T,FLT>::reduce_log_arg( T& x, T& addend ) const
 }
 
 template< typename T, typename FLT >
-void Cordic<T,FLT>::reduce_atan2_args( T& y, T& x, bool x_is_one, T& addend, bool& sign ) const
+void Cordic<T,FLT>::reduce_atan2_args( T& y, T& x, bool& y_sign, bool& x_sign, bool& is_pi ) const
 {
     //-----------------------------------------------------
     // Identities:
     //     atan2(y,x)       = undefined                             if x == 0 && y == 0
     //     atan2(y,x)       = PI                                    if x <  0 && y == 0
     //     atan2(y,x)       = 2*atan(y / (sqrt(x^2 + y^2) + x))     if x >  0    
-    //     atan2(y,x)       = 2*atan((sqrt(x^2 + y^2) - x) / y)     if x <= 0 && y != 0
+    //     atan2(y,x)       = 2*atan((sqrt(x^2 + y^2) + |x|) / y)   if x <= 0 && y != 0
     // Strategy:
-    //     Find power-of-two that we can factor out of both numerator and denominator.
-    //     Can use reduce_sqrt_arg() for that.  
-    //     Then do atan2() CORDIC on reduced x and y.
-    //
-    // TODO: Code below is wrong and needs to be changed to do above.
+    //     Use reduce_norm_arg().
     //-----------------------------------------------------
-    T y_orig = y;
-    T x_orig = x;
-    int32_t y_lshift;
-    int32_t x_lshift;
-    if ( x_is_one ) {
-        x_lshift = 0;
-        reduce_arg( y, y_lshift, sign );
+    const T y_orig = y;
+    const T x_orig = x;
+    cassert( (x != 0 || y != 0) && "atan2: x or y needs to be non-zero for result to be defined" );
+
+    x_sign = x < 0;
+    y_sign = y < 0;
+    if ( x_sign && y == 0 ) {
+        // PI
+        is_pi = true;
+        if ( debug ) std::cout << "reduce_atan2_args: xy_orig=[" << to_flt(x_orig) << "," << to_flt(y_orig) << "]" << " PI returned\n";
     } else {
-        reduce_div_args( y, x, y_lshift, x_lshift, sign );
+        is_pi = false;
+        int32_t lshift;
+        reduce_norm_args( x, y, lshift );
+        if ( debug ) std::cout << "reduce_atan2_args: xy_orig=[" << to_flt(x_orig) << "," << to_flt(y_orig) << "]" << 
+                          " xy_reduced=[" << to_flt(x) << "," << to_flt(y) << "] y_sign=" << y_sign << " x_sign=" << x_sign << "\n";
     }
-    T * addends = impl->reduce_atan2_addend.get();
-    int32_t int_width = int_w();
-    int32_t index = y_lshift + x_lshift + int_width;
-    cassert( index >= 0 && index < 2*int_width );
-    addend = addends[index];    // PI - asin(1 << (y_lshift+x_lshift))
-    if ( debug ) std::cout << "reduce_atan2_args: xy_orig=[" << to_flt(x_orig) << "," << to_flt(y_orig) << "]" << 
-                          " xy_lshift=[" << x_lshift << "," << y_lshift << "] index=" << index << 
-                          " xy_reduced=[" << to_flt(x) << "," << to_flt(y) << "] addend=" << to_flt(addend) << " sign=" << sign << "\n";
+
 }
 
 template< typename T, typename FLT >
