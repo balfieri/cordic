@@ -103,7 +103,7 @@ To build and run the basic "smoke" test, <b>test_basic.cpp</b>, on Linux, Cygwin
 <pre>
 doit.test
 doit.test 1                             - run with debug spew 
-doit.test test_basic                    - same as doit.test
+doit.test 0 test_basic                  - same as doit.test with no args
 </pre>
 
 <p>
