@@ -289,7 +289,7 @@ T Cordic<T,FLT>::to_fp( FLT _x ) const
     FLT x = _x;
     bool is_neg = x < 0.0;
     if ( is_neg ) x = -x;
-    T x_fp = x * FLT(T(1) << T(frac_w()));
+    T x_fp = x * FLT( one() );
     //std::cout << "to_fp: abs(x)=" << x << " x_fp=0x" << std::hex << x_fp << std::dec << " to_flt=" << to_flt(x_fp) << "\n";
     if ( is_neg ) x_fp = -x_fp;
     return x_fp;
@@ -301,7 +301,7 @@ FLT Cordic<T,FLT>::to_flt( const T& _x ) const
     T x = _x;
     bool is_neg = x < 0;
     if ( is_neg ) x = -x;
-    FLT x_f = FLT( x ) / std::pow( 2.0, frac_w() );
+    FLT x_f = FLT( x ) / FLT( one() );
     //std::cout << "to_flt: abs(x)=0x" << std::hex << x << " x_f=" << std::dec << x_f << "\n";
     if ( is_neg ) x_f = -x_f;
     return x_f;
@@ -862,6 +862,7 @@ T Cordic<T,FLT>::atan2( const T& _y, const T& _x, bool do_reduce, bool x_is_one,
     //     Do atan2( y, norm(x, y) + x ) << 1   if x > 0
     //     Do atan2( norm(x, y) + x, y ) << 1   if <= 0
     //-----------------------------------------------------
+    if ( debug ) std::cout << "atan2 begin: y=" << to_flt(y) << " x=" << to_flt(x) << " do_reduce=" << do_reduce << " x_is_one=" << x_is_one << "\n";
     cassert( (x != 0 || y != 0) && "atan2: x or y needs to be non-zero for result to be defined" );
     T xx, yy, zz;
     if ( do_reduce ) {
@@ -875,16 +876,23 @@ T Cordic<T,FLT>::atan2( const T& _y, const T& _x, bool do_reduce, bool x_is_one,
         }
         const T norm_plus_x = norm( x, y, false ) + x;
         if ( x > 0 ) {
+            // atan2( y, norm_plus_x );
+            if ( debug ) std::cout << "atan2 cordic begin: y=y=" << to_flt(y) << " x=norm_plus_x=" << to_flt(norm_plus_x) << "\n";
             circular_vectoring( norm_plus_x, y, zero(), xx, yy, zz );
         } else {
+            // atan2( norm_plus_x, y );
+            if ( debug ) std::cout << "atan2 cordic begin: y=norm_plus_x=" << to_flt(norm_plus_x) << " x=y=" << to_flt(y) << "\n";
             circular_vectoring( y, norm_plus_x, zero(), xx, yy, zz );
         }
         zz <<= 1;
         if ( y_sign ) zz = -zz;
+        if ( debug ) std::cout << "atan2 cordic end: zz=" << to_flt(zz) << "\n";
     } else {
         circular_vectoring( x, y, zero(), xx, yy, zz );
     }
     if ( r != nullptr ) *r = mul( xx, one_over_gain(), false );   // for rect_to_polar()
+    if ( debug ) std::cout << "atan2 end: y=" << to_flt(_y) << " x=" << to_flt(_x) << " do_reduce=" << do_reduce << " x_is_one=" << x_is_one << 
+                              " zz=" << to_flt(zz) << " r=" << ((r != nullptr) ? to_flt(*r) : to_flt(zero())) << "\n";
     return zz;
 }
 
@@ -911,6 +919,7 @@ T Cordic<T,FLT>::norm( const T& _x, const T& _y, bool do_reduce ) const
 {
     T x = _x;
     T y = _y;
+    if ( debug ) std::cout << "norm begin: x=" << to_flt(x) << " y=" << to_flt(y) << " do_reduce=" << do_reduce << "\n";
     int32_t lshift;
     if ( do_reduce ) reduce_norm_args( x, y, lshift );
 
@@ -918,6 +927,7 @@ T Cordic<T,FLT>::norm( const T& _x, const T& _y, bool do_reduce ) const
     circular_vectoring( x, y, zero(), xx, yy, zz );
     xx = mul( xx, one_over_gain() );
     if ( do_reduce ) impl->do_lshift( xx, lshift );
+    if ( debug ) std::cout << "norm end: x=" << to_flt(x) << " y=" << to_flt(y) << " do_reduce=" << do_reduce << " xx=" << to_flt(xx) << "\n";
     return xx;
 }
 
@@ -926,6 +936,7 @@ T Cordic<T,FLT>::normh( const T& _x, const T& _y ) const
 {
     T x = _x;
     T y = _y;
+    if ( debug ) std::cout << "normh begin: x=" << x << " y=" << y << " do_reduce=" << impl->do_reduce << "\n";
     int32_t lshift;
     if ( impl->do_reduce ) reduce_norm_args( x, y, lshift );
     cassert( x >= y && "normh abs(x) must be greater than abs(y)" );
@@ -934,6 +945,7 @@ T Cordic<T,FLT>::normh( const T& _x, const T& _y ) const
     hyperbolic_vectoring( x, y, zero(), xx, yy, zz );
     xx = mul( xx, one_over_gainh(), false );   // should not need to do reduction
     if ( impl->do_reduce ) impl->do_lshift( xx, lshift );
+    if ( debug ) std::cout << "normh end: x=" << x << " y=" << y << " do_reduce=" << impl->do_reduce << " xx=" << to_flt(xx) << "\n";
     return xx;
 }
 
