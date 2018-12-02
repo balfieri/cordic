@@ -60,6 +60,8 @@ struct Cordic<T,FLT>::Impl
     std::unique_ptr<uint32_t[]> reduce_sin_cos_quadrant;        // 00,01,02,03
     std::unique_ptr<T[]>        reduce_sinh_cosh_sinh_i;        // for each possible integer value, sinh(i)
     std::unique_ptr<T[]>        reduce_sinh_cosh_cosh_i;        // for each possible integer value, cosh(i)
+    std::unique_ptr<bool[]>     reduce_sinh_cosh_sinh_i_oflow;  // boolean indicating if this index creates too big of a number
+    std::unique_ptr<bool[]>     reduce_sinh_cosh_cosh_i_oflow;  // boolean indicating if this index creates too big of a number
     std::unique_ptr<FLT[]>      reduce_exp_factor;              // for each possible integer value, exp(i)
     std::unique_ptr<T[]>        reduce_log_addend;              // for each possible lshift value, log( 1 << lshift )
 
@@ -166,17 +168,23 @@ Cordic<T,FLT>::Cordic( uint32_t int_w, uint32_t frac_w, bool do_reduce, uint32_t
     // use integer part plus 0.5 bit of fraction
     cassert( int_w < 14 && "too many cases to worry about" );
     uint32_t N = 1 << (1+int_w);
-    T *        addend   = new T[N];
-    uint32_t * quadrant = new uint32_t[N];
-    T *        sinh_i   = new T[N];
-    T *        cosh_i   = new T[N];
-    impl->reduce_sin_cos_addend   = std::unique_ptr<T[]>( addend );
-    impl->reduce_sin_cos_quadrant = std::unique_ptr<uint32_t[]>( quadrant );
-    impl->reduce_sinh_cosh_sinh_i = std::unique_ptr<T[]>( sinh_i );
-    impl->reduce_sinh_cosh_cosh_i = std::unique_ptr<T[]>( cosh_i );
+    T *        addend       = new T[N];
+    uint32_t * quadrant     = new uint32_t[N];
+    T *        sinh_i       = new T[N];
+    T *        cosh_i       = new T[N];
+    bool *     sinh_i_oflow = new bool[N];
+    bool *     cosh_i_oflow = new bool[N];
+    impl->reduce_sin_cos_addend         = std::unique_ptr<T[]>( addend );
+    impl->reduce_sin_cos_quadrant       = std::unique_ptr<uint32_t[]>( quadrant );
+    impl->reduce_sinh_cosh_sinh_i       = std::unique_ptr<T[]>( sinh_i );
+    impl->reduce_sinh_cosh_cosh_i       = std::unique_ptr<T[]>( cosh_i );
+    impl->reduce_sinh_cosh_sinh_i_oflow = std::unique_ptr<bool[]>( sinh_i_oflow );
+    impl->reduce_sinh_cosh_cosh_i_oflow = std::unique_ptr<bool[]>( cosh_i_oflow );
     const FLT PI       = M_PI;
     const FLT PI_DIV_2 = PI / 2.0;
     const T   MASK     = (T(1) << (int_w+T(1)))-T(1);  // include 0.5 bit of fraction
+    const T   MAX      = (T(1) << (int_w+frac_w))-T(1);
+    const FLT MAX_F    = to_flt( MAX );
     for( T i = 0; i <= MASK; i++ )
     {
         FLT i_f = FLT(i) / 2.0;
@@ -190,9 +198,14 @@ Cordic<T,FLT>::Cordic( uint32_t int_w, uint32_t frac_w, bool do_reduce, uint32_t
         if ( debug ) std::cout << "reduce_sin_cos_arg LUT: i_f=" << i_f << " cnt_i=" << cnt_i << 
                                   " addend[" << i << "]=" << to_flt(addend[i]) << " quadrant=" << quadrant[i] << "\n";
 
-        sinh_i[i] = std::sinh( i_f );
-        cosh_i[i] = std::cosh( i_f );
-        if ( debug ) std::cout << "reduce_sinh_cosh_arg LUT: i_f=" << i_f << " sinh_i=" << to_flt(sinh_i[i]) << " cosh_i=" << to_flt(cosh_i[i]) << "\n";
+        FLT sinh_i_f = std::sinh( i_f );
+        FLT cosh_i_f = std::cosh( i_f );
+        sinh_i_oflow[i] = sinh_i_f > MAX_F;
+        cosh_i_oflow[i] = cosh_i_f > MAX_F;
+        sinh_i[i]       = sinh_i_oflow[i] ? MAX : to_t( std::sinh( i_f ) );
+        cosh_i[i]       = cosh_i_oflow[i] ? MAX : to_t( std::cosh( i_f ) );
+        if ( debug ) std::cout << "reduce_sinh_cosh_arg LUT: i_f=" << i_f << " sinh_i=" << to_flt(sinh_i[i]) << " cosh_i=" << to_flt(cosh_i[i]) << 
+                                  " sinh_i_oflow=" << sinh_i_oflow[i] << " cosh_i_oflow=" << cosh_i_oflow[i] << "\n";
     }
 
     // construct LUT used by reduce_exp_arg()
@@ -1285,8 +1298,12 @@ void Cordic<T,FLT>::reduce_sinh_cosh_arg( T& x, T& sinh_i, T& cosh_i, bool& sign
     const T MASK = (T(1) << (int_w()+T(1))) - T(1);  // include 0.5 bit of fraction
     T i = (x >> (frac_w()-T(1))) & MASK;
     x   = x & ((T(1) << (frac_w()-T(1)))-T(1));
-    const T *  sinh_i_vals = impl->reduce_sinh_cosh_sinh_i.get();
-    const T *  cosh_i_vals = impl->reduce_sinh_cosh_cosh_i.get();
+    const T *    sinh_i_vals   = impl->reduce_sinh_cosh_sinh_i.get();
+    const T *    cosh_i_vals   = impl->reduce_sinh_cosh_cosh_i.get();
+    const bool * sinh_i_oflows = impl->reduce_sinh_cosh_sinh_i_oflow.get();
+    const bool * cosh_i_oflows = impl->reduce_sinh_cosh_cosh_i_oflow.get();
+    cassert( !sinh_i_oflows[i] && "reduce_sinh_cosh_arg x will cause an overflow for sinh" );
+    cassert( !cosh_i_oflows[i] && "reduce_sinh_cosh_arg x will cause an overflow for cosh" );
     sinh_i = sinh_i_vals[i];
     cosh_i = cosh_i_vals[i];
     if ( debug ) std::cout << "reduce_sinh_cosh_arg: x_orig=" << to_flt(x_orig) << " sinh_i[" << i << "]=" << to_flt(sinh_i) << 
