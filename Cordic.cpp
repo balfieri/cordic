@@ -444,6 +444,8 @@ void Cordic<T,FLT>::hyperbolic_vectoring( const T& x0, const T& y0, const T& z0,
         T xi;
         T yi;
         T zi;
+        if ( debug ) printf( "hyperbolic_vectoring: i=%d xyz=[%.30f,%.30f,%.30f] test=%d\n", i, 
+                             to_flt(x), to_flt(y), to_flt(z), int((x < zero()) != (y < zero())) );
         if ( (x < zero()) != (y < zero()) ) {
             xi = x + (y >> i);
             yi = y + (x >> i);
@@ -1207,8 +1209,8 @@ void Cordic<T,FLT>::reduce_norm_args( T& x, T& y, int32_t& lshift ) const
     lshift = (x_lshift > y_lshift) ? x_lshift : y_lshift;
     x >>= lshift;
     y >>= lshift;
-    if ( debug ) std::cout << "reduce_norm_arg: xy_orig=[" << to_flt(x_orig) << "," << to_flt(y_orig) << "]" << 
-                                              " xy_reduced=[" << to_flt(x) << "," << to_flt(y) << "] lshift=" << lshift << "\n"; 
+    if ( debug ) std::cout << "reduce_norm_args: xy_orig=[" << to_flt(x_orig) << "," << to_flt(y_orig) << "]" << 
+                                               " xy_reduced=[" << to_flt(x) << "," << to_flt(y) << "] lshift=" << lshift << "\n"; 
 }
 
 template< typename T, typename FLT >
