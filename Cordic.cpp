@@ -115,9 +115,9 @@ Cordic<T,FLT>::Cordic( uint32_t int_w, uint32_t frac_w, bool do_reduce, uint32_t
         FLT ah = std::atanh( pow2 );
         //FLT ah = 0.5 * std::log( (1.0+pow2) / (1-pow2) );
         impl->hyperbolic_atanh[i] = T( ah   * FLT( T(1) << T(frac_w) ) );
-        gain_inv *= std::cos( a );
+        if ( i != n ) gain_inv *= std::cos( a );
 
-        if ( i != 0 && i <= n ) {
+        if ( i != 0 ) {
             gainh_inv *= std::cosh( ah );
             if ( i == next_dup_i ) {
                 // for hyperbolic, we must duplicate iterations 4, 13, 40, 121, ..., 3*i+1
@@ -329,7 +329,7 @@ void Cordic<T,FLT>::circular_rotation( const T& x0, const T& y0, const T& z0, T&
     y = y0;
     z = z0;
     uint32_t n = impl->n;
-    for( uint32_t i = 0; i <= n; i++ )
+    for( uint32_t i = 0; i < n; i++ )
     {
         T xi;
         T yi;
@@ -363,7 +363,7 @@ void Cordic<T,FLT>::circular_vectoring( const T& x0, const T& y0, const T& z0, T
     y = y0;
     z = z0;
     uint32_t n = impl->n;
-    for( uint32_t i = 0; i <= n; i++ )
+    for( uint32_t i = 0; i < n; i++ )
     {
         T xi;
         T yi;
