@@ -103,20 +103,24 @@ Cordic<T,FLT>::Cordic( uint32_t int_w, uint32_t frac_w, bool do_reduce, uint32_t
     impl->linear_pow2      = std::unique_ptr<T[]>( new T[n+1] );
 
     // compute atan/atanh table and gains in high-resolution floating point
+    // Let gain = cos(a0)*cos(a1)*... and multiply x and y 
+    // Use cos(a) = 1/sqrt(1 + tan^2(a)) 
+    // Let gainh = cosh(a0)*cosh(a1)*... and multiply x and y 
+    // Use cosh(a) = 1/sqrt(1 - tanh^2(a)) 
+    //
     FLT pow2  = 1.0;
     FLT gain_inv  = 1.0;
     FLT gainh_inv = 1.0;
     uint32_t next_dup_i = 4;     // for hyperbolic 
     for( uint32_t i = 0; i <= n; i++ )
     {
-        FLT a  = std::atan( pow2 );
-        impl->circular_atan[i]    = T( a    * FLT( T(1) << T(frac_w) ) );
-        impl->linear_pow2[i]      = T( pow2 * FLT( T(1) << T(frac_w) ) );
-        FLT ah = std::atanh( pow2 );
-        //FLT ah = 0.5 * std::log( (1.0+pow2) / (1-pow2) );
-        impl->hyperbolic_atanh[i] = T( ah   * FLT( T(1) << T(frac_w) ) );
-        if ( i != n ) gain_inv *= std::cos( a );
+        impl->linear_pow2[i]      = to_t( pow2 );
+        FLT a                     = std::atan( pow2 );
+        FLT ah                    = std::atanh( pow2 );
+        impl->circular_atan[i]    = to_t( a );
+        impl->hyperbolic_atanh[i] = to_t( ah );
 
+        if ( i != n ) gain_inv *= std::cos( a );
         if ( i != 0 ) {
             gainh_inv *= std::cosh( ah );
             if ( i == next_dup_i ) {
