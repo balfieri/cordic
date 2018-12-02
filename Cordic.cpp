@@ -65,7 +65,24 @@ struct Cordic<T,FLT>::Impl
 
     inline void                 do_lshift( T& x, int32_t lshift ) const
     {
+        cassert( x >= 0        && "do_lshift x should be non-negative" );
         if ( lshift > 0 ) {
+            //-----------------------------------------------------
+            // For now, crap out if we overflow.
+            // At some point, we'll have options to saturate or set a flag in the container.
+            //-----------------------------------------------------
+            int32_t lshift_max = int_w;
+            uint32_t i = x >> frac_w;
+            cassert( i <= maxint && "do_lshift x integer part should be <= maxint()"  );
+            while( i != 0 ) 
+            {
+                lshift_max--;
+                i >>= 1;
+            }
+            if ( lshift > lshift_max ) {
+                std::cout << "do_lshift x << " << lshift << " will overflow x\n";
+                exit( 1 );
+            }
             x <<= lshift;
         } else if ( lshift < 0 ) {
             x >>= -lshift;
