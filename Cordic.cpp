@@ -586,7 +586,6 @@ T Cordic<T,FLT>::dad( const T& _y, const T& _x, const T addend, bool do_reduce )
     T y = _y;
     if ( debug ) std::cout << "dad begin: x_orig=" << to_flt(x) << " y_orig=" << to_flt(y) << " addend=" << to_flt(addend) << " do_reduce=" << do_reduce << "\n";
     cassert( y != 0  && "dad y must be non-zero" );
-    cassert( x > 0 && "dad x must be positive" );
     cassert( do_reduce || addend >= 0 && "dad addend must be non-negative (need to fix this soon)" );
     int32_t x_lshift;
     int32_t y_lshift;
