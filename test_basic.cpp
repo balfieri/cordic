@@ -34,7 +34,7 @@ int main( int argc, const char * argv[] )
     //---------------------------------------------------------------------------
     int int_w = 7;                              // fixed-point for now
     int frac_w = 56;                            // same as double
-    FLT TOL = 1.0 / FLT( 1LL << (frac_w-12) );  // would like this to be much smaller
+    FLT TOL = 1.0 / FLT( 1LL << (frac_w-13) );  // would like this to be much smaller
     bool     new_bugs = false;                  // by default, don't run new bugs
     uint32_t loop_cnt = 1;                      // by default, run through only first iteration of below loop
 
@@ -98,9 +98,10 @@ int main( int argc, const char * argv[] )
         do_op3(  "y/x + w",          dad,     dad,            y, x, w, do_reduce );
         do_op2(  "y/x",              div,     div,            y, x, do_reduce );
         do_op1(  "1/x",              one_over,one_over,       x   , do_reduce );
+        if ( !do_reduce ) {
         do_op1(  "sqrt(x)",          sqrt,    std::sqrt,      x   , do_reduce );
         do_op1(  "one_over_sqrt(x)", one_over_sqrt, one_over_sqrt, x, do_reduce );
-        
+        } 
         do_op1(  "exp(x)",           exp,     std::exp,       x   , do_reduce );
         do_op2(  "pow(x,y)",         pow,     std::pow,       b, y, do_reduce );
         do_op1(  "pow2(x)",          pow2,    pow2,           x   , do_reduce );
