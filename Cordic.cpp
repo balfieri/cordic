@@ -1028,7 +1028,7 @@ void Cordic<T,FLT>::sinh_cosh( const T& _x, T& sih, T& coh, bool do_reduce, bool
     T sinh_f;
     T cosh_f;
     T zz;
-    hyperbolic_rotation( r, zero(), x, coh, sih, zz );
+    hyperbolic_rotation( r, zero(), x, cosh_f, sinh_f, zz );
     if ( do_reduce ) {
         if ( need_sih ) {
             sih = mul( sinh_f, cosh_i, true ) + mul( cosh_f, sinh_i, true );
@@ -1037,6 +1037,9 @@ void Cordic<T,FLT>::sinh_cosh( const T& _x, T& sih, T& coh, bool do_reduce, bool
         if ( need_coh ) {
             coh = mul( cosh_f, cosh_i, true ) - mul( sinh_f, sinh_i, true );
         }
+    } else {
+        sih = sinh_f;
+        coh = cosh_f;
     }
 }
 
