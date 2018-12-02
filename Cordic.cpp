@@ -109,10 +109,6 @@ Cordic<T,FLT>::Cordic( uint32_t int_w, uint32_t frac_w, bool do_reduce, uint32_t
     // Use cosh(a) = 1/sqrt(1 - tanh^2(a)) 
     //
     FLT pow2      = 1.0;
-    FLT gain      = 1.0;
-    FLT gain_inv  = 1.0;
-    FLT gainh     = 1.0;
-    FLT gainh_inv = 1.0;
     uint32_t next_dup_i = 4;     // for hyperbolic 
     for( uint32_t i = 0; i <= n; i++ )
     {
@@ -122,34 +118,28 @@ Cordic<T,FLT>::Cordic( uint32_t int_w, uint32_t frac_w, bool do_reduce, uint32_t
         impl->circular_atan[i]    = to_t( a );
         impl->hyperbolic_atanh[i] = to_t( ah );
 
-        if ( i != n ) {
-            gain      *= std::sqrt( 1 + pow2*pow2 );
-            gain_inv  *= std::cos( a );
-        }
-        if ( i != 0 ) {
-            gainh     *= std::sqrt( 1 - pow2*pow2 );
-            gainh_inv *= std::cosh( ah );
-            if ( i == next_dup_i ) {
-                // for hyperbolic, we must duplicate iterations 4, 13, 40, 121, ..., 3*i+1
-                gainh     *= std::sqrt( 1 - pow2*pow2 );
-                gainh_inv *= std::cosh( ah );
-                next_dup_i = 3*i + 1;
-            }
+        if ( i == next_dup_i ) {
+            // for hyperbolic, we must duplicate iterations 4, 13, 40, 121, ..., 3*i+1
+            next_dup_i = 3*i + 1;
         }
         pow2 /= 2.0;
 
-        if ( debug ) printf( "i=%2d a=%30.27g ah=%30.27g y=%30.27g gain=%30.27g gainh=%30.27g gain_inv=%30.27g gainh_inv=%30.27g\n", 
-                             i, double(a), double(ah), double(pow2), double(gain), double(gainh), double(gain_inv), double(gainh_inv) );
+        if ( debug ) printf( "i=%2d a=%30.27g ah=%30.27g y=%30.27g\n", i, double(a), double(ah), double(pow2) );
 
     }
 
+    // calculate gain and gainh by plugging x=1,y=0,z=0 into CORDICs
+    T gain, gainh, yy, zz;
+    circular_rotation( one(), zero(), zero(), gain, yy, zz );
+    hyperbolic_rotation( one(), zero(), zero(), gainh, yy, zz );
+
     // now convert those last two to fixed-point
-    impl->circular_gain            = to_t( FLT(1)/gain_inv );
-    impl->hyperbolic_gain          = to_t( FLT(1)/gainh_inv );
-    impl->circular_one_over_gain   = to_t( gain_inv );
-    impl->hyperbolic_one_over_gain = to_t( gainh_inv );
-    if ( debug ) std::cout << "circular_gain="            << std::setw(30) << to_flt(impl->circular_gain) << " other_way=" << gain << "\n";
-    if ( debug ) std::cout << "circular_gainh="           << std::setw(30) << to_flt(impl->hyperbolic_gain) << " other_way=" << gainh << "\n";
+    impl->circular_gain            = gain;
+    impl->hyperbolic_gain          = gainh;
+    impl->circular_one_over_gain   = to_t( FLT(1) / to_flt(gain)  );
+    impl->hyperbolic_one_over_gain = to_t( FLT(1) / to_flt(gainh) );
+    if ( debug ) std::cout << "circular_gain="            << std::setw(30) << to_flt(impl->circular_gain) << "\n";
+    if ( debug ) std::cout << "circular_gainh="           << std::setw(30) << to_flt(impl->hyperbolic_gain) << "\n";
     if ( debug ) std::cout << "circular_one_over_gain="   << std::setw(30) << to_flt(impl->circular_one_over_gain) << "\n";
     if ( debug ) std::cout << "hyperbolic_one_over_gain=" << std::setw(30) << to_flt(impl->hyperbolic_one_over_gain) << "\n";
 
