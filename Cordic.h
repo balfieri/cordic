@@ -269,7 +269,6 @@ public:
     void reduce_arg( T& x, int32_t& x_lshift, bool& sign, bool shift_x=true, bool normalize=false ) const; // 0.0 .. <2.0
     void reduce_mul_args( T& x, T& y, int32_t& x_lshift, int32_t& y_lshift, bool& sign ) const; // reduce_arg x and y
     void reduce_div_args( T& y, T& x, int32_t& y_lshift, int32_t& x_lshift, bool& sign ) const; // reduce_arg y, normalize_arg x
-    void reduce_sqrt_arg( T& x, int32_t& x_lshift ) const;                                      // reduce_arg but lshift must pow-of-2
     void reduce_exp_arg( FLT b, T& x, T& factor, bool& sign ) const;                            // b=const_base, mul/div exp(x) by factor
     void reduce_log_arg( T& x, T& addend ) const;                                               // reduce_arg x, addend to log(x) 
     void reduce_atan2_args( T& y, T& x, bool& y_sign, bool& x_sign, bool& is_pi ) const;        // reduce y and x

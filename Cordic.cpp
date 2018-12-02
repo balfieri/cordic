@@ -1107,23 +1107,6 @@ void Cordic<T,FLT>::reduce_div_args( T& y, T& x, int32_t& y_lshift, int32_t& x_l
 }
 
 template< typename T, typename FLT >
-void Cordic<T,FLT>::reduce_sqrt_arg( T& x, int32_t& x_lshift ) const
-{
-    //-----------------------------------------------------
-    // Reduce without right-shifting x yet.
-    // Then round the x_lshift up to even number.
-    // And *then* shift.
-    //-----------------------------------------------------
-    cassert( x >= 0 && "sqrt argument may not be negative for fixed-point numbers" );
-    T x_orig = x;
-    bool x_sign;
-    reduce_arg( x, x_lshift, x_sign, false );
-    if ( x_lshift & 1 ) x_lshift++;
-    x >>= x_lshift;
-    if ( debug ) std::cout << "reduce_sqrt_arg: x_orig=" << to_flt(x_orig) << " x_reduced=" << to_flt(x) << " x_lshift=" << x_lshift << "\n"; 
-}
-
-template< typename T, typename FLT >
 void Cordic<T,FLT>::reduce_exp_arg( FLT b, T& x, T& factor, bool& sign ) const 
 {
     //-----------------------------------------------------
