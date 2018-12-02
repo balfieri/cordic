@@ -1044,6 +1044,7 @@ T Cordic<T,FLT>::asinh( const T& x ) const
 template< typename T, typename FLT >
 T Cordic<T,FLT>::acosh( const T& x ) const
 { 
+    cassert( x >= one() && "acosh x must be >= 1" );
     return log( x + normh( x, one() ) );
 }
 
