@@ -586,8 +586,8 @@ T Cordic<T,FLT>::mad( const T& _x, const T& _y, const T addend, bool do_reduce )
         yy += addend;
         if ( sign ) yy = -yy;
     }
-    if ( debug ) std::cout << "mad end: x_orig=" << to_flt(x) << " y_orig=" << to_flt(y) << " addend=" << to_flt(addend) << " do_reduce=" << do_reduce << " yy=" << to_flt(yy) << 
-                                  " x_lshift=" << x_lshift << " y_lshift=" << y_lshift << " sign=" << sign << "\n";
+    if ( debug ) std::cout << "mad end: x_orig=" << to_flt(_x) << " y_orig=" << to_flt(_y) << " addend=" << to_flt(addend) << " do_reduce=" << do_reduce << 
+                                  " yy=" << to_flt(yy) << " x_lshift=" << x_lshift << " y_lshift=" << y_lshift << " sign=" << sign << "\n";
     return yy;
 }
 
@@ -629,7 +629,7 @@ T Cordic<T,FLT>::dad( const T& _y, const T& _x, const T addend, bool do_reduce )
         zz += addend;
         if ( sign ) zz = -zz;
     }
-    if ( debug ) std::cout << "dad end: x_orig=" << to_flt(x) << " y_orig=" << to_flt(y) << " addend=" << to_flt(addend) << " do_reduce=" << do_reduce <<
+    if ( debug ) std::cout << "dad end: x_orig=" << to_flt(_x) << " y_orig=" << to_flt(_y) << " addend=" << to_flt(addend) << " do_reduce=" << do_reduce <<
                               " zz_final=" << to_flt(zz) << " x_lshift=" << x_lshift << " y_lshift=" << y_lshift << " sign=" << sign << "\n";
     return zz;
 }
