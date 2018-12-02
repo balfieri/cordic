@@ -133,7 +133,7 @@ Cordic<T,FLT>::Cordic( uint32_t int_w, uint32_t frac_w, bool do_reduce, uint32_t
     circular_rotation( one(), zero(), zero(), gain, yy, zz );
     hyperbolic_rotation( one(), zero(), zero(), gainh, yy, zz );
 
-    // now convert those last two to fixed-point
+    // calculate 1/gain and 1/gainh which are the multiplication factors 
     impl->circular_gain            = gain;
     impl->hyperbolic_gain          = gainh;
     impl->circular_one_over_gain   = to_t( FLT(1) / to_flt(gain)  );
