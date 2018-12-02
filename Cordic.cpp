@@ -828,18 +828,21 @@ T Cordic<T,FLT>::tan( const T& x ) const
 template< typename T, typename FLT >
 T Cordic<T,FLT>::asin( const T& x ) const
 { 
+    cassert( x >= -one() && x <= one() && "asin x must be between -1 and 1" );
     return atan2( x, normh( one(), x ) );
 }
 
 template< typename T, typename FLT >
 T Cordic<T,FLT>::acos( const T& x ) const
 { 
+    cassert( x >= -one() && x <= one() && "acos x must be between -1 and 1" );
     return atan2( normh( one(), x ), x );
 }
 
 template< typename T, typename FLT >
 T Cordic<T,FLT>::atan( const T& x ) const
 { 
+    cassert( x >= -one() && x <= one() && "atan x must be between -1 and 1" );
     return atan2( x, one(), impl->do_reduce, true );
 }
 

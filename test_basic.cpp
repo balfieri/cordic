@@ -115,9 +115,11 @@ int main( int argc, const char * argv[] )
         do_op1(  "cos(x)",           cos,     std::cos,       x   , do_reduce );
         do_op12( "sin_cos(x)",       sin_cos, sin_cos,        x   , do_reduce );
         do_op1(  "tan(x)",           tan,     std::tan,       x   , do_reduce );
-        do_op1(  "asin(x)",          asin,    std::asin,      x   , do_reduce );
-        do_op1(  "acos(x)",          acos,    std::acos,      x   , do_reduce );
-        do_op1(  "atan(x)",          atan,    std::atan,      x   , do_reduce );
+        if ( x >= -1.0 && x <= 1.0 ) {
+            do_op1(  "asin(x)",          asin,    std::asin,      x   , do_reduce );
+            do_op1(  "acos(x)",          acos,    std::acos,      x   , do_reduce );
+            do_op1(  "atan(x)",          atan,    std::atan,      x   , do_reduce );
+        }
         do_op2(  "atan2(y,x)",       atan2,   std::atan2,     y, x, do_reduce );
         do_op1(  "sinh(x)",          sinh,    std::sinh,      x   , do_reduce );
         do_op1(  "cosh(x)",          cosh,    std::cosh,      x   , do_reduce );
