@@ -81,6 +81,8 @@ Cordic<T,FLT>::Cordic( uint32_t int_w, uint32_t frac_w, bool do_reduce, uint32_t
 {
     if ( n == 0 ) n = frac_w;
     cassert( (1+int_w+frac_w) <= (sizeof( T ) * 8) && "1+int_w+frac_w does not fit in T container" );
+    cassert( int_w  != 0 && "int_w must be > 0 currently" );
+    cassert( frac_w != 0 && "frac_w must be > 0 currently" );
 
     impl = std::make_unique<Impl>();
 
@@ -143,7 +145,8 @@ Cordic<T,FLT>::Cordic( uint32_t int_w, uint32_t frac_w, bool do_reduce, uint32_t
     if ( debug ) std::cout << "circular_one_over_gain="   << std::setw(30) << to_flt(impl->circular_one_over_gain) << "\n";
     if ( debug ) std::cout << "hyperbolic_one_over_gain=" << std::setw(30) << to_flt(impl->hyperbolic_one_over_gain) << "\n";
 
-    // construct LUTs used by reduce_sin_cos_arg() and reduce_sinh_cosh_arg()
+    // construct LUTs used by reduce_sin_cos_arg() and reduce_sinh_cosh_arg();
+    // use integer part plus 0.5 bit of fraction
     cassert( int_w < 14 && "too many cases to worry about" );
     uint32_t N = 1 << (1+int_w);
     T *        addend   = new T[N];
@@ -156,20 +159,23 @@ Cordic<T,FLT>::Cordic( uint32_t int_w, uint32_t frac_w, bool do_reduce, uint32_t
     impl->reduce_sinh_cosh_cosh_i = std::unique_ptr<T[]>( cosh_i );
     const FLT PI       = M_PI;
     const FLT PI_DIV_2 = PI / 2.0;
-    for( T i = 0; i <= maxint(); i++ )
+    const T   MASK     = (T(1) << (int_w+T(1)))-T(1);  // include 0.5 bit of fraction
+    for( T i = 0; i <= MASK; i++ )
     {
-        FLT cnt = FLT(i) / PI_DIV_2;
+        FLT i_f = FLT(i) / 2.0;
+        FLT cnt = i_f / PI_DIV_2; 
         T   cnt_i = cnt;
         if ( debug ) std::cout << "cnt_i=" << cnt_i << "\n";
         FLT add_f = FLT(cnt_i) * PI_DIV_2;
         if ( i > 0 ) add_f = -add_f;
         addend[i]   = to_t( add_f );
         quadrant[i] = cnt_i % 4;
-        if ( debug ) std::cout << "reduce_sin_cos_arg LUT: cnt_i=" << cnt_i << " addend[" << i << "]=" << to_flt(addend[i]) << " quadrant=" << quadrant[i] << "\n";
+        if ( debug ) std::cout << "reduce_sin_cos_arg LUT: i_f=" << i_f << " cnt_i=" << cnt_i << 
+                                  " addend[" << i << "]=" << to_flt(addend[i]) << " quadrant=" << quadrant[i] << "\n";
 
-        sinh_i[i] = std::sinh( double(i) );
-        cosh_i[i] = std::cosh( double(i) );
-        if ( debug ) std::cout << "reduce_sinh_cosh_arg LUT: sinh_i=" << to_flt(sinh_i[i]) << " cosh_i=" << to_flt(cosh_i[i]) << "\n";
+        sinh_i[i] = std::sinh( i_f );
+        cosh_i[i] = std::cosh( i_f );
+        if ( debug ) std::cout << "reduce_sinh_cosh_arg LUT: i_f=" << i_f << " sinh_i=" << to_flt(sinh_i[i]) << " cosh_i=" << to_flt(cosh_i[i]) << "\n";
     }
 
     // construct LUT used by reduce_exp_arg()
@@ -1228,11 +1234,12 @@ void Cordic<T,FLT>::reduce_sin_cos_arg( T& a, uint32_t& quad, bool& sign ) const
     if ( sign ) a = -a;
     const T *  addend   = impl->reduce_sin_cos_addend.get();
     uint32_t * quadrant = impl->reduce_sin_cos_quadrant.get();
-
-    T index = (a >> frac_w()) & maxint();
-    quad = quadrant[index];
-    a += addend[index];
-    if ( debug ) std::cout << "reduce_sin_cos_arg: a_orig=" << to_flt(a_orig) << " a_reduced=" << to_flt(a) << " quadrant=" << quad << "\n"; 
+    const T MASK = (T(1) << (int_w()+T(1))) - T(1);  // include 0.5 bit of fraction
+    T i = (a >> (frac_w()-T(1))) & MASK;
+    quad = quadrant[i];
+    a += addend[i];
+    if ( debug ) std::cout << "reduce_sin_cos_arg: a_orig=" << to_flt(a_orig) << " addend[" << i << "]=" << to_flt(addend[i]) << 
+                              " a_reduced=" << to_flt(a) << " quadrant=" << quad << "\n"; 
 }
 
 template< typename T, typename FLT >
@@ -1255,8 +1262,9 @@ void Cordic<T,FLT>::reduce_sinh_cosh_arg( T& _x, T& sinh_i, T& cosh_i, bool& sig
     sign = x < 0;
     if ( sign ) x = -x;
 
-    T i = x >> frac_w();
-    x   = x & ((1 << frac_w())-1);
+    const T MASK = (T(1) << (int_w()+T(1))) - T(1);  // include 0.5 bit of fraction
+    T i = (x >> (frac_w()-T(1))) & MASK;
+    x   = x & ((T(1) << (frac_w()-T(1)))-T(1));
     const T *  sinh_i_vals = impl->reduce_sinh_cosh_sinh_i.get();
     const T *  cosh_i_vals = impl->reduce_sinh_cosh_cosh_i.get();
     sinh_i = sinh_i_vals[i];
