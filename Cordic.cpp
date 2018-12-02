@@ -180,9 +180,9 @@ Cordic<T,FLT>::Cordic( uint32_t int_w, uint32_t frac_w, bool do_reduce, uint32_t
     for( T i = 0; i <= MASK; i++ )
     {
         FLT i_f = FLT(i) / 2.0;
+
         FLT cnt = i_f / PI_DIV_2; 
         T   cnt_i = cnt;
-        if ( debug ) std::cout << "cnt_i=" << cnt_i << "\n";
         FLT add_f = FLT(cnt_i) * PI_DIV_2;
         if ( i > 0 ) add_f = -add_f;
         addend[i]   = to_t( add_f );
