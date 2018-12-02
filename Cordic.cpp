@@ -1263,7 +1263,7 @@ void Cordic<T,FLT>::reduce_sin_cos_arg( T& a, uint32_t& quad, bool& sign ) const
 }
 
 template< typename T, typename FLT >
-void Cordic<T,FLT>::reduce_sinh_cosh_arg( T& _x, T& sinh_i, T& cosh_i, bool& sign ) const
+void Cordic<T,FLT>::reduce_sinh_cosh_arg( T& x, T& sinh_i, T& cosh_i, bool& sign ) const
 {
     //-----------------------------------------------------
     // Identities:
@@ -1278,7 +1278,7 @@ void Cordic<T,FLT>::reduce_sinh_cosh_arg( T& _x, T& sinh_i, T& cosh_i, bool& sig
     //     do the multiplications
     //     fix sign of sih
     //-----------------------------------------------------
-    T x = _x;
+    T x_orig = x;
     sign = x < 0;
     if ( sign ) x = -x;
 
@@ -1289,6 +1289,8 @@ void Cordic<T,FLT>::reduce_sinh_cosh_arg( T& _x, T& sinh_i, T& cosh_i, bool& sig
     const T *  cosh_i_vals = impl->reduce_sinh_cosh_cosh_i.get();
     sinh_i = sinh_i_vals[i];
     cosh_i = cosh_i_vals[i];
+    if ( debug ) std::cout << "reduce_sinh_cosh_arg: x_orig=" << to_flt(x_orig) << " sinh_i[" << i << "]=" << to_flt(sinh_i) << 
+                              " coshh_i[" << i << "]=" << to_flt(cosh_i) << " x_reduced=" << to_flt(x) << "\n";
 }
 
 template class Cordic<int64_t, double>;
