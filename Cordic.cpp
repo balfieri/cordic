@@ -209,7 +209,7 @@ Cordic<T,FLT>::Cordic( uint32_t int_w, uint32_t frac_w, bool do_reduce, uint32_t
         FLT add_f = FLT(cnt_i) * PI_DIV_2;
         if ( i > 0 ) add_f = -add_f;
         addend[i]   = to_t( add_f );
-        quadrant[i] = (cnt_i >> 1) % 4;
+        quadrant[i] = cnt_i % 4;
         if ( debug ) std::cout << "reduce_sin_cos_arg LUT: i_f=" << i_f << " cnt_f=" << cnt << " cnt_i=" << cnt_i << 
                                   " addend[" << i << "]=" << to_flt(addend[i]) << " quadrant=" << quadrant[i] << "\n";
 
