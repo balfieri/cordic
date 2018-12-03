@@ -41,10 +41,14 @@ struct Cordic<T,FLT>::Impl
     T                           zero;
     T                           one;
     T                           quarter;
+    T                           sqrt2;
+    T                           sqrt2_div_2;
     T                           pi;
+    T                           pi_div_2;
+    T                           pi_div_4;
     T                           e;
-    T                           log2;                                   // log(2)
-    T                           log10;                                  // log(10)
+    T                           log2;                                   
+    T                           log10;                                 
 
     std::unique_ptr<T[]>        circular_atan;                          // circular atan values
     T                           circular_rotation_gain;                 // circular rotation gain
@@ -116,14 +120,18 @@ Cordic<T,FLT>::Cordic( uint32_t int_w, uint32_t frac_w, bool do_reduce, uint32_t
     impl->do_reduce = do_reduce;
     impl->n       = n;
 
-    impl->maxint  = (T(1) << int_w) - 1;
-    impl->zero    = 0;
-    impl->one     = T(1) << frac_w;
-    impl->quarter = T(1) << (frac_w-2);
-    impl->pi      = to_flt( std::acos( FLT(-1.0) ) );
-    impl->e       = to_flt( std::exp( FLT(1) ) );
-    impl->log2    = to_t( std::log( FLT(  2 ) ) );
-    impl->log10   = to_t( std::log( FLT( 10 ) ) );
+    impl->maxint        = (T(1) << int_w) - 1;
+    impl->zero          = 0;
+    impl->one           = T(1) << frac_w;
+    impl->quarter       = T(1) << (frac_w-2);
+    impl->sqrt2         = to_t( std::sqrt( 2.0 ) );
+    impl->sqrt2_div_2   = to_t( std::sqrt( 2.0 ) / 2.0 );
+    impl->pi            = to_t( std::acos( FLT(-1.0) ) );
+    impl->pi_div_2      = to_t( std::acos( FLT(-1.0) ) / 2.0 );
+    impl->pi_div_4      = to_t( std::acos( FLT(-1.0) ) / 4.0 );
+    impl->e             = to_t( std::exp( FLT(1) ) );
+    impl->log2          = to_t( std::log( FLT(  2 ) ) );
+    impl->log10         = to_t( std::log( FLT( 10 ) ) );
 
     impl->circular_atan    = std::unique_ptr<T[]>( new T[n+1] );
     impl->hyperbolic_atanh = std::unique_ptr<T[]>( new T[n+1] );
@@ -188,6 +196,7 @@ Cordic<T,FLT>::Cordic( uint32_t int_w, uint32_t frac_w, bool do_reduce, uint32_t
     impl->reduce_sinh_cosh_cosh_i_oflow = std::unique_ptr<bool[]>( cosh_i_oflow );
     const FLT PI       = M_PI;
     const FLT PI_DIV_2 = PI / 2.0;
+    const FLT PI_DIV_4 = PI / 4.0;
     const T   MASK     = (T(1) << (int_w+T(1)))-T(1);  // include 0.5 bit of fraction
     const T   MAX      = (T(1) << (int_w+frac_w))-T(1);
     const FLT MAX_F    = to_flt( MAX );
@@ -200,8 +209,8 @@ Cordic<T,FLT>::Cordic( uint32_t int_w, uint32_t frac_w, bool do_reduce, uint32_t
         FLT add_f = FLT(cnt_i) * PI_DIV_2;
         if ( i > 0 ) add_f = -add_f;
         addend[i]   = to_t( add_f );
-        quadrant[i] = cnt_i % 4;
-        if ( debug ) std::cout << "reduce_sin_cos_arg LUT: i_f=" << i_f << " cnt_i=" << cnt_i << 
+        quadrant[i] = (cnt_i >> 1) % 4;
+        if ( debug ) std::cout << "reduce_sin_cos_arg LUT: i_f=" << i_f << " cnt_f=" << cnt << " cnt_i=" << cnt_i << 
                                   " addend[" << i << "]=" << to_flt(addend[i]) << " quadrant=" << quadrant[i] << "\n";
 
         FLT sinh_i_f = std::sinh( i_f );
@@ -287,9 +296,33 @@ T Cordic<T,FLT>::quarter( void ) const
 }
 
 template< typename T, typename FLT >
+T Cordic<T,FLT>::sqrt2( void ) const
+{
+    return impl->sqrt2;
+}
+
+template< typename T, typename FLT >
+T Cordic<T,FLT>::sqrt2_div_2( void ) const
+{
+    return impl->sqrt2_div_2;
+}
+
+template< typename T, typename FLT >
 T Cordic<T,FLT>::pi( void ) const
 {
     return impl->pi;
+}
+
+template< typename T, typename FLT >
+T Cordic<T,FLT>::pi_div_2( void ) const
+{
+    return impl->pi_div_2;
+}
+
+template< typename T, typename FLT >
+T Cordic<T,FLT>::pi_div_4( void ) const
+{
+    return impl->pi_div_4;
 }
 
 template< typename T, typename FLT >
@@ -931,7 +964,8 @@ void Cordic<T,FLT>::sin_cos( const T& _x, T& si, T& co, bool do_reduce, bool nee
     T x = _x;
     uint32_t quadrant;
     bool x_sign;
-    if ( do_reduce ) reduce_sin_cos_arg( x, quadrant, x_sign );
+    bool did_minus_pi_div_4;
+    if ( do_reduce ) reduce_sin_cos_arg( x, quadrant, x_sign, did_minus_pi_div_4 );
 
     T r = circular_rotation_one_over_gain();
     int32_t r_lshift;
@@ -1391,10 +1425,10 @@ void Cordic<T,FLT>::reduce_norm_args( T& x, T& y, int32_t& lshift ) const
 }
 
 template< typename T, typename FLT >
-void Cordic<T,FLT>::reduce_sin_cos_arg( T& a, uint32_t& quad, bool& sign ) const
+void Cordic<T,FLT>::reduce_sin_cos_arg( T& a, uint32_t& quad, bool& sign, bool& did_minus_pi_div_4 ) const
 {
     //-----------------------------------------------------
-    // Use LUT to find addend.
+    // Use LUT to find addend to get the a in 0 .. PI/2.
     //-----------------------------------------------------
     const T a_orig = a;
     sign = a < 0;
@@ -1405,6 +1439,14 @@ void Cordic<T,FLT>::reduce_sin_cos_arg( T& a, uint32_t& quad, bool& sign ) const
     T i = (a >> (frac_w()-T(1))) & MASK;
     quad = quadrant[i];
     a += addend[i];
+
+    //-----------------------------------------------------
+    // Next, if a is still greater than PI/4, then subtract
+    // PI/4 and tell the caller to use the following:
+    //
+    //     sin(x+PI/4) = sqrt(2)/2 * ( sin(x) + cos(x) )
+    //     cos(x+PI/4) = sqrt(2)/2 * ( cos(x) - sin(x) )
+    //-----------------------------------------------------
     if ( debug ) std::cout << "reduce_sin_cos_arg: a_orig=" << to_flt(a_orig) << " addend[" << i << "]=" << to_flt(addend[i]) << 
                               " a_reduced=" << to_flt(a) << " quadrant=" << quad << "\n"; 
 }

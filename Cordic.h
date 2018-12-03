@@ -123,9 +123,11 @@ public:
     //
     // sin(-x)          = -sin(x)
     // sin(x+y)         = sin(x)*cos(y) + cos(x)*sin(y)
+    // sin(x+PI/4)      = sqrt(2)/2 * (sin(x) + cos(x))
     // sin(x)           = Im(e^(ix)) = (e^(ix) + e^(-ix)) / 2
     // sin(ix)          = i*sinh(x)
     // cos(x+y)         = cos(x)*sin(y) - sin(x)*cos(y)
+    // cos(x+PI/4)      = sqrt(2)/2 * (cos(x) - sin(x))
     // cos(-x)          = cos(x)
     // cos(x)           = Re(e^(ix)) = (e^(ix) - e^(-ix)) / 2i
     // cos(ix)          = cosh(x)
@@ -304,7 +306,11 @@ public:
     T zero( void ) const;                                // encoded 0.0
     T one( void ) const;                                 // encoded 1.0
     T quarter( void ) const;                             // encoded 0.25
+    T sqrt2( void ) const;                               // encoded sqrt(2)
+    T sqrt2_div_2( void ) const;                         // encoded sqrt(2)/2
     T pi( void ) const;                                  // encoded PI
+    T pi_div_2( void ) const;                            // encoded PI/2
+    T pi_div_4( void ) const;                            // encoded PI/4
     T e( void ) const;                                   // encoded natural exponent
 
     T circular_rotation_gain( void ) const;              // circular_rotation()     x result with x0=1, y0=0, z0=0 (1.646760258121066...)
@@ -349,7 +355,7 @@ public:
     void reduce_log_arg( T& x, T& addend ) const;                                               // reduce_arg x, addend to log(x) 
     void reduce_atan2_args( T& y, T& x, bool& y_sign, bool& x_sign, bool& is_pi ) const;        // reduce y and x
     void reduce_norm_args( T& x, T& y, int32_t& lshift ) const;                                 // reduce_arg x and y with same lshift
-    void reduce_sin_cos_arg( T& a, uint32_t& quadrant, bool& sign ) const;                      // to 0 .. pi/2
+    void reduce_sin_cos_arg( T& a, uint32_t& quadrant, bool& sign, bool& did_minus_pi_div_4 ) const; // to 0 .. pi/4
     void reduce_sinh_cosh_arg( T& x, T& sinh_i, T& cosh_i, bool& sign ) const;                  // split x into i+f parts
 
 private:
