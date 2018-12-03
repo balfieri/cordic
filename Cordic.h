@@ -195,10 +195,9 @@ public:
     //      z = 0
     //
     // input ranges allowed:
-    //      -1  <= x0 <= 1
-    //      -1  <= y0 <= 1
-    //      -PI <= z0 <= PI
-    //      |atan(y0/x0)| <= 0.7854...
+    //      -1    <= x0 <= 1
+    //      -1    <= y0 <= 1
+    //      -PI/4 <= z0 <= PI/4
     //
     // output ranges:
     //      -sqrt(2) <= x <= sqrt(2)
@@ -213,10 +212,10 @@ public:
     //      z = z0 + atan( y0/x0 )
     //
     // input ranges allowed:
-    //      -1  <= x0 <= 1
-    //      -1  <= y0 <= 1
-    //      -PI <= z0 <= PI
-    //      |atan(y0/x0)| <= 0.7854...
+    //      -1    <= x0 <= 1
+    //      -1    <= y0 <= 1
+    //      -PI/4 <= z0 <= PI/4
+    //      |atan(y/x)| <= PI/4
     //
     // output ranges:
     //      0    <= x <= sqrt(2)
@@ -317,8 +316,8 @@ public:
     T hyperbolic_rotation_one_over_gain( void ) const;   // 1.0/hyperbolic_rotation_gain()                         (1.207497067763074...)
     T hyperbolic_vectoring_one_over_gain( void ) const;  // 1.0/hyperbolic_vectoring_gain()                        (1.207497067763074...)
 
-    T circular_angle_max( void ) const;                  // circular_vectoring      z result with x0=1, y0=1, z0=0 (0.785398163397447...)
-    T hyperbolic_angle_max( void ) const;                // hyperbolic_vectoring    z result with x0=1, y0=1, z0=0 (1.118173015526502...)
+    T circular_angle_max( void ) const;                  // circular_vectoring      z result with x0=1, y0=1, z0=0 (0.785398163397447... == PI/4)
+    T hyperbolic_angle_max( void ) const;                // hyperbolic_vectoring    z result with x0=1, y0=1, z0=0 (1.118173015526502... == [need to figure out])
 
     //-----------------------------------------------------
     // These version are used internally, but making them available publically.

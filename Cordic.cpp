@@ -412,7 +412,7 @@ void Cordic<T,FLT>::circular_rotation( const T& x0, const T& y0, const T& z0, T&
     if ( debug ) std::cout << "circular_rotation begin: x0,y0,z0=[ " << to_flt(x0) << ", " << to_flt(y0) << ", " << to_flt(z0) << "]\n";
     cassert( x0 >= -ONE       && x0 <= ONE &&       "circular_rotation x0 must be in the range -1 .. 1" );
     cassert( y0 >= -ONE       && y0 <= ONE &&       "circular_rotation y0 must be in the range -1 .. 1" );
-    //cassert( z0 >= -ANGLE_MAX && z0 <= ANGLE_MAX && "circular_rotation |z0| must be <= circular_angle_max()" );
+    cassert( z0 >= -ANGLE_MAX && z0 <= ANGLE_MAX && "circular_rotation |z0| must be <= circular_angle_max()" );
 
     //-----------------------------------------------------
     // d = (z >= 0) ? 1 : -1
@@ -939,7 +939,7 @@ void Cordic<T,FLT>::sin_cos( const T& _x, T& si, T& co, bool do_reduce, bool nee
     if ( _r != nullptr ) {
         r = *_r;
         if ( do_reduce ) reduce_arg( r, r_lshift, r_sign );
-        r = mul( r, circular_rotation_one_over_gain(), false );  // should not need to reduce
+        r = mul( r, circular_rotation_one_over_gain(), true );  
     }
 
     T zz;
@@ -1050,12 +1050,14 @@ T Cordic<T,FLT>::atan2( const T& _y, const T& _x, bool do_reduce, bool x_is_one,
 template< typename T, typename FLT >
 void Cordic<T,FLT>::polar_to_rect( const T& r, const T& a, T& x, T& y ) const
 {
-    sin_cos( a, y, x, &r );
+    if ( debug ) std::cout << "polar_to_rect begin: r=" << to_flt(r) << " a=" << to_flt(a) << " do_reduce=" << impl->do_reduce << "\n";
+    sin_cos( a, y, x, true, true, true, &r );
 }
 
 template< typename T, typename FLT >
 void Cordic<T,FLT>::rect_to_polar( const T& x, const T& y, T& r, T& a ) const
 {
+    if ( debug ) std::cout << "rect_to_polar begin: x=" << to_flt(x) << " y=" << to_flt(y) << " do_reduce=" << impl->do_reduce << "\n";
     a = atan2( y, x, true, false, &r );
 }
 
