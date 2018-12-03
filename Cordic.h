@@ -106,18 +106,20 @@ public:
     //-----------------------------------------------------
     // Interesting Identities (for the curious)
     //
+    // sqrt(x)          = sqrt( (x+0.25)^2 - (x-0.25)^2 )               (allows use of normh)
+    // sqrt(x)          = sqrt( (x+1)^2 - (x-1)^2 ) / 2                 (ditto)
+    // sqrt(x*y)        = sqrt( (x+y)^2 - (x-y)^2 ) / 2                 (ditto)
+    //
     // exp(x)           = sinh(x) + cosh(x)
     // exp(x+y)         = exp(x) * exp(y)
-    // exp(ix)          = cos(x) + i*sin(x)                             (Eurler's Formula, i = sqrt(-1))
+    // exp(ix)          = cos(x) + i*sin(x)                             (Euler's Formula, i = sqrt(-1))
     // exp(i*PI) + 1    = 0                                             (Euler's Identity)
     // log(x)           = 2*atan2(x-1, x+1)              
     // log(x)           = atanh2(x^2 - 1, x^2 + 1) 
     // log(x*y)         = log(x) + log(y)
+    // log(x/4)         = atanh2(x-0.25, x+0.25) 
     // log(x/y)         = log(x) - log(y)
-    //
-    // sqrt(x)          = sqrt( (x+0.25)^2 - (x-0.25)^2 )               (allows use of normh)
-    // sqrt(x)          = sqrt( (x+1)^2 - (x-1)^2 ) / 2                 (ditto)
-    // sqrt(x*y)        = sqrt( (x+y)^2 - (x-y)^2 ) / 2                 (ditto)
+    // log(x/y)         = 2*atanh2(x-y, x+y)  
     //
     // sin(-x)          = -sin(x)
     // sin(x+y)         = sin(x)*cos(y) + cos(x)*sin(y)
@@ -166,7 +168,7 @@ public:
     // atanh(-x)        = -atanh(x)
     // atanh(x)         = log((1+x)/(1-x))/2 = log(1+x)/2 - log(1-x)/2    (note: x must be between -1 and 1)
     // atanh(x)         = asinh(x / sqrt(1 - x^2)) 
-    // atanh(x)         = +/- acosh(1 / sqrt(1 - x^2))
+    // atanh(x)         = acosh(1 / sqrt(1 - x^2))  (+/-)
     //-----------------------------------------------------
 
     //-----------------------------------------------------
