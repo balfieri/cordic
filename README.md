@@ -59,7 +59,7 @@ fixed-point OR floating-point encodings including, but not
 limited to, standard IEEE floating-point formats such as float (fp32), double (fp64), quadruple (fp128), half (fp16), and quarter (fp8).
 Only one of int_w or exp_w may be non-zero.  In IEEE floating-point numbers, int_w is 0 because the binary fraction is 
 assumed to have an implied '1' before the 
-binary point, which is known as a normalized number (e.g., 1.110110<sub>2</sup> * 2<sup>24</sup>).  One exception is when
+binary point, which is known as a normalized number (e.g., 1.110110<sub>2</sub> * 2<sup>24</sup>).  One exception is when
 the value is less than the smallest normalized number 1.0 * 2<sup>MIN_EXP</sup>, which makes it a denormalized number or "denorm." Other special
 numbers include +Infinity (e.g., from 1/0), -Infinity (e.g., from -1/0), or NaN (not a number, e.g., from sqrt(-1)), which 
 are identified using special encodings of the exponent.
