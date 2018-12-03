@@ -151,8 +151,16 @@ Cordic<T,FLT>::Cordic( uint32_t int_w, uint32_t frac_w, bool do_reduce, uint32_t
         if ( debug ) printf( "i=%2d a=%30.27g ah=%30.27g y=%30.27g\n", i, double(a), double(ah), double(pow2) );
     }
 
-    // calculate gain by plugging in x=1,y=0,z=0 into CORDICs
+    // calculate max |z0| angle allowed
     T xx, yy, zz;
+    impl->circular_angle_max = one();   // to avoid triggering assert
+    impl->hyperbolic_angle_max = one();
+    circular_vectoring(   one(), one(),     zero(), xx, yy, impl->circular_angle_max );
+    hyperbolic_vectoring( one(), to_t(2.0), zero(), xx, yy, impl->hyperbolic_angle_max );
+    if ( debug ) std::cout << "circular_angle_max="             << std::setw(30) << to_flt(impl->circular_angle_max) << "\n";
+    if ( debug ) std::cout << "hyperbolic_angle_max="           << std::setw(30) << to_flt(impl->hyperbolic_angle_max) << "\n";
+    
+    // calculate gain by plugging in x=1,y=0,z=0 into CORDICs
     circular_rotation(    one(), zero(), zero(), impl->circular_rotation_gain,    yy, zz );
     circular_vectoring(   one(), zero(), zero(), impl->circular_vectoring_gain,   yy, zz );
     hyperbolic_rotation(  one(), zero(), zero(), impl->hyperbolic_rotation_gain,  yy, zz );
@@ -171,12 +179,6 @@ Cordic<T,FLT>::Cordic( uint32_t int_w, uint32_t frac_w, bool do_reduce, uint32_t
     if ( debug ) std::cout << "circular_vectoring_one_over_gain="   << std::setw(30) << to_flt(impl->circular_vectoring_one_over_gain) << "\n";
     if ( debug ) std::cout << "hyperbolic_rotation_one_over_gain="  << std::setw(30) << to_flt(impl->hyperbolic_rotation_one_over_gain) << "\n";
     if ( debug ) std::cout << "hyperbolic_vectoring_one_over_gain=" << std::setw(30) << to_flt(impl->hyperbolic_vectoring_one_over_gain) << "\n";
-
-    // calculate max |z0| angle allowed
-    circular_vectoring(   one(), one(), zero(), xx, yy, impl->circular_angle_max );
-    hyperbolic_vectoring( one(), to_t(2.0), zero(), xx, yy, impl->hyperbolic_angle_max );
-    if ( debug ) std::cout << "circular_angle_max="             << std::setw(30) << to_flt(impl->circular_angle_max) << "\n";
-    if ( debug ) std::cout << "hyperbolic_angle_max="           << std::setw(30) << to_flt(impl->hyperbolic_angle_max) << "\n";
 
     // construct LUTs used by reduce_sin_cos_arg() and reduce_sinh_cosh_arg();
     // use integer part plus 0.5 bit of fraction
@@ -496,8 +498,8 @@ void Cordic<T,FLT>::circular_vectoring( const T& x0, const T& y0, const T& z0, T
     cassert( x0 >= -THREE && x0 <= THREE && "circular_vectoring x0 must be in the range -3 .. 3" );
     cassert( y0 >= -ONE   && y0 <= ONE   && "circular_vectoring y0 must be in the range -1 .. 1" );
     cassert( z0 >= -PI    && z0 <= PI    && "circular_vectoring z0 must be in the range -PI .. PI" );
-    //cassert( std::abs( std::atan( to_flt(y0) / to_flt(x0) ) ) <= to_flt(ANGLE_MAX) && 
-    //                                    "circular_vectoring |atan(y0/x0)| must be <= circular_angle_max()" );
+    cassert( std::abs( std::atan( to_flt(y0) / to_flt(x0) ) ) <= to_flt(ANGLE_MAX) && 
+                                        "circular_vectoring |atan(y0/x0)| must be <= circular_angle_max()" );
 
     //-----------------------------------------------------
     // d = (y < 0) ? 1 : -1
@@ -1038,7 +1040,7 @@ template< typename T, typename FLT >
 T Cordic<T,FLT>::acos( const T& x ) const
 { 
     cassert( x >= -one() && x <= one() && "acos x must be between -1 and 1" );
-    return atan2( normh( one(), x ), x );
+    return atan2( normh( one(), x ), x, true );
 }
 
 template< typename T, typename FLT >
@@ -1152,8 +1154,7 @@ T Cordic<T,FLT>::normh( const T& _x, const T& _y ) const
     T y = _y;
     if ( debug ) std::cout << "normh begin: x=" << to_flt(x) << " y=" << to_flt(y) << " do_reduce=" << impl->do_reduce << "\n";
     int32_t lshift;
-    if ( impl->do_reduce ) reduce_norm_args( x, y, lshift );
-    cassert( x >= y && "normh abs(x) must be greater than abs(y)" );
+    if ( impl->do_reduce ) reduce_norm_args( x, y, lshift, true );
 
     T xx, yy, zz;
     hyperbolic_vectoring( x, y, zero(), xx, yy, zz );
@@ -1427,7 +1428,7 @@ void Cordic<T,FLT>::reduce_atan2_args( T& y, T& x, bool& y_sign, bool& x_sign, b
 }
 
 template< typename T, typename FLT >
-void Cordic<T,FLT>::reduce_norm_args( T& x, T& y, int32_t& lshift ) const
+void Cordic<T,FLT>::reduce_norm_args( T& x, T& y, int32_t& lshift, bool for_normh ) const
 {
     //-----------------------------------------------------
     // Must shift both x and y by max( x_lshift, y_lshift ).
@@ -1447,8 +1448,15 @@ void Cordic<T,FLT>::reduce_norm_args( T& x, T& y, int32_t& lshift ) const
     lshift = (x_lshift > y_lshift) ? x_lshift : y_lshift;
     x >>= lshift;
     y >>= lshift;
+    bool swapped = x < y;
+    if ( swapped ) {
+        cassert( !for_normh && "x must be >= y for normh" );
+        T tmp = x;
+        x = y;
+        y = tmp;
+    }
     if ( debug ) std::cout << "reduce_norm_args: xy_orig=[" << to_flt(x_orig) << "," << to_flt(y_orig) << "]" << 
-                                               " xy_reduced=[" << to_flt(x) << "," << to_flt(y) << "] lshift=" << lshift << "\n"; 
+                                               " xy_reduced=[" << to_flt(x) << "," << to_flt(y) << "] lshift=" << lshift << " swapped=" << swapped << "\n"; 
 }
 
 template< typename T, typename FLT >
