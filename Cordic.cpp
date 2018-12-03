@@ -483,19 +483,19 @@ void Cordic<T,FLT>::circular_vectoring( const T& x0, const T& y0, const T& z0, T
 {
     //-----------------------------------------------------
     // input ranges allowed:
-    //      -2  <= x0 <= 2
+    //      -3  <= x0 <= 3
     //      -1  <= y0 <= 1
     //      -PI <= z0 <= PI
     //      |atan(y0/x0)| <= 0.7854...
     //-----------------------------------------------------
     const T ONE = one();
-    const T TWO = ONE << 1;
+    const T THREE = 3*ONE;
     const T PI  = pi();
     const T ANGLE_MAX = circular_angle_max();
     if ( debug ) std::cout << "circular_vectoring begin: x0,y0,z0=[ " << to_flt(x0) << ", " << to_flt(y0) << ", " << to_flt(z0) << "]\n";
-    //cassert( x0 >= -TWO && x0 <= TWO && "circular_vectoring x0 must be in the range -2 .. 2" );
-    cassert( y0 >= -ONE && y0 <= ONE && "circular_vectoring y0 must be in the range -1 .. 1" );
-    cassert( z0 >= -PI  && z0 <= PI  && "circular_vectoring z0 must be in the range -PI .. PI" );
+    cassert( x0 >= -THREE && x0 <= THREE && "circular_vectoring x0 must be in the range -3 .. 3" );
+    cassert( y0 >= -ONE   && y0 <= ONE   && "circular_vectoring y0 must be in the range -1 .. 1" );
+    cassert( z0 >= -PI    && z0 <= PI    && "circular_vectoring z0 must be in the range -PI .. PI" );
     //cassert( std::abs( std::atan( to_flt(y0) / to_flt(x0) ) ) <= to_flt(ANGLE_MAX) && 
     //                                    "circular_vectoring |atan(y0/x0)| must be <= circular_angle_max()" );
 
@@ -1066,6 +1066,7 @@ T Cordic<T,FLT>::atan2( const T& _y, const T& _x, bool do_reduce, bool x_is_one,
     //     atan2(y,x)       = PI                                    if x <  0 && y == 0
     //     atan2(y,x)       = 2*atan(y / (sqrt(x^2 + y^2) + x))     if x >  0    
     //     atan2(y,x)       = 2*atan((sqrt(x^2 + y^2) + |x|) / y)   if x <= 0 && y != 0
+    //     atan(1/x)        = PI/2 - atan(x)                        if x > 0
     // Strategy:
     //     Use reduce_atan2_args() to reduce y and x and get y_sign and x_sign.
     //     Return PI if we're done.

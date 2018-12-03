@@ -214,7 +214,7 @@ public:
     //      z = z0 + atan( y0/x0 )
     //
     // input ranges allowed:
-    //      -2    <= x0 <= 2
+    //      -3    <= x0 <= 3
     //      -1    <= y0 <= 1
     //      -PI/4 <= z0 <= PI/4
     //      |atan(y/x)| <= PI/4
