@@ -166,7 +166,7 @@ Cordic<T,FLT>::Cordic( uint32_t int_w, uint32_t frac_w, bool do_reduce, uint32_t
 
     // calculate max |z0| angle allowed
     circular_vectoring(   one(), one(), zero(), xx, yy, impl->circular_angle_max );
-    hyperbolic_vectoring( one(), one(), zero(), xx, yy, impl->hyperbolic_angle_max );
+    hyperbolic_vectoring( one(), to_t(2.0), zero(), xx, yy, impl->hyperbolic_angle_max );
     if ( debug ) std::cout << "circular_angle_max="             << std::setw(30) << to_flt(impl->circular_angle_max) << "\n";
     if ( debug ) std::cout << "hyperbolic_angle_max="           << std::setw(30) << to_flt(impl->hyperbolic_angle_max) << "\n";
 

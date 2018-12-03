@@ -198,7 +198,7 @@ public:
     //      -1.0 <= x0 <= 1.0
     //      -1.0 <= y0 <= 1.0
     //      -PI  <= z0 <= PI
-    //      |atan(y0/x0)| <= 1.7433....                 (though my calculations say 0.785398)
+    //      |atan(y0/x0)| <= 0.7854...
     //
     // output ranges:
     //      -sqrt(2) <= x <= sqrt(2)
@@ -216,7 +216,7 @@ public:
     //      -1.0 <= x0 <= 1.0
     //      -1.0 <= y0 <= 1.0
     //      -PI  <= z0 <= PI
-    //      |atan(y0/x0)| <= 1.7433....                 (though my calculations say 0.785398)
+    //      |atan(y0/x0)| <= 0.7854...
     //
     // output ranges:
     //      0    <= x <= sqrt(2)
@@ -316,8 +316,8 @@ public:
     T hyperbolic_rotation_one_over_gain( void ) const;   // 1.0/hyperbolic_rotation_gain()                         (1.207497067763074...)
     T hyperbolic_vectoring_one_over_gain( void ) const;  // 1.0/hyperbolic_vectoring_gain()                        (1.207497067763074...)
 
-    T circular_angle_max( void ) const;                  // circular_rotation       z result with z0=1, y0=1, z0=1 (0.785398163397447...)
-    T hyperbolic_angle_max( void ) const;                // hyperbolic_rotation     z result with z0=1, y0=1, z0=1 (1.118173015526502...)
+    T circular_angle_max( void ) const;                  // circular_vectoring      z result with x0=1, y0=1, z0=0 (0.785398163397447...)
+    T hyperbolic_angle_max( void ) const;                // hyperbolic_vectoring    z result with x0=1, y0=1, z0=0 (1.118173015526502...)
 
     //-----------------------------------------------------
     // These version are used internally, but making them available publically.
