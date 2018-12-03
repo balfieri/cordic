@@ -33,7 +33,7 @@ int main( int argc, const char * argv[] )
     // Process command-line arguments after applying defaults.
     //---------------------------------------------------------------------------
     int int_w = 7;                              // fixed-point for now
-    int frac_w = 56;                            // same as double
+    int frac_w = 53;                            // same as double
     FLT TOL = 1.0 / FLT( 1LL << (frac_w-13) );  // would like this to be much smaller
     bool     new_bugs = false;                  // by default, don't run new bugs
     uint32_t loop_cnt = 1;                      // by default, run through only first iteration of below loop
