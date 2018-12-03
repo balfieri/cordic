@@ -18,7 +18,7 @@ for use as a production reference model.
 </p>
 
 <p>
-The library currently assumes that values are stored as fixed-point with user-defined integer width (int_w) and fraction width (frac_w).  
+The library assumes that values are stored as fixed-point with user-defined integer width (int_w) and fraction width (frac_w).  
 The fixed-point container type T must be a signed integer at least as wide as 1+int_w+frac_w. A fixed-point number stores
 the sign in the most-significant bit, followed by the int_w binary integer bits, followed by the frac_w binary fraction bits 
 in the least-significant
@@ -41,12 +41,12 @@ Format         value            binary (spaces added for readability)
 </pre>
 
 <p>
-By default, this code automatically performs appropriate argument range reductions and post-CORDIC adjustments, 
+This code automatically performs appropriate argument range reductions and post-CORDIC adjustments, 
 but it can be turned off if you know that the inputs to the math functions are in the proper range already.
 </p>
 
 <p>
-By default, the CORDIC routines perform frac_w iterations in order to arrive at frac_w precision.  You may, however,
+The CORDIC routines perform frac_w iterations in order to arrive at frac_w precision.  You may, however,
 reduce the number of iterations by passing a different value for n to the constructor.  The numeric encoding
 will be the same, but the result will be less precise.  Again, two different Cordic() instances with idential parameters
 except for do_reduce and n can be used on an operation-by-operation basis.
@@ -66,14 +66,14 @@ are identified using special encodings of the exponent.
 </p>
 
 <p>
-Currently, fixed-point numbers naturally support denorms (i.e., they are all denorms), but have no way to indicate a value 
+Fixed-point numbers naturally support denorms (i.e., they are all denorms), but have no way to indicate a value 
 outside their allowed range.  The library needs
 an option to mark a number as +Infinity, -Infinity, or NaN.  An additional needed option is
 to gracefully flush large numbers to +/- "max value" and NaNs to zero.
 </p>
 
 <p>
-Another thing that is not currently handled is the different IEEE rounding modes: round-to-nearest (currently behavior 
+Also not handled are the different IEEE rounding modes: round-to-nearest (current behavior 
 and what one normally expects), 
 round-toward-zero, round-toward-plus-infinity, round-toward-minus-infinity.  There's another one worth doing
 called round-away-from-zero (aka round-toward-plus-or-minus-infinity). The rounding mode would be set
@@ -82,7 +82,7 @@ encodings.
 </p>
 
 <p>
-On a related note, there are a couple other options supported in most floating-point libraries that we'll need to add for
+There are a couple other options supported in most floating-point libraries that we'll need to add for
 floating-point encodings only.
 Flush-To-Zero (FTZ) means that any time an operation would produce a denom (again, a number smaller than the smallest normalized
 number), it is changed to zero.
@@ -109,7 +109,7 @@ doit.test 0 test_basic -int_w 8         - change int_w from default to 8 bits
 </pre>
 
 <p>
-Currently, test_basic.cpp does its own checking using macros in test_helpers.h.  In the near future, 
+test_basic.cpp does its own checking using macros in test_helpers.h.  In the near future, 
 Cordic.cpp should do optional checking of computations so that test_helpers.h can be deleted or greatly simplified.
 </p>
 
@@ -119,7 +119,7 @@ as its underlying implementation.  freal should keep track of ranges and automat
 representations, ideally mixing fixed-point and floating-point.
 
 <p>
-Note that there should never be a need for this library to do something special for complex numbers. The C++ complex<> 
+There should never be a need for this library to do something special for complex numbers. The C++ complex<> 
 class and associated math functions fall out naturally by using complex&lt;freal&gt; or whatever.
 </p>
 
