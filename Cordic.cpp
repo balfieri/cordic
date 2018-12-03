@@ -439,7 +439,7 @@ void Cordic<T,FLT>::circular_vectoring( const T& x0, const T& y0, const T& z0, T
         T yi;
         T zi;
         if ( debug ) printf( "circular_vectoring: i=%d xyz=[%.30f,%.30f,%.30f] test=%d\n", i, to_flt(x), to_flt(y), to_flt(z), int((x < zero()) != (y < zero())) );
-        if ( y < T(0) ) {
+        if ( y <= T(0) ) {
             xi = x - (y >> i);
             yi = y + (x >> i);
             zi = z - impl->circular_atan[i];
@@ -516,7 +516,7 @@ void Cordic<T,FLT>::hyperbolic_vectoring( const T& x0, const T& y0, const T& z0,
         T zi;
         if ( debug ) printf( "hyperbolic_vectoring: i=%d xyz=[%.30f,%.30f,%.30f] test=%d\n", i, 
                              to_flt(x), to_flt(y), to_flt(z), int((x < zero()) != (y < zero())) );
-        if ( y < T(0) ) {
+        if ( y <= T(0) ) {
             xi = x + (y >> i);
             yi = y + (x >> i);
             zi = z - impl->hyperbolic_atanh[i];
@@ -585,7 +585,7 @@ void Cordic<T,FLT>::linear_vectoring( const T& x0, const T& y0, const T& z0, T& 
         if ( debug ) printf( "linear_vectoring: i=%d xyz=[%.30f,%.30f,%.30f] test=%d\n", i, to_flt(x), to_flt(y), to_flt(z), int((x < zero()) != (y < zero())) );
         T yi;
         T zi;
-        if ( y < T(0) ) {
+        if ( y <= T(0) ) {
             yi = y + (x >> i);
             zi = z - impl->linear_pow2[i];
         } else {
