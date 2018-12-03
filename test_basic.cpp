@@ -74,7 +74,8 @@ int main( int argc, const char * argv[] )
         //---------------------------------------------------------------------------
         FLT x = 0.810431798013170871;
         FLT y = 0.681807431807431031;
-        do_op2(  "3) normh(x,y)",            normh,  normh,         x, y, do_reduce );                          
+        do_op2(  "3) normh(x,y)",            normh,  normh,         x+0.0, y, do_reduce );          // y/x has to be less than a certain amount
+        do_op1(  "sqrt(x)",          sqrt,    std::sqrt,      x+3.0   , do_reduce );
     }
     //---------------------------------------------------------------------------
     // Put fixed bugs here so they get regressed.
