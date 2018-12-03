@@ -43,16 +43,20 @@ struct Cordic<T,FLT>::Impl
     T                           quarter;
     T                           pi;
     T                           e;
-    T                           log2;                           // log(2)
-    T                           log10;                          // log(10)
+    T                           log2;                                   // log(2)
+    T                           log10;                                  // log(10)
 
-    std::unique_ptr<T[]>        circular_atan;                  // circular atan values
-    T                           circular_gain;                  // circular gain
-    T                           circular_one_over_gain;         // circular 1/gain
+    std::unique_ptr<T[]>        circular_atan;                          // circular atan values
+    T                           circular_rotation_gain;                 // circular rotation gain
+    T                           circular_rotation_one_over_gain;        // circular rotation 1/gain
+    T                           circular_vectoring_gain;                // circular vectoring gain
+    T                           circular_vectoring_one_over_gain;       // circular vectoring 1/gain
 
-    std::unique_ptr<T[]>        hyperbolic_atanh;               // hyperbolic atanh values
-    T                           hyperbolic_gain;                // hyperbolic gain
-    T                           hyperbolic_one_over_gain;       // hyperbolic 1/gain
+    std::unique_ptr<T[]>        hyperbolic_atanh;                       // hyperbolic atanh values
+    T                           hyperbolic_rotation_gain;               // hyperbolic rotation gain
+    T                           hyperbolic_rotation_one_over_gain;      // hyperbolic rotation 1/gain
+    T                           hyperbolic_vectoring_gain;              // hyperbolic vectoring gain
+    T                           hyperbolic_vectoring_one_over_gain;     // hyperbolic vectoring 1/gain
 
     std::unique_ptr<T[]>        linear_pow2;                    // linear 2^(-i) values
 
@@ -123,11 +127,7 @@ Cordic<T,FLT>::Cordic( uint32_t int_w, uint32_t frac_w, bool do_reduce, uint32_t
     impl->hyperbolic_atanh = std::unique_ptr<T[]>( new T[n+1] );
     impl->linear_pow2      = std::unique_ptr<T[]>( new T[n+1] );
 
-    // compute atan/atanh table and gains in high-resolution floating point
-    // Let gain = cos(a0)*cos(a1)*... and multiply x and y 
-    // Use cos(a) = 1/sqrt(1 + tan^2(a)) 
-    // Let gainh = cosh(a0)*cosh(a1)*... and multiply x and y 
-    // Use cosh(a) = 1/sqrt(1 - tanh^2(a)) 
+    // compute atan/atanh table in high-resolution floating point
     //
     FLT pow2      = 1.0;
     uint32_t next_dup_i = 4;     // for hyperbolic 
@@ -149,20 +149,26 @@ Cordic<T,FLT>::Cordic( uint32_t int_w, uint32_t frac_w, bool do_reduce, uint32_t
 
     }
 
-    // calculate gain and gainh by plugging x=1,y=0,z=0 into CORDICs
-    T gain, gainh, yy, zz;
-    circular_rotation( one(), zero(), zero(), gain, yy, zz );
-    hyperbolic_rotation( one(), zero(), zero(), gainh, yy, zz );
+    // calculate gain by plugging in x=1,y=0,z=0 into CORDICs
+    T yy, zz;
+    circular_rotation(    one(), zero(), zero(), impl->circular_rotation_gain,    yy, zz );
+    circular_vectoring(   one(), zero(), zero(), impl->circular_vectoring_gain,   yy, zz );
+    hyperbolic_rotation(  one(), zero(), zero(), impl->hyperbolic_rotation_gain,  yy, zz );
+    hyperbolic_vectoring( one(), zero(), zero(), impl->hyperbolic_vectoring_gain, yy, zz );
 
-    // calculate 1/gain and 1/gainh which are the multiplication factors 
-    impl->circular_gain            = gain;
-    impl->hyperbolic_gain          = gainh;
-    impl->circular_one_over_gain   = to_t( FLT(1) / to_flt(gain)  );
-    impl->hyperbolic_one_over_gain = to_t( FLT(1) / to_flt(gainh) );
-    if ( debug ) std::cout << "circular_gain="            << std::setw(30) << to_flt(impl->circular_gain) << "\n";
-    if ( debug ) std::cout << "circular_gainh="           << std::setw(30) << to_flt(impl->hyperbolic_gain) << "\n";
-    if ( debug ) std::cout << "circular_one_over_gain="   << std::setw(30) << to_flt(impl->circular_one_over_gain) << "\n";
-    if ( debug ) std::cout << "hyperbolic_one_over_gain=" << std::setw(30) << to_flt(impl->hyperbolic_one_over_gain) << "\n";
+    // calculate 1/gain which are the multiplication factors
+    impl->circular_rotation_one_over_gain    = to_t( FLT(1) / to_flt(impl->circular_rotation_gain) );
+    impl->circular_vectoring_one_over_gain   = to_t( FLT(1) / to_flt(impl->circular_vectoring_gain) );
+    impl->hyperbolic_rotation_one_over_gain  = to_t( FLT(1) / to_flt(impl->hyperbolic_rotation_gain) );
+    impl->hyperbolic_vectoring_one_over_gain = to_t( FLT(1) / to_flt(impl->hyperbolic_vectoring_gain) );
+    if ( debug ) std::cout << "circular_rotation_gain="             << std::setw(30) << to_flt(impl->circular_rotation_gain) << "\n";
+    if ( debug ) std::cout << "circular_vectoring_gain="            << std::setw(30) << to_flt(impl->circular_vectoring_gain) << "\n";
+    if ( debug ) std::cout << "hyperbolic_rotation_gain="           << std::setw(30) << to_flt(impl->hyperbolic_rotation_gain) << "\n";
+    if ( debug ) std::cout << "hyperbolic_vectoring_gain="          << std::setw(30) << to_flt(impl->hyperbolic_vectoring_gain) << "\n";
+    if ( debug ) std::cout << "circular_rotation_one_over_gain="    << std::setw(30) << to_flt(impl->circular_rotation_one_over_gain) << "\n";
+    if ( debug ) std::cout << "circular_vectoring_one_over_gain="   << std::setw(30) << to_flt(impl->circular_vectoring_one_over_gain) << "\n";
+    if ( debug ) std::cout << "hyperbolic_rotation_one_over_gain="  << std::setw(30) << to_flt(impl->hyperbolic_rotation_one_over_gain) << "\n";
+    if ( debug ) std::cout << "hyperbolic_vectoring_one_over_gain=" << std::setw(30) << to_flt(impl->hyperbolic_vectoring_one_over_gain) << "\n";
 
     // construct LUTs used by reduce_sin_cos_arg() and reduce_sinh_cosh_arg();
     // use integer part plus 0.5 bit of fraction
@@ -293,27 +299,51 @@ T Cordic<T,FLT>::e( void ) const
 }
 
 template< typename T, typename FLT >
-T Cordic<T,FLT>::gain( void ) const
+T Cordic<T,FLT>::circular_rotation_gain( void ) const
 {
-    return impl->circular_gain;
+    return impl->circular_rotation_gain;
 }
 
 template< typename T, typename FLT >
-T Cordic<T,FLT>::gainh( void ) const
+T Cordic<T,FLT>::circular_vectoring_gain( void ) const
 {
-    return impl->hyperbolic_gain;
+    return impl->circular_vectoring_gain;
 }
 
 template< typename T, typename FLT >
-T Cordic<T,FLT>::one_over_gain( void ) const
+T Cordic<T,FLT>::hyperbolic_rotation_gain( void ) const
 {
-    return impl->circular_one_over_gain;
+    return impl->hyperbolic_rotation_gain;
 }
 
 template< typename T, typename FLT >
-T Cordic<T,FLT>::one_over_gainh( void ) const
+T Cordic<T,FLT>::hyperbolic_vectoring_gain( void ) const
 {
-    return impl->hyperbolic_one_over_gain;
+    return impl->hyperbolic_vectoring_gain;
+}
+
+template< typename T, typename FLT >
+T Cordic<T,FLT>::circular_rotation_one_over_gain( void ) const
+{
+    return impl->circular_rotation_one_over_gain;
+}
+
+template< typename T, typename FLT >
+T Cordic<T,FLT>::circular_vectoring_one_over_gain( void ) const
+{
+    return impl->circular_vectoring_one_over_gain;
+}
+
+template< typename T, typename FLT >
+T Cordic<T,FLT>::hyperbolic_rotation_one_over_gain( void ) const
+{
+    return impl->hyperbolic_rotation_one_over_gain;
+}
+
+template< typename T, typename FLT >
+T Cordic<T,FLT>::hyperbolic_vectoring_one_over_gain( void ) const
+{
+    return impl->hyperbolic_vectoring_one_over_gain;
 }
 
 //-----------------------------------------------------
@@ -680,7 +710,7 @@ T Cordic<T,FLT>::exp( const T& _x ) const
     if ( impl->do_reduce ) reduce_exp_arg( M_E, x, factor, sign );
 
     T xx, yy, zz;
-    hyperbolic_rotation( one_over_gainh(), one_over_gainh(), x, xx, yy, zz );
+    hyperbolic_rotation( hyperbolic_rotation_one_over_gain(), hyperbolic_rotation_one_over_gain(), x, xx, yy, zz );
     if ( impl->do_reduce ) {
         if ( !sign ) {
             xx = mul( xx, factor, true );
@@ -804,13 +834,13 @@ void Cordic<T,FLT>::sin_cos( const T& _x, T& si, T& co, bool do_reduce, bool nee
     bool x_sign;
     if ( do_reduce ) reduce_sin_cos_arg( x, quadrant, x_sign );
 
-    T r = one_over_gain();
+    T r = circular_rotation_one_over_gain();
     int32_t r_lshift;
     bool r_sign = false;
     if ( _r != nullptr ) {
         r = *_r;
         if ( do_reduce ) reduce_arg( r, r_lshift, r_sign );
-        r = mul( r, one_over_gain(), false );  // should not need to reduce
+        r = mul( r, circular_rotation_one_over_gain(), false );  // should not need to reduce
     }
 
     T zz;
@@ -947,7 +977,7 @@ T Cordic<T,FLT>::norm( const T& _x, const T& _y, bool do_reduce ) const
 
     T xx, yy, zz;
     circular_vectoring( x, y, zero(), xx, yy, zz );
-    xx = mul( xx, one_over_gain() );
+    xx = mul( xx, circular_vectoring_one_over_gain() );
     if ( do_reduce ) impl->do_lshift( xx, lshift );
     if ( debug ) std::cout << "norm end: x=" << to_flt(x) << " y=" << to_flt(y) << " do_reduce=" << do_reduce << " xx=" << to_flt(xx) << "\n";
     return xx;
@@ -965,7 +995,7 @@ T Cordic<T,FLT>::normh( const T& _x, const T& _y ) const
 
     T xx, yy, zz;
     hyperbolic_vectoring( x, y, zero(), xx, yy, zz );
-    xx = mul( xx, one_over_gainh(), false );   // should not need to do reduction
+    xx = mul( xx, hyperbolic_vectoring_one_over_gain(), false );   // should not need to do reduction
     if ( impl->do_reduce ) impl->do_lshift( xx, lshift );
     if ( debug ) std::cout << "normh end: x=" << to_flt(x) << " y=" << to_flt(y) << " do_reduce=" << impl->do_reduce << " xx=" << to_flt(xx) << "\n";
     return xx;
@@ -1016,13 +1046,13 @@ void Cordic<T,FLT>::sinh_cosh( const T& _x, T& sih, T& coh, bool do_reduce, bool
     bool sign;
     if ( do_reduce ) reduce_sinh_cosh_arg( x, sinh_i, cosh_i, sign );  
 
-    T r = one_over_gainh();
+    T r = hyperbolic_rotation_one_over_gain();
     int32_t r_lshift;
     bool r_sign = false;
     if ( _r != nullptr ) {
         r = *_r;
         if ( do_reduce ) reduce_arg( r, r_lshift, r_sign );
-        r = mul( r, one_over_gainh(), false );  // should not need to reduce (I think)
+        r = mul( r, hyperbolic_rotation_one_over_gain(), false );  // should not need to reduce (I think)
     }
 
     T sinh_f;

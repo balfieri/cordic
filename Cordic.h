@@ -185,17 +185,21 @@ public:
     //-----------------------------------------------------
     uint32_t int_w( void ) const;
     uint32_t frac_w( void ) const;
-    uint32_t n( void ) const;           // n
-    T maxint( void ) const;             // largest positive integer
-    T zero( void ) const;               // 0.0
-    T one( void ) const;                // 1.0
-    T quarter( void ) const;            // 0.25
-    T pi( void ) const;                 // PI
-    T e( void ) const;                  // natural exponent
-    T gain( void ) const;               // circular
-    T gainh( void ) const;              // hyperbolic
-    T one_over_gain( void ) const;      // circular
-    T one_over_gainh( void ) const;     // hyperbolic
+    uint32_t n( void ) const;                            // n
+    T maxint( void ) const;                              // largest positive integer (does not include fraction)
+    T zero( void ) const;                                // encoded 0.0
+    T one( void ) const;                                 // encoded 1.0
+    T quarter( void ) const;                             // encoded 0.25
+    T pi( void ) const;                                  // encoded PI
+    T e( void ) const;                                   // encoded natural exponent
+    T circular_rotation_gain( void ) const;              // circular_rotation()     x result with x0=1, y0=0, z0=0
+    T circular_vectoring_gain( void ) const;             // circular_vectoring()    x result with x0=1, y0=0, z0=0 (same as previous)
+    T hyperbolic_rotation_gain( void ) const;            // hyperbolic_rotation()   x result with x0=1, y0=0, z0=0
+    T hyperbolic_vectoring_gain( void ) const;           // hyperbolic_vectoring()  x result with x0=1, y0=0, z0=0 (same as previous)
+    T circular_rotation_one_over_gain( void ) const;     // 1.0/circular_rotation_gain()
+    T circular_vectoring_one_over_gain( void ) const;    // 1.0/circular_vectoring_gain()
+    T hyperbolic_rotation_one_over_gain( void ) const;   // 1.0/hyperbolic_rotation_gain()
+    T hyperbolic_vectoring_one_over_gain( void ) const;  // 1.0/hyperbolic_vectoring_gain()
 
     //-----------------------------------------------------
     // The basic CORDIC functions that all the above math functions ultimately use.
