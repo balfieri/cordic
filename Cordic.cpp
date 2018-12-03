@@ -369,7 +369,7 @@ void Cordic<T,FLT>::circular_rotation( const T& x0, const T& y0, const T& z0, T&
     y = y0;
     z = z0;
     uint32_t n = impl->n;
-    for( uint32_t i = 0; i < n; i++ )
+    for( uint32_t i = 0; i <= n; i++ )
     {
         T xi;
         T yi;
@@ -403,7 +403,7 @@ void Cordic<T,FLT>::circular_vectoring( const T& x0, const T& y0, const T& z0, T
     y = y0;
     z = z0;
     uint32_t n = impl->n;
-    for( uint32_t i = 0; i < n; i++ )
+    for( uint32_t i = 0; i <= n; i++ )
     {
         T xi;
         T yi;
