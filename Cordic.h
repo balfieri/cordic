@@ -192,58 +192,120 @@ public:
     T quarter( void ) const;                             // encoded 0.25
     T pi( void ) const;                                  // encoded PI
     T e( void ) const;                                   // encoded natural exponent
-    T circular_rotation_gain( void ) const;              // circular_rotation()     x result with x0=1, y0=0, z0=0
-    T circular_vectoring_gain( void ) const;             // circular_vectoring()    x result with x0=1, y0=0, z0=0 (same as previous)
-    T hyperbolic_rotation_gain( void ) const;            // hyperbolic_rotation()   x result with x0=1, y0=0, z0=0
-    T hyperbolic_vectoring_gain( void ) const;           // hyperbolic_vectoring()  x result with x0=1, y0=0, z0=0 (same as previous)
-    T circular_rotation_one_over_gain( void ) const;     // 1.0/circular_rotation_gain()
-    T circular_vectoring_one_over_gain( void ) const;    // 1.0/circular_vectoring_gain()
-    T hyperbolic_rotation_one_over_gain( void ) const;   // 1.0/hyperbolic_rotation_gain()
-    T hyperbolic_vectoring_one_over_gain( void ) const;  // 1.0/hyperbolic_vectoring_gain()
+    T circular_rotation_gain( void ) const;              // circular_rotation()     x result with x0=1, y0=0, z0=0 (1.646760258121066...)
+    T circular_vectoring_gain( void ) const;             // circular_vectoring()    x result with x0=1, y0=0, z0=0 (1.646760258121066...)
+    T hyperbolic_rotation_gain( void ) const;            // hyperbolic_rotation()   x result with x0=1, y0=0, z0=0 (0.828159360960214...)
+    T hyperbolic_vectoring_gain( void ) const;           // hyperbolic_vectoring()  x result with x0=1, y0=0, z0=0 (0.828159360960214...)
+    T circular_rotation_one_over_gain( void ) const;     // 1.0/circular_rotation_gain()                           (0.607252935008881...)
+    T circular_vectoring_one_over_gain( void ) const;    // 1.0/circular_vectoring_gain()                          (0.607252935008881...)
+    T hyperbolic_rotation_one_over_gain( void ) const;   // 1.0/hyperbolic_rotation_gain()                         (1.207497067763074...)
+    T hyperbolic_vectoring_one_over_gain( void ) const;  // 1.0/hyperbolic_vectoring_gain()                        (1.207497067763074...)
 
     //-----------------------------------------------------
     // The basic CORDIC functions that all the above math functions ultimately use.
     //-----------------------------------------------------
 
-    // circular rotation mode after step n:
-    //      x = gain*(x0*cos(z0) - y0*sin(z0))
+    // circular rotation mode results after step n:
+    //      x = gain*(x0*cos(z0) - y0*sin(z0))          gain=1.64676...
     //      y = gain*(y0*cos(z0) + x0*sin(z0))
     //      z = 0
     //
+    // input ranges allowed:
+    //      -1.0 <= x0 <= 1.0
+    //      -1.0 <= y0 <= 1.0
+    //      -PI  <= z0 <= PI
+    //      |atan(y0/x0)| <= 1.7433....
+    //
+    // output ranges:
+    //      -sqrt(2) <= x <= sqrt(2)
+    //      -sqrt(2) <= y <= sqrt(2)
+    //      0        <= z <= 0
+    //
     void circular_rotation( const T& x0, const T& y0, const T& z0, T& x, T& y, T& z ) const;
 
-    // circular vectoring mode after step n:
-    //      x = gain*sqrt(x0^2 + y0^2)
+    // circular vectoring mode results after step n:
+    //      x = gain*sqrt(x0^2 + y0^2)                  gain=1.64676...
     //      y = 0
     //      z = z0 + atan( y0/x0 )
     //
+    // input ranges allowed:
+    //      -1.0 <= x0 <= 1.0
+    //      -1.0 <= y0 <= 1.0
+    //      -PI  <= z0 <= PI
+    //      |atan(y0/x0)| <= 1.7433....
+    //
+    // output ranges:
+    //      0    <= x <= sqrt(2)
+    //      0    <= y <= 0
+    //      -PI  <= z <= PI     (if z0 == 0)
+    //
     void circular_vectoring( const T& x0, const T& y0, const T& z0, T& x, T& y, T& z ) const;
 
-    // hyperbolic rotation mode after step n:
-    //      x = gain*(x0*cosh(z0) + y0*sinh(z0))
+    // hyperbolic rotation mode results after step n:
+    //      x = gain*(x0*cosh(z0) + y0*sinh(z0))        gain=0.828159...
     //      y = gain*(y0*cosh(z0) + x0*sinh(z0))
     //      z = 0
     //
+    // input ranges allowed:
+    //      -1    <= x0 <= 1
+    //      -1    <= y0 <= 1
+    //      |z0|  <= 1.1182...
+    //
+    // output ranges:
+    //      1  <= x <= 2
+    //      -2 <= y <= 2
+    //      0  <= z <= 0
+    //
     void hyperbolic_rotation( const T& x0, const T& y0, const T& z0, T& x, T& y, T& z ) const;
 
-    // hyperbolic vectoring mode after step n:
-    //      x = gain*sqrt(x0^2 - y0^2)
+    // hyperbolic vectoring mode results after step n:
+    //      x = gain*sqrt(x0^2 - y0^2)                  gain=0.828159...
     //      y = 0
     //      z = z0 + atanh( y0/x0 )
     //
+    // input ranges allowed:
+    //      0     <= x0 <= 2
+    //      -2    <= y0 <= 2
+    //      |z0|  <= 1.1182...
+    //
+    // output ranges:
+    //      -2    <= x <= 2
+    //      0     <= y <= 0
+    //      -PI/2 <= z <= PI/2  (if z0 == 0)
+    //
     void hyperbolic_vectoring( const T& x0, const T& y0, const T& z0, T& x, T& y, T& z ) const;
 
-    // linear rotation mode after step n:
+    // linear rotation mode results after step n:
     //      x = x0
     //      y = y0 + x0*z0
     //      z = 0
     //
+    // input ranges allowed:
+    //      -2    <= x0 <= 2
+    //      -2    <= y0 <= 2
+    //      |z0|  <= 1
+    //
+    // output ranges:
+    //      -2    <= x <= 2
+    //      -2    <= y <= 2
+    //      0     <= z <= 0
+    //
     void linear_rotation( const T& x0, const T& y0, const T& z0, T& x, T& y, T& z ) const;
 
-    // linear vectoring mode after step n:
+    // linear vectoring mode results after step n:
     //      x = x0
     //      y = 0
     //      z = z0 + y0/x0
+    //
+    // input ranges allowed:
+    //      -2      <= x0 <= 2
+    //      -2      <= y0 <= 2
+    //      |y0/x0| <= 1
+    //
+    // output ranges:
+    //      -2    <= x <= 2
+    //      0     <= y <= 0
+    //      -PI/2 <= z <= PI/2  (if z0 == 0)
     //
     void linear_vectoring( const T& x0, const T& y0, const T& z0, T& x, T& y, T& z ) const;
 
