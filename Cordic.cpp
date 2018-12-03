@@ -483,16 +483,17 @@ void Cordic<T,FLT>::circular_vectoring( const T& x0, const T& y0, const T& z0, T
 {
     //-----------------------------------------------------
     // input ranges allowed:
-    //      -1  <= x0 <= 1
+    //      -2  <= x0 <= 2
     //      -1  <= y0 <= 1
     //      -PI <= z0 <= PI
     //      |atan(y0/x0)| <= 0.7854...
     //-----------------------------------------------------
     const T ONE = one();
+    const T TWO = ONE << 1;
     const T PI  = pi();
     const T ANGLE_MAX = circular_angle_max();
     if ( debug ) std::cout << "circular_vectoring begin: x0,y0,z0=[ " << to_flt(x0) << ", " << to_flt(y0) << ", " << to_flt(z0) << "]\n";
-    //cassert( x0 >= -ONE && x0 <= ONE && "circular_vectoring x0 must be in the range -1 .. 1" );
+    //cassert( x0 >= -TWO && x0 <= TWO && "circular_vectoring x0 must be in the range -2 .. 2" );
     cassert( y0 >= -ONE && y0 <= ONE && "circular_vectoring y0 must be in the range -1 .. 1" );
     cassert( z0 >= -PI  && z0 <= PI  && "circular_vectoring z0 must be in the range -PI .. PI" );
     //cassert( std::abs( std::atan( to_flt(y0) / to_flt(x0) ) ) <= to_flt(ANGLE_MAX) && 
@@ -1085,7 +1086,7 @@ T Cordic<T,FLT>::atan2( const T& _y, const T& _x, bool do_reduce, bool x_is_one,
                                       " zz=PI" << " r=" << ((r != nullptr) ? to_flt(*r) : to_flt(zero())) << "\n";
             return pi();
         }
-        const T norm_plus_x = norm( x, y, false ) + x;
+        const T norm_plus_x = norm( x, y, true ) + x;
         if ( x > 0 ) {
             // atan2( y, norm_plus_x );
             if ( debug ) std::cout << "atan2 cordic begin: y=y=" << to_flt(y) << " x=norm_plus_x=" << to_flt(norm_plus_x) << "\n";
@@ -1137,7 +1138,7 @@ T Cordic<T,FLT>::norm( const T& _x, const T& _y, bool do_reduce ) const
 
     T xx, yy, zz;
     circular_vectoring( x, y, zero(), xx, yy, zz );
-    xx = mul( xx, circular_vectoring_one_over_gain() );
+    xx = mul( xx, circular_vectoring_one_over_gain(), true );
     if ( do_reduce ) impl->do_lshift( xx, lshift );
     if ( debug ) std::cout << "norm end: x=" << to_flt(x) << " y=" << to_flt(y) << " do_reduce=" << do_reduce << " xx=" << to_flt(xx) << "\n";
     return xx;
