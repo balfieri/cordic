@@ -150,7 +150,7 @@ public:
     // sinh(x+y)        = sinh(x)*cosh(y) + cosh(x)*sinh(y)
     // cosh(-x)         = cosh(x)
     // cosh(x)          = (e^x + e^-x)/2
-    // cosh(x+y)        = cosh(x)*cosh(y) - sinh(x)*sinh(y)
+    // cosh(x+y)        = cosh(x)*cosh(y) + sinh(x)*sinh(y)
     // tanh(-x)         = -tanh(x)
     // tanh(x)          = (e^x - e^-x) / (e^x + e^-x)
     //

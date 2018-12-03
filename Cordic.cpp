@@ -1035,7 +1035,7 @@ void Cordic<T,FLT>::sinh_cosh( const T& _x, T& sih, T& coh, bool do_reduce, bool
             if ( sign ) sih = -sih;
         }
         if ( need_coh ) {
-            coh = mul( cosh_f, cosh_i, true ) - mul( sinh_f, sinh_i, true );
+            coh = mul( cosh_f, cosh_i, true ) + mul( sinh_f, sinh_i, true );
         }
     } else {
         sih = sinh_f;
