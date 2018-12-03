@@ -129,24 +129,16 @@ Cordic<T,FLT>::Cordic( uint32_t int_w, uint32_t frac_w, bool do_reduce, uint32_t
 
     // compute atan/atanh table in high-resolution floating point
     //
-    FLT pow2      = 1.0;
-    uint32_t next_dup_i = 4;     // for hyperbolic 
     for( uint32_t i = 0; i <= n; i++ )
     {
-        impl->linear_pow2[i]      = to_t( pow2 );
+        impl->linear_pow2[i]      = T(1) << (frac_w-i);
+        FLT pow2                  = to_flt( impl->linear_pow2[i] );
         FLT a                     = std::atan( pow2 );
         FLT ah                    = std::atanh( pow2 );
         impl->circular_atan[i]    = to_t( a );
         impl->hyperbolic_atanh[i] = to_t( ah );
 
-        if ( i == next_dup_i ) {
-            // for hyperbolic, we must duplicate iterations 4, 13, 40, 121, ..., 3*i+1
-            next_dup_i = 3*i + 1;
-        }
-        pow2 /= 2.0;
-
         if ( debug ) printf( "i=%2d a=%30.27g ah=%30.27g y=%30.27g\n", i, double(a), double(ah), double(pow2) );
-
     }
 
     // calculate gain by plugging in x=1,y=0,z=0 into CORDICs
