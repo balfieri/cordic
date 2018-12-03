@@ -195,9 +195,9 @@ public:
     //      z = 0
     //
     // input ranges allowed:
-    //      -1.0 <= x0 <= 1.0
-    //      -1.0 <= y0 <= 1.0
-    //      -PI  <= z0 <= PI
+    //      -1  <= x0 <= 1
+    //      -1  <= y0 <= 1
+    //      -PI <= z0 <= PI
     //      |atan(y0/x0)| <= 0.7854...
     //
     // output ranges:
@@ -213,9 +213,9 @@ public:
     //      z = z0 + atan( y0/x0 )
     //
     // input ranges allowed:
-    //      -1.0 <= x0 <= 1.0
-    //      -1.0 <= y0 <= 1.0
-    //      -PI  <= z0 <= PI
+    //      -1  <= x0 <= 1
+    //      -1  <= y0 <= 1
+    //      -PI <= z0 <= PI
     //      |atan(y0/x0)| <= 0.7854...
     //
     // output ranges:
@@ -248,9 +248,10 @@ public:
     //      z = z0 + atanh( y0/x0 )
     //
     // input ranges allowed:
-    //      0     <= x0 <= 2
-    //      -2    <= y0 <= 2
-    //      |z0|  <= 1.1182...
+    //      0   <= x0 <= 2
+    //      -2  <= y0 <= 2
+    //      -PI <= z0 <= PI
+    //      |atanh(y0/x0)| <= 1.1182...
     //
     // output ranges:
     //      -2    <= x <= 2

@@ -402,6 +402,18 @@ template< typename T, typename FLT >
 void Cordic<T,FLT>::circular_rotation( const T& x0, const T& y0, const T& z0, T& x, T& y, T& z ) const
 {
     //-----------------------------------------------------
+    // input ranges allowed:
+    //      -1  <= x0 <= 1
+    //      -1  <= y0 <= 1
+    //      |z0| <= 0.7854...
+    //-----------------------------------------------------
+    const T ONE = one();
+    const T ANGLE_MAX = circular_angle_max();
+    cassert( x0 >= -ONE       && x0 <= ONE &&       "circular_rotation x0 must be in the range -1 .. 1" );
+    cassert( y0 >= -ONE       && y0 <= ONE &&       "circular_rotation y0 must be in the range -1 .. 1" );
+    //cassert( z0 >= -ANGLE_MAX && z0 <= ANGLE_MAX && "circular_rotation |z0| must be <= circular_angle_max()" );
+
+    //-----------------------------------------------------
     // d = (z >= 0) ? 1 : -1
     // xi = x - d*(y >> i)
     // yi = y + d*(x >> i)
@@ -436,6 +448,22 @@ template< typename T, typename FLT >
 void Cordic<T,FLT>::circular_vectoring( const T& x0, const T& y0, const T& z0, T& x, T& y, T& z ) const
 {
     //-----------------------------------------------------
+    // input ranges allowed:
+    //      -1  <= x0 <= 1
+    //      -1  <= y0 <= 1
+    //      -PI <= z0 <= PI
+    //      |atan(y0/x0)| <= 0.7854...
+    //-----------------------------------------------------
+    const T ONE = one();
+    const T PI  = pi();
+    const T ANGLE_MAX = circular_angle_max();
+    //cassert( x0 >= -ONE && x0 <= ONE && "circular_vectoring x0 must be in the range -1 .. 1" );
+    cassert( y0 >= -ONE && y0 <= ONE && "circular_vectoring y0 must be in the range -1 .. 1" );
+    cassert( z0 >= -PI  && z0 <= PI  && "circular_vectoring z0 must be in the range -PI .. PI" );
+    //cassert( std::abs( std::atan( to_flt(y0) / to_flt(x0) ) ) <= to_flt(ANGLE_MAX) && 
+    //                                    "circular_vectoring |atan(y0/x0)| must be <= circular_angle_max()" );
+
+    //-----------------------------------------------------
     // d = (y < 0) ? 1 : -1
     // xi = x - d*(y >> i)
     // yi = y + d*(x >> i)
@@ -469,6 +497,18 @@ void Cordic<T,FLT>::circular_vectoring( const T& x0, const T& y0, const T& z0, T
 template< typename T, typename FLT >
 void Cordic<T,FLT>::hyperbolic_rotation( const T& x0, const T& y0, const T& z0, T& x, T& y, T& z ) const
 {
+    //-----------------------------------------------------
+    // input ranges allowed:
+    //      -1  <= x0 <= 1
+    //      -1  <= y0 <= 1
+    //      |z0| <= 1.1182...
+    //-----------------------------------------------------
+    const T ONE = one();
+    const T ANGLE_MAX = hyperbolic_angle_max();
+    //cassert( x0 >= -ONE       && x0 <= ONE &&       "hyperbolic_vectoring x0 must be in the range -1 .. 1" );
+    //cassert( y0 >= -ONE       && y0 <= ONE &&       "hyperbolic_vectoring y0 must be in the range -1 .. 1" );
+    cassert( z0 >= -ANGLE_MAX && z0 <= ANGLE_MAX && "hyperbolic_vectoring |z0| must be <= hyperbolic_angle_max()" );
+
     //-----------------------------------------------------
     // d = (z >= 0) ? 1 : -1
     // xi = x - d*(y >> i)
@@ -510,6 +550,22 @@ void Cordic<T,FLT>::hyperbolic_rotation( const T& x0, const T& y0, const T& z0, 
 template< typename T, typename FLT >
 void Cordic<T,FLT>::hyperbolic_vectoring( const T& x0, const T& y0, const T& z0, T& x, T& y, T& z ) const
 {
+    //-----------------------------------------------------
+    // input ranges allowed:
+    //      -1  <= x0 <= 1
+    //      -1  <= y0 <= 1
+    //      -PI <= z0 <= PI
+    //      |atanh(y0/x0)| <= 1.1182...
+    //-----------------------------------------------------
+    const T ONE = one();
+    const T PI  = pi();
+    const T ANGLE_MAX = hyperbolic_angle_max();
+    //cassert( x0 >= -ONE && x0 <= ONE && "hyperbolic_vectoring x0 must be in the range -1 .. 1" );
+    //cassert( y0 >= -ONE && y0 <= ONE && "hyperbolic_vectoring y0 must be in the range -1 .. 1" );
+    cassert( z0 >= -PI  && z0 <= PI  && "hyperbolic_vectoring z0 must be in the range -PI .. PI" );
+    //cassert( std::abs( std::atanh( to_flt(y0) / to_flt(x0) ) ) <= to_flt(ANGLE_MAX) && 
+    //                                    "hyperbolic_vectoring |atanh(y0/x0)| must be <= hyperbolic_angle_max()" );
+
     //-----------------------------------------------------
     // d = (y < 0) ? 1 : -1
     // xi = x - d*(y >> i)
@@ -553,6 +609,18 @@ template< typename T, typename FLT >
 void Cordic<T,FLT>::linear_rotation( const T& x0, const T& y0, const T& z0, T& x, T& y, T& z ) const
 {
     //-----------------------------------------------------
+    // input ranges allowed:
+    //      -2    <= x0 <= 2
+    //      -2    <= y0 <= 2
+    //      |z0|  <= 1
+    //-----------------------------------------------------
+    const T ONE = one();
+    const T TWO = ONE << 1;
+    cassert( x0 >= -TWO && x0 <= TWO && "linear_rotation x0 must be in the range -2 .. 2" );
+    cassert( y0 >= -TWO && y0 <= TWO && "linear_rotation y0 must be in the range -2 .. 2" );
+    //cassert( z0 >= -ONE && z0 <= ONE && "linear_rotation z0 must be in the range -1 .. 1" );
+    
+    //-----------------------------------------------------
     // d = (z >= 0) ? 1 : -1
     // xi = x 
     // yi = y + d*(x >> i)
@@ -582,6 +650,19 @@ void Cordic<T,FLT>::linear_rotation( const T& x0, const T& y0, const T& z0, T& x
 template< typename T, typename FLT >
 void Cordic<T,FLT>::linear_vectoring( const T& x0, const T& y0, const T& z0, T& x, T& y, T& z ) const
 {
+    //-----------------------------------------------------
+    // input ranges allowed:
+    //      -2      <= x0 <= 2
+    //      -2      <= y0 <= 2
+    //      |y0/x0| <= 1
+    //-----------------------------------------------------
+    const T ONE = one();
+    const T TWO = ONE << 1;
+    cassert( x0 >= -TWO && x0 <= TWO && "linear_rotation x0 must be in the range -2 .. 2" );
+    cassert( y0 >= -TWO && y0 <= TWO && "linear_rotation y0 must be in the range -2 .. 2" );
+    //cassert( std::abs( to_flt(y0) / to_flt(x0) ) <= FLT(1.0) &&
+    //                                    "linear_rotation y0/x0 must be in the range -1 .. 1" );
+    
     //-----------------------------------------------------
     // d = (y < 0) ? 1 : -1
     // xi = x
