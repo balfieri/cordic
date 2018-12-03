@@ -101,7 +101,7 @@ public:
     T    asinh( const T& x ) const;                                       // log(x + sqrt(x^2 + 1))       (2)
     T    acosh( const T& x ) const;                                       // log(x + sqrt(x^2 - 1))       (2)
     T    atanh( const T& x ) const;                                       // atanh(x)
-    T    atanh2( const T& y, const T& x ) const;                          // atanh2(y, x)
+    T    atanh2( const T& y, const T& x ) const;                          // atanh(y/x)
 
     //-----------------------------------------------------
     // Interesting Identities (for the curious)
