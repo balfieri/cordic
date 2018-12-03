@@ -72,7 +72,11 @@ int main( int argc, const char * argv[] )
         // Put new bugs here.
         // Once fixed, they will be moved to below.
         //---------------------------------------------------------------------------
-        do_op2(  "3) normh(x,y)",            normh,  normh,         0.810431798013170871, 0.681807431807431031, do_reduce );
+        FLT x = 0.810431798013170871;
+        FLT y = 0.681807431807431031;
+        do_op2(  "3) normh(x,y)",            normh,  normh,         x, 0.0, do_reduce );                        // passes
+        do_op2(  "3) normh(x,y)",            normh,  normh,         normh(x, y), 0.0, do_reduce );              // passes
+        do_op2(  "3) normh(x,y)",            normh,  normh,         x, y, do_reduce );                          // fails
     }
     //---------------------------------------------------------------------------
     // Put fixed bugs here so they get regressed.
