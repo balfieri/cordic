@@ -409,9 +409,10 @@ void Cordic<T,FLT>::circular_rotation( const T& x0, const T& y0, const T& z0, T&
     //-----------------------------------------------------
     const T ONE = one();
     const T ANGLE_MAX = circular_angle_max();
+    if ( debug ) std::cout << "circular_rotation begin: x0,y0,z0=[ " << to_flt(x0) << ", " << to_flt(y0) << ", " << to_flt(z0) << "]\n";
     cassert( x0 >= -ONE       && x0 <= ONE &&       "circular_rotation x0 must be in the range -1 .. 1" );
     cassert( y0 >= -ONE       && y0 <= ONE &&       "circular_rotation y0 must be in the range -1 .. 1" );
-    //cassert( z0 >= -ANGLE_MAX && z0 <= ANGLE_MAX && "circular_rotation |z0| must be <= circular_angle_max()" );
+    cassert( z0 >= -ANGLE_MAX && z0 <= ANGLE_MAX && "circular_rotation |z0| must be <= circular_angle_max()" );
 
     //-----------------------------------------------------
     // d = (z >= 0) ? 1 : -1
@@ -457,6 +458,7 @@ void Cordic<T,FLT>::circular_vectoring( const T& x0, const T& y0, const T& z0, T
     const T ONE = one();
     const T PI  = pi();
     const T ANGLE_MAX = circular_angle_max();
+    if ( debug ) std::cout << "circular_vectoring begin: x0,y0,z0=[ " << to_flt(x0) << ", " << to_flt(y0) << ", " << to_flt(z0) << "]\n";
     //cassert( x0 >= -ONE && x0 <= ONE && "circular_vectoring x0 must be in the range -1 .. 1" );
     cassert( y0 >= -ONE && y0 <= ONE && "circular_vectoring y0 must be in the range -1 .. 1" );
     cassert( z0 >= -PI  && z0 <= PI  && "circular_vectoring z0 must be in the range -PI .. PI" );
@@ -505,6 +507,7 @@ void Cordic<T,FLT>::hyperbolic_rotation( const T& x0, const T& y0, const T& z0, 
     //-----------------------------------------------------
     const T ONE = one();
     const T ANGLE_MAX = hyperbolic_angle_max();
+    if ( debug ) std::cout << "hyperbolic_rotation begin: x0,y0,z0=[ " << to_flt(x0) << ", " << to_flt(y0) << ", " << to_flt(z0) << "]\n";
     //cassert( x0 >= -ONE       && x0 <= ONE &&       "hyperbolic_vectoring x0 must be in the range -1 .. 1" );
     //cassert( y0 >= -ONE       && y0 <= ONE &&       "hyperbolic_vectoring y0 must be in the range -1 .. 1" );
     cassert( z0 >= -ANGLE_MAX && z0 <= ANGLE_MAX && "hyperbolic_vectoring |z0| must be <= hyperbolic_angle_max()" );
@@ -560,6 +563,7 @@ void Cordic<T,FLT>::hyperbolic_vectoring( const T& x0, const T& y0, const T& z0,
     const T ONE = one();
     const T PI  = pi();
     const T ANGLE_MAX = hyperbolic_angle_max();
+    if ( debug ) std::cout << "hyperbolic_vectoring begin: x0,y0,z0=[ " << to_flt(x0) << ", " << to_flt(y0) << ", " << to_flt(z0) << "]\n";
     //cassert( x0 >= -ONE && x0 <= ONE && "hyperbolic_vectoring x0 must be in the range -1 .. 1" );
     //cassert( y0 >= -ONE && y0 <= ONE && "hyperbolic_vectoring y0 must be in the range -1 .. 1" );
     cassert( z0 >= -PI  && z0 <= PI  && "hyperbolic_vectoring z0 must be in the range -PI .. PI" );
@@ -616,6 +620,7 @@ void Cordic<T,FLT>::linear_rotation( const T& x0, const T& y0, const T& z0, T& x
     //-----------------------------------------------------
     const T ONE = one();
     const T TWO = ONE << 1;
+    if ( debug ) std::cout << "linear_rotation begin: x0,y0,z0=[ " << to_flt(x0) << ", " << to_flt(y0) << ", " << to_flt(z0) << "]\n";
     cassert( x0 >= -TWO && x0 <= TWO && "linear_rotation x0 must be in the range -2 .. 2" );
     cassert( y0 >= -TWO && y0 <= TWO && "linear_rotation y0 must be in the range -2 .. 2" );
     //cassert( z0 >= -ONE && z0 <= ONE && "linear_rotation z0 must be in the range -1 .. 1" );
@@ -658,6 +663,7 @@ void Cordic<T,FLT>::linear_vectoring( const T& x0, const T& y0, const T& z0, T& 
     //-----------------------------------------------------
     const T ONE = one();
     const T TWO = ONE << 1;
+    if ( debug ) std::cout << "linear_vectoring begin: x0,y0,z0=[ " << to_flt(x0) << ", " << to_flt(y0) << ", " << to_flt(z0) << "]\n";
     cassert( x0 >= -TWO && x0 <= TWO && "linear_rotation x0 must be in the range -2 .. 2" );
     cassert( y0 >= -TWO && y0 <= TWO && "linear_rotation y0 must be in the range -2 .. 2" );
     //cassert( std::abs( to_flt(y0) / to_flt(x0) ) <= FLT(1.0) &&
