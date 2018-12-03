@@ -36,7 +36,7 @@ int main( int argc, const char * argv[] )
     int frac_w = 53;                            // same as double
     FLT TOL = 1.0 / FLT( 1LL << (frac_w-13) );  // would like this to be much smaller
     bool     new_bugs = false;                  // by default, don't run new bugs
-    uint32_t loop_cnt = 1;                      // by default, run through only first iteration of below loop
+    uint32_t loop_cnt = 2;                      // by default, run first 2 iterations
 
     for( int i = 1; i < argc; i++ )
     {
@@ -72,6 +72,7 @@ int main( int argc, const char * argv[] )
         // Put new bugs here.
         // Once fixed, they will be moved to below.
         //---------------------------------------------------------------------------
+        do_op2(  "3) normh(x,y)",            normh,  normh,         0.810431798013170871, 0.681807431807431031, do_reduce );
     }
     //---------------------------------------------------------------------------
     // Put fixed bugs here so they get regressed.
