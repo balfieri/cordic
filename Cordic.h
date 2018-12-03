@@ -114,7 +114,10 @@ public:
     // log(x)           = atanh2(x^2 - 1, x^2 + 1) 
     // log(x*y)         = log(x) + log(y)
     // log(x/y)         = log(x) - log(y)
+    //
     // sqrt(x)          = sqrt( (x+0.25)^2 - (x-0.25)^2 )               (allows use of normh)
+    // sqrt(x)          = sqrt( (x+1)^2 - (x-1)^2 ) / 2                 (ditto)
+    // sqrt(x*y)        = sqrt( (x+y)^2 - (x-y)^2 ) / 2                 (ditto)
     //
     // sin(-x)          = -sin(x)
     // sin(x+y)         = sin(x)*cos(y) + cos(x)*sin(y)
