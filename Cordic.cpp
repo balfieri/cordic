@@ -51,12 +51,14 @@ struct Cordic<T,FLT>::Impl
     T                           circular_rotation_one_over_gain;        // circular rotation 1/gain
     T                           circular_vectoring_gain;                // circular vectoring gain
     T                           circular_vectoring_one_over_gain;       // circular vectoring 1/gain
+    T                           circular_angle_max;                     // circular vectoring |z0| max value
 
     std::unique_ptr<T[]>        hyperbolic_atanh;                       // hyperbolic atanh values
     T                           hyperbolic_rotation_gain;               // hyperbolic rotation gain
     T                           hyperbolic_rotation_one_over_gain;      // hyperbolic rotation 1/gain
     T                           hyperbolic_vectoring_gain;              // hyperbolic vectoring gain
     T                           hyperbolic_vectoring_one_over_gain;     // hyperbolic vectoring 1/gain
+    T                           hyperbolic_angle_max;                   // hyperbolic vectoring |z0| max value
 
     std::unique_ptr<T[]>        linear_pow2;                    // linear 2^(-i) values
 
@@ -142,7 +144,7 @@ Cordic<T,FLT>::Cordic( uint32_t int_w, uint32_t frac_w, bool do_reduce, uint32_t
     }
 
     // calculate gain by plugging in x=1,y=0,z=0 into CORDICs
-    T yy, zz;
+    T xx, yy, zz;
     circular_rotation(    one(), zero(), zero(), impl->circular_rotation_gain,    yy, zz );
     circular_vectoring(   one(), zero(), zero(), impl->circular_vectoring_gain,   yy, zz );
     hyperbolic_rotation(  one(), zero(), zero(), impl->hyperbolic_rotation_gain,  yy, zz );
@@ -161,6 +163,12 @@ Cordic<T,FLT>::Cordic( uint32_t int_w, uint32_t frac_w, bool do_reduce, uint32_t
     if ( debug ) std::cout << "circular_vectoring_one_over_gain="   << std::setw(30) << to_flt(impl->circular_vectoring_one_over_gain) << "\n";
     if ( debug ) std::cout << "hyperbolic_rotation_one_over_gain="  << std::setw(30) << to_flt(impl->hyperbolic_rotation_one_over_gain) << "\n";
     if ( debug ) std::cout << "hyperbolic_vectoring_one_over_gain=" << std::setw(30) << to_flt(impl->hyperbolic_vectoring_one_over_gain) << "\n";
+
+    // calculate max |z0| angle allowed
+    circular_vectoring(   one(), one(), zero(), xx, yy, impl->circular_angle_max );
+    hyperbolic_vectoring( one(), one(), zero(), xx, yy, impl->hyperbolic_angle_max );
+    if ( debug ) std::cout << "circular_angle_max="             << std::setw(30) << to_flt(impl->circular_angle_max) << "\n";
+    if ( debug ) std::cout << "hyperbolic_angle_max="           << std::setw(30) << to_flt(impl->hyperbolic_angle_max) << "\n";
 
     // construct LUTs used by reduce_sin_cos_arg() and reduce_sinh_cosh_arg();
     // use integer part plus 0.5 bit of fraction
@@ -336,6 +344,18 @@ template< typename T, typename FLT >
 T Cordic<T,FLT>::hyperbolic_vectoring_one_over_gain( void ) const
 {
     return impl->hyperbolic_vectoring_one_over_gain;
+}
+
+template< typename T, typename FLT >
+T Cordic<T,FLT>::circular_angle_max( void ) const
+{
+    return impl->circular_angle_max;
+}
+
+template< typename T, typename FLT >
+T Cordic<T,FLT>::hyperbolic_angle_max( void ) const
+{
+    return impl->hyperbolic_angle_max;
 }
 
 //-----------------------------------------------------

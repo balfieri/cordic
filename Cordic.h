@@ -181,27 +181,6 @@ public:
     //-----------------------------------------------------
 
     //-----------------------------------------------------
-    // Constants 
-    //-----------------------------------------------------
-    uint32_t int_w( void ) const;
-    uint32_t frac_w( void ) const;
-    uint32_t n( void ) const;                            // n
-    T maxint( void ) const;                              // largest positive integer (does not include fraction)
-    T zero( void ) const;                                // encoded 0.0
-    T one( void ) const;                                 // encoded 1.0
-    T quarter( void ) const;                             // encoded 0.25
-    T pi( void ) const;                                  // encoded PI
-    T e( void ) const;                                   // encoded natural exponent
-    T circular_rotation_gain( void ) const;              // circular_rotation()     x result with x0=1, y0=0, z0=0 (1.646760258121066...)
-    T circular_vectoring_gain( void ) const;             // circular_vectoring()    x result with x0=1, y0=0, z0=0 (1.646760258121066...)
-    T hyperbolic_rotation_gain( void ) const;            // hyperbolic_rotation()   x result with x0=1, y0=0, z0=0 (0.828159360960214...)
-    T hyperbolic_vectoring_gain( void ) const;           // hyperbolic_vectoring()  x result with x0=1, y0=0, z0=0 (0.828159360960214...)
-    T circular_rotation_one_over_gain( void ) const;     // 1.0/circular_rotation_gain()                           (0.607252935008881...)
-    T circular_vectoring_one_over_gain( void ) const;    // 1.0/circular_vectoring_gain()                          (0.607252935008881...)
-    T hyperbolic_rotation_one_over_gain( void ) const;   // 1.0/hyperbolic_rotation_gain()                         (1.207497067763074...)
-    T hyperbolic_vectoring_one_over_gain( void ) const;  // 1.0/hyperbolic_vectoring_gain()                        (1.207497067763074...)
-
-    //-----------------------------------------------------
     // The basic CORDIC functions that all the above math functions ultimately use.
     //-----------------------------------------------------
 
@@ -214,7 +193,7 @@ public:
     //      -1.0 <= x0 <= 1.0
     //      -1.0 <= y0 <= 1.0
     //      -PI  <= z0 <= PI
-    //      |atan(y0/x0)| <= 1.7433....
+    //      |atan(y0/x0)| <= 1.7433....                 (though my calculations say 0.785398)
     //
     // output ranges:
     //      -sqrt(2) <= x <= sqrt(2)
@@ -232,7 +211,7 @@ public:
     //      -1.0 <= x0 <= 1.0
     //      -1.0 <= y0 <= 1.0
     //      -PI  <= z0 <= PI
-    //      |atan(y0/x0)| <= 1.7433....
+    //      |atan(y0/x0)| <= 1.7433....                 (though my calculations say 0.785398)
     //
     // output ranges:
     //      0    <= x <= sqrt(2)
@@ -308,6 +287,32 @@ public:
     //      -PI/2 <= z <= PI/2  (if z0 == 0)
     //
     void linear_vectoring( const T& x0, const T& y0, const T& z0, T& x, T& y, T& z ) const;
+
+    //-----------------------------------------------------
+    // Constants 
+    //-----------------------------------------------------
+    uint32_t int_w( void ) const;
+    uint32_t frac_w( void ) const;
+    uint32_t n( void ) const;                            // n
+
+    T maxint( void ) const;                              // largest positive integer (just integer part, does not include fraction)
+    T zero( void ) const;                                // encoded 0.0
+    T one( void ) const;                                 // encoded 1.0
+    T quarter( void ) const;                             // encoded 0.25
+    T pi( void ) const;                                  // encoded PI
+    T e( void ) const;                                   // encoded natural exponent
+
+    T circular_rotation_gain( void ) const;              // circular_rotation()     x result with x0=1, y0=0, z0=0 (1.646760258121066...)
+    T circular_vectoring_gain( void ) const;             // circular_vectoring()    x result with x0=1, y0=0, z0=0 (1.646760258121066...)
+    T hyperbolic_rotation_gain( void ) const;            // hyperbolic_rotation()   x result with x0=1, y0=0, z0=0 (0.828159360960214...)
+    T hyperbolic_vectoring_gain( void ) const;           // hyperbolic_vectoring()  x result with x0=1, y0=0, z0=0 (0.828159360960214...)
+    T circular_rotation_one_over_gain( void ) const;     // 1.0/circular_rotation_gain()                           (0.607252935008881...)
+    T circular_vectoring_one_over_gain( void ) const;    // 1.0/circular_vectoring_gain()                          (0.607252935008881...)
+    T hyperbolic_rotation_one_over_gain( void ) const;   // 1.0/hyperbolic_rotation_gain()                         (1.207497067763074...)
+    T hyperbolic_vectoring_one_over_gain( void ) const;  // 1.0/hyperbolic_vectoring_gain()                        (1.207497067763074...)
+
+    T circular_angle_max( void ) const;                  // circular_rotation       z result with z0=1, y0=1, z0=1 (0.785398163397447...)
+    T hyperbolic_angle_max( void ) const;                // hyperbolic_rotation     z result with z0=1, y0=1, z0=1 (1.118173015526502...)
 
     //-----------------------------------------------------
     // These version are used internally, but making them available publically.
