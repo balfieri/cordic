@@ -965,7 +965,15 @@ void Cordic<T,FLT>::sin_cos( const T& _x, T& si, T& co, bool do_reduce, bool nee
     uint32_t quadrant;
     bool x_sign;
     bool did_minus_pi_div_4;
-    if ( do_reduce ) reduce_sin_cos_arg( x, quadrant, x_sign, did_minus_pi_div_4 );
+    if ( do_reduce ) {
+        //-----------------------------------------------------
+        // reduce_sin_cos_arg() will get x in the range 0 .. PI/2 and tell us the quadrant.
+        // It will then check if x is still >= PI/4 and, if so, subtract PI/4 and
+        // set did_minus_pi_div_4.  If did_minus_pi_div_4 is true, then we need
+        // to do some adjustments below after the cordic routine completes.
+        //-----------------------------------------------------
+        reduce_sin_cos_arg( x, quadrant, x_sign, did_minus_pi_div_4 );
+    }
 
     T r = circular_rotation_one_over_gain();
     int32_t r_lshift;
@@ -979,6 +987,23 @@ void Cordic<T,FLT>::sin_cos( const T& _x, T& si, T& co, bool do_reduce, bool nee
     T zz;
     circular_rotation( r, zero(), x, co, si, zz );
     if ( do_reduce ) {
+        //-----------------------------------------------------
+        // If did_minus_pi_div_4 is true, then we need to perform this
+        // modification for sin and cos:
+        //
+        // sin(x+PI/4) = sqrt(2)/2 * ( sin(x) + cos(x) )
+        // cos(x+PI/4) = sqrt(2)/2 * ( cos(x) - sin(x) )
+        //-----------------------------------------------------
+        if ( did_minus_pi_div_4 ) {
+            T si_new = mul( impl->sqrt2_div_2, si+co, true );
+            T co_new = mul( impl->sqrt2_div_2, co-si, true );
+            si = si_new;
+            co = co_new;
+        }
+
+        //-----------------------------------------------------
+        // Next, make adjustments for the quadrant and r multiply.
+        //-----------------------------------------------------
         if ( quadrant&1 ) {
             T tmp = co;
             co = si;
@@ -1441,14 +1466,17 @@ void Cordic<T,FLT>::reduce_sin_cos_arg( T& a, uint32_t& quad, bool& sign, bool& 
     a += addend[i];
 
     //-----------------------------------------------------
-    // Next, if a is still greater than PI/4, then subtract
+    // Next, if a is still >= PI/4, then subtract
     // PI/4 and tell the caller to use the following:
     //
     //     sin(x+PI/4) = sqrt(2)/2 * ( sin(x) + cos(x) )
     //     cos(x+PI/4) = sqrt(2)/2 * ( cos(x) - sin(x) )
     //-----------------------------------------------------
+    did_minus_pi_div_4 = a >= pi_div_4();
+    if ( did_minus_pi_div_4 ) a -= pi_div_4();
+
     if ( debug ) std::cout << "reduce_sin_cos_arg: a_orig=" << to_flt(a_orig) << " addend[" << i << "]=" << to_flt(addend[i]) << 
-                              " a_reduced=" << to_flt(a) << " quadrant=" << quad << "\n"; 
+                              " a_reduced=" << to_flt(a) << " quadrant=" << quad << " did_minus_pi_div_4=" << did_minus_pi_div_4 << "\n"; 
 }
 
 template< typename T, typename FLT >
