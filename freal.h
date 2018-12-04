@@ -49,9 +49,10 @@ public:
     //-----------------------------------------------------
     // Constructors
     //-----------------------------------------------------
-    freal( void );                              // initializes value to undefined
-    freal( const freal& other );                // copy type and value of other
-    freal( const freal& other, FLT f );         // copy type of other, but value of f
+    freal( void );                                      // initializes value to undefined
+    freal( const freal& other );                        // copy type and value of other
+    freal( const freal& other, FLT f );                 // copy type of other, but value of f
+    freal( const Cordic<T,FLT> * cordic, FLT f );       // use type from cordic, but value of f
 
     static freal make_fixed( uint32_t int_w, uint32_t frac_w, FLT init_f=FLT(0) );  // make a signed fixed-point    number with initial value
     static freal make_float( uint32_t exp_w, uint32_t frac_w, FLT init_f=FLT(0) );  // make a signed floating-point number with initial value
@@ -60,7 +61,7 @@ public:
     //-----------------------------------------------------
     // Conversions
     //-----------------------------------------------------
-    //FLT    FLT( void ) const;                   // freal to FLT
+    FLT    to_flt( void ) const;                        // freal to FLT
 
     //-----------------------------------------------------
     // Standard Operators
@@ -139,9 +140,11 @@ public:
     freal  atanh2( const freal& b ) const;   // atanh2( a, b )
 
 private:
+    const Cordic<T,FLT> *       cordic;         // defines the type and most operations
+    T                           a;              // this value encoded in type T
 };
 
-// std:xxx() functions should pick these up 
+// std:xxx() calls should pick these up automatically
 //
 template< typename T=int64_t, typename FLT=double >              
 static inline freal<T,FLT>  add( const freal<T,FLT>& a, const freal<T,FLT>& b )                         { return a.add( b );                    }
@@ -230,11 +233,9 @@ static inline freal<T,FLT>  atan2( const freal<T,FLT>& a, const freal<T,FLT>& b 
 template< typename T=int64_t, typename FLT=double >              
 static inline void   polar_to_rect( const freal<T,FLT>& a, const freal<T,FLT>& angle, freal<T,FLT>& x, freal<T,FLT>& y )  
                                                                                                         { a.polar_to_rect( angle, x, y );       }
-
 template< typename T=int64_t, typename FLT=double >              
 static inline void   rect_to_polar( const freal<T,FLT>& a, const freal<T,FLT>& b,     freal<T,FLT>& r, freal<T,FLT>& angle )  
                                                                                                         { rect_to_polar( b, r, angle );         }
-
 template< typename T=int64_t, typename FLT=double >              
 static inline freal<T,FLT>  norm( const freal<T,FLT>& a,  const freal<T,FLT>& b )                       { return a.norm( b );                   }
 
@@ -265,4 +266,18 @@ static inline freal<T,FLT>  atanh( const freal<T,FLT>& a )                      
 template< typename T=int64_t, typename FLT=double >              
 static inline freal<T,FLT>  atanh2( const freal<T,FLT>& a, const freal<T,FLT>& b )                      { return a.atanh2( b );                 }
 
-#endif
+//-----------------------------------------------------
+//-----------------------------------------------------
+//-----------------------------------------------------
+//-----------------------------------------------------
+//-----------------------------------------------------
+//
+// IMPLEMENTATION
+//
+//-----------------------------------------------------
+//-----------------------------------------------------
+//-----------------------------------------------------
+//-----------------------------------------------------
+//-----------------------------------------------------
+
+#endif // _freal_h
