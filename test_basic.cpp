@@ -144,7 +144,7 @@ int main( int argc, const char * argv[] )
         if ( y/x >= -1.0 && y/x <= 1.0 ) {
             do_op2(  "atanh2(y,x)",  atanh2,  atanh2,         y, x, true      );
         }
-        do_op2(  "norm(x,y)",        norm,    norm,           x, y, do_reduce );
+        do_op2(  "norm(x,y)",        norm,    norm,           y, x, do_reduce );
         if ( y >= x ) {
             do_op2(  "normh(x,y)",   normh,   normh,          y, x, do_reduce );
         }
