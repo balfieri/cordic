@@ -232,8 +232,8 @@ public:
     //      z = 0
     //
     // input ranges allowed:
-    //      -1    <= x0 <= 1
-    //      -1    <= y0 <= 1
+    //      -2    <= x0 <= 2
+    //      -2    <= y0 <= 2
     //      |z0|  <= 1.1182...
     //
     // output ranges:

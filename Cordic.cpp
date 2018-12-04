@@ -541,11 +541,11 @@ void Cordic<T,FLT>::hyperbolic_rotation( const T& x0, const T& y0, const T& z0, 
     //      -1  <= y0 <= 1
     //      |z0| <= 1.1182...
     //-----------------------------------------------------
-    const T ONE = one();
+    const T TWO = one() << 1;
     const T ANGLE_MAX = hyperbolic_angle_max();
     if ( debug ) std::cout << "hyperbolic_rotation begin: x0,y0,z0=[ " << to_flt(x0) << ", " << to_flt(y0) << ", " << to_flt(z0) << "]\n";
-    cassert( x0 >= -ONE       && x0 <= ONE &&       "hyperbolic_vectoring x0 must be in the range -1 .. 1" );
-    cassert( y0 >= -ONE       && y0 <= ONE &&       "hyperbolic_vectoring y0 must be in the range -1 .. 1" );
+    cassert( x0 >= -TWO       && x0 <= TWO &&       "hyperbolic_vectoring x0 must be in the range -2 .. 2" );
+    cassert( y0 >= -TWO       && y0 <= TWO &&       "hyperbolic_vectoring y0 must be in the range -2 .. 2" );
     cassert( z0 >= -ANGLE_MAX && z0 <= ANGLE_MAX && "hyperbolic_vectoring |z0| must be <= hyperbolic_angle_max()" );
 
     //-----------------------------------------------------
@@ -1374,6 +1374,7 @@ void Cordic<T,FLT>::reduce_exp_arg( FLT b, T& x, T& factor, bool& sign ) const
     //     [do above but the callere will divide by factor rather than multiplying]
     //-----------------------------------------------------
     T x_orig = x;
+    if ( debug ) std::cout << "reduce_exp_arg: b=" << b << " x_orig=" << to_flt(x_orig) << "\n";
     const FLT * factors_f = impl->reduce_exp_factor.get();
     sign         = x < 0;
     if ( sign ) x = -x;
@@ -1381,7 +1382,7 @@ void Cordic<T,FLT>::reduce_exp_arg( FLT b, T& x, T& factor, bool& sign ) const
     FLT factor_f = std::log(b) * factors_f[index];   // could build per-b factors_f[] LUT with multiply already done
     factor       = to_t( factor_f );
     x           &= (T(1) << frac_w())-T(1); // fraction only
-    if ( debug ) std::cout << "reduce_exp_arg: x_orig=" << to_flt(x_orig) << " x_reduced=" << to_flt(x) << " factor=" << factor << "\n"; 
+    if ( debug ) std::cout << "reduce_exp_arg: b=" << b << " x_orig=" << to_flt(x_orig) << " x_reduced=" << to_flt(x) << " factor=" << to_flt(factor) << "\n"; 
 }
 
 template< typename T, typename FLT >
