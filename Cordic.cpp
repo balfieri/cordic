@@ -824,11 +824,30 @@ T Cordic<T,FLT>::one_over( const T& x ) const
 }
 
 template< typename T, typename FLT >
-T Cordic<T,FLT>::sqrt( const T& x ) const
+T Cordic<T,FLT>::sqrt( const T& _x ) const
 { 
-    if ( debug ) std::cout << "sqrt begin: x_orig=" << to_flt(x) << " do_reduce=" << impl->do_reduce << "\n";
-    // TODO: need to reduce here 
-    return normh( x+one(), x-one() ) >> 1;
+    //-----------------------------------------------------
+    // Identities:
+    //     sqrt(x) = sqrt((x+1)^2 - (x-1)^2) / 2          
+    // Strategy:
+    //     reduce_sqrt_arg() will factor x=p*s where p is a power-of-2 
+    //     where log2(p) is even >= 2 and s is between 0..1.
+    //     sqrt(x) = sqrt(p) * sqrt(s) = 2^(log2(p)/2) * sqrt((s+1)^2 - (s-1)^2)/2
+    //     Use hyperbolic_vectoring() for sqrt((s+1)^2 - (s-1)^2).
+    //     Then lshift that by log2(p)/2 - 1.
+    //-----------------------------------------------------
+    T x = _x;
+    if ( debug ) std::cout << "sqrt begin: x_orig=" << to_flt(_x) << " do_reduce=" << impl->do_reduce << "\n";
+    int32_t lshift;
+    if ( impl->do_reduce ) reduce_sqrt_arg( x, lshift );
+
+    T xx, yy, zz;
+    hyperbolic_vectoring( x+one(), x-one(), zero(), xx, yy, zz );  // gain*sqrt((s+1)^2 - (s-1)^2)
+    xx = mul( xx, hyperbolic_vectoring_one_over_gain(), false );   // sucks that we have to do this
+    if ( impl->do_reduce ) impl->do_lshift( xx, lshift );          // log2(p)/2 - 1
+
+    if ( debug ) std::cout << "sqrt end: x_orig=" << to_flt(_x) << " x_reduced=s=" << to_flt(x) << " do_reduce=" << impl->do_reduce << " xx=" << to_flt(xx) << "\n";
+    return xx;
 }
 
 template< typename T, typename FLT >
@@ -836,6 +855,8 @@ T Cordic<T,FLT>::one_over_sqrt( const T& x ) const
 { 
     if ( debug ) std::cout << "one_over_sqrt begin: x_orig=" << to_flt(x) << " do_reduce=" << impl->do_reduce << "\n";
     cassert( x != 0 && "one_over_sqrt x must not be 0" );
+
+    // There might be a better way, but exp(-log(x)/2) is probably not it
     return div( one(), sqrt( x ) );
 }
 
@@ -1355,6 +1376,32 @@ void Cordic<T,FLT>::reduce_div_args( T& y, T& x, int32_t& y_lshift, int32_t& x_l
     reduce_arg( y, y_lshift, y_sign );
     reduce_arg( x, x_lshift, x_sign, true, true );
     sign = x_sign ^ y_sign;
+}
+
+template< typename T, typename FLT >
+void Cordic<T,FLT>::reduce_sqrt_arg( T& _x, int32_t& lshift ) const
+{
+    //-----------------------------------------------------
+    // Identities:
+    //     sqrt(x) = sqrt((x+1)^2 - (x-1)^2) / 2          
+    // Strategy:
+    //     Factor x=p*s where p is a power-of-2 
+    //     where log2(p) is even >= 2 and s is between 0..1.
+    //     sqrt(x) = sqrt(p) * sqrt(s) = 2^(log2(p)/2) * sqrt((s+1)^2 - (s-1)^2)/2
+    //     Use hyperbolic_vectoring() for sqrt((s+1)^2 - (s-1)^2).
+    //     Then lshift that by log2(p)/2 - 1.
+    //-----------------------------------------------------
+    T x = _x;
+    cassert( x >= 0 && "reduce_sqrt_arg x must be non-negative" );
+    bool sign;
+    reduce_arg( x, lshift, sign );
+    if ( lshift & 1 ) {
+        // make it even
+        lshift++;
+        x >>= 1;
+    }
+    lshift = lshift/2 - 1;
+    if ( debug ) std::cout << "reduce_sqrt_arg: x_orig=" << to_flt(x) << " x_reduced=s=" << to_flt(x) << " lshift=" << to_flt(lshift) << "\n";
 }
 
 template< typename T, typename FLT >

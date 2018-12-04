@@ -114,6 +114,7 @@ public:
     //                                                          factor m*d=p*s so that p is a power-of-2 and s is within -1 .. 1
     //                                                          2*sqrt(m*d) = 2*sqrt(p) * sqrt(s) = sqrt(p) * sqrt((s+1)^2 - (s-1)^2)
     //                                                          if log2(p) is even and >= 2, then sqrt(p) = 2^(log2(p)/2) = some integer
+    //
     // exp(x)           = sinh(x) + cosh(x)
     // exp(x+y)         = exp(x) * exp(y)
     // exp(ix)          = cos(x) + i*sin(x)                     Euler's Formula, i = sqrt(-1)
@@ -357,6 +358,7 @@ public:
     void reduce_arg( T& x, int32_t& x_lshift, bool& sign, bool shift_x=true, bool normalize=false ) const; 
     void reduce_mul_args( T& x, T& y, int32_t& x_lshift, int32_t& y_lshift, bool& sign ) const; 
     void reduce_div_args( T& y, T& x, int32_t& y_lshift, int32_t& x_lshift, bool& sign ) const;
+    void reduce_sqrt_arg( T& x, int32_t& lshift ) const;
     void reduce_exp_arg( FLT b, T& x, T& factor, bool& sign ) const;                          
     void reduce_log_arg( T& x, T& addend ) const;                                            
     void reduce_atan2_args( T& y, T& x, bool& y_sign, bool& x_sign, bool& swapped, bool& is_pi ) const;     
