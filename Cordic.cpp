@@ -1173,20 +1173,17 @@ T Cordic<T,FLT>::norm( const T& _x, const T& _y, bool do_reduce ) const
 }
 
 template< typename T, typename FLT >
-T Cordic<T,FLT>::normh( const T& _x, const T& _y ) const
+T Cordic<T,FLT>::normh( const T& x, const T& y ) const
 {
-    T x = _x;
-    T y = _y;
+    //-----------------------------------------------------
+    // Identities:
+    //     sqrt(x^2 - y^2) = sqrt((x+y)(x-y))
+    // Strategy:
+    //     Try this easy way, though I suspect there will be issues.
+    //-----------------------------------------------------
     if ( debug ) std::cout << "normh begin: x=" << to_flt(x) << " y=" << to_flt(y) << " do_reduce=" << impl->do_reduce << "\n";
-    int32_t lshift;
-    if ( impl->do_reduce ) reduce_normh_args( x, y, lshift );
-
-    T xx, yy, zz;
-    hyperbolic_vectoring( x, y, zero(), xx, yy, zz );
-    xx = mul( xx, hyperbolic_vectoring_one_over_gain(), false );   // should not need to do reduction
-    if ( impl->do_reduce ) impl->do_lshift( xx, lshift );
-    if ( debug ) std::cout << "normh end: x=" << to_flt(x) << " y=" << to_flt(y) << " do_reduce=" << impl->do_reduce << " xx=" << to_flt(xx) << "\n";
-    return xx;
+    cassert( x >= y && "normh x must be >= y" );
+    return sqrt( mul( x+y, x-y ) );
 }
 
 template< typename T, typename FLT >
@@ -1216,6 +1213,7 @@ void Cordic<T,FLT>::sinh_cosh( const T& x, T& sih, T& coh, const T * r ) const
 template< typename T, typename FLT >
 void Cordic<T,FLT>::sinh_cosh( const T& _x, T& sih, T& coh, bool do_reduce, bool need_sih, bool need_coh, const T * _r ) const
 { 
+    //-----------------------------------------------------
     // Identities:
     //     sinh(-x)         = -sinh(x)
     //     sinh(x+y)        = sinh(x)*cosh(y) + cosh(x)*sinh(y)    
@@ -1227,7 +1225,7 @@ void Cordic<T,FLT>::sinh_cosh( const T& _x, T& sih, T& coh, bool do_reduce, bool
     //     run cordic on f
     //     do the multiplications
     //     fix sign of sih
-    //
+    //-----------------------------------------------------
     T x = _x;
     T sinh_i; 
     T cosh_i;
@@ -1515,22 +1513,6 @@ void Cordic<T,FLT>::reduce_norm_args( T& x, T& y, int32_t& lshift, bool& swapped
     }
     if ( debug ) std::cout << "reduce_norm_args: xy_orig=[" << to_flt(x_orig) << "," << to_flt(y_orig) << "]" << 
                                                " xy_reduced=[" << to_flt(x) << "," << to_flt(y) << "] lshift=" << lshift << " swapped=" << swapped << "\n"; 
-}
-
-template< typename T, typename FLT >
-void Cordic<T,FLT>::reduce_normh_args( T& x, T& y, int32_t& lshift ) const
-{
-    //-----------------------------------------------------
-    // Use reduce_div_args(y, x) for most of it.
-    //-----------------------------------------------------
-    cassert( x >= y && "reduce_normh_args: x must be >= y" );
-    T       x_orig = x;
-    T       y_orig = y;
-    bool    swapped;  // unused
-    reduce_norm_args( x, y, lshift, swapped );
-
-    if ( debug ) std::cout << "reduce_normh_args: xy_orig=[" << to_flt(x_orig) << "," << to_flt(y_orig) << "]" << 
-                                                " xy_reduced=[" << to_flt(x) << "," << to_flt(y) << "] lshift=" << lshift << "\n";
 }
 
 template< typename T, typename FLT >
