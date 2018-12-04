@@ -32,10 +32,12 @@ static inline FLT tolerance( uint32_t frac_w, FLT expected, FLT tol, int32_t& to
 {
     //------------------------------------------------------------
     // Fixed-point numbers > 1 are going to have less precision.
-    // tol is the tolerance if the result is <= 1.
+    // tol is the tolerance if the |result| is <= 1.
     //------------------------------------------------------------
+    FLT exp_abs = std::fabs( expected );
     tol_lg2 = int32_t( std::log2( tol ) - 0.5 );
-    return tol;
+    if ( expected > 1.0 ) tol_lg2 += int32_t( std::log2( expected ) );
+    return std::pow( 2.0, tol_lg2 );
 }
 
 #define do_op1( str, c_fn, exp_fn, fltx, do_reduce )                    \
@@ -136,7 +138,7 @@ static inline FLT tolerance( uint32_t frac_w, FLT expected, FLT tol, int32_t& to
     std::cout << "Input:    " << std::setw(30) << fltx << "(fltx) " << flty << "(flty)\n"; \
     std::cout << "Expected: " << std::setw(30) << flte1 << ", " << flte2 << "\n"; \
     std::cout << "Actual:   " << std::setw(30) << fltz1 << ", " << fltz2 << "\n"; \
-    std::cout << "Diff:     " << std::setw(30) << flterr1 << ", " << flterr2 << "\n\n"; \
+    std::cout << "Diff:     " << std::setw(30) << flterr1 << ", " << flterr2 << "\n"; \
     std::cout << "Tol:      " << std::setw(30) << tol1 << " (2^" << tol1_lg2 << "), " << tol2 << " (2^" << tol2_lg2 << ")\n\n"; \
     cassert( flterr1 <= tol1 );			                        \
     cassert( flterr2 <= tol2 );			                        \
