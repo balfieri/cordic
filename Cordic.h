@@ -148,7 +148,7 @@ public:
     // atan2(y,x)       = 2*atan((sqrt(x^2 + y^2) - x) / y)     if x <= 0 && y != 0
     // atan2(y,x)       = PI                                    if x <  0 && y == 0
     // atan2(y,x)       = undefined                             if x == 0 && y == 0
-    // PI               = 4*atan(1)	                        but low 2 bits will end up as 0 for a fixed-point number
+    // PI               = 4*atan(1)                             but low 2 bits will end up as 0 for a fixed-point number
     // PI               = acos(-1)                              but that just uses atan
     // PI               = pi()                                  function in this class to return a precomputed high-precision version
     //
