@@ -420,10 +420,10 @@ FLT Cordic<T,FLT>::to_flt( const T& _x ) const
 }
 
 template< typename T, typename FLT >
-T Cordic<T,FLT>::make_fp( bool sign, T i, T f )
+T Cordic<T,FLT>::make_fixed( bool sign, T i, T f )
 {
-    cassert( i >= 0 && i <= maxint()               && "make_fp integer part must be in range 0 .. maxint()" );
-    cassert( f >= 0 && f <= ((T(1) << frac_w())-1) && "make_fp fractional part must be in range 0 .. (1 << frac_w)-1" );
+    cassert( i >= 0 && i <= maxint()               && "make_fixed integer part must be in range 0 .. maxint()" );
+    cassert( f >= 0 && f <= ((T(1) << frac_w())-1) && "make_fixed fractional part must be in range 0 .. (1 << frac_w)-1" );
 
     return (T(sign) << (int_w() + frac_w())) |
            (T(i)    << frac_w())             |
