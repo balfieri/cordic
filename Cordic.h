@@ -107,7 +107,7 @@ public:
     // Interesting Identities (for the curious)
     //
     // sqrt(x)          = sqrt( (x+0.25)^2 - (x-0.25)^2 )               (allows use of normh)
-    // sqrt(x)          = sqrt( (x+1)^2 - (x-1)^2 ) / 2                 (ditto)
+    // sqrt(x)          = sqrt( (x+1)^2 - (x-1)^2 ) / 2                 (ditto, but easier to make sure (x-1)/(x+1) is small enough)
     // sqrt(x*y)        = sqrt( (x+y)^2 - (x-y)^2 ) / 2                 (ditto)
     //
     // exp(x)           = sinh(x) + cosh(x)
