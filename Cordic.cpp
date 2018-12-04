@@ -591,17 +591,17 @@ void Cordic<T,FLT>::hyperbolic_vectoring( const T& x0, const T& y0, const T& z0,
 {
     //-----------------------------------------------------
     // input ranges allowed:
-    //      -1  <= x0 <= 1
-    //      -1  <= y0 <= 1
+    //      -2  <= x0 <= 2
+    //      -2  <= y0 <= 2
     //      -PI <= z0 <= PI
     //      |atanh(y0/x0)| <= 1.1182...
     //-----------------------------------------------------
-    const T ONE = one();
+    const T TWO = one() << 1;
     const T PI  = pi();
     const T ANGLE_MAX = hyperbolic_angle_max();
     if ( debug ) std::cout << "hyperbolic_vectoring begin: x0,y0,z0=[ " << to_flt(x0) << ", " << to_flt(y0) << ", " << to_flt(z0) << "]\n";
-    cassert( x0 >= -ONE && x0 <= ONE && "hyperbolic_vectoring x0 must be in the range -1 .. 1" );
-    cassert( y0 >= -ONE && y0 <= ONE && "hyperbolic_vectoring y0 must be in the range -1 .. 1" );
+    cassert( x0 >= -TWO && x0 <= TWO && "hyperbolic_vectoring x0 must be in the range -2 .. 2" );
+    cassert( y0 >= -TWO && y0 <= TWO && "hyperbolic_vectoring y0 must be in the range -2 .. 2" );
     cassert( z0 >= -PI  && z0 <= PI  && "hyperbolic_vectoring z0 must be in the range -PI .. PI" );
     cassert( (ANGLE_MAX == 0 || std::abs( std::atanh( to_flt(y0) / to_flt(x0) ) ) <= to_flt(ANGLE_MAX)) && 
                                         "hyperbolic_vectoring |atanh(y0/x0)| must be <= hyperbolic_angle_max()" );
@@ -1155,8 +1155,7 @@ T Cordic<T,FLT>::normh( const T& _x, const T& _y ) const
     T y = _y;
     if ( debug ) std::cout << "normh begin: x=" << to_flt(x) << " y=" << to_flt(y) << " do_reduce=" << impl->do_reduce << "\n";
     int32_t lshift;
-    bool    swapped;  // unused
-    if ( impl->do_reduce ) reduce_norm_args( x, y, lshift, swapped, true );
+    if ( impl->do_reduce ) reduce_normh_args( x, y, lshift );
 
     T xx, yy, zz;
     hyperbolic_vectoring( x, y, zero(), xx, yy, zz );
@@ -1321,7 +1320,7 @@ void Cordic<T,FLT>::reduce_arg( T& x, int32_t& x_lshift, bool& sign, bool shift_
             other <<= 1;
         }
     }
-    while( normalize && x < one() )
+    while( normalize && x < other )
     {
         x_lshift--;
         if ( shift_x ) {
@@ -1330,7 +1329,7 @@ void Cordic<T,FLT>::reduce_arg( T& x, int32_t& x_lshift, bool& sign, bool shift_
             other >>= 1;
         }
     }
-    if ( debug && shift_x ) std::cout << "reduce_arg: x_orig=" << to_flt(x_orig) << " x_reduced=" << to_flt(x) << " x_lshift=" << x_lshift << "\n"; 
+    if ( debug ) std::cout << "reduce_arg: x_orig=" << to_flt(x_orig) << " x_reduced=" << to_flt(x) << " x_lshift=" << x_lshift << "\n"; 
 }
 
 template< typename T, typename FLT >
@@ -1438,7 +1437,7 @@ void Cordic<T,FLT>::reduce_atan2_args( T& y, T& x, bool& y_sign, bool& x_sign, b
 }
 
 template< typename T, typename FLT >
-void Cordic<T,FLT>::reduce_norm_args( T& x, T& y, int32_t& lshift, bool& swapped, bool for_normh ) const
+void Cordic<T,FLT>::reduce_norm_args( T& x, T& y, int32_t& lshift, bool& swapped ) const
 {
     //-----------------------------------------------------
     // Must shift both x and y by max( x_lshift, y_lshift ).
@@ -1453,20 +1452,37 @@ void Cordic<T,FLT>::reduce_norm_args( T& x, T& y, int32_t& lshift, bool& swapped
     int32_t y_lshift;
     bool x_sign;
     bool y_sign;
-    reduce_arg( x, x_lshift, x_sign, false );   
+    reduce_arg( x, x_lshift, x_sign, false );
     reduce_arg( y, y_lshift, y_sign, false );   
     lshift = (x_lshift > y_lshift) ? x_lshift : y_lshift;
     x >>= lshift;
     y >>= lshift;
     swapped = x < y;
     if ( swapped ) {
-        cassert( !for_normh && "x must be >= y for normh" );
         T tmp = x;
         x = y;
         y = tmp;
     }
     if ( debug ) std::cout << "reduce_norm_args: xy_orig=[" << to_flt(x_orig) << "," << to_flt(y_orig) << "]" << 
                                                " xy_reduced=[" << to_flt(x) << "," << to_flt(y) << "] lshift=" << lshift << " swapped=" << swapped << "\n"; 
+}
+
+template< typename T, typename FLT >
+void Cordic<T,FLT>::reduce_normh_args( T& x, T& y, int32_t& lshift ) const
+{
+    //-----------------------------------------------------
+    // Use reduce_div_args(y, x) for most of it.
+    //-----------------------------------------------------
+    T       x_orig = x;
+    T       y_orig = y;
+    int32_t y_lshift;
+    int32_t x_lshift;
+    bool    sign;
+    reduce_div_args( y, x, y_lshift, x_lshift, sign );
+    lshift = y_lshift + x_lshift;
+
+    if ( debug ) std::cout << "reduce_normh_args: xy_orig=[" << to_flt(x_orig) << "," << to_flt(y_orig) << "]" << 
+                                                " xy_reduced=[" << to_flt(x) << "," << to_flt(y) << "] lshift=" << lshift << "\n";
 }
 
 template< typename T, typename FLT >

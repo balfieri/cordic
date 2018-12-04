@@ -249,7 +249,7 @@ public:
     //      z = z0 + atanh( y0/x0 )
     //
     // input ranges allowed:
-    //      0   <= x0 <= 2
+    //      -2  <= x0 <= 2
     //      -2  <= y0 <= 2
     //      -PI <= z0 <= PI
     //      |atanh(y0/x0)| <= 1.1182...
@@ -356,7 +356,8 @@ public:
     void reduce_exp_arg( FLT b, T& x, T& factor, bool& sign ) const;                          
     void reduce_log_arg( T& x, T& addend ) const;                                            
     void reduce_atan2_args( T& y, T& x, bool& y_sign, bool& x_sign, bool& swapped, bool& is_pi ) const;     
-    void reduce_norm_args( T& x, T& y, int32_t& lshift, bool& swapped, bool for_normh=false ) const;
+    void reduce_norm_args( T& x, T& y, int32_t& lshift, bool& swapped ) const;
+    void reduce_normh_args( T& x, T& y, int32_t& lshift ) const;
     void reduce_sin_cos_arg( T& a, uint32_t& quadrant, bool& sign, bool& did_minus_pi_div_4 ) const;
     void reduce_sinh_cosh_arg( T& x, T& sinh_i, T& cosh_i, bool& sign ) const;                  
 
