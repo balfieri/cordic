@@ -826,6 +826,7 @@ T Cordic<T,FLT>::one_over( const T& x ) const
 template< typename T, typename FLT >
 T Cordic<T,FLT>::sqrt( const T& x ) const
 { 
+    if ( debug ) std::cout << "sqrt begin: x_orig=" << to_flt(x) << " do_reduce=" << impl->do_reduce << "\n";
     return normh( x+quarter(), x-quarter() );
 }
 
@@ -833,6 +834,7 @@ template< typename T, typename FLT >
 T Cordic<T,FLT>::one_over_sqrt( const T& x ) const
 { 
     // later, have normh leave result normalized
+    if ( debug ) std::cout << "one_over_sqrt begin: x_orig=" << to_flt(x) << " do_reduce=" << impl->do_reduce << "\n";
     return div( one(), normh( x+quarter(), x-quarter() ) );
 }
 
