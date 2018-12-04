@@ -145,7 +145,7 @@ int main( int argc, const char * argv[] )
             do_op2(  "atanh2(y,x)",  atanh2,  atanh2,         y, x, true      );
         }
         do_op2(  "norm(x,y)",        norm,    norm,           x, y, do_reduce );
-        if ( 0 && y >= x ) {
+        if ( y >= x ) {
             do_op2(  "normh(x,y)",   normh,   normh,          y, x, do_reduce );
         }
         do_op22( "rect_to_polar(x,y)", rect_to_polar, rect_to_polar, x, y, do_reduce );
