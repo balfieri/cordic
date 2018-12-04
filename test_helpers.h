@@ -27,6 +27,17 @@
 
 // some useful macros to avoid redundant typing
 //
+
+static inline FLT tolerance( uint32_t frac_w, FLT expected, FLT tol, int32_t& tol_lg2 )
+{
+    //------------------------------------------------------------
+    // Fixed-point numbers > 1 are going to have less precision.
+    // tol is the tolerance if the result is <= 1.
+    //------------------------------------------------------------
+    tol_lg2 = int32_t( std::log2( tol ) - 0.5 );
+    return tol;
+}
+
 #define do_op1( str, c_fn, exp_fn, fltx, do_reduce )                    \
 {                                                                       \
     auto c = do_reduce ? cordicr : cordicnr;                            \
@@ -35,6 +46,8 @@
     FLT fltz = c->to_flt( tz );	                                        \
     FLT flte = exp_fn( fltx );			                        \
     FLT flterr = std::abs( flte-fltz );			                \
+    int32_t tol_lg2;                                                    \
+    FLT tol  = tolerance( c->frac_w(), flte, TOL, tol_lg2 );            \
 			                                                \
     std::cout.precision(24);			                        \
     std::cout << #str << "\n";			                        \
@@ -42,8 +55,9 @@
     std::cout << "Input:    " << std::setw(30) << fltx << "(fltx)\n";	\
     std::cout << "Expected: " << std::setw(30) << flte << "\n";		\
     std::cout << "Actual:   " << std::setw(30) << fltz << "\n";		\
-    std::cout << "Diff:     " << std::setw(30) << flterr << "\n\n";	\
-    cassert( flterr <= TOL );			                        \
+    std::cout << "Diff:     " << std::setw(30) << flterr << "\n";	\
+    std::cout << "Tol:      " << std::setw(30) << tol << " (2^" << tol_lg2 << ")\n\n"; \
+    cassert( flterr <= tol );			                        \
 }    
 
 #define do_op12( str, c_fn, exp_fn, fltx, do_reduce )                   \
@@ -58,6 +72,10 @@
     exp_fn( fltx, flte1, flte2 );			                \
     FLT flterr1 = std::abs( flte1-fltz1 );			        \
     FLT flterr2 = std::abs( flte2-fltz2 );			        \
+    int32_t tol1_lg2;                                                   \
+    int32_t tol2_lg2;                                                   \
+    FLT tol1  = tolerance( c->frac_w(), flte1, TOL, tol1_lg2 );         \
+    FLT tol2  = tolerance( c->frac_w(), flte2, TOL, tol2_lg2 );         \
 			                                                \
     std::cout.precision(24);			                        \
     std::cout << #str << "\n";			                        \
@@ -65,9 +83,10 @@
     std::cout << "Input:    " << std::setw(30) << fltx << "(fltx)\n";	\
     std::cout << "Expected: " << std::setw(30) << flte1 << ", " << flte2 << "\n"; \
     std::cout << "Actual:   " << std::setw(30) << fltz1 << ", " << fltz2 << "\n"; \
-    std::cout << "Diff:     " << std::setw(30) << flterr1 << ", " << flterr2 << "\n\n"; \
-    cassert( flterr1 <= TOL );			                        \
-    cassert( flterr2 <= TOL );			                        \
+    std::cout << "Diff:     " << std::setw(30) << flterr1 << ", " << flterr2 << "\n"; \
+    std::cout << "Tol:      " << std::setw(30) << tol1 << " (2^" << tol1_lg2 << "), " << tol2 << " (2^" << tol2_lg2 << ")\n\n"; \
+    cassert( flterr1 <= tol1 );			                        \
+    cassert( flterr2 <= tol2 );			                        \
 }    
 
 #define do_op2( str, c_fn, exp_fn, fltx, flty, do_reduce )              \
@@ -79,6 +98,8 @@
     FLT fltz = c->to_flt( tz );			                        \
     FLT flte = exp_fn( fltx, flty );			                \
     FLT flterr = std::abs( flte-fltz );			                \
+    int32_t tol_lg2;                                                    \
+    FLT tol  = tolerance( c->frac_w(), flte, TOL, tol_lg2 );            \
 			                                                \
     std::cout.precision(24);			                        \
     std::cout << #str << "\n";			                        \
@@ -86,8 +107,9 @@
     std::cout << "Input:    " << std::setw(30) << fltx << "(x) " << flty << "(y)\n"; \
     std::cout << "Expected: " << std::setw(30) << flte << "\n";		\
     std::cout << "Actual:   " << std::setw(30) << fltz << "\n";		\
-    std::cout << "Diff:     " << std::setw(30) << flterr << "\n\n";	\
-    cassert( flterr <= TOL );			                        \
+    std::cout << "Diff:     " << std::setw(30) << flterr << "\n";	\
+    std::cout << "Tol:      " << std::setw(30) << tol << " (2^" << tol_lg2 << ")\n\n"; \
+    cassert( flterr <= tol );			                        \
 }    
 
 #define do_op22( str, c_fn, exp_fn, fltx, flty, do_reduce )             \
@@ -103,6 +125,10 @@
     exp_fn( fltx, flty, flte1, flte2 );			                \
     FLT flterr1 = std::abs( flte1-fltz1 );			        \
     FLT flterr2 = std::abs( flte2-fltz2 );			        \
+    int32_t tol1_lg2;                                                   \
+    int32_t tol2_lg2;                                                   \
+    FLT tol1  = tolerance( c->frac_w(), flte1, TOL, tol1_lg2 );         \
+    FLT tol2  = tolerance( c->frac_w(), flte2, TOL, tol2_lg2 );         \
 			                                                \
     std::cout.precision(24);			                        \
     std::cout << #str << "\n";			                        \
@@ -111,8 +137,9 @@
     std::cout << "Expected: " << std::setw(30) << flte1 << ", " << flte2 << "\n"; \
     std::cout << "Actual:   " << std::setw(30) << fltz1 << ", " << fltz2 << "\n"; \
     std::cout << "Diff:     " << std::setw(30) << flterr1 << ", " << flterr2 << "\n\n"; \
-    cassert( flterr1 <= TOL );			                        \
-    cassert( flterr2 <= TOL );			                        \
+    std::cout << "Tol:      " << std::setw(30) << tol1 << " (2^" << tol1_lg2 << "), " << tol2 << " (2^" << tol2_lg2 << ")\n\n"; \
+    cassert( flterr1 <= tol1 );			                        \
+    cassert( flterr2 <= tol2 );			                        \
 }    
 
 #define do_op3( str, c_fn, exp_fn, fltx, flty, fltw, do_reduce )        \
@@ -125,6 +152,8 @@
     FLT fltz = c->to_flt( tz );			                        \
     FLT flte = exp_fn( fltx, flty, fltw );			        \
     FLT flterr = std::abs( flte-fltz );			                \
+    int32_t tol_lg2;                                                    \
+    FLT tol  = tolerance( c->frac_w(), flte, TOL, tol_lg2 );            \
 			                                                \
     std::cout.precision(24);			                        \
     std::cout << #str << "\n";			                        \
@@ -132,8 +161,9 @@
     std::cout << "Input:    " << std::setw(30) << fltx << "(x) " << flty << "(y) " << fltw << "(w)\n"; \
     std::cout << "Expected: " << std::setw(30) << flte << "\n";		\
     std::cout << "Actual:   " << std::setw(30) << fltz << "\n";		\
-    std::cout << "Diff:     " << std::setw(30) << flterr << "\n\n";	\
-    cassert( flterr <= TOL );			                        \
+    std::cout << "Diff:     " << std::setw(30) << flterr << "\n";	\
+    std::cout << "Tol:      " << std::setw(30) << tol << " (2^" << tol_lg2 << ")\n\n"; \
+    cassert( flterr <= tol );			                        \
 }    
 
 // FLT wrapper routines for those that are not in std::
