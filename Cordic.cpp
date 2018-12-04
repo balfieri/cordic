@@ -833,9 +833,9 @@ T Cordic<T,FLT>::sqrt( const T& x ) const
 template< typename T, typename FLT >
 T Cordic<T,FLT>::one_over_sqrt( const T& x ) const
 { 
-    // later, have normh leave result normalized
     if ( debug ) std::cout << "one_over_sqrt begin: x_orig=" << to_flt(x) << " do_reduce=" << impl->do_reduce << "\n";
-    return div( one(), normh( x+quarter(), x-quarter() ) );
+    cassert( x != 0 && "one_over_sqrt x must not be 0" );
+    return div( one(), sqrt( x ) );
 }
 
 template< typename T, typename FLT >
@@ -1475,13 +1475,11 @@ void Cordic<T,FLT>::reduce_normh_args( T& x, T& y, int32_t& lshift ) const
     //-----------------------------------------------------
     // Use reduce_div_args(y, x) for most of it.
     //-----------------------------------------------------
+    cassert( x >= y && "reduce_normh_args: x must be >= y" );
     T       x_orig = x;
     T       y_orig = y;
-    int32_t y_lshift;
-    int32_t x_lshift;
-    bool    sign;
-    reduce_div_args( y, x, y_lshift, x_lshift, sign );
-    lshift = y_lshift + x_lshift;
+    bool    swapped;  // unused
+    reduce_norm_args( x, y, lshift, swapped );
 
     if ( debug ) std::cout << "reduce_normh_args: xy_orig=[" << to_flt(x_orig) << "," << to_flt(y_orig) << "]" << 
                                                 " xy_reduced=[" << to_flt(x) << "," << to_flt(y) << "] lshift=" << lshift << "\n";
