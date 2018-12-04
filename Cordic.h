@@ -66,7 +66,7 @@ public:
     T    dad( const T& y, const T& x, const T addend = T(0) ) const;      // y/x + addend
     T    div( const T& y, const T& x ) const;                             // y/x
     T    one_over( const T& x ) const;                                    // 1/x
-    T    sqrt( const T& x ) const;                                        // normh( x+0.25, x-0.25 )
+    T    sqrt( const T& x ) const;                                        // normh( x+1, x-1 ) / 2
     T    one_over_sqrt( const T& x ) const;                               // 1/sqrt 
 
     T    exp( const T& x ) const;                                         // e^x
