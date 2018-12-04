@@ -18,11 +18,11 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 //
-// freal.h - flexible real number class
+// freal.h - flexible real number 
 //
-// This class supports typical C++ floating-point semantics.
+// This class supports typical C++ floating-point semantics found with float and double.
 // It implements freals as a user-specified fixed-point.
-// Most functions are implemented using Cordic.h.
+// All functions are implemented using Cordic.h.
 //
 // In the near future, it will allow the internal format to change
 // dynamically based on input and output ranges, and the 
@@ -31,7 +31,7 @@
 // Typical usage:
 //
 //     #include freal.h
-//     using real = freal<int64_t, double>;
+//     using real = freal<>;
 //     [use "real" in the rest of your program]
 //
 #ifndef _freal_h
