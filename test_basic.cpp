@@ -134,12 +134,12 @@ int main( int argc, const char * argv[] )
         do_op1(  "cosh(x)",          cosh,    std::cosh,      x   , do_reduce );
         do_op12( "sinh_cosh(x)",     sinh_cosh,sinh_cosh,     x   , do_reduce );
         do_op1(  "tanh(x)",          tanh,    std::tanh,      x   , do_reduce );
-        do_op1(  "asinh(x)",         asinh,   std::asinh,     x   , do_reduce );
+        do_op1(  "asinh(x)",         asinh,   std::asinh,     x   , true      );
         if ( x >= 1.0 ) {
-            do_op1(  "acosh(x)",     acosh,   std::acosh,     x   , do_reduce );
+            do_op1(  "acosh(x)",     acosh,   std::acosh,     x   , true      );
         }
         if ( x >= -1.0 && x <= 1.0 ) {
-            do_op1(  "atanh(x)",     atanh,   std::atanh,     x   , do_reduce );
+            do_op1(  "atanh(x)",     atanh,   std::atanh,     x   , true      );
         }
         if ( y/x >= -1.0 && y/x <= 1.0 ) {
             do_op2(  "atanh2(y,x)",  atanh2,  atanh2,         y, x, true      );
