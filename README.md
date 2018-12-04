@@ -3,6 +3,12 @@ This repository contains some C++ code that shows how to implement CORDIC math. 
 </p>
 
 <p>
+<b>This is all open-source.  Refer to the LICENSE.md for licensing details.
+This code is intended for tutorial purposes only. You should not assume that the library is bug-free or accurate enough
+for use as a production reference model.</b>
+</p>
+
+<p>
 Addition, subtraction, and multiplication are relatively easy tasks to implement in a computer chip.  Divide, sqrt(), and other
 transcendental functions are challenging even when high precision is not required.  CORDIC math makes it easy and cheap to implement
 these complicated math functions by using a simple sequence of shifts and adds.  The only complication is that inputs need to 
@@ -12,9 +18,7 @@ be reduced to a small range of values, typically 0.0 .. 2.0.
 <p>
 CORDIC was invented in the 1950's and first used in the navigation system of the B-58 bomber, which did not
 even have a built-in multiply instruction.  Prior to that, navigation systems used analog computers.
-There is nothing novel or proprietary here.  <b>This is all open-source.  Refer to the LICENSE.md for licensing details.</b>  
-This code is intended for tutorial purposes only. You should not assume that the library is bug-free or accurate enough
-for use as a production reference model.
+There is nothing novel or proprietary here.  
 </p>
 
 <p>
