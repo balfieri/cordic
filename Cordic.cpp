@@ -707,6 +707,26 @@ void Cordic<T,FLT>::linear_vectoring( const T& x0, const T& y0, const T& z0, T& 
 }
 
 template< typename T, typename FLT >
+T Cordic<T,FLT>::add( const T& x, const T& y ) const
+{
+    bool x_sign = x < T(0);
+    bool y_sign = y < T(0);
+    T    sum    = x + y;
+    cassert( (x_sign != y_sign || ((sum < T(0)) == x_sign)) && "add causes overflow" ); // needs to also check that all sign bits are the same
+    return sum;
+}
+
+template< typename T, typename FLT >
+T Cordic<T,FLT>::sub( const T& x, const T& y ) const
+{
+    bool x_sign = x < T(0);
+    bool y_sign = y < T(0);
+    T    sum    = x - y;
+    cassert( (x_sign != y_sign || ((sum < T(0)) == x_sign)) && "sub causes overflow" );
+    return sum;
+}
+
+template< typename T, typename FLT >
 T Cordic<T,FLT>::mad( const T& _x, const T& _y, const T addend, bool do_reduce ) const
 {
     T x = _x;
