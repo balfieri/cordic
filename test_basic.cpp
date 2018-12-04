@@ -34,7 +34,8 @@ int main( int argc, const char * argv[] )
     //---------------------------------------------------------------------------
     int int_w  = 7;                             // fixed-point for now, max integer is 127
     int frac_w = 52;                            // same as double
-    FLT TOL = 1.0 / FLT( 1LL << (frac_w-7) );   // would like this to be 1/(1 << frac_w)
+    FLT TOL = 1.0 / FLT( 1LL << (frac_w-7) );   // we'd like this to be 1/(1 << (frac_w-1)) 
+                                                // not clear the CPU is doing the ops correctly either
     bool     new_bugs = false;                  // by default, don't run new bugs
     uint32_t loop_cnt = 2;                      
 
