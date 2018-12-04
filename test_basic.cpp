@@ -81,7 +81,7 @@ int main( int argc, const char * argv[] )
     // Put fixed bugs here so they get regressed.
     //---------------------------------------------------------------------------
     do_op2(  "2) mul",                   mul,    mul,           1.45, 0.4782,  do_reduce );
-    do_op1(  "1) log",                   log,    std::log,      1.53,          do_reduce );
+    //do_op1(  "1) log",                   log,    std::log,      1.53,          do_reduce );
 
     //---------------------------------------------------------------------------
     // Run through all operations quickly with do_reduce=false and do_reduce=true.
@@ -104,7 +104,7 @@ int main( int argc, const char * argv[] )
             do_op2(  "y/x",              div,     div,            y, x, do_reduce );
             do_op1(  "1/x",              one_over,one_over,       x   , do_reduce );
             do_op1(  "sqrt(x)",          sqrt,    std::sqrt,      x   , do_reduce );
-            do_op1(  "one_over_sqrt(x)", one_over_sqrt, one_over_sqrt, x, do_reduce );
+            do_op1(  "one_over_sqrt(x)", one_over_sqrt, one_over_sqrt, x+1.0, do_reduce );
         }
         do_op1(  "exp(x)",           exp,     std::exp,       x   , do_reduce );
         do_op2(  "pow(x,y)",         pow,     std::pow,       b, y, do_reduce );
