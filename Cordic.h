@@ -62,8 +62,12 @@ public:
     //
     // (2) means requires 2 applications of a CORDIC algorithm.              functionality
     //-----------------------------------------------------               ---------------------------
+    T    add( const T& x, const T& y ) const;                             // x+y 
+    T    sub( const T& x, const T& y ) const;                             // x-y 
     T    mad( const T& x, const T& y, const T addend ) const;             // x*y + addend
     T    mul( const T& x, const T& y ) const;                             // x*y 
+    T    lshift( const T& x, int y ) const;                               // x << y
+    T    rshift( const T& x, int y ) const;                               // x >> y
     T    dad( const T& y, const T& x, const T addend = T(0) ) const;      // y/x + addend
     T    div( const T& y, const T& x ) const;                             // y/x
     T    one_over( const T& x ) const;                                    // 1/x

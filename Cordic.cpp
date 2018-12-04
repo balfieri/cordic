@@ -74,32 +74,6 @@ struct Cordic<T,FLT>::Impl
     std::unique_ptr<bool[]>     reduce_sinh_cosh_cosh_i_oflow;  // boolean indicating if this index creates too big of a number
     std::unique_ptr<FLT[]>      reduce_exp_factor;              // for each possible integer value, exp(i)
     std::unique_ptr<T[]>        reduce_log_addend;              // for each possible lshift value, log( 1 << lshift )
-
-    inline void                 do_lshift( T& x, int32_t lshift ) const
-    {
-        cassert( x >= 0        && "do_lshift x should be non-negative" );
-        if ( lshift > 0 ) {
-            //-----------------------------------------------------
-            // For now, crap out if we overflow.
-            // At some point, we'll have options to saturate or set a flag in the container.
-            //-----------------------------------------------------
-            int32_t lshift_max = int_w;
-            uint32_t i = x >> frac_w;
-            cassert( i <= maxint && "do_lshift x integer part should be <= maxint()"  );
-            while( i != 0 ) 
-            {
-                lshift_max--;
-                i >>= 1;
-            }
-            if ( lshift > lshift_max ) {
-                std::cout << "do_lshift x << " << lshift << " will overflow x\n";
-                exit( 1 );
-            }
-            x <<= lshift;
-        } else if ( lshift < 0 ) {
-            x >>= -lshift;
-        }
-    }
 };
 
 //-----------------------------------------------------
@@ -747,7 +721,7 @@ T Cordic<T,FLT>::mad( const T& _x, const T& _y, const T addend, bool do_reduce )
     T xx, yy, zz;
     linear_rotation( x, do_reduce ? zero() : addend, y, xx, yy, zz );
     if ( do_reduce ) {
-        impl->do_lshift( yy, x_lshift + y_lshift );
+        yy = lshift( yy, x_lshift + y_lshift );
         yy += addend;
         if ( sign ) yy = -yy;
     }
@@ -775,6 +749,41 @@ T Cordic<T,FLT>::mul( const T& x, const T& y, bool do_reduce ) const
 }
 
 template< typename T, typename FLT >
+T Cordic<T,FLT>::lshift( const T& x, int ls ) const
+{
+    cassert( x >= 0 && "lshift x should be non-negative" );
+    if ( ls > 0 ) {
+        //-----------------------------------------------------
+        // For now, crap out if we overflow.
+        // At some point, we'll have options to saturate or set a flag in the container.
+        //-----------------------------------------------------
+        int32_t ls_max = int_w();
+        uint32_t i = x >> frac_w();
+        cassert( i <= maxint() && "lshift x integer part should be <= maxint()"  );
+        while( i != 0 ) 
+        {
+            ls_max--;
+            i >>= 1;
+        }
+        if ( ls > ls_max ) {
+            std::cout << "lshift x << " << ls << " will overflow x\n";
+            exit( 1 );
+        }
+        return x << ls;
+    } else if ( ls < 0 ) {
+        return x >> -ls;
+    } else {
+        return x;
+    }
+}
+
+template< typename T, typename FLT >
+T Cordic<T,FLT>::rshift( const T& x, int rs ) const
+{
+    return lshift( x, -rs );
+}
+
+template< typename T, typename FLT >
 T Cordic<T,FLT>::dad( const T& _y, const T& _x, const T addend, bool do_reduce ) const
 {
     T x = _x;
@@ -790,7 +799,7 @@ T Cordic<T,FLT>::dad( const T& _y, const T& _x, const T addend, bool do_reduce )
     T xx, yy, zz;
     linear_vectoring( x, y, do_reduce ? zero() : addend, xx, yy, zz );
     if ( do_reduce ) {
-        impl->do_lshift( zz, y_lshift-x_lshift );
+        zz = lshift( zz, y_lshift-x_lshift );
         zz += addend;
         if ( sign ) zz = -zz;
     }
@@ -838,13 +847,13 @@ T Cordic<T,FLT>::sqrt( const T& _x ) const
     //-----------------------------------------------------
     T x = _x;
     if ( debug ) std::cout << "sqrt begin: x_orig=" << to_flt(_x) << " do_reduce=" << impl->do_reduce << "\n";
-    int32_t lshift;
-    if ( impl->do_reduce ) reduce_sqrt_arg( x, lshift );
+    int32_t ls;
+    if ( impl->do_reduce ) reduce_sqrt_arg( x, ls );
 
     T xx, yy, zz;
     hyperbolic_vectoring( x+one(), x-one(), zero(), xx, yy, zz );  // gain*sqrt((s+1)^2 - (s-1)^2)
     xx = mul( xx, hyperbolic_vectoring_one_over_gain(), false );   // sucks that we have to do this
-    if ( impl->do_reduce ) impl->do_lshift( xx, lshift );          // log2(p)/2 - 1
+    if ( impl->do_reduce ) xx = lshift( xx, ls );                  // log2(p)/2 - 1
 
     if ( debug ) std::cout << "sqrt end: x_orig=" << to_flt(_x) << " x_reduced=s=" << to_flt(x) << " do_reduce=" << impl->do_reduce << " xx=" << to_flt(xx) << "\n";
     return xx;
@@ -1160,14 +1169,14 @@ T Cordic<T,FLT>::norm( const T& _x, const T& _y, bool do_reduce ) const
     T x = _x;
     T y = _y;
     if ( debug ) std::cout << "norm begin: x=" << to_flt(x) << " y=" << to_flt(y) << " do_reduce=" << do_reduce << "\n";
-    int32_t lshift;
+    int32_t ls;
     bool    swapped;  // unused
-    if ( do_reduce ) reduce_norm_args( x, y, lshift, swapped );
+    if ( do_reduce ) reduce_norm_args( x, y, ls, swapped );
 
     T xx, yy, zz;
     circular_vectoring( x, y, zero(), xx, yy, zz );
     xx = mul( xx, circular_vectoring_one_over_gain(), true );
-    if ( do_reduce ) impl->do_lshift( xx, lshift );
+    if ( do_reduce ) xx = lshift( xx, ls );
     if ( debug ) std::cout << "norm end: x=" << to_flt(x) << " y=" << to_flt(y) << " do_reduce=" << do_reduce << " xx=" << to_flt(xx) << "\n";
     return xx;
 }
