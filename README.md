@@ -102,7 +102,7 @@ number), it is changed to zero.
 Denorm-As-Zero (DAZ) means that any denorm input to an operation is first changed to zero.
 </p>
 
-<h1>Installation and Running Basic Test</h1>
+<h1>Installation</h1>
 
 <p>
 To install this on your computer, you'll need git and a C++ compiler, then:
