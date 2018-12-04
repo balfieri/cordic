@@ -103,10 +103,8 @@ int main( int argc, const char * argv[] )
             do_op3(  "y/x + w",          dad,     dad,            y, x, w, do_reduce );
             do_op2(  "y/x",              div,     div,            y, x, do_reduce );
             do_op1(  "1/x",              one_over,one_over,       x   , do_reduce );
-            if ( !do_reduce ) {
             do_op1(  "sqrt(x)",          sqrt,    std::sqrt,      x   , do_reduce );
             do_op1(  "one_over_sqrt(x)", one_over_sqrt, one_over_sqrt, x, do_reduce );
-            }
         }
         do_op1(  "exp(x)",           exp,     std::exp,       x   , do_reduce );
         do_op2(  "pow(x,y)",         pow,     std::pow,       b, y, do_reduce );
