@@ -1068,12 +1068,14 @@ T Cordic<T,FLT>::atan2( const T& _y, const T& _x, bool do_reduce, bool x_is_one,
     //     atan2(y,x)       = PI                                    if x <  0 && y == 0
     //     atan2(y,x)       = 2*atan(y / (sqrt(x^2 + y^2) + x))     if x >  0    
     //     atan2(y,x)       = 2*atan((sqrt(x^2 + y^2) + |x|) / y)   if x <= 0 && y != 0
-    //     atan(1/x)        = PI/2 - atan(x)                        if x > 0
+    //     atan(1/x)        = PI/2 - atan(x)                        if x >  0
     // Strategy:
     //     Use reduce_atan2_args() to reduce y and x and get y_sign and x_sign.
     //     Return PI if we're done.
-    //     Do atan2( y, norm(x, y) + x ) << 1   if x > 0
-    //     Do atan2( norm(x, y) + x, y ) << 1   if <= 0
+    //     Do 2*atan( y / (norm(x, y) + x) )    if x > 0
+    //     Do 2*atan( (norm(x, y) + x) / y )    if x <= 0
+    //     When using atan2 for the latter, if the numerator is larger than
+    //     the denominator, then use PI/2 - atan(x/y)
     //-----------------------------------------------------
     if ( debug ) std::cout << "atan2 begin: y=" << to_flt(y) << " x=" << to_flt(x) << " do_reduce=" << do_reduce << " x_is_one=" << x_is_one << "\n";
     cassert( (x != 0 || y != 0) && "atan2: x or y needs to be non-zero for result to be defined" );
@@ -1083,23 +1085,20 @@ T Cordic<T,FLT>::atan2( const T& _y, const T& _x, bool do_reduce, bool x_is_one,
         bool y_sign;
         bool x_sign;
         bool is_pi;
-        reduce_atan2_args( y, x, y_sign, x_sign, is_pi );
+        bool swapped;
+        reduce_atan2_args( y, x, y_sign, x_sign, swapped, is_pi );
         if ( is_pi ) {
-            if ( debug ) std::cout << "atan2 end: y=" << to_flt(_y) << " x=" << to_flt(_x) << " do_reduce=" << do_reduce << " x_is_one=" << x_is_one << 
+            if ( debug ) std::cout << "atan2 end: y=" << to_flt(_y) << " x=" << to_flt(_x) << " do_reduce=" << do_reduce << 
+                                      " x_is_one=" << x_is_one << 
                                       " zz=PI" << " r=" << ((r != nullptr) ? to_flt(*r) : to_flt(zero())) << "\n";
             return pi();
         }
+
         const T norm_plus_x = norm( x, y, true ) + x;
-        if ( x > 0 ) {
-            // atan2( y, norm_plus_x );
-            if ( debug ) std::cout << "atan2 cordic begin: y=y=" << to_flt(y) << " x=norm_plus_x=" << to_flt(norm_plus_x) << "\n";
-            circular_vectoring( norm_plus_x, y, zero(), xx, yy, zz );
-        } else {
-            // atan2( norm_plus_x, y );
-            if ( debug ) std::cout << "atan2 cordic begin: y=norm_plus_x=" << to_flt(norm_plus_x) << " x=y=" << to_flt(y) << "\n";
-            circular_vectoring( y, norm_plus_x, zero(), xx, yy, zz );
-        }
+        if ( debug ) std::cout << "atan2 cordic begin: y=y=" << to_flt(y) << " x=norm_plus_x=" << to_flt(norm_plus_x) << " swapped=" << swapped << "\n";
+        circular_vectoring( norm_plus_x, y, zero(), xx, yy, zz );
         zz <<= 1;
+        if ( swapped ) zz = pi_div_2() - zz;
         if ( y_sign ) zz = -zz;
         if ( debug ) std::cout << "atan2 cordic end: zz=" << to_flt(zz) << "\n";
     } else {
@@ -1137,7 +1136,8 @@ T Cordic<T,FLT>::norm( const T& _x, const T& _y, bool do_reduce ) const
     T y = _y;
     if ( debug ) std::cout << "norm begin: x=" << to_flt(x) << " y=" << to_flt(y) << " do_reduce=" << do_reduce << "\n";
     int32_t lshift;
-    if ( do_reduce ) reduce_norm_args( x, y, lshift );
+    bool    swapped;  // unused
+    if ( do_reduce ) reduce_norm_args( x, y, lshift, swapped );
 
     T xx, yy, zz;
     circular_vectoring( x, y, zero(), xx, yy, zz );
@@ -1154,7 +1154,8 @@ T Cordic<T,FLT>::normh( const T& _x, const T& _y ) const
     T y = _y;
     if ( debug ) std::cout << "normh begin: x=" << to_flt(x) << " y=" << to_flt(y) << " do_reduce=" << impl->do_reduce << "\n";
     int32_t lshift;
-    if ( impl->do_reduce ) reduce_norm_args( x, y, lshift, true );
+    bool    swapped;  // unused
+    if ( impl->do_reduce ) reduce_norm_args( x, y, lshift, swapped, true );
 
     T xx, yy, zz;
     hyperbolic_vectoring( x, y, zero(), xx, yy, zz );
@@ -1396,7 +1397,7 @@ void Cordic<T,FLT>::reduce_log_arg( T& x, T& addend ) const
 }
 
 template< typename T, typename FLT >
-void Cordic<T,FLT>::reduce_atan2_args( T& y, T& x, bool& y_sign, bool& x_sign, bool& is_pi ) const
+void Cordic<T,FLT>::reduce_atan2_args( T& y, T& x, bool& y_sign, bool& x_sign, bool& swapped, bool& is_pi ) const
 {
     //-----------------------------------------------------
     // Identities:
@@ -1420,15 +1421,16 @@ void Cordic<T,FLT>::reduce_atan2_args( T& y, T& x, bool& y_sign, bool& x_sign, b
     } else {
         is_pi = false;
         int32_t lshift;
-        reduce_norm_args( x, y, lshift );
+        reduce_norm_args( x, y, lshift, swapped );
         if ( debug ) std::cout << "reduce_atan2_args: xy_orig=[" << to_flt(x_orig) << "," << to_flt(y_orig) << "]" << 
-                          " xy_reduced=[" << to_flt(x) << "," << to_flt(y) << "] y_sign=" << y_sign << " x_sign=" << x_sign << "\n";
+                                  " xy_reduced=[" << to_flt(x) << "," << to_flt(y) << "] y_sign=" << y_sign << " x_sign=" << x_sign << 
+                                  " lshift=" << lshift << " swapped=" << swapped << "\n";
     }
 
 }
 
 template< typename T, typename FLT >
-void Cordic<T,FLT>::reduce_norm_args( T& x, T& y, int32_t& lshift, bool for_normh ) const
+void Cordic<T,FLT>::reduce_norm_args( T& x, T& y, int32_t& lshift, bool& swapped, bool for_normh ) const
 {
     //-----------------------------------------------------
     // Must shift both x and y by max( x_lshift, y_lshift ).
@@ -1448,7 +1450,7 @@ void Cordic<T,FLT>::reduce_norm_args( T& x, T& y, int32_t& lshift, bool for_norm
     lshift = (x_lshift > y_lshift) ? x_lshift : y_lshift;
     x >>= lshift;
     y >>= lshift;
-    bool swapped = x < y;
+    swapped = x < y;
     if ( swapped ) {
         cassert( !for_normh && "x must be >= y for normh" );
         T tmp = x;

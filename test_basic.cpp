@@ -129,7 +129,7 @@ int main( int argc, const char * argv[] )
             do_op1(  "acos(x)",      acos,    std::acos,      x   , do_reduce );
             do_op1(  "atan(x)",      atan,    std::atan,      x   , do_reduce );
         }
-        do_op2(  "atan2(y,x)",       atan2,   std::atan2,     y, x, do_reduce );
+        do_op2(  "atan2(y,x)",       atan2,   std::atan2,     y, x, true      );
         do_op1(  "sinh(x)",          sinh,    std::sinh,      x   , do_reduce );
         do_op1(  "cosh(x)",          cosh,    std::cosh,      x   , do_reduce );
         do_op12( "sinh_cosh(x)",     sinh_cosh,sinh_cosh,     x   , do_reduce );

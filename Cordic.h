@@ -347,16 +347,18 @@ public:
     // you are still free to call these routines to perform reduction where you want.
     // However, it's easier to just allocate another Cordic object with do_reduce=true
     // and use the appropriate one depending on whether you want reduction or not.
+    //
+    // Look at the code in Cordic.cpp to understand what these routines are doing.  
     //-----------------------------------------------------
-    void reduce_arg( T& x, int32_t& x_lshift, bool& sign, bool shift_x=true, bool normalize=false ) const; // 0.0 .. <2.0
-    void reduce_mul_args( T& x, T& y, int32_t& x_lshift, int32_t& y_lshift, bool& sign ) const; // reduce_arg x and y
-    void reduce_div_args( T& y, T& x, int32_t& y_lshift, int32_t& x_lshift, bool& sign ) const; // reduce_arg y, normalize_arg x
-    void reduce_exp_arg( FLT b, T& x, T& factor, bool& sign ) const;                            // b=const_base, mul/div exp(x) by factor
-    void reduce_log_arg( T& x, T& addend ) const;                                               // reduce_arg x, addend to log(x) 
-    void reduce_atan2_args( T& y, T& x, bool& y_sign, bool& x_sign, bool& is_pi ) const;        // reduce y and x
-    void reduce_norm_args( T& x, T& y, int32_t& lshift, bool for_normh=false ) const;           // reduce_arg x and y with same lshift
-    void reduce_sin_cos_arg( T& a, uint32_t& quadrant, bool& sign, bool& did_minus_pi_div_4 ) const; // to 0 .. pi/4
-    void reduce_sinh_cosh_arg( T& x, T& sinh_i, T& cosh_i, bool& sign ) const;                  // split x into i+f parts
+    void reduce_arg( T& x, int32_t& x_lshift, bool& sign, bool shift_x=true, bool normalize=false ) const; 
+    void reduce_mul_args( T& x, T& y, int32_t& x_lshift, int32_t& y_lshift, bool& sign ) const; 
+    void reduce_div_args( T& y, T& x, int32_t& y_lshift, int32_t& x_lshift, bool& sign ) const;
+    void reduce_exp_arg( FLT b, T& x, T& factor, bool& sign ) const;                          
+    void reduce_log_arg( T& x, T& addend ) const;                                            
+    void reduce_atan2_args( T& y, T& x, bool& y_sign, bool& x_sign, bool& swapped, bool& is_pi ) const;     
+    void reduce_norm_args( T& x, T& y, int32_t& lshift, bool& swapped, bool for_normh=false ) const;
+    void reduce_sin_cos_arg( T& a, uint32_t& quadrant, bool& sign, bool& did_minus_pi_div_4 ) const;
+    void reduce_sinh_cosh_arg( T& x, T& sinh_i, T& cosh_i, bool& sign ) const;                  
 
 private:
     class Impl;
