@@ -892,7 +892,8 @@ T Cordic<T,FLT>::log( const T& _x, bool do_reduce ) const
     cassert( x > 0 && "log: x must be positive" );
     T addend;
     if ( do_reduce ) reduce_log_arg( x, addend );
-    T lg = atanh2( x-one(), x+one(), true ) << 1;
+    T dv = div( x-one(), x+one(), false );
+    T lg = atanh( dv ) << 1;
     if ( do_reduce ) lg += addend;
     if ( debug ) std::cout << "log: x_orig=" << to_flt(_x) << " reduced_x=" << to_flt(x) << " log=" << to_flt(lg) << "\n";
     return lg;
@@ -1287,7 +1288,13 @@ T Cordic<T,FLT>::atanh2( const T& _y, const T& _x, bool do_reduce, bool x_is_one
     int32_t y_lshift = 0;
     int32_t x_lshift = 0;
     bool    sign = false;
-    if ( do_reduce ) reduce_div_args( y, x, y_lshift, x_lshift, sign );
+    if ( do_reduce ) {
+        bool y_sign;
+        bool x_sign = false;
+        reduce_arg( y, y_lshift, y_sign );
+        if ( !x_is_one ) reduce_arg( x, x_lshift, x_sign, true ); 
+        sign = y_sign != x_sign;
+    }
     int32_t lshift = x_lshift + y_lshift;
     cassert( lshift == 0 && "atanh2: abs(y/x) must be between 0 and 1" );
 
@@ -1390,7 +1397,7 @@ void Cordic<T,FLT>::reduce_log_arg( T& x, T& addend ) const
     T x_orig = x;
     int32_t x_lshift;
     bool x_sign;
-    reduce_arg( x, x_lshift, x_sign, true, true );
+    reduce_arg( x, x_lshift, x_sign, true );
     const T * addends = impl->reduce_log_addend.get();
     addend = addends[frac_w()+x_lshift];
     if ( debug ) std::cout << "reduce_log_arg: x_orig=" << to_flt(x_orig) << " x_reduced=" << to_flt(x) << " addend=" << to_flt(addend) << "\n"; 

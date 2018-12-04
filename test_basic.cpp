@@ -36,7 +36,7 @@ int main( int argc, const char * argv[] )
     int frac_w = 52;                            // same as double
     FLT TOL = 1.0 / FLT( 1LL << (frac_w-13) );  // would like this to be much smaller
     bool     new_bugs = false;                  // by default, don't run new bugs
-    uint32_t loop_cnt = 2;                      // by default, run first 2 iterations
+    uint32_t loop_cnt = 2;                      
 
     for( int i = 1; i < argc; i++ )
     {
@@ -81,20 +81,32 @@ int main( int argc, const char * argv[] )
     // Put fixed bugs here so they get regressed.
     //---------------------------------------------------------------------------
     do_op2(  "2) mul",                   mul,    mul,           1.45, 0.4782,  do_reduce );
-    //do_op1(  "1) log",                   log,    std::log,      1.53,          do_reduce );
+    do_op1(  "1) log",                   log,    std::log,      1.53,          do_reduce );
 
     //---------------------------------------------------------------------------
-    // Run through all operations quickly with do_reduce=false and do_reduce=true.
+    // Run through all operations quickly with do_reduce=true.
+    // Trying to run with do_reduce=false is painful to deal with.
     //---------------------------------------------------------------------------
     for( uint32_t i = 0; i < loop_cnt; i++ )
     {
-        do_reduce = i != 0;
-
         FLT x  = 0.681807431807431031 + 3*i;
         FLT xs = 0.681807431807431031 + 1.23*i;
         FLT y  = 0.810431798013170871 + 3*i;
         FLT w  = 0.103301038084310970 + 3*i;
         FLT b  = M_E * 1.1;
+        switch( i ) 
+        {
+            case 0:
+            case 1:
+            {
+                x  = 0.681807431807431031 + 3*i;
+                xs = 0.681807431807431031 + 1.23*i;
+                y  = 0.810431798013170871 + 3*i;
+                w  = 0.103301038084310970 + 3*i;
+                b  = M_E * 1.1;
+            }
+            break;
+        }
 
         //                          cordic   reference
         do_op3(  "x*y + w",          mad,     mad,            x, y, w, do_reduce );
