@@ -8,6 +8,8 @@ This code is intended for tutorial purposes only. You should not assume that the
 for use as a production reference model.</b>
 </p>
 
+<h1>Motivation</h1>
+
 <p>
 Addition, subtraction, and multiplication are relatively easy tasks to implement in a computer chip.  Divide, sqrt(), and other
 transcendental functions are challenging even when high precision is not required.  CORDIC math makes it easy and cheap to implement
@@ -23,6 +25,8 @@ that did even have a multiply instruction.  Prior to that, navigation systems we
 analog circuitry.  So CORDIC is over 60 years old and all been done before.  The hope of
 this library is to create a small, yet complete, tutorial package.
 </p>
+
+<h1>Fixed-Point</h1>
 
 <p>
 The library assumes that values are stored as fixed-point with user-defined integer width (int_w) and fraction width (frac_w).  
@@ -58,6 +62,8 @@ reduce the number of iterations by passing a different value for n to the constr
 will be the same, but the result will be less precise.  Again, two different Cordic() instances with idential parameters
 except for do_reduce and n can be used on an operation-by-operation basis.
 </p>
+
+<h1>Floating-Point</h1>
 
 <p>
 At some point in the near future, the library will be enhanced to allow T to hold IEEE floating-point numbers with
@@ -96,6 +102,8 @@ number), it is changed to zero.
 Denorm-As-Zero (DAZ) means that any denorm input to an operation is first changed to zero.
 </p>
 
+<h1>Installation and Running Basic Test</h1>
+
 <p>
 To install this on your computer, you'll need git and a C++ compiler, then:
 </p>
@@ -119,6 +127,8 @@ doit.test 0 test_basic -int_w 8         - change int_w from default to 8 bits
 test_basic.cpp does its own checking using macros in test_helpers.h.  In the near future, 
 Cordic.cpp should do optional checking of computations so that test_helpers.h can be deleted or greatly simplified.
 </p>
+
+<h1>Notes</h1>
 
 <p>
 The library needs an "freal" flexible real number class that follows all the rules of any C++ floating-point number but uses Cordic 
