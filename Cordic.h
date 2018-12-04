@@ -54,7 +54,8 @@ public:
     T       to_t( FLT x ) const;                // FLT to T encoded value
     FLT     to_flt( const T& x ) const;         // T encoded value to FLT
 
-    T       make_fixed( bool sign, T i, T f );  // encode a fixed-point value using sign, integer part i, and fractional part f
+    T       make_fixed( bool sign, T i, T f );  // encode a fixed-point    value using sign, integer  part i, and fractional part f
+    T       make_float( bool sign, T e, T f );  // encode a floating-point value using sign, exponent part 3, and fractional part f
 
     //-----------------------------------------------------
     // Well-Known Math Functions Implemented Using CORDIC
