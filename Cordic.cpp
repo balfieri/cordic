@@ -892,7 +892,7 @@ T Cordic<T,FLT>::log( const T& _x, bool do_reduce ) const
     cassert( x > 0 && "log: x must be positive" );
     T addend;
     if ( do_reduce ) reduce_log_arg( x, addend );
-    T lg = atanh2( x-one(), x+one(), false ) << 1;
+    T lg = atanh2( x-one(), x+one(), true ) << 1;
     if ( do_reduce ) lg += addend;
     if ( debug ) std::cout << "log: x_orig=" << to_flt(_x) << " reduced_x=" << to_flt(x) << " log=" << to_flt(lg) << "\n";
     return lg;
@@ -1303,7 +1303,7 @@ void Cordic<T,FLT>::reduce_arg( T& x, int32_t& x_lshift, bool& sign, bool shift_
     T x_orig = x;
     sign = x < 0;
     if ( sign ) x = -x;
-    T other = T(1) << frac_w();
+    T other = one();
     x_lshift = 0;
     while( x > other ) 
     {
