@@ -1379,7 +1379,7 @@ void Cordic<T,FLT>::reduce_div_args( T& y, T& x, int32_t& y_lshift, int32_t& x_l
 }
 
 template< typename T, typename FLT >
-void Cordic<T,FLT>::reduce_sqrt_arg( T& _x, int32_t& lshift ) const
+void Cordic<T,FLT>::reduce_sqrt_arg( T& x, int32_t& lshift ) const
 {
     //-----------------------------------------------------
     // Identities:
@@ -1391,8 +1391,8 @@ void Cordic<T,FLT>::reduce_sqrt_arg( T& _x, int32_t& lshift ) const
     //     Use hyperbolic_vectoring() for sqrt((s+1)^2 - (s-1)^2).
     //     Then lshift that by log2(p)/2 - 1.
     //-----------------------------------------------------
-    T x = _x;
     cassert( x >= 0 && "reduce_sqrt_arg x must be non-negative" );
+    T x_orig = x;
     bool sign;
     reduce_arg( x, lshift, sign );
     if ( lshift & 1 ) {
@@ -1401,7 +1401,7 @@ void Cordic<T,FLT>::reduce_sqrt_arg( T& _x, int32_t& lshift ) const
         x >>= 1;
     }
     lshift = lshift/2 - 1;
-    if ( debug ) std::cout << "reduce_sqrt_arg: x_orig=" << to_flt(x) << " x_reduced=s=" << to_flt(x) << " lshift=" << to_flt(lshift) << "\n";
+    if ( debug ) std::cout << "reduce_sqrt_arg: x_orig=" << to_flt(x_orig) << " x_reduced=s=" << to_flt(x) << " lshift=" << to_flt(lshift) << "\n";
 }
 
 template< typename T, typename FLT >
