@@ -16,9 +16,12 @@ be reduced to a small range of values, typically 0.0 .. 2.0.
 </p>
 
 <p>
-CORDIC was invented in the 1950's and first used in the navigation system of the B-58 bomber, which did not
-even have a built-in multiply instruction.  Prior to that, navigation systems used analog computers.
-There is nothing novel or proprietary here.  
+CORDIC was invented in 1956 by Jack Volder using mathematics from 1624 and 1771.  CORDIC, which stands for for 
+<b>CO</b>ordinate <b>R</b>otation <b>DI</b>gital <b>C</b>omputer
+was first used in the navigation system of the B-58 bomber, whose computer
+did not have a built-in multiply instruction.  Prior to that, navigation systems were done using
+analog circuitry.  There is nothing novel or proprietary in this library.  It's all be done before, though
+it can be difficult trying to track it all down.
 </p>
 
 <p>
