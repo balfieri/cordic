@@ -23,8 +23,9 @@
 #include "Cordic.h"
 #include "freal.h"                                      // not used yet, just here to test build
 
-using FLT = double;                                     // later, use a more precise float type
-using T   = int64_t;                                    // integer container to hold encoded numbers
+using FLT  = double;                                    // later, use a more precise float type
+using T    = int64_t;                                   // integer container to hold encoded numbers
+using real = freal<>;                                   // real number (not used yet)
 
 #include "test_helpers.h"                               // must be included after FLT is defined
 
@@ -39,6 +40,8 @@ int main( int argc, const char * argv[] )
                                                 // not clear the CPU is doing the ops correctly either
     bool     new_bugs = false;                  // by default, don't run new bugs
     uint32_t loop_cnt = 2;                      
+
+    real unused = real::make_fixed( int_w, frac_w, 1.78302 ); // smoke test on freal type; freal is not used yet
 
     for( int i = 1; i < argc; i++ )
     {

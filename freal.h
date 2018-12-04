@@ -320,7 +320,7 @@ freal<T,FLT>::freal( const Cordic<T,FLT> * _cordic, FLT f )
 template< typename T, typename FLT >              
 freal<T,FLT> freal<T,FLT>::make_fixed( uint32_t int_w, uint32_t frac_w, FLT init_f )
 {
-    return freal( new Cordic<T,FLT>( true, int_w, frac_w ), init_f );
+    return freal( new Cordic<T,FLT>( int_w, frac_w ), init_f );
 }
 
 template< typename T, typename FLT >              
