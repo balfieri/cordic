@@ -104,16 +104,18 @@ public:
     T    atanh2( const T& y, const T& x ) const;                          // atanh(y/x)
 
     //-----------------------------------------------------
-    // Interesting Identities (for the curious)
+    // Interesting Identities (some are used in the implementation, most are not)
     //
-    // sqrt(x)          = sqrt( (x+0.25)^2 - (x-0.25)^2 )               (allows use of normh)
-    // sqrt(x)          = sqrt( (x+1)^2 - (x-1)^2 ) / 2                 (ditto, but easier to make sure (x-1)/(x+1) is small enough)
-    // sqrt(x*y)        = sqrt( (x+y)^2 - (x-y)^2 ) / 2                 (ditto)
+    // sqrt(x)          = sqrt((x+0.25)^2 - (x-0.25)^2)         allows use of hyperbolic_vectoring
+    // sqrt(x)          = sqrt((x+1)^2 - (x-1)^2) / 2           ditto, but easier to make sure |atanh((x-1)/(x+1))| is small enough
+    // sqrt(x*y)        = sqrt((x+y)^2 - (x-y)^2) / 2           ditto
+    // sqrt(x^2 - y^2)  = sqrt((m+d)^2 - (m-d)^2) = 2*sqrt(m)   choose m=(x+y)/2, d=(x-y)/2, then 
+    //                                                          2*sqrt(m) = sqrt((m+d/2)^2 - (m-d/2)^2) (which should be small enough)
     //
     // exp(x)           = sinh(x) + cosh(x)
     // exp(x+y)         = exp(x) * exp(y)
-    // exp(ix)          = cos(x) + i*sin(x)                             (Euler's Formula, i = sqrt(-1))
-    // exp(i*PI) + 1    = 0                                             (Euler's Identity)
+    // exp(ix)          = cos(x) + i*sin(x)                     Euler's Formula, i = sqrt(-1)
+    // exp(i*PI) + 1    = 0                                     Euler's Identity
     // log(x)           = 2*atanh2(x-1, x+1)              
     // log(x)           = atanh2((x^2 - 1, x^2 + 1) 
     // log(x*y)         = log(x) + log(y)
@@ -168,7 +170,7 @@ public:
     // acosh(x)         = log(x + sqrt(x^2 - 1))
     // acosh(x)         = abs( asinh(sqrt(x^2 - 1)) )
     // atanh(-x)        = -atanh(x)
-    // atanh(x)         = log((1+x)/(1-x))/2 = log(1+x)/2 - log(1-x)/2    (note: x must be between -1 and 1)
+    // atanh(x)         = log((1+x)/(1-x))/2 = log(1+x)/2 - log(1-x)/2    note: x must be between -1 and 1
     // atanh(x)         = asinh(x / sqrt(1 - x^2)) 
     // atanh(x)         = acosh(1 / sqrt(1 - x^2))  (+/-)
     //-----------------------------------------------------
