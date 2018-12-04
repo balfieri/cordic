@@ -153,10 +153,10 @@ Cordic<T,FLT>::Cordic( uint32_t int_w, uint32_t frac_w, bool do_reduce, uint32_t
 
     // calculate max |z0| angle allowed
     T xx, yy, zz;
-    impl->circular_angle_max = one();   // to avoid triggering assert
-    impl->hyperbolic_angle_max = one();
-    circular_vectoring(   one(), one(),     zero(), xx, yy, impl->circular_angle_max );
-    hyperbolic_vectoring( one(), to_t(2.0), zero(), xx, yy, impl->hyperbolic_angle_max );
+    impl->circular_angle_max   = one();   // to avoid triggering assert
+    impl->hyperbolic_angle_max = zero();  // to disable assert
+    circular_vectoring(   one(),     one(), zero(), xx, yy, impl->circular_angle_max );
+    hyperbolic_vectoring( to_t(0.5), one(), zero(), xx, yy, impl->hyperbolic_angle_max );
     if ( debug ) std::cout << "circular_angle_max="             << std::setw(30) << to_flt(impl->circular_angle_max) << "\n";
     if ( debug ) std::cout << "hyperbolic_angle_max="           << std::setw(30) << to_flt(impl->hyperbolic_angle_max) << "\n";
     
@@ -544,8 +544,8 @@ void Cordic<T,FLT>::hyperbolic_rotation( const T& x0, const T& y0, const T& z0, 
     const T ONE = one();
     const T ANGLE_MAX = hyperbolic_angle_max();
     if ( debug ) std::cout << "hyperbolic_rotation begin: x0,y0,z0=[ " << to_flt(x0) << ", " << to_flt(y0) << ", " << to_flt(z0) << "]\n";
-    //cassert( x0 >= -ONE       && x0 <= ONE &&       "hyperbolic_vectoring x0 must be in the range -1 .. 1" );
-    //cassert( y0 >= -ONE       && y0 <= ONE &&       "hyperbolic_vectoring y0 must be in the range -1 .. 1" );
+    cassert( x0 >= -ONE       && x0 <= ONE &&       "hyperbolic_vectoring x0 must be in the range -1 .. 1" );
+    cassert( y0 >= -ONE       && y0 <= ONE &&       "hyperbolic_vectoring y0 must be in the range -1 .. 1" );
     cassert( z0 >= -ANGLE_MAX && z0 <= ANGLE_MAX && "hyperbolic_vectoring |z0| must be <= hyperbolic_angle_max()" );
 
     //-----------------------------------------------------
@@ -600,11 +600,11 @@ void Cordic<T,FLT>::hyperbolic_vectoring( const T& x0, const T& y0, const T& z0,
     const T PI  = pi();
     const T ANGLE_MAX = hyperbolic_angle_max();
     if ( debug ) std::cout << "hyperbolic_vectoring begin: x0,y0,z0=[ " << to_flt(x0) << ", " << to_flt(y0) << ", " << to_flt(z0) << "]\n";
-    //cassert( x0 >= -ONE && x0 <= ONE && "hyperbolic_vectoring x0 must be in the range -1 .. 1" );
-    //cassert( y0 >= -ONE && y0 <= ONE && "hyperbolic_vectoring y0 must be in the range -1 .. 1" );
+    cassert( x0 >= -ONE && x0 <= ONE && "hyperbolic_vectoring x0 must be in the range -1 .. 1" );
+    cassert( y0 >= -ONE && y0 <= ONE && "hyperbolic_vectoring y0 must be in the range -1 .. 1" );
     cassert( z0 >= -PI  && z0 <= PI  && "hyperbolic_vectoring z0 must be in the range -PI .. PI" );
-    //cassert( std::abs( std::atanh( to_flt(y0) / to_flt(x0) ) ) <= to_flt(ANGLE_MAX) && 
-    //                                    "hyperbolic_vectoring |atanh(y0/x0)| must be <= hyperbolic_angle_max()" );
+    cassert( (ANGLE_MAX == 0 || std::abs( std::atanh( to_flt(y0) / to_flt(x0) ) ) <= to_flt(ANGLE_MAX)) && 
+                                        "hyperbolic_vectoring |atanh(y0/x0)| must be <= hyperbolic_angle_max()" );
 
     //-----------------------------------------------------
     // d = (y < 0) ? 1 : -1
