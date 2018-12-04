@@ -827,6 +827,7 @@ template< typename T, typename FLT >
 T Cordic<T,FLT>::sqrt( const T& x ) const
 { 
     if ( debug ) std::cout << "sqrt begin: x_orig=" << to_flt(x) << " do_reduce=" << impl->do_reduce << "\n";
+    // TODO: need to reduce here 
     return normh( x+one(), x-one() ) >> 1;
 }
 
