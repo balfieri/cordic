@@ -31,7 +31,7 @@
 // Typical usage:
 //
 //     #include freal.h
-//     using real = freal<int64_t, double>
+//     using real = freal<int64_t, double>;
 //     [use "real" in the rest of your program]
 //
 #ifndef _freal_h
@@ -60,7 +60,7 @@ public:
     //-----------------------------------------------------
     // Conversions
     //-----------------------------------------------------
-    FLT    FLT( void ) const;                   // freal to FLT
+    //FLT    FLT( void ) const;                   // freal to FLT
 
     //-----------------------------------------------------
     // Standard Operators
@@ -106,7 +106,7 @@ public:
 
     freal  exp( void ) const;                                         
     freal  pow( const freal& e ) const;      // a^e
-    freal  powc( const FLT c, void ) const;  // c^a
+    freal  powc( const FLT c ) const;        // c^a
     freal  pow2( void ) const;               // 2^a
     freal  pow10( void ) const;              // 10^a
     freal  log( void ) const;                                         
@@ -141,51 +141,126 @@ public:
 private:
 };
 
-// std:xxx() functions
+// std:xxx() functions should pick these up 
 //
-static freal  add( const freal& a, const freal& b ); 
-static freal  sub( const freal& a, const freal& b ); 
-static freal  mad( const freal& a, const freal& b, const freal& c );             
-static freal  mul( const freal& a, const freal& b );                             
-static freal  sqr( const freal& a );
-static freal  dad( const freal& a, const freal& b, const freal& c );      
-static freal  div( const freal& a, const freal& b );      // a/b
-static freal  one_over( const freal& a );                                    
-static freal  sqrt( const freal& a );                                        
-static freal  one_over_sqrt( const freal a& );
+template< typename T=int64_t, typename FLT=double >              
+static freal<T,FLT>  add( const freal<T,FLT>& a, const freal<T,FLT>& b ); 
 
-static freal  exp( const freal& a );
-static freal  pow( const freal& a, const freal& e );      // a^e
-static freal  powc( const freal& a, const FLT c );  // c^a
-static freal  pow2( const freal& a );               // 2^a
-static freal  pow10( const freal& a );              // 10^a
-static freal  log( const freal& a );                                         
-static freal  logb( const freal& a, const freal& b );     // log-base-b(a)
-static freal  logc( const freal& a, const FLT c );        // log-base-c(a)                  
-static freal  log2( const freal& a );                                        
-static freal  log10( const freal& a );                                       
+template< typename T=int64_t, typename FLT=double >              
+static freal<T,FLT>  sub( const freal<T,FLT>& a, const freal<T,FLT>& b ); 
 
-static freal  sin( const freal& a );
-static freal  cos( const freal& a );
-static void   sin_cos( const freal& a, freal& si, freal& co );
-static freal  tan( const freal& a );                                         
-static freal  asin( const freal& a );                                        
-static freal  acos( const freal& a );                                        
-static freal  atan( const freal& a );                                        
-static freal  atan2( const freal& a, const freal& b );    // y=a, x=b
+template< typename T=int64_t, typename FLT=double >              
+static freal<T,FLT>  mad( const freal<T,FLT>& a, const freal<T,FLT>& b, const freal<T,FLT>& c );             
 
-static void   polar_to_rect( const freal& a, const freal& angle, freal& x, freal& y     );  // a=radius
-static void   rect_to_polar( const freal& a, const freal& b,     freal& r, freal& angle );  // x=a, y=b 
-static freal  norm( const freal& a,  const freal& b );    // x=a, y=b
-static freal  normh( const freal& a, const freal& b );    // x=a, y=b
+template< typename T=int64_t, typename FLT=double >              
+static freal<T,FLT>  mul( const freal<T,FLT>& a, const freal<T,FLT>& b );                             
 
-static freal  sinh( const freal& a );
-static freal  cosh( const freal& a );
-static void   sinh_cosh( const freal& a, freal& sih, freal& coh, const freal * r=nullptr );
-static freal  tanh( const freal& a );                                        
-static freal  asinh( const freal& a );                                       
-static freal  acosh( const freal& a );                                       
-static freal  atanh( const freal& a );                                       
-static freal  atanh2( const freal& a, const freal& b );                          
+template< typename T=int64_t, typename FLT=double >              
+static freal<T,FLT>  sqr( const freal<T,FLT>& a );
+
+template< typename T=int64_t, typename FLT=double >              
+static freal<T,FLT>  dad( const freal<T,FLT>& a, const freal<T,FLT>& b, const freal<T,FLT>& c );      
+
+template< typename T=int64_t, typename FLT=double >              
+static freal<T,FLT>  div( const freal<T,FLT>& a, const freal<T,FLT>& b );      // a/b
+
+template< typename T=int64_t, typename FLT=double >              
+static freal<T,FLT>  one_over( const freal<T,FLT>& a );                                    
+
+template< typename T=int64_t, typename FLT=double >              
+static freal<T,FLT>  sqrt( const freal<T,FLT>& a );                                        
+
+template< typename T=int64_t, typename FLT=double >              
+static freal<T,FLT>  one_over_sqrt( const freal<T,FLT>& a );
+
+template< typename T=int64_t, typename FLT=double >              
+static freal<T,FLT>  exp( const freal<T,FLT>& a );
+
+template< typename T=int64_t, typename FLT=double >              
+static freal<T,FLT>  pow( const freal<T,FLT>& a, const freal<T,FLT>& e );      // a^e
+
+template< typename T=int64_t, typename FLT=double >              
+static freal<T,FLT>  powc( const freal<T,FLT>& a, const FLT c );  // c^a
+
+template< typename T=int64_t, typename FLT=double >              
+static freal<T,FLT>  pow2( const freal<T,FLT>& a );               // 2^a
+
+template< typename T=int64_t, typename FLT=double >              
+static freal<T,FLT>  pow10( const freal<T,FLT>& a );              // 10^a
+
+template< typename T=int64_t, typename FLT=double >              
+static freal<T,FLT>  log( const freal<T,FLT>& a );                                         
+
+template< typename T=int64_t, typename FLT=double >              
+static freal<T,FLT>  logb( const freal<T,FLT>& a, const freal<T,FLT>& b );     // log-base-b(a)
+
+template< typename T=int64_t, typename FLT=double >              
+static freal<T,FLT>  logc( const freal<T,FLT>& a, const FLT c );        // log-base-c(a)                  
+
+template< typename T=int64_t, typename FLT=double >              
+static freal<T,FLT>  log2( const freal<T,FLT>& a );                                        
+
+template< typename T=int64_t, typename FLT=double >              
+static freal<T,FLT>  log10( const freal<T,FLT>& a );                                       
+
+template< typename T=int64_t, typename FLT=double >              
+static freal<T,FLT>  sin( const freal<T,FLT>& a );
+
+template< typename T=int64_t, typename FLT=double >              
+static freal<T,FLT>  cos( const freal<T,FLT>& a );
+
+template< typename T=int64_t, typename FLT=double >              
+static void   sin_cos( const freal<T,FLT>& a, freal<T,FLT>& si, freal<T,FLT>& co );
+
+template< typename T=int64_t, typename FLT=double >              
+static freal<T,FLT>  tan( const freal<T,FLT>& a );                                         
+
+template< typename T=int64_t, typename FLT=double >              
+static freal<T,FLT>  asin( const freal<T,FLT>& a );                                        
+
+template< typename T=int64_t, typename FLT=double >              
+static freal<T,FLT>  acos( const freal<T,FLT>& a );                                        
+
+template< typename T=int64_t, typename FLT=double >              
+static freal<T,FLT>  atan( const freal<T,FLT>& a );                                        
+
+template< typename T=int64_t, typename FLT=double >              
+static freal<T,FLT>  atan2( const freal<T,FLT>& a, const freal<T,FLT>& b );    // y=a, x=b
+
+template< typename T=int64_t, typename FLT=double >              
+static void   polar_to_rect( const freal<T,FLT>& a, const freal<T,FLT>& angle, freal<T,FLT>& x, freal<T,FLT>& y     );  // a=radius
+
+template< typename T=int64_t, typename FLT=double >              
+static void   rect_to_polar( const freal<T,FLT>& a, const freal<T,FLT>& b,     freal<T,FLT>& r, freal<T,FLT>& angle );  // x=a, y=b 
+
+template< typename T=int64_t, typename FLT=double >              
+static freal<T,FLT>  norm( const freal<T,FLT>& a,  const freal<T,FLT>& b );    // x=a, y=b
+
+template< typename T=int64_t, typename FLT=double >              
+static freal<T,FLT>  normh( const freal<T,FLT>& a, const freal<T,FLT>& b );    // x=a, y=b
+
+template< typename T=int64_t, typename FLT=double >              
+static freal<T,FLT>  sinh( const freal<T,FLT>& a );
+
+template< typename T=int64_t, typename FLT=double >              
+static freal<T,FLT>  cosh( const freal<T,FLT>& a );
+
+template< typename T=int64_t, typename FLT=double >              
+static void   sinh_cosh( const freal<T,FLT>& a, freal<T,FLT>& sih, freal<T,FLT>& coh, const freal<T,FLT> * r=nullptr );
+
+template< typename T=int64_t, typename FLT=double >              
+static freal<T,FLT>  tanh( const freal<T,FLT>& a );                                        
+
+template< typename T=int64_t, typename FLT=double >              
+static freal<T,FLT>  asinh( const freal<T,FLT>& a );                                       
+
+template< typename T=int64_t, typename FLT=double >              
+static freal<T,FLT>  acosh( const freal<T,FLT>& a );                                       
+
+template< typename T=int64_t, typename FLT=double >              
+static freal<T,FLT>  atanh( const freal<T,FLT>& a );                                       
+
+template< typename T=int64_t, typename FLT=double >              
+static freal<T,FLT>  atanh2( const freal<T,FLT>& a, const freal<T,FLT>& b );                          
 
 #endif

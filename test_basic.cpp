@@ -21,6 +21,7 @@
 // test_basic.cpp - basic black-box test of Cordic.h math functions
 //
 #include "Cordic.h"
+#include "freal.h"                                      // not used yet, just here to test build
 
 using FLT = double;                                     // later, use a more precise float type
 using T   = int64_t;                                    // integer container to hold encoded numbers
