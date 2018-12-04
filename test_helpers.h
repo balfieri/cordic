@@ -36,7 +36,7 @@ static inline FLT tolerance( uint32_t frac_w, FLT expected, FLT tol, int32_t& to
     //------------------------------------------------------------
     FLT exp_abs = std::fabs( expected );
     tol_lg2 = int32_t( std::log2( tol ) - 0.5 );
-    if ( expected > 1.0 ) tol_lg2 += int32_t( std::log2( expected ) );
+    if ( exp_abs > 1.0 ) tol_lg2 += int32_t( std::log2( exp_abs ) ) + 1;
     return std::pow( 2.0, tol_lg2 );
 }
 
