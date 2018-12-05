@@ -411,8 +411,14 @@ static inline freal<T,FLT>  atanh2( const freal<T,FLT>& a, const freal<T,FLT>& b
 //-----------------------------------------------------
 //-----------------------------------------------------
 
+//-----------------------------------------------------
+// Static Globals
+//-----------------------------------------------------
 template< typename T, typename FLT >              
-const Cordic<T,FLT> * freal<T,FLT>::implicit_cordic = nullptr;
+const Cordic<T,FLT> * freal<T,FLT>::implicit_cordic = nullptr;  // disallow
+
+template< typename T, typename FLT >              
+bool                  freal<T,FLT>::implicit_from = false;      // disallow
 
 //-----------------------------------------------------
 // Constructors
