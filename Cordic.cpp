@@ -394,6 +394,12 @@ FLT Cordic<T,FLT>::to_flt( const T& _x ) const
 }
 
 template< typename T, typename FLT >
+std::string Cordic<T,FLT>::to_string( const T& x ) const
+{
+    return std::to_string( to_flt( x ) );  
+}
+
+template< typename T, typename FLT >
 T Cordic<T,FLT>::make_fixed( bool sign, T i, T f )
 {
     cassert( i >= 0 && i <= maxint()               && "make_fixed integer part must be in range 0 .. maxint()" );

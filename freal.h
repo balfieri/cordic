@@ -64,13 +64,17 @@ public:
     //-----------------------------------------------------
     // Explicit Conversions
     //-----------------------------------------------------
-    FLT    to_flt( void ) const;                        // freal to FLT
+    FLT         to_flt( void ) const;                   // freal to FLT
+    std::string to_string( void ) const;                // freal to std::string
 
     //-----------------------------------------------------
     // Implicit Conversions
     //
     // IMPORTANT: implicit_cordic_set() must be called before 
     // using any implicit conversions.
+    //
+    // The only implicit conversion FROM freal is to std::string.
+    // Use to_flt() above to explicitly convert to FLT.
     //-----------------------------------------------------
     static void implicit_cordic_set( const Cordic<T,FLT> * cordic );
 
@@ -81,7 +85,8 @@ public:
     freal( uint32_t i );
     freal( int32_t i );
 
-    //-----------------------------------------------------
+    operator std::string ();
+
     //-----------------------------------------------------
     // Standard Operators
     //-----------------------------------------------------               
@@ -182,6 +187,10 @@ private:
 //
 namespace std
 {
+
+template< typename T=int64_t, typename FLT=double >              
+static inline std::string   to_string( const freal<T,FLT>& a )
+{ return a.to_string();                 }
 
 template< typename T=int64_t, typename FLT=double >              
 static inline freal<T,FLT>  abs( const freal<T,FLT>& a )
@@ -467,6 +476,10 @@ const Cordic<T,FLT> * freal<T,FLT>::c( const freal<T,FLT>& b, const freal<T,FLT>
 template< typename T, typename FLT >              
 FLT    freal<T,FLT>::to_flt( void ) const                                                               
 { return c()->to_flt( v );              }
+
+template< typename T, typename FLT >              
+std::string freal<T,FLT>::to_string( void ) const                                                               
+{ return c()->to_string( v );           }
 
 //-----------------------------------------------------
 // Implicit Conversions
