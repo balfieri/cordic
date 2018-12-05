@@ -66,7 +66,8 @@ public:
 
     T    add( const T& x, const T& y ) const;                             // x+y 
     T    sub( const T& x, const T& y ) const;                             // x-y 
-    T    mad( const T& x, const T& y, const T addend ) const;             // x*y + addend
+    T    mad( const T& x, const T& y, const T& addend ) const;            // x*y + addend
+    T    fma( const T& x, const T& y, const T& addend ) const;            // mad( x, y, addend )        (same thing)
     T    mul( const T& x, const T& y ) const;                             // x*y 
     T    lshift( const T& x, int y ) const;                               // x << y
     T    rshift( const T& x, int y ) const;                               // x >> y

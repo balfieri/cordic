@@ -99,6 +99,7 @@ public:
     freal  add( const freal& b ) const; 
     freal  sub( const freal& b ) const; 
     freal  mad( const freal& b, const freal& c ) const;             
+    freal  fma( const freal& b, const freal& c ) const;         // same as mad()
     freal  mul( const freal& b ) const;                             
     freal  lshift( int b ) const;
     freal  rshift( int b ) const;
@@ -170,6 +171,10 @@ static inline freal<T,FLT>  sub( const freal<T,FLT>& a, const freal<T,FLT>& b )
 template< typename T=int64_t, typename FLT=double >              
 static inline freal<T,FLT>  mad( const freal<T,FLT>& a, const freal<T,FLT>& b, const freal<T,FLT>& c )  
 { return a.mad( b, c );                 }
+
+template< typename T=int64_t, typename FLT=double >              
+static inline freal<T,FLT>  fma( const freal<T,FLT>& a, const freal<T,FLT>& b, const freal<T,FLT>& c )  
+{ return a.fma( b, c );                 }
 
 template< typename T=int64_t, typename FLT=double >              
 static inline freal<T,FLT>  mul( const freal<T,FLT>& a, const freal<T,FLT>& b )                         

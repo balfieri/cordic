@@ -766,9 +766,15 @@ T Cordic<T,FLT>::mad( const T& _x, const T& _y, const T addend, bool do_reduce )
 }
 
 template< typename T, typename FLT >
-T Cordic<T,FLT>::mad( const T& _x, const T& _y, const T addend ) const
+T Cordic<T,FLT>::mad( const T& _x, const T& _y, const T& addend ) const
 {
     return mad( _x, _y, addend, impl->do_reduce );
+}
+
+template< typename T, typename FLT >
+T Cordic<T,FLT>::fma( const T& x, const T& y, const T& addend ) const
+{
+    return mad( x, y, addend );
 }
 
 template< typename T, typename FLT >
