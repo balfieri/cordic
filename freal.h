@@ -193,7 +193,7 @@ static inline std::string   to_string( const freal<T,FLT>& a )
 { return a.to_string();                 }
 
 template< typename T=int64_t, typename FLT=double >              
-static inline std::ifstream& operator >> ( std::ifstream &in, freal<T,FLT>& a )
+static inline std::istream& operator >> ( std::istream &in, freal<T,FLT>& a )
 { 
     FLT a_f;
     in >> a_f; 
@@ -206,7 +206,7 @@ static inline std::ifstream& operator >> ( std::ifstream &in, freal<T,FLT>& a )
 }
 
 template< typename T=int64_t, typename FLT=double >              
-static inline std::ofstream& operator << ( std::ofstream &out, const freal<T,FLT>& a )
+static inline std::ostream& operator << ( std::ostream &out, const freal<T,FLT>& a )
 { 
     out << a.to_string(); 
     return out;     
