@@ -94,6 +94,8 @@ public:
     //
     // a = *this
     //-----------------------------------------------------               
+    freal  abs( void ) const;
+
     freal  add( const freal& b ) const; 
     freal  sub( const freal& b ) const; 
     freal  mad( const freal& b, const freal& c ) const;             
@@ -152,6 +154,10 @@ private:
 
 // std:xxx() calls should pick these up automatically
 //
+template< typename T=int64_t, typename FLT=double >              
+static inline freal<T,FLT>  abs( const freal<T,FLT>& a )
+{ return a.abs();                       }
+
 template< typename T=int64_t, typename FLT=double >              
 static inline freal<T,FLT>  add( const freal<T,FLT>& a, const freal<T,FLT>& b )                         
 { return a.add( b );                    }
@@ -416,6 +422,10 @@ FLT    freal<T,FLT>::to_flt( void ) const
 //-----------------------------------------------------
 // Standard Operators
 //-----------------------------------------------------               
+template< typename T, typename FLT >              
+inline freal<T,FLT>  freal<T,FLT>::abs( void ) const
+{ return c()->abs( v );                 }
+
 template< typename T, typename FLT >              
 inline freal<T,FLT>  freal<T,FLT>::operator +  ( const freal<T,FLT>& b ) const                          
 { return add( b );                      }

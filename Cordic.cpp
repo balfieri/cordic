@@ -707,12 +707,25 @@ void Cordic<T,FLT>::linear_vectoring( const T& x0, const T& y0, const T& z0, T& 
 }
 
 template< typename T, typename FLT >
+T Cordic<T,FLT>::abs( const T& x ) const
+{
+    T    x_abs  = x;
+    bool x_sign = x_abs < T(0);
+    if ( x_sign ) x_abs = -x;
+    T    sign_mask = x_abs >> (int_w() + frac_w());
+    cassert( (sign_mask == 0 || sign_mask == T(-1)) && "abs caused overflowe" ); 
+    return x_abs;
+}
+
+template< typename T, typename FLT >
 T Cordic<T,FLT>::add( const T& x, const T& y ) const
 {
     bool x_sign = x < T(0);
     bool y_sign = y < T(0);
     T    sum    = x + y;
-    cassert( (x_sign != y_sign || ((sum < T(0)) == x_sign)) && "add causes overflow" ); // needs to also check that all sign bits are the same
+    T    sign_mask = sum >> (int_w() + frac_w());
+    cassert( (x_sign != y_sign || ((sum < T(0)) == x_sign)) && "add caused overflow" );
+    cassert( sign_mask == 0 || sign_mask == T(-1) && "add caused overflow" );
     return sum;
 }
 
@@ -722,7 +735,9 @@ T Cordic<T,FLT>::sub( const T& x, const T& y ) const
     bool x_sign = x < T(0);
     bool y_sign = y < T(0);
     T    sum    = x - y;
-    cassert( (x_sign != y_sign || ((sum < T(0)) == x_sign)) && "sub causes overflow" );
+    T    sign_mask = sum >> (int_w() + frac_w());
+    cassert( (x_sign != y_sign || ((sum < T(0)) == x_sign)) && "sub caused overflow" );
+    cassert( sign_mask == 0 || sign_mask == T(-1) && "sub caused overflow" );
     return sum;
 }
 
