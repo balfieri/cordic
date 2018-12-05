@@ -180,6 +180,9 @@ private:
 
 // std:xxx() calls should pick these up automatically
 //
+namespace std
+{
+
 template< typename T=int64_t, typename FLT=double >              
 static inline freal<T,FLT>  abs( const freal<T,FLT>& a )
 { return a.abs();                       }
@@ -355,6 +358,8 @@ static inline freal<T,FLT>  atanh( const freal<T,FLT>& a )
 template< typename T=int64_t, typename FLT=double >              
 static inline freal<T,FLT>  atanh2( const freal<T,FLT>& a, const freal<T,FLT>& b )                      
 { return a.atanh2( b );                 }
+
+}
 
 //-----------------------------------------------------
 //-----------------------------------------------------
