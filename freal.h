@@ -32,7 +32,10 @@
 //
 //     #include freal.h
 //     using real = freal<>;
-//     [use "real" in the rest of your program]
+//     ...
+//     real f;                                  // undefined, no type yet
+//     f = real( 8, 21, 25.573822 );            // assigned using 1.8.21 fixed-point value 25.573822
+//     real g = f;                              // g copies type and value of f
 //
 #ifndef _freal_h
 #define _freal_h
