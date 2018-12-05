@@ -442,7 +442,6 @@ bool                  freal<T,FLT>::implicit_from = false;      // disallow
 template< typename T, typename FLT >              
 freal<T,FLT>::freal( void )
 {
-    std::cout << "constructor void\n";
     cordic = nullptr;
     v      = T(666);
 }
@@ -450,7 +449,6 @@ freal<T,FLT>::freal( void )
 template< typename T, typename FLT >              
 freal<T,FLT>::freal( const freal& other )
 {
-    std::cout << "constructor freal\n";
     cordic = other.c();
     v      = other.v;
 }
@@ -458,7 +456,6 @@ freal<T,FLT>::freal( const freal& other )
 template< typename T, typename FLT >              
 freal<T,FLT>::freal( const freal& other, FLT f )
 {
-    std::cout << "constructor freal\n";
     cordic = other.c();
     v      = cordic->to_t( f );
 }
@@ -466,7 +463,6 @@ freal<T,FLT>::freal( const freal& other, FLT f )
 template< typename T, typename FLT >              
 freal<T,FLT>::freal( const Cordic<T,FLT> * _cordic, FLT f )
 {
-    std::cout << "constructor cordic\n";
     cordic = _cordic;
     v      = cordic ? cordic->to_t( f ) : T(667);
 }
@@ -553,7 +549,6 @@ void freal<T,FLT>::implicit_from_set( bool allow )
 template< typename T, typename FLT >              
 freal<T,FLT>::freal( double f )
 {
-    std::cout << "constructor double\n";
     cassert( implicit_to != nullptr && "implicit_to_set() must be called before relying on any implicit from double to freal<>" );
     *this = freal( implicit_to, FLT(f) );
 }
@@ -561,7 +556,6 @@ freal<T,FLT>::freal( double f )
 template< typename T, typename FLT >              
 freal<T,FLT>::freal( float f )
 {
-    std::cout << "constructor float \n";
     cassert( implicit_to != nullptr && "implicit_to_set() must be called before relying on any implicit from float to freal<>" );
     *this = freal( implicit_to, FLT(f) );
 }
@@ -569,7 +563,6 @@ freal<T,FLT>::freal( float f )
 template< typename T, typename FLT >              
 freal<T,FLT>::freal( uint64_t i )
 {
-    std::cout << "constructor uint64_t\n";
     cassert( implicit_to != nullptr && "implicit_to_set() must be called before relying on any implicit from uint64_t to freal<>" );
     *this = freal( implicit_to, FLT(i) );
 }
@@ -577,7 +570,6 @@ freal<T,FLT>::freal( uint64_t i )
 template< typename T, typename FLT >              
 freal<T,FLT>::freal( int64_t i )
 {
-    std::cout << "constructor int64_t\n";
     cassert( implicit_to != nullptr && "implicit_to_set() must be called before relying on any implicit from int64_t to freal<>" );
     *this = freal( implicit_to, FLT(i) );
 }
@@ -585,7 +577,6 @@ freal<T,FLT>::freal( int64_t i )
 template< typename T, typename FLT >              
 freal<T,FLT>::freal( uint32_t i )
 {
-    std::cout << "constructor uint32_t\n";
     cassert( implicit_to != nullptr && "implicit_to_set() must be called before relying on any implicit from uint32_t to freal<>" );
     *this = freal( implicit_to, FLT(i) );
 }
@@ -593,7 +584,6 @@ freal<T,FLT>::freal( uint32_t i )
 template< typename T, typename FLT >              
 freal<T,FLT>::freal( int32_t i )
 {
-    std::cout << "constructor int32_t\n";
     cassert( implicit_to != nullptr && "implicit_to_set() must be called before relying on any implicit from int32_t to freal<>" );
     *this = freal( implicit_to, FLT(i) );
 }
