@@ -313,7 +313,7 @@ static inline void   polar_to_rect( const freal<T,FLT>& a, const freal<T,FLT>& a
 
 template< typename T=int64_t, typename FLT=double >              
 static inline void   rect_to_polar( const freal<T,FLT>& a, const freal<T,FLT>& b,     freal<T,FLT>& r, freal<T,FLT>& angle )  
-{ rect_to_polar( b, r, angle );         }
+{ a.rect_to_polar( b, r, angle );       }
 
 template< typename T=int64_t, typename FLT=double >              
 static inline freal<T,FLT>  norm( const freal<T,FLT>& a,  const freal<T,FLT>& b )                       
@@ -419,6 +419,9 @@ template< typename T, typename FLT >
 freal<T,FLT> freal<T,FLT>::make_float( uint32_t exp_w, uint32_t frac_w, FLT init_f )
 {
     cassert( false && "can't encode floating-point values right now" );
+    (void)exp_w;   // unused
+    (void)frac_w;
+    (void)init_f;
     return freal();
 }
 

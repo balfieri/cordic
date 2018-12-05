@@ -11,7 +11,8 @@ my $opt = ($debug_level <= 0) ? "3" : "0";
 
 my $CFLAGS = "-std=c++17 -Wextra -Wstrict-aliasing -pedantic -Werror -Wcast-align -Wcast-qual -Wctor-dtor-privacy -Wdisabled-optimization -Wformat=2 -Winit-self -Wmissing-include-dirs -Wold-style-cast -Woverloaded-virtual -Wredundant-decls -Wshadow -Wsign-promo -Wstrict-overflow=5 -Wswitch-default -Wundef -O${opt} -g -DDEBUG_LEVEL=${debug_level}";
 `uname` !~ /Darwin/ and $CFLAGS .= " -Wlogical-op -Wstrict-null-sentinel";
-`uname` =~ /Darwin/ and $CFLAGS .= " -Wno-unused-parameter -Wno-shift-negative-value -Wno-c++14-binary-literal -ferror-limit=10 -DNO_FMT_LLU";
+#`uname` =~ /Darwin/ and $CFLAGS .= " -Wno-unused-parameter -Wno-shift-negative-value -Wno-c++14-binary-literal -ferror-limit=10 -DNO_FMT_LLU";
+`uname` =~ /Darwin/ and $CFLAGS .= " -Wno-shift-negative-value -Wno-c++14-binary-literal -ferror-limit=10 -DNO_FMT_LLU";
 
 system( "rm -f ${prog}.o ${prog} Cordic.o" );
 system( "g++ -g -o ${prog}.o ${CFLAGS} -c ${prog}.cpp" ) == 0 or die "ERROR: compile failed\n";
