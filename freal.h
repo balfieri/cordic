@@ -71,12 +71,13 @@ public:
     // Implicit Conversions
     //
     // IMPORTANT: implicit_cordic_set() must be called before 
-    // using any implicit conversions.
+    // using any implicit conversions TO freal.
     //
-    // The only implicit conversion FROM freal is to std::string.
-    // Use to_flt() above to explicitly convert to FLT.
+    // IMPORTANT: implicit_from_set() must be called before
+    // using any implicit conversions FROM freal.
     //-----------------------------------------------------
     static void implicit_cordic_set( const Cordic<T,FLT> * cordic );
+    static void implicit_from_set( bool allow );
 
     freal( float f );
     freal( double f );
@@ -85,7 +86,12 @@ public:
     freal( uint32_t i );
     freal( int32_t i );
 
-    operator std::string ();
+    operator float( void );
+    operator double( void );
+    operator uint64_t( void );
+    operator int64_t( void );
+    operator uint32_t( void );
+    operator int32_t( void );
 
     //-----------------------------------------------------
     // Standard Operators
@@ -174,6 +180,7 @@ public:
 
 private:
     static const Cordic<T,FLT> * implicit_cordic;
+    static bool                  implicit_from;
 
     const Cordic<T,FLT> *       cordic;         // defines the type and most operations
     T                           v;              // this value encoded in type T
@@ -511,6 +518,12 @@ void freal<T,FLT>::implicit_cordic_set( const Cordic<T,FLT> * cordic )
 }
 
 template< typename T, typename FLT >              
+void freal<T,FLT>::implicit_from_set( bool allow )
+{ 
+    implicit_from = allow;
+}
+
+template< typename T, typename FLT >              
 freal<T,FLT>::freal( double f )
 {
     cassert( implicit_cordic != nullptr && "implicit_cordic_set() must be called before relying any implicit from double to freal<>" );
@@ -550,6 +563,48 @@ freal<T,FLT>::freal( int32_t i )
 {
     cassert( implicit_cordic != nullptr && "implicit_cordic_set() must be called before relying any implicit from int32_t to freal<>" );
     return freal( implicit_cordic, FLT(i) );
+}
+
+template< typename T, typename FLT >              
+freal<T,FLT>::operator double( void )
+{ 
+    cassert( implicit_from && "implicit_from_set( true ) must be called before relying any implicit from freal<> to double" );
+    return to_flt();
+}
+
+template< typename T, typename FLT >              
+freal<T,FLT>::operator float( void )
+{ 
+    cassert( implicit_from && "implicit_from_set( true ) must be called before relying any implicit from freal<> to float" );
+    return to_flt();
+}
+
+template< typename T, typename FLT >              
+freal<T,FLT>::operator uint64_t( void )
+{ 
+    cassert( implicit_from && "implicit_from_set( true ) must be called before relying any implicit from freal<> to uint64_t" );
+    return uint64_t( to_flt() );
+}
+
+template< typename T, typename FLT >              
+freal<T,FLT>::operator int64_t( void )
+{ 
+    cassert( implicit_from && "implicit_from_set( true ) must be called before relying any implicit from freal<> to int64_t" );
+    return int64_t( to_flt() );
+}
+
+template< typename T, typename FLT >              
+freal<T,FLT>::operator uint32_t( void )
+{ 
+    cassert( implicit_from && "implicit_from_set( true ) must be called before relying any implicit from freal<> to uint32_t" );
+    return uint32_t( to_flt() );
+}
+
+template< typename T, typename FLT >              
+freal<T,FLT>::operator int32_t( void )
+{ 
+    cassert( implicit_from && "implicit_from_set( true ) must be called before relying any implicit from freal<> to int32_t" );
+    return int32_t( to_flt() );
 }
 
 //-----------------------------------------------------
