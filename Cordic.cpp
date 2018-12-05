@@ -1199,6 +1199,12 @@ T Cordic<T,FLT>::norm( const T& x, const T& y ) const
 }
 
 template< typename T, typename FLT >
+T Cordic<T,FLT>::hypot( const T& x, const T& y ) const
+{
+    return norm( x, y, impl->do_reduce );
+}
+
+template< typename T, typename FLT >
 T Cordic<T,FLT>::norm( const T& _x, const T& _y, bool do_reduce ) const
 {
     T x = _x;

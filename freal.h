@@ -132,6 +132,7 @@ public:
     void   polar_to_rect( const freal& angle, freal& x, freal& y     ) const;  // a=radius
     void   rect_to_polar( const freal& b,     freal& r, freal& angle ) const;  // x=a, y=b 
     freal  norm(  const freal& b ) const;    // x=a, y=b
+    freal  hypot( const freal& b ) const;    // same as norm()
     freal  normh( const freal& b ) const;    // x=a, y=b
 
     freal  sinh( void ) const;
@@ -280,6 +281,10 @@ static inline void   rect_to_polar( const freal<T,FLT>& a, const freal<T,FLT>& b
 
 template< typename T=int64_t, typename FLT=double >              
 static inline freal<T,FLT>  norm( const freal<T,FLT>& a,  const freal<T,FLT>& b )                       
+{ return a.norm( b );                   }
+
+template< typename T=int64_t, typename FLT=double >              
+static inline freal<T,FLT>  hypot( const freal<T,FLT>& a, const freal<T,FLT>& b )                       
 { return a.norm( b );                   }
 
 template< typename T=int64_t, typename FLT=double >              
@@ -644,6 +649,10 @@ inline void freal<T,FLT>::rect_to_polar( const freal<T,FLT>& b,     freal<T,FLT>
 template< typename T, typename FLT >              
 inline freal<T,FLT> freal<T,FLT>::norm(  const freal<T,FLT>& b ) const                                  
 { return c( b )->norm( v, b.v );                }
+
+template< typename T, typename FLT >              
+inline freal<T,FLT> freal<T,FLT>::hypot(  const freal<T,FLT>& b ) const                                  
+{ return c( b )->hypot( v, b.v );               }
 
 template< typename T, typename FLT >              
 inline freal<T,FLT> freal<T,FLT>::normh( const freal<T,FLT>& b ) const                                  

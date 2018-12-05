@@ -99,6 +99,7 @@ public:
     void polar_to_rect( const T& r, const T& a, T& x, T& y ) const;       // sin_cos(a, x, y, &r)  
     void rect_to_polar( const T& x, const T& y, T& r, T& a ) const;       // r=sqrt(x^2 + y^2), a=atan2(y, x)
     T    norm( const T& x, const T& y ) const;                            // sqrt(x^2 + y^2)
+    T    hypot( const T& x, const T& y ) const;                           // norm(x, y);  (same thing)
     T    normh( const T& x, const T& y ) const;                           // sqrt(x^2 - y^2)
 
     T    sinh( const T& x, const T * r=nullptr ) const;                   // r*sinh(x), also r*(e^x - e^-x)/2  (default r is 1)
