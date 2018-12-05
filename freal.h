@@ -193,6 +193,26 @@ static inline std::string   to_string( const freal<T,FLT>& a )
 { return a.to_string();                 }
 
 template< typename T=int64_t, typename FLT=double >              
+static inline std::ifstream& operator >> ( std::ifstream &in, freal<T,FLT>& a )
+{ 
+    FLT a_f;
+    in >> a_f; 
+    if ( a.cordic != nullptr ) {
+        a = freal( a.cordic, a_f );   // use a's current format
+    } else {
+        a = a_f;                      // rely on implicit conversion, if it's currently allowed 
+    }
+    return in;
+}
+
+template< typename T=int64_t, typename FLT=double >              
+static inline std::ofstream& operator << ( std::ofstream &out, const freal<T,FLT>& a )
+{ 
+    out << a.to_string(); 
+    return out;     
+}
+
+template< typename T=int64_t, typename FLT=double >              
 static inline freal<T,FLT>  abs( const freal<T,FLT>& a )
 { return a.abs();                       }
 
