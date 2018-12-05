@@ -542,7 +542,7 @@ bool   freal<T,FLT>::operator >= ( const freal<T,FLT>& b ) const
 
 template< typename T, typename FLT >              
 inline freal<T,FLT> freal<T,FLT>::add( const freal<T,FLT>& b ) const                                    
-{ return c( b )->add( v, b.v );         }
+{ return c( b )->add( v, b.v );                 }
 
 template< typename T, typename FLT >              
 inline freal<T,FLT> freal<T,FLT>::sub( const freal<T,FLT>& b ) const                                    
