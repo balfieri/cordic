@@ -634,22 +634,6 @@ freal<T,FLT>::operator int32_t( void )
 // Standard Operators
 //-----------------------------------------------------               
 template< typename T, typename FLT >              
-inline freal<T,FLT>  freal<T,FLT>::abs( void ) const
-{ return c()->abs( v );                 }
-
-template< typename T, typename FLT >              
-inline freal<T,FLT>  freal<T,FLT>::neg( void ) const
-{ return c()->neg( v );                 }
-
-template< typename T, typename FLT >              
-inline freal<T,FLT>  freal<T,FLT>::floor( void ) const
-{ return c()->floor( v );               }
-
-template< typename T, typename FLT >              
-inline freal<T,FLT>  freal<T,FLT>::ceil( void ) const
-{ return c()->ceil( v );               }
-
-template< typename T, typename FLT >              
 inline freal<T,FLT>  freal<T,FLT>::operator -  () const 
 { return neg();                         }
 
@@ -740,92 +724,238 @@ bool   freal<T,FLT>::operator >= ( const freal<T,FLT>& b ) const
 //-----------------------------------------------------               
 
 template< typename T, typename FLT >              
+inline freal<T,FLT>  freal<T,FLT>::abs( void ) const
+{ 
+    freal r;
+    r.cordic = c();
+    r.v      = r.cordic->abs( v );
+    return r;
+}
+
+template< typename T, typename FLT >              
+inline freal<T,FLT>  freal<T,FLT>::neg( void ) const
+{ 
+    freal r;
+    r.cordic = c();
+    r.v      = r.cordic->neg( v );
+    return r;
+}
+
+template< typename T, typename FLT >              
+inline freal<T,FLT>  freal<T,FLT>::floor( void ) const
+{ 
+    freal r;
+    r.cordic = c();
+    r.v      = r.cordic->floor( v );
+    return r;
+}
+
+template< typename T, typename FLT >              
+inline freal<T,FLT>  freal<T,FLT>::ceil( void ) const
+{ 
+    freal r;
+    r.cordic = c();
+    r.v      = r.cordic->ceil( v );
+    return r;
+}
+
+template< typename T, typename FLT >              
 inline freal<T,FLT> freal<T,FLT>::add( const freal<T,FLT>& b ) const                                    
-{ return c( b )->add( v, b.v );                 }
+{ 
+    freal r;
+    r.cordic = c( b );
+    r.v      = r.cordic->add( v, b.v );
+    return r;
+}
 
 template< typename T, typename FLT >              
 inline freal<T,FLT> freal<T,FLT>::sub( const freal<T,FLT>& b ) const                                    
-{ return c( b )->sub( v, b.v );                 }
+{ 
+    freal r;
+    r.cordic = c( b );
+    r.v      = r.cordic->sub( v, b.v );
+    return r;
+}
 
 template< typename T, typename FLT >              
 inline freal<T,FLT> freal<T,FLT>::mad( const freal<T,FLT>& b, const freal<T,FLT>& c ) const             
-{ return c( b, c )->mad( v, b.v, c.v );         }
+{ 
+    freal r;
+    r.cordic = c( b, c );
+    r.v      = r.cordic->mad( v, b.v, c.v );
+    return r;
+}
 
 template< typename T, typename FLT >              
 inline freal<T,FLT> freal<T,FLT>::mul( const freal<T,FLT>& b ) const                                    
-{ return c( b )->mul( v, b.v );                 }
+{ 
+    freal r;
+    r.cordic = c( b );
+    r.v      = r.cordic->mul( v, b.v );
+    return r;
+}
 
 template< typename T, typename FLT >              
 inline freal<T,FLT> freal<T,FLT>::sqr( void ) const                                                     
-{ return c()->sqr( v );                         }
+{ 
+    freal r;
+    r.cordic = c();
+    r.v      = r.cordic->sqr( v );
+    return r;
+}
 
 template< typename T, typename FLT >              
 inline freal<T,FLT> freal<T,FLT>::dad( const freal<T,FLT>& b, const freal<T,FLT>& c ) const             
-{ return c( b, c )->dad( v, b.v, c.v );         }
+{ 
+    freal r;
+    r.cordic = c( b, c );
+    r.v      = r.cordic->dad( v, b.v, c.v );
+    return r;
+}
 
 template< typename T, typename FLT >              
 inline freal<T,FLT> freal<T,FLT>::div( const freal<T,FLT>& b ) const                                    
-{ return c( b )->div( v, b.v );                 }
+{ 
+    freal r;
+    r.cordic = c( b );
+    r.v      = r.cordic->div( v, b.v );
+    return r;
+}
 
 template< typename T, typename FLT >              
 inline freal<T,FLT> freal<T,FLT>::one_over( void ) const                                                
-{ return c()->one_over( v );                    }
+{ 
+    freal r;
+    r.cordic = c();
+    r.v      = r.cordic->one_over( v );
+    return r;
+}
 
 template< typename T, typename FLT >              
 inline freal<T,FLT> freal<T,FLT>::sqrt( void ) const                                                    
-{ return c()->sqrt( v );                        }
+{ 
+    freal r;
+    r.cordic = c();
+    r.v      = r.cordic->sqrt( v );
+    return r;
+}
 
 template< typename T, typename FLT >              
 inline freal<T,FLT> freal<T,FLT>::one_over_sqrt( void ) const                                           
-{ return c()->one_over_sqrt( v );               }
+{ 
+    freal r;
+    r.cordic = c();
+    r.v      = r.cordic->one_over_sqrt( v );
+    return r;
+}
 
 template< typename T, typename FLT >              
 inline freal<T,FLT> freal<T,FLT>::exp( void ) const                                                     
-{ return c()->exp( v );                         }
+{ 
+    freal r;
+    r.cordic = c();
+    r.v      = r.cordic->exp( v );
+    return r;
+}
 
 template< typename T, typename FLT >              
 inline freal<T,FLT> freal<T,FLT>::pow( const freal<T,FLT>& e ) const                                    
-{ return c( e )->pow( v, e.v );                 }
+{ 
+    freal r;
+    r.cordic = c( e );
+    r.v      = r.cordic->pow( v, e.v );
+    return r;
+}
 
 template< typename T, typename FLT >              
 inline freal<T,FLT> freal<T,FLT>::powc( const FLT c ) const                                             
-{ return c( c )->pow( c.v, v );                 }
+{ 
+    freal r;
+    r.cordic = c( c );
+    r.v      = r.cordic->powc( v, c.v );
+    return r;
+}
 
 template< typename T, typename FLT >              
 inline freal<T,FLT> freal<T,FLT>::pow2( void ) const                                                    
-{ return c()->pow2( v );                        }
+{ 
+    freal r;
+    r.cordic = c();
+    r.v      = r.cordic->pow2( v );
+    return r;
+}
 
 template< typename T, typename FLT >              
 inline freal<T,FLT> freal<T,FLT>::pow10( void ) const                                                   
-{ return c()->pow10( v );                       }
+{ 
+    freal r;
+    r.cordic = c();
+    r.v      = r.cordic->pow10( v );
+    return r;
+}
 
 template< typename T, typename FLT >              
 inline freal<T,FLT> freal<T,FLT>::log( void ) const                                                     
-{ return c()->log( v );                         }
+{ 
+    freal r;
+    r.cordic = c();
+    r.v      = r.cordic->log( v );
+    return r;
+}
 
 template< typename T, typename FLT >             
 inline freal<T,FLT> freal<T,FLT>::logb( const freal<T,FLT>& b ) const                                   
-{ return c( b )->logb( v );                     }
+{ 
+    freal r;
+    r.cordic = c( b );
+    r.v      = r.cordic->logb( b.v, v );
+    return r;
+}
 
 template< typename T, typename FLT >              
 inline freal<T,FLT> freal<T,FLT>::logc( const FLT c ) const                                             
-{ return c()->logc( v, c );                     }
+{ 
+    freal r;
+    r.cordic = c();
+    r.v      = r.cordic->logc( c, v );
+    return r;
+}
 
 template< typename T, typename FLT >              
 inline freal<T,FLT> freal<T,FLT>::log2( void ) const                                                    
-{ return c()->log2( v );                        }
+{ 
+    freal r;
+    r.cordic = c();
+    r.v      = r.cordic->log2( v );
+    return r;
+}
 
 template< typename T, typename FLT >              
 inline freal<T,FLT> freal<T,FLT>::log10( void ) const                                                   
-{ return c()->log10( v );                       }
+{ 
+    freal r;
+    r.cordic = c();
+    r.v      = r.cordic->log10( v );
+    return r;
+}
 
 template< typename T, typename FLT >              
 inline freal<T,FLT> freal<T,FLT>::sin( void ) const                                                     
-{ return c()->sin( v );                         }
+{ 
+    freal r;
+    r.cordic = c();
+    r.v      = r.cordic->sin( v );
+    return r;
+}
 
 template< typename T, typename FLT >              
 inline freal<T,FLT> freal<T,FLT>::cos( void ) const                                                     
-{ return c()->cos( v );                         }
+{ 
+    freal r;
+    r.cordic = c();
+    r.v      = r.cordic->cos( v );
+    return r;
+}
 
 template< typename T, typename FLT >              
 inline void freal<T,FLT>::sin_cos( freal<T,FLT>& si, freal<T,FLT>& co ) const                           
@@ -836,23 +966,48 @@ inline void freal<T,FLT>::sin_cos( freal<T,FLT>& si, freal<T,FLT>& co ) const
 
 template< typename T, typename FLT >              
 inline freal<T,FLT> freal<T,FLT>::tan( void ) const                                                     
-{ return c()->tan( v );                         }
+{ 
+    freal r;
+    r.cordic = c();
+    r.v      = r.cordic->tan( v );
+    return r;
+}
 
 template< typename T, typename FLT >                                                     
 inline freal<T,FLT> freal<T,FLT>::asin( void ) const                                                    
-{ return c()->asin( v );                        }
+{ 
+    freal r;
+    r.cordic = c();
+    r.v      = r.cordic->asin( v );
+    return r;
+}
 
 template< typename T, typename FLT >              
 inline freal<T,FLT> freal<T,FLT>::acos( void ) const                                                    
-{ return c()->acos( v );                        }
+{ 
+    freal r;
+    r.cordic = c();
+    r.v      = r.cordic->acos( v );
+    return r;
+}
 
 template< typename T, typename FLT >                                     
 inline freal<T,FLT> freal<T,FLT>::atan( void ) const                                                    
-{ return c()->atan( v );                        }
+{ 
+    freal r;
+    r.cordic = c();
+    r.v      = r.cordic->atan( v );
+    return r;
+}
 
 template< typename T, typename FLT >              
 inline freal<T,FLT> freal<T,FLT>::atan2( const freal<T,FLT>& b ) const                                  
-{ return c( b )->atan2( v, b.v );               }
+{ 
+    freal r;
+    r.cordic = c( b );
+    r.v      = r.cordic->atan2( v, b.v );
+    return r;
+}
 
 template< typename T, typename FLT >              
 inline void freal<T,FLT>::polar_to_rect( const freal<T,FLT>& angle, freal<T,FLT>& x, freal<T,FLT>& y ) const    
@@ -870,23 +1025,48 @@ inline void freal<T,FLT>::rect_to_polar( const freal<T,FLT>& b,     freal<T,FLT>
 
 template< typename T, typename FLT >              
 inline freal<T,FLT> freal<T,FLT>::norm(  const freal<T,FLT>& b ) const                                  
-{ return c( b )->norm( v, b.v );                }
+{ 
+    freal r;
+    r.cordic = c( b );
+    r.v      = r.cordic->norm( v, b.v );
+    return r;
+}
 
 template< typename T, typename FLT >              
 inline freal<T,FLT> freal<T,FLT>::hypot(  const freal<T,FLT>& b ) const                                  
-{ return c( b )->hypot( v, b.v );               }
+{ 
+    freal r;
+    r.cordic = c( b );
+    r.v      = r.cordic->hypot( v, b.v );
+    return r;
+}
 
 template< typename T, typename FLT >              
 inline freal<T,FLT> freal<T,FLT>::normh( const freal<T,FLT>& b ) const                                  
-{ return c( b )->normh( v, b.v );               }
+{ 
+    freal r;
+    r.cordic = c( b );
+    r.v      = r.cordic->normh( v, b.v );
+    return r;
+}
 
 template< typename T, typename FLT >              
 inline freal<T,FLT> freal<T,FLT>::sinh( void ) const                                                    
-{ return c()->sinh( v );                        }
+{ 
+    freal r;
+    r.cordic = c();
+    r.v      = r.cordic->sinh( v );
+    return r;
+}
 
 template< typename T, typename FLT >              
 inline freal<T,FLT> freal<T,FLT>::cosh( void ) const                                                    
-{ return c()->cosh( v );                        }
+{ 
+    freal r;
+    r.cordic = c();
+    r.v      = r.cordic->cosh( v );
+    return r;
+}
 
 template< typename T, typename FLT >              
 inline void freal<T,FLT>::sinh_cosh( freal<T,FLT>& sih, freal<T,FLT>& coh ) const                       
@@ -897,22 +1077,47 @@ inline void freal<T,FLT>::sinh_cosh( freal<T,FLT>& sih, freal<T,FLT>& coh ) cons
 
 template< typename T, typename FLT >              
 inline freal<T,FLT> freal<T,FLT>::tanh( void ) const                                                    
-{ return c()->tanh( v );                        }
+{ 
+    freal r;
+    r.cordic = c();
+    r.v      = r.cordic->tanh( v );
+    return r;
+}
 
 template< typename T, typename FLT >              
 inline freal<T,FLT> freal<T,FLT>::asinh( void ) const                                                   
-{ return c()->asinh( v );                       }
+{ 
+    freal r;
+    r.cordic = c();
+    r.v      = r.cordic->asinh( v );
+    return r;
+}
 
 template< typename T, typename FLT >              
 inline freal<T,FLT> freal<T,FLT>::acosh( void ) const                                                   
-{ return c()->acosh( v );                       }
+{ 
+    freal r;
+    r.cordic = c();
+    r.v      = r.cordic->acosh( v );
+    return r;
+}
 
 template< typename T, typename FLT >              
 inline freal<T,FLT> freal<T,FLT>::atanh( void ) const                                                   
-{ return c()->atanh( v );                       }
+{ 
+    freal r;
+    r.cordic = c();
+    r.v      = r.cordic->atanh( v );
+    return r;
+}
 
 template< typename T, typename FLT >              
 inline freal<T,FLT> freal<T,FLT>::atanh2( const freal<T,FLT>& b ) const                                 
-{ return c( b )->atanh2( v, b.v );              }
+{ 
+    freal r;
+    r.cordic = c( b );
+    r.v      = r.cordic->atanh2( v, b.v );
+    return r;
+}
 
 #endif // _freal_h
