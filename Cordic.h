@@ -63,6 +63,7 @@ public:
     // (2) means requires 2 applications of a CORDIC algorithm.              functionality
     //-----------------------------------------------------               ---------------------------
     T    abs( const T& x ) const;                                         // |x|
+    T    neg( const T& x ) const;                                         // -x
 
     T    add( const T& x, const T& y ) const;                             // x+y 
     T    sub( const T& x, const T& y ) const;                             // x-y 

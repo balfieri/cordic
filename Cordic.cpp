@@ -713,8 +713,18 @@ T Cordic<T,FLT>::abs( const T& x ) const
     bool x_sign = x_abs < T(0);
     if ( x_sign ) x_abs = -x;
     T    sign_mask = x_abs >> (int_w() + frac_w());
-    cassert( (sign_mask == 0 || sign_mask == T(-1)) && "abs caused overflowe" ); 
+    cassert( (sign_mask == T(0) || sign_mask == T(-1)) && "abs caused overflow" ); 
     return x_abs;
+}
+
+template< typename T, typename FLT >
+T Cordic<T,FLT>::neg( const T& x ) const
+{
+    bool x_sign = x < 0;
+    T    x_neg  = -x;
+    T    sign_mask = x_neg >> (int_w() + frac_w());
+    cassert( sign_mask == (x_sign ? T(0) : T(-1)) && "neg caused overflow" ); 
+    return x_neg;
 }
 
 template< typename T, typename FLT >
@@ -725,7 +735,7 @@ T Cordic<T,FLT>::add( const T& x, const T& y ) const
     T    sum    = x + y;
     T    sign_mask = sum >> (int_w() + frac_w());
     cassert( (x_sign != y_sign || ((sum < T(0)) == x_sign)) && "add caused overflow" );
-    cassert( sign_mask == 0 || sign_mask == T(-1) && "add caused overflow" );
+    cassert( sign_mask == T(0) || sign_mask == T(-1) && "add caused overflow" );
     return sum;
 }
 

@@ -66,6 +66,8 @@ public:
     //-----------------------------------------------------
     // Standard Operators
     //-----------------------------------------------------               
+    freal  operator -  ()                 const;                // unary
+
     freal  operator +  ( const freal& b ) const;
     freal  operator -  ( const freal& b ) const;
     freal  operator *  ( const freal& b ) const;
@@ -95,6 +97,7 @@ public:
     // a = *this
     //-----------------------------------------------------               
     freal  abs( void ) const;
+    freal  neg( void ) const; 
 
     freal  add( const freal& b ) const; 
     freal  sub( const freal& b ) const; 
@@ -159,6 +162,10 @@ private:
 template< typename T=int64_t, typename FLT=double >              
 static inline freal<T,FLT>  abs( const freal<T,FLT>& a )
 { return a.abs();                       }
+
+template< typename T=int64_t, typename FLT=double >              
+static inline freal<T,FLT>  neg( const freal<T,FLT>& a )
+{ return a.neg();                       }
 
 template< typename T=int64_t, typename FLT=double >              
 static inline freal<T,FLT>  add( const freal<T,FLT>& a, const freal<T,FLT>& b )                         
@@ -435,6 +442,14 @@ FLT    freal<T,FLT>::to_flt( void ) const
 template< typename T, typename FLT >              
 inline freal<T,FLT>  freal<T,FLT>::abs( void ) const
 { return c()->abs( v );                 }
+
+template< typename T, typename FLT >              
+inline freal<T,FLT>  freal<T,FLT>::neg( void ) const
+{ return c()->neg( v );                 }
+
+template< typename T, typename FLT >              
+inline freal<T,FLT>  freal<T,FLT>::operator -  () const 
+{ return neg();                         }
 
 template< typename T, typename FLT >              
 inline freal<T,FLT>  freal<T,FLT>::operator +  ( const freal<T,FLT>& b ) const                          
