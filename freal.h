@@ -40,7 +40,7 @@
 #ifndef _freal_h
 #define _freal_h
 
-#include "Misc.h"
+#include "Cordic.h"
 
 // T      = some signed integer type that can hold fixed-point values (default is int64_t)
 // FLT    = some floating-point type that can hold constants of the desired precision (default is double)
