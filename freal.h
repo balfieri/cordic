@@ -69,7 +69,7 @@ public:
     //-----------------------------------------------------
     // Standard Operators
     //-----------------------------------------------------               
-    freal  operator -  ()                 const;                // unary
+    freal  operator -  ()                 const;                // -x
 
     freal  operator +  ( const freal& b ) const;
     freal  operator -  ( const freal& b ) const;
