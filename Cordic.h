@@ -21,7 +21,12 @@
 #ifndef _Cordic_h
 #define _Cordic_h
 
-#include "Misc.h"
+#include <cmath>
+#include <iostream>
+#include <iomanip>
+
+#define cassert(expr) if ( !(expr) ) { printf( "ERROR: assertion failure: '%s' at %s:%d\n", #expr, __FILE__, __LINE__ ); exit( 1 ); }
+
 
 // T      = some signed integer type that can hold fixed-point values (default is int64_t)
 // FLT    = some floating-point type that can hold constants of the desired precision (default is double)
