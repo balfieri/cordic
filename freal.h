@@ -62,10 +62,26 @@ public:
     ~freal();
 
     //-----------------------------------------------------
-    // Conversions
+    // Explicit Conversions
     //-----------------------------------------------------
     FLT    to_flt( void ) const;                        // freal to FLT
 
+    //-----------------------------------------------------
+    // Implicit Conversions
+    //
+    // IMPORTANT: implicit_cordic_set() must be called before 
+    // using any implicit conversions.
+    //-----------------------------------------------------
+    static void implicit_cordic_set( const Cordic<T,FLT> * cordic );
+
+    freal( float f );
+    freal( double f );
+    freal( uint64_t i );
+    freal( int64_t i );
+    freal( uint32_t i );
+    freal( int32_t i );
+
+    //-----------------------------------------------------
     //-----------------------------------------------------
     // Standard Operators
     //-----------------------------------------------------               
@@ -152,6 +168,8 @@ public:
     freal  atanh2( const freal& b ) const;   // atanh2( a, b )
 
 private:
+    static const Cordic<T,FLT> * implicit_cordic;
+
     const Cordic<T,FLT> *       cordic;         // defines the type and most operations
     T                           v;              // this value encoded in type T
 
@@ -352,6 +370,9 @@ static inline freal<T,FLT>  atanh2( const freal<T,FLT>& a, const freal<T,FLT>& b
 //-----------------------------------------------------
 //-----------------------------------------------------
 
+template< typename T, typename FLT >              
+const Cordic<T,FLT> * freal<T,FLT>::implicit_cordic = nullptr;
+
 //-----------------------------------------------------
 // Constructors
 //-----------------------------------------------------
@@ -433,11 +454,62 @@ const Cordic<T,FLT> * freal<T,FLT>::c( const freal<T,FLT>& b, const freal<T,FLT>
 }
 
 //-----------------------------------------------------
-// Conversions
+// Explicit Conversions
 //-----------------------------------------------------
 template< typename T, typename FLT >              
 FLT    freal<T,FLT>::to_flt( void ) const                                                               
 { return c()->to_flt( v );              }
+
+//-----------------------------------------------------
+// Implicit Conversions
+//-----------------------------------------------------
+template< typename T, typename FLT >              
+void freal<T,FLT>::implicit_cordic_set( const Cordic<T,FLT> * cordic )
+{ 
+    implicit_cordic = cordic;
+}
+
+template< typename T, typename FLT >              
+freal<T,FLT>::freal( double f )
+{
+    cassert( implicit_cordic != nullptr && "implicit_cordic_set() must be called before relying any implicit from double to freal<>" );
+    return freal( implicit_cordic, FLT(f) );
+}
+
+template< typename T, typename FLT >              
+freal<T,FLT>::freal( float f )
+{
+    cassert( implicit_cordic != nullptr && "implicit_cordic_set() must be called before relying any implicit from float to freal<>" );
+    return freal( implicit_cordic, FLT(f) );
+}
+
+template< typename T, typename FLT >              
+freal<T,FLT>::freal( uint64_t i )
+{
+    cassert( implicit_cordic != nullptr && "implicit_cordic_set() must be called before relying any implicit from uint64_t to freal<>" );
+    return freal( implicit_cordic, FLT(i) );
+}
+
+template< typename T, typename FLT >              
+freal<T,FLT>::freal( int64_t i )
+{
+    cassert( implicit_cordic != nullptr && "implicit_cordic_set() must be called before relying any implicit from int64_t to freal<>" );
+    return freal( implicit_cordic, FLT(i) );
+}
+
+template< typename T, typename FLT >              
+freal<T,FLT>::freal( uint32_t i )
+{
+    cassert( implicit_cordic != nullptr && "implicit_cordic_set() must be called before relying any implicit from uint32_t to freal<>" );
+    return freal( implicit_cordic, FLT(i) );
+}
+
+template< typename T, typename FLT >              
+freal<T,FLT>::freal( int32_t i )
+{
+    cassert( implicit_cordic != nullptr && "implicit_cordic_set() must be called before relying any implicit from int32_t to freal<>" );
+    return freal( implicit_cordic, FLT(i) );
+}
 
 //-----------------------------------------------------
 // Standard Operators
