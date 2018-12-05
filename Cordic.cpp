@@ -734,6 +734,32 @@ T Cordic<T,FLT>::neg( const T& x ) const
 }
 
 template< typename T, typename FLT >
+T Cordic<T,FLT>::floor( const T& x ) const
+{
+    T frac_mask = (T(1) << frac_w()) - 1;
+    if ( (x & frac_mask) == 0 ) {
+        return x;
+    } else if ( x > 0 ) {
+        return x & ~frac_mask;
+    } else {
+        return (x & ~frac_mask) - one();
+    }
+}
+
+template< typename T, typename FLT >
+T Cordic<T,FLT>::ceil( const T& x ) const
+{
+    T frac_mask = (T(1) << frac_w()) - 1;
+    if ( (x & frac_mask) == 0 ) {
+        return x;
+    } else if ( x > 0 ) {
+        return (x & ~frac_mask) + one();
+    } else {
+        return x & ~frac_mask;
+    }
+}
+
+template< typename T, typename FLT >
 T Cordic<T,FLT>::add( const T& x, const T& y ) const
 {
     bool x_sign = x < T(0);

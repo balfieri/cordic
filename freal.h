@@ -124,10 +124,14 @@ public:
     //-----------------------------------------------------
     // Well-Known Math Operators and Functions 
     //
+    // See Cordic.h for functionality of each of these.
+    //
     // a = *this
     //-----------------------------------------------------               
     freal  abs( void ) const;
     freal  neg( void ) const; 
+    freal  floor( void ) const;
+    freal  ceil( void ) const;
 
     freal  add( const freal& b ) const; 
     freal  sub( const freal& b ) const; 
@@ -226,6 +230,14 @@ static inline freal<T,FLT>  abs( const freal<T,FLT>& a )
 template< typename T=int64_t, typename FLT=double >              
 static inline freal<T,FLT>  neg( const freal<T,FLT>& a )
 { return a.neg();                       }
+
+template< typename T=int64_t, typename FLT=double >              
+static inline freal<T,FLT>  floor( const freal<T,FLT>& a )
+{ return a.floor();                     }
+
+template< typename T=int64_t, typename FLT=double >              
+static inline freal<T,FLT>  ceil( const freal<T,FLT>& a )
+{ return a.ceil();                      }
 
 template< typename T=int64_t, typename FLT=double >              
 static inline freal<T,FLT>  add( const freal<T,FLT>& a, const freal<T,FLT>& b )                         
@@ -623,6 +635,14 @@ inline freal<T,FLT>  freal<T,FLT>::abs( void ) const
 template< typename T, typename FLT >              
 inline freal<T,FLT>  freal<T,FLT>::neg( void ) const
 { return c()->neg( v );                 }
+
+template< typename T, typename FLT >              
+inline freal<T,FLT>  freal<T,FLT>::floor( void ) const
+{ return c()->floor( v );               }
+
+template< typename T, typename FLT >              
+inline freal<T,FLT>  freal<T,FLT>::ceil( void ) const
+{ return c()->ceil( v );               }
 
 template< typename T, typename FLT >              
 inline freal<T,FLT>  freal<T,FLT>::operator -  () const 

@@ -70,6 +70,8 @@ public:
     //-----------------------------------------------------               ---------------------------
     T    abs( const T& x ) const;                                         // |x|
     T    neg( const T& x ) const;                                         // -x
+    T    floor( const T& x ) const;                                       // largest  integral value <= x
+    T    ceil( const T& x ) const;                                        // smallest integral value >= x
 
     T    add( const T& x, const T& y ) const;                             // x+y 
     T    sub( const T& x, const T& y ) const;                             // x-y 
