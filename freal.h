@@ -105,14 +105,14 @@ public:
     freal  operator << (       int    b ) const;
     freal  operator >> (       int    b ) const;
 
-    freal& operator =  ( const freal& b ) const;
-    freal& operator =  ( const FLT&   b ) const;
-    freal& operator += ( const freal& b ) const;
-    freal& operator -= ( const freal& b ) const;
-    freal& operator *= ( const freal& b ) const;
-    freal& operator /= ( const freal& b ) const;
-    freal& operator <<=(       int    b ) const;
-    freal& operator >>=(       int    b ) const;
+    freal& operator =  ( const freal& b );
+    freal& operator =  ( const FLT&   b );
+    freal& operator += ( const freal& b );
+    freal& operator -= ( const freal& b );
+    freal& operator *= ( const freal& b );
+    freal& operator /= ( const freal& b );
+    freal& operator <<=(       int    b );
+    freal& operator >>=(       int    b );
 
     bool   operator == ( const freal& b ) const;
     bool   operator != ( const freal& b ) const;
@@ -182,16 +182,19 @@ public:
     freal  atanh( void ) const;                                       
     freal  atanh2( const freal& b ) const;   // atanh2( a, b )
 
+    //-----------------------------------------------------
+    // Introspection
+    //-----------------------------------------------------
+    const Cordic<T,FLT> * c( void ) const;                            // validates current cordic  and returns it
+    const Cordic<T,FLT> * c( const freal& b ) const;                  // validates two     cordics and returns one to use for operation
+    const Cordic<T,FLT> * c( const freal& b, const freal& _c ) const; // validates three   cordics and returns one to use for operation
+
 private:
     static const Cordic<T,FLT> * implicit_to;
     static bool                  implicit_from;
 
     const Cordic<T,FLT> *       cordic;         // defines the type and most operations
     T                           v;              // this value encoded in type T
-
-    const Cordic<T,FLT> *       c( void );                              // validates current cordic and returns it
-    const Cordic<T,FLT> *       c( const freal& b );                    // validates two   cordics and returns one to use for operation
-    const Cordic<T,FLT> *       c( const freal& b, const freal& _c );   // validates three cordics and returns one to use for operation
 };
 
 // std:xxx() calls should pick these up automatically
@@ -208,8 +211,9 @@ static inline std::istream& operator >> ( std::istream &in, freal<T,FLT>& a )
 { 
     FLT a_f;
     in >> a_f; 
-    if ( a.cordic != nullptr ) {
-        a = freal( a.cordic, a_f );   // use a's current format
+    const Cordic<T,FLT> * cordic = a.c();
+    if ( cordic != nullptr ) {
+        a = freal( cordic, a_f );     // use a's current format
     } else {
         a = a_f;                      // rely on implicit conversion, if it's currently allowed 
     }
@@ -446,7 +450,7 @@ template< typename T, typename FLT >
 freal<T,FLT>::freal( const freal& other )
 {
     cordic = other.c();
-    v      = other.a;
+    v      = other.v;
 }
 
 template< typename T, typename FLT >              
@@ -490,14 +494,14 @@ freal<T,FLT>::~freal()
 // Check CORDIC(s)
 //-----------------------------------------------------
 template< typename T, typename FLT >              
-const Cordic<T,FLT> * freal<T,FLT>::c( void )
+const Cordic<T,FLT> * freal<T,FLT>::c( void ) const
 {
     cassert( cordic != nullptr && "undefined type" );
     return cordic;
 }
 
 template< typename T, typename FLT >              
-const Cordic<T,FLT> * freal<T,FLT>::c( const freal<T,FLT>& b )
+const Cordic<T,FLT> * freal<T,FLT>::c( const freal<T,FLT>& b ) const
 {
     cassert( cordic   != nullptr && "a has undefined type" );
     cassert( b.cordic != nullptr && "b has undefined type" );
@@ -506,7 +510,7 @@ const Cordic<T,FLT> * freal<T,FLT>::c( const freal<T,FLT>& b )
 }
 
 template< typename T, typename FLT >              
-const Cordic<T,FLT> * freal<T,FLT>::c( const freal<T,FLT>& b, const freal<T,FLT>& _c )
+const Cordic<T,FLT> * freal<T,FLT>::c( const freal<T,FLT>& b, const freal<T,FLT>& _c ) const
 {
     cassert( cordic    != nullptr && "a has undefined type" );
     cassert( b.cordic  != nullptr && "b has undefined type" );
@@ -545,42 +549,42 @@ template< typename T, typename FLT >
 freal<T,FLT>::freal( double f )
 {
     cassert( implicit_to != nullptr && "implicit_to_set() must be called before relying on any implicit from double to freal<>" );
-    return freal( implicit_to, FLT(f) );
+    freal( implicit_to, FLT(f) );
 }
 
 template< typename T, typename FLT >              
 freal<T,FLT>::freal( float f )
 {
     cassert( implicit_to != nullptr && "implicit_to_set() must be called before relying on any implicit from float to freal<>" );
-    return freal( implicit_to, FLT(f) );
+    freal( implicit_to, FLT(f) );
 }
 
 template< typename T, typename FLT >              
 freal<T,FLT>::freal( uint64_t i )
 {
     cassert( implicit_to != nullptr && "implicit_to_set() must be called before relying on any implicit from uint64_t to freal<>" );
-    return freal( implicit_to, FLT(i) );
+    freal( implicit_to, FLT(i) );
 }
 
 template< typename T, typename FLT >              
 freal<T,FLT>::freal( int64_t i )
 {
     cassert( implicit_to != nullptr && "implicit_to_set() must be called before relying on any implicit from int64_t to freal<>" );
-    return freal( implicit_to, FLT(i) );
+    freal( implicit_to, FLT(i) );
 }
 
 template< typename T, typename FLT >              
 freal<T,FLT>::freal( uint32_t i )
 {
     cassert( implicit_to != nullptr && "implicit_to_set() must be called before relying on any implicit from uint32_t to freal<>" );
-    return freal( implicit_to, FLT(i) );
+    freal( implicit_to, FLT(i) );
 }
 
 template< typename T, typename FLT >              
 freal<T,FLT>::freal( int32_t i )
 {
     cassert( implicit_to != nullptr && "implicit_to_set() must be called before relying on any implicit from int32_t to freal<>" );
-    return freal( implicit_to, FLT(i) );
+    freal( implicit_to, FLT(i) );
 }
 
 template< typename T, typename FLT >              
@@ -673,36 +677,36 @@ inline freal<T,FLT>  freal<T,FLT>::operator >> (       int    b ) const
 { return rshift( b );                   }
 
 template< typename T, typename FLT >              
-inline freal<T,FLT>& freal<T,FLT>::operator =  ( const freal<T,FLT>& b ) const                          
-{ cordic = b.c(); v = b.v;              }
+inline freal<T,FLT>& freal<T,FLT>::operator =  ( const freal<T,FLT>& b ) 
+{ cordic = b.c(); v = b.v; return *this;}
 
 template< typename T, typename FLT >              
-inline freal<T,FLT>& freal<T,FLT>::operator =  ( const FLT&   b ) const                                 
-{ v = c()->to_t( b );                   }
+inline freal<T,FLT>& freal<T,FLT>::operator =  ( const FLT&   b )
+{ v = c()->to_t( b ); return *this;     }
 
 template< typename T, typename FLT >              
-inline freal<T,FLT>& freal<T,FLT>::operator += ( const freal<T,FLT>& b ) const                          
-{ *this = *this + b;                    }
+inline freal<T,FLT>& freal<T,FLT>::operator += ( const freal<T,FLT>& b )
+{ *this = *this + b; return *this;      }
 
 template< typename T, typename FLT >              
-inline freal<T,FLT>& freal<T,FLT>::operator -= ( const freal<T,FLT>& b ) const                          
-{ *this = *this - b;                    }
+inline freal<T,FLT>& freal<T,FLT>::operator -= ( const freal<T,FLT>& b )
+{ *this = *this - b; return *this;      }
 
 template< typename T, typename FLT >              
-inline freal<T,FLT>& freal<T,FLT>::operator *= ( const freal<T,FLT>& b ) const                          
-{ *this = *this * b;                    }
+inline freal<T,FLT>& freal<T,FLT>::operator *= ( const freal<T,FLT>& b )
+{ *this = *this * b; return *this;      }
 
 template< typename T, typename FLT >              
-inline freal<T,FLT>& freal<T,FLT>::operator /= ( const freal<T,FLT>& b ) const                          
-{ *this = *this / b;                    }
+inline freal<T,FLT>& freal<T,FLT>::operator /= ( const freal<T,FLT>& b )
+{ *this = *this / b; return *this;      }
 
 template< typename T, typename FLT >              
-inline freal<T,FLT>& freal<T,FLT>::operator <<=(       int    b ) const                                 
-{ *this = *this << b;                   }
+inline freal<T,FLT>& freal<T,FLT>::operator <<=(       int    b )
+{ *this = *this << b; return *this;     }
 
 template< typename T, typename FLT >              
-inline freal<T,FLT>& freal<T,FLT>::operator >>=(       int    b ) const                                 
-{ *this = *this >> b;                   }
+inline freal<T,FLT>& freal<T,FLT>::operator >>=(       int    b )
+{ *this = *this >> b; return *this;     }
 
 template< typename T, typename FLT >              
 bool   freal<T,FLT>::operator == ( const freal<T,FLT>& b ) const                                        
