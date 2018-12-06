@@ -140,13 +140,13 @@ inline void real_init( void )
 </pre>
 
 <p>
-Note that implicit conversions from int,double,etc. are not allowed for operators like +, -, etc.  You must 
+Note that implicit conversions from int,double,etc. are not allowed for binary operators like +, -, etc.  You must 
 explicitly convert them as in this example:
 </p>
 
 <pre>
 real a = 5.2;          // this will implicitly convert 5.2 to real because no operator involved
-real c = real(1) + a;  // this is an operator, so much explicity convert the 1 to disambiguate for C++
+real c = real(1) + a;  // this is an operator, so must explicity convert the 1 to disambiguate for C++
 </pre>
 
 <h1>Complex Numbers</h1>
