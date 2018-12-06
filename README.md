@@ -152,9 +152,16 @@ real c = real(1) + a;  // this is an operator, so must explicity convert the 1 t
 <h1>Complex Numbers</h1>
 
 <p>
-This library does nothing special for complex numbers. Simply use the C++ complex&lt;freal&gt; template class
-and all the associated complex math functions will just work.
+This library does nothing special for complex numbers. Simply use the C++ complex&lt;freal&lt;&gt;&gt; template class
+and all the associated complex math functions will just work:
 </p>
+
+<pre>
+#include <complex>
+#include "freal.h"
+typedef freal<> real;
+typedef complex<real> creal;
+</pre>
 
 <h1>Installation</h1>
 
