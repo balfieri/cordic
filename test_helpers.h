@@ -53,6 +53,7 @@ static inline FLT tolerance( uint32_t frac_w, FLT expected, FLT tol, int32_t& to
     FLT flterr = c->to_flt( terr );                                     \
     int32_t tol_lg2;                                                    \
     FLT tol  = tolerance( c->frac_w(), flte, TOL, tol_lg2 );            \
+    int32_t tol_bits = c->frac_w() + tol_lg2;                           \
 			                                                \
     std::cout.precision(24);			                        \
     std::cout << #str << "\n";			                        \
@@ -61,7 +62,7 @@ static inline FLT tolerance( uint32_t frac_w, FLT expected, FLT tol, int32_t& to
     std::cout << "Expected: " << std::setw(30) << flte   << " (" << c->to_bstring( te )   << ")\n"; \
     std::cout << "Actual:   " << std::setw(30) << fltz   << " (" << c->to_bstring( tz )   << ")\n"; \
     std::cout << "Diff:     " << std::setw(30) << flterr << " (" << c->to_bstring( terr ) << ")\n"; \
-    std::cout << "Tol:      " << std::setw(30) << tol << " (2^" << tol_lg2 << ")\n\n"; \
+    std::cout << "Tol:      " << std::setw(30) << tol    << " (" << tol_bits              << " bits)\n\n"; \
     cassert( flterr <= tol );			                        \
 }    
 
@@ -85,6 +86,8 @@ static inline FLT tolerance( uint32_t frac_w, FLT expected, FLT tol, int32_t& to
     int32_t tol2_lg2;                                                   \
     FLT tol1  = tolerance( c->frac_w(), flte1, TOL, tol1_lg2 );         \
     FLT tol2  = tolerance( c->frac_w(), flte2, TOL, tol2_lg2 );         \
+    int32_t tol1_bits = c->frac_w() + tol1_lg2;                         \
+    int32_t tol2_bits = c->frac_w() + tol2_lg2;                         \
 			                                                \
     std::cout.precision(24);			                        \
     std::cout << #str << "\n";			                        \
@@ -96,7 +99,8 @@ static inline FLT tolerance( uint32_t frac_w, FLT expected, FLT tol, int32_t& to
     std::cout << "Actual:   " << std::setw(30) << fltz2   << " (" << c->to_bstring( tz2 )   << ")\n"; \
     std::cout << "Diff:     " << std::setw(30) << flterr1 << " (" << c->to_bstring( terr1 ) << ")\n"; \
     std::cout << "Diff:     " << std::setw(30) << flterr2 << " (" << c->to_bstring( terr2 ) << ")\n"; \
-    std::cout << "Tol:      " << std::setw(30) << tol1 << " (2^" << tol1_lg2 << "), " << tol2 << " (2^" << tol2_lg2 << ")\n\n"; \
+    std::cout << "Tol:      " << std::setw(30) << tol1    << " (" << tol1_bits              << " bits)\n"; \
+    std::cout << "Tol:      " << std::setw(30) << tol2    << " (" << tol2_bits              << " bits)\n\n"; \
     cassert( flterr1 <= tol1 );			                        \
     cassert( flterr2 <= tol2 );			                        \
 }    
@@ -114,16 +118,17 @@ static inline FLT tolerance( uint32_t frac_w, FLT expected, FLT tol, int32_t& to
     FLT flterr = c->to_flt( terr );                                     \
     int32_t tol_lg2;                                                    \
     FLT tol  = tolerance( c->frac_w(), flte, TOL, tol_lg2 );            \
+    int32_t tol_bits = c->frac_w() + tol_lg2;                           \
 			                                                \
     std::cout.precision(24);			                        \
     std::cout << #str << "\n";			                        \
     std::cout << "Reduce:   " << do_reduce << "\n";                     \
-    std::cout << "Input:    " << std::setw(30) << fltx << "(x)\n";      \
-    std::cout << "Input:    " << std::setw(30) << flty << "(y)\n";      \
+    std::cout << "Input:    " << std::setw(30) << fltx << " (x)\n";     \
+    std::cout << "Input:    " << std::setw(30) << flty << " (y)\n";     \
     std::cout << "Expected: " << std::setw(30) << flte   << " (" << c->to_bstring( te )   << ")\n"; \
     std::cout << "Actual:   " << std::setw(30) << fltz   << " (" << c->to_bstring( tz )   << ")\n"; \
     std::cout << "Diff:     " << std::setw(30) << flterr << " (" << c->to_bstring( terr ) << ")\n"; \
-    std::cout << "Tol:      " << std::setw(30) << tol << " (2^" << tol_lg2 << ")\n\n"; \
+    std::cout << "Tol:      " << std::setw(30) << tol    << " (" << tol_bits              << " bits)\n\n"; \
     cassert( flterr <= tol );			                        \
 }    
 
@@ -148,19 +153,22 @@ static inline FLT tolerance( uint32_t frac_w, FLT expected, FLT tol, int32_t& to
     int32_t tol2_lg2;                                                   \
     FLT tol1  = tolerance( c->frac_w(), flte1, TOL, tol1_lg2 );         \
     FLT tol2  = tolerance( c->frac_w(), flte2, TOL, tol2_lg2 );         \
+    int32_t tol1_bits = c->frac_w() + tol1_lg2;                         \
+    int32_t tol2_bits = c->frac_w() + tol2_lg2;                         \
 			                                                \
     std::cout.precision(24);			                        \
     std::cout << #str << "\n";			                        \
     std::cout << "Reduce:   " << do_reduce << "\n";                     \
-    std::cout << "Input:    " << std::setw(30) << fltx << "(x)\n";      \
-    std::cout << "Input:    " << std::setw(30) << flty << "(y)\n";      \
+    std::cout << "Input:    " << std::setw(30) << fltx << " (x)\n";     \
+    std::cout << "Input:    " << std::setw(30) << flty << " (y)\n";     \
     std::cout << "Expected: " << std::setw(30) << flte1   << " (" << c->to_bstring( te1 )   << ")\n"; \
     std::cout << "Expected: " << std::setw(30) << flte2   << " (" << c->to_bstring( te2 )   << ")\n"; \
     std::cout << "Actual:   " << std::setw(30) << fltz1   << " (" << c->to_bstring( tz1 )   << ")\n"; \
     std::cout << "Actual:   " << std::setw(30) << fltz2   << " (" << c->to_bstring( tz2 )   << ")\n"; \
     std::cout << "Diff:     " << std::setw(30) << flterr1 << " (" << c->to_bstring( terr1 ) << ")\n"; \
     std::cout << "Diff:     " << std::setw(30) << flterr2 << " (" << c->to_bstring( terr2 ) << ")\n"; \
-    std::cout << "Tol:      " << std::setw(30) << tol1 << " (2^" << tol1_lg2 << "), " << tol2 << " (2^" << tol2_lg2 << ")\n\n"; \
+    std::cout << "Tol:      " << std::setw(30) << tol1    << " (" << tol1_bits              << " bits)\n"; \
+    std::cout << "Tol:      " << std::setw(30) << tol2    << " (" << tol2_bits              << " bits)\n\n"; \
     cassert( flterr1 <= tol1 );			                        \
     cassert( flterr2 <= tol2 );			                        \
 }    
@@ -179,17 +187,18 @@ static inline FLT tolerance( uint32_t frac_w, FLT expected, FLT tol, int32_t& to
     FLT flterr = c->to_flt( terr );                                     \
     int32_t tol_lg2;                                                    \
     FLT tol  = tolerance( c->frac_w(), flte, TOL, tol_lg2 );            \
+    int32_t tol_bits = c->frac_w() + tol_lg2;                           \
 			                                                \
     std::cout.precision(24);			                        \
     std::cout << #str << "\n";			                        \
     std::cout << "Reduce:   " << do_reduce << "\n";                     \
-    std::cout << "Input:    " << std::setw(30) << fltx << "(x)\n";      \
-    std::cout << "Input:    " << std::setw(30) << flty << "(y)\n";      \
-    std::cout << "Input:    " << std::setw(30) << fltz << "(z)\n";      \
+    std::cout << "Input:    " << std::setw(30) << fltx << " (x)\n";     \
+    std::cout << "Input:    " << std::setw(30) << flty << " (y)\n";     \
+    std::cout << "Input:    " << std::setw(30) << fltz << " (z)\n";     \
     std::cout << "Expected: " << std::setw(30) << flte   << " (" << c->to_bstring( te )   << ")\n"; \
     std::cout << "Actual:   " << std::setw(30) << fltz   << " (" << c->to_bstring( tz )   << ")\n"; \
     std::cout << "Diff:     " << std::setw(30) << flterr << " (" << c->to_bstring( terr ) << ")\n"; \
-    std::cout << "Tol:      " << std::setw(30) << tol << " (2^" << tol_lg2 << ")\n\n"; \
+    std::cout << "Tol:      " << std::setw(30) << tol    << " (" << tol_bits              << " bits)\n\n"; \
     cassert( flterr <= tol );			                        \
 }    
 
