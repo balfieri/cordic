@@ -96,8 +96,8 @@ public:
     //-----------------------------------------------------
     // Constants
     //-----------------------------------------------------               
-    freal maxval( void );                                       // maximum positive value 
-    freal minval( void );                                       // minimum positive value
+    freal max( void );                                       // maximum positive value 
+    freal min( void );                                       // minimum positive value
     T     maxint( void );                                       // largest positive integer (just integer part, does not include fraction)
     freal zero( void );                                         // 0.0
     freal one( void );                                          // 1.0
@@ -651,56 +651,116 @@ const Cordic<T,FLT> * freal<T,FLT>::c( const freal<T,FLT>& b, const freal<T,FLT>
 // Constants
 //-----------------------------------------------------               
 template< typename T, typename FLT >              
-inline freal<T,FLT> freal<T,FLT>::maxval( void ) 
-{ return c()->maxval(); }
-
-template< typename T, typename FLT >              
-inline freal<T,FLT> freal<T,FLT>::minval( void ) 
-{ return c()->minval(); }
-
-template< typename T, typename FLT >              
 inline T            freal<T,FLT>::maxint( void ) 
-{ return c()->maxint(); }
+{ return c()->maxint(); } 
+
+template< typename T, typename FLT >              
+inline freal<T,FLT> freal<T,FLT>::max( void ) 
+{ 
+    freal r;
+    r.cordic = c();
+    r.v      = cordic->max();
+    return r;
+}
+
+template< typename T, typename FLT >              
+inline freal<T,FLT> freal<T,FLT>::min( void ) 
+{ 
+    freal r;
+    r.cordic = c();
+    r.v      = cordic->min();
+    return r;
+}
 
 template< typename T, typename FLT >              
 inline freal<T,FLT> freal<T,FLT>::zero( void ) 
-{ return c()->zero(); }
+{ 
+    freal r;
+    r.cordic = c();
+    r.v      = cordic->zero();
+    return r;
+}
 
 template< typename T, typename FLT >              
 inline freal<T,FLT> freal<T,FLT>::one( void ) 
-{ return c()->one(); }
+{ 
+    freal r;
+    r.cordic = c();
+    r.v      = cordic->one();
+    return r;
+}
 
 template< typename T, typename FLT >              
 inline freal<T,FLT> freal<T,FLT>::half( void ) 
-{ return c()->half(); }
+{ 
+    freal r;
+    r.cordic = c();
+    r.v      = cordic->half();
+    return r;
+}
 
 template< typename T, typename FLT >              
 inline freal<T,FLT> freal<T,FLT>::quarter( void ) 
-{ return c()->quarter(); }
+{ 
+    freal r;
+    r.cordic = c();
+    r.v      = cordic->quarter();
+    return r;
+}
 
 template< typename T, typename FLT >              
 inline freal<T,FLT> freal<T,FLT>::sqrt2( void ) 
-{ return c()->sqrt2(); }
+{ 
+    freal r;
+    r.cordic = c();
+    r.v      = cordic->sqrt2();
+    return r;
+}
 
 template< typename T, typename FLT >              
 inline freal<T,FLT> freal<T,FLT>::sqrt2_div_2( void ) 
-{ return c()->sqrt2_div_2(); }
+{ 
+    freal r;
+    r.cordic = c();
+    r.v      = cordic->sqrt2_div_2();
+    return r;
+}
 
 template< typename T, typename FLT >              
 inline freal<T,FLT> freal<T,FLT>::pi( void ) 
-{ return c()->pi(); }
+{ 
+    freal r;
+    r.cordic = c();
+    r.v      = cordic->pi();
+    return r;
+}
 
 template< typename T, typename FLT >              
 inline freal<T,FLT> freal<T,FLT>::pi_div_2( void ) 
-{ return c()->pi_div_2(); }
+{ 
+    freal r;
+    r.cordic = c();
+    r.v      = cordic->pi_div_2();
+    return r;
+}
 
 template< typename T, typename FLT >              
 inline freal<T,FLT> freal<T,FLT>::pi_div_4( void ) 
-{ return c()->pi_div_4(); }
+{ 
+    freal r;
+    r.cordic = c();
+    r.v      = cordic->pi_div_4();
+    return r;
+}
 
 template< typename T, typename FLT >              
 inline freal<T,FLT> freal<T,FLT>::e( void ) 
-{ return c()->e(); }
+{ 
+    freal r;
+    r.cordic = c();
+    r.v      = cordic->e();
+    return r;
+}
 
 //-----------------------------------------------------
 // Standard Operators 

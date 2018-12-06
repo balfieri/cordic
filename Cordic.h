@@ -71,8 +71,8 @@ public:
     uint32_t frac_w( void ) const;                      // frac_w from above
     uint32_t n( void ) const;                           // n      from above
 
-    T maxval( void ) const;                             // maximum positive value 
-    T minval( void ) const;                             // minimum positive value
+    T max( void ) const;                                // maximum positive encoded value 
+    T min( void ) const;                                // minimum positive encoded value
     T maxint( void ) const;                             // largest positive integer (just integer part, does not include fraction)
     T zero( void ) const;                               // encoded 0.0
     T one( void ) const;                                // encoded 1.0
@@ -430,8 +430,8 @@ struct Cordic<T,FLT>::Impl
     uint32_t                    n;
 
     T                           maxint;
-    T                           maxval;
-    T                           minval;
+    T                           max;
+    T                           min;
     T                           zero;
     T                           one;
     T                           half;
@@ -490,8 +490,8 @@ Cordic<T,FLT>::Cordic( uint32_t int_w, uint32_t frac_w, bool do_reduce, uint32_t
     impl->n       = n;
 
     impl->maxint        = (T(1) << int_w) - 1;
-    impl->maxval        = (T(1) << (int_w+frac_w)) - 1;
-    impl->minval        = T(1);
+    impl->max           = (T(1) << (int_w+frac_w)) - 1;
+    impl->min           = T(1);
     impl->zero          = 0;
     impl->one           = T(1) << frac_w;
     impl->half          = T(1) << (frac_w-1);
@@ -653,15 +653,15 @@ T Cordic<T,FLT>::maxint( void ) const
 }
 
 template< typename T, typename FLT >
-T Cordic<T,FLT>::maxval( void ) const
+T Cordic<T,FLT>::max( void ) const
 {
-    return impl->maxval;
+    return impl->max;
 }
 
 template< typename T, typename FLT >
-T Cordic<T,FLT>::minval( void ) const
+T Cordic<T,FLT>::min( void ) const
 {
-    return impl->minval;
+    return impl->min;
 }
 
 template< typename T, typename FLT >
