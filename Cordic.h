@@ -1141,7 +1141,7 @@ T Cordic<T,FLT>::neg( const T& x ) const
     bool x_sign = x < 0;
     T    x_neg  = -x;
     T    sign_mask = x_neg >> (int_w() + frac_w());
-    cassert( sign_mask == (x_sign ? T(0) : T(-1)) && "neg caused overflow" ); 
+    cassert( (x == 0 || sign_mask == (x_sign ? T(0) : T(-1))) && "neg caused overflow" ); 
     return x_neg;
 }
 
