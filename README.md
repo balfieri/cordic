@@ -116,8 +116,8 @@ use for implicit conversions to freal from int, double, etc.
 </p>
 
 <p>
-The default freal container T is int64_t and the default floating-point format is double.  These are the same defaults as
-for Cordic<>.  If you use freal<> as your number type, then you'll pick up these defaults.
+The default freal container T is int64_t and the default floating-point format for any constants is double.  
+These are the same defaults as for Cordic<>.  If you use freal<> as your number type, then you'll pick up these defaults.
 </p>
 
 <p>
