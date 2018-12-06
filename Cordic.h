@@ -329,6 +329,7 @@ public:
     T maxint( void ) const;                              // largest positive integer (just integer part, does not include fraction)
     T zero( void ) const;                                // encoded 0.0
     T one( void ) const;                                 // encoded 1.0
+    T half( void ) const;                                // encoded 0.5
     T quarter( void ) const;                             // encoded 0.25
     T sqrt2( void ) const;                               // encoded sqrt(2)
     T sqrt2_div_2( void ) const;                         // encoded sqrt(2)/2
@@ -374,7 +375,7 @@ public:
     //
     // Look at the implementation below to understand what these routines are doing.  
     //-----------------------------------------------------
-    void reduce_arg( T& x, int32_t& x_lshift, bool& sign, bool shift_x=true, bool normalize=false ) const; 
+    void reduce_arg( T& x, int32_t& x_lshift, bool& sign, bool shift_x=true, bool normalize=false, bool for_sqrt=false ) const;
     void reduce_mul_args( T& x, T& y, int32_t& x_lshift, int32_t& y_lshift, bool& sign ) const; 
     void reduce_div_args( T& y, T& x, int32_t& y_lshift, int32_t& x_lshift, bool& sign ) const;
     void reduce_sqrt_arg( T& x, int32_t& lshift ) const;
@@ -426,6 +427,7 @@ struct Cordic<T,FLT>::Impl
     T                           maxint;
     T                           zero;
     T                           one;
+    T                           half;
     T                           quarter;
     T                           sqrt2;
     T                           sqrt2_div_2;
@@ -483,6 +485,7 @@ Cordic<T,FLT>::Cordic( uint32_t int_w, uint32_t frac_w, bool do_reduce, uint32_t
     impl->maxint        = (T(1) << int_w) - 1;
     impl->zero          = 0;
     impl->one           = T(1) << frac_w;
+    impl->half          = T(1) << (frac_w-1);
     impl->quarter       = T(1) << (frac_w-2);
     impl->sqrt2         = to_t( std::sqrt( 2.0 ) );
     impl->sqrt2_div_2   = to_t( std::sqrt( 2.0 ) / 2.0 );
@@ -649,6 +652,12 @@ template< typename T, typename FLT >
 T Cordic<T,FLT>::one( void ) const
 {
     return impl->one;
+}
+
+template< typename T, typename FLT >
+T Cordic<T,FLT>::half( void ) const
+{
+    return impl->half;
 }
 
 template< typename T, typename FLT >
@@ -1325,7 +1334,7 @@ T Cordic<T,FLT>::sqrt( const T& _x ) const
     //     sqrt(x) = sqrt((x+1)^2 - (x-1)^2) / 2          
     // Strategy:
     //     reduce_sqrt_arg() will factor x=p*s where p is a power-of-2 
-    //     where log2(p) is even >= 2 and s is between 0..1.
+    //     where log2(p) is even >= 2 and s is between 0.5..1.
     //     sqrt(x) = sqrt(p) * sqrt(s) = 2^(log2(p)/2) * sqrt((s+1)^2 - (s-1)^2)/2
     //     Use hyperbolic_vectoring() for sqrt((s+1)^2 - (s-1)^2).
     //     Then lshift that by log2(p)/2 - 1.
@@ -1826,13 +1835,13 @@ T Cordic<T,FLT>::atanh2( const T& _y, const T& _x, bool do_reduce, bool x_is_one
 }
 
 template< typename T, typename FLT >
-void Cordic<T,FLT>::reduce_arg( T& x, int32_t& x_lshift, bool& sign, bool shift_x, bool normalize ) const
+void Cordic<T,FLT>::reduce_arg( T& x, int32_t& x_lshift, bool& sign, bool shift_x, bool normalize, bool for_sqrt ) const
 {
     T x_orig = x;
     sign = x < 0;
     if ( sign ) x = -x;
-    T other = one();
     x_lshift = 0;
+    T other = for_sqrt ? half() : one();
     while( x > other ) 
     {
         x_lshift++;
@@ -1884,7 +1893,7 @@ void Cordic<T,FLT>::reduce_sqrt_arg( T& x, int32_t& lshift ) const
     //     sqrt(x) = sqrt((x+1)^2 - (x-1)^2) / 2          
     // Strategy:
     //     Factor x=p*s where p is a power-of-2 
-    //     where log2(p) is even >= 2 and s is between 0..1.
+    //     where log2(p) is even >= 2 and s is between 0.5..1.
     //     sqrt(x) = sqrt(p) * sqrt(s) = 2^(log2(p)/2) * sqrt((s+1)^2 - (s-1)^2)/2
     //     Use hyperbolic_vectoring() for sqrt((s+1)^2 - (s-1)^2).
     //     Then lshift that by log2(p)/2 - 1.
@@ -1892,7 +1901,7 @@ void Cordic<T,FLT>::reduce_sqrt_arg( T& x, int32_t& lshift ) const
     cassert( x >= 0 && "reduce_sqrt_arg x must be non-negative" );
     T x_orig = x;
     bool sign;
-    reduce_arg( x, lshift, sign );
+    reduce_arg( x, lshift, sign, true, true, true );
     if ( lshift & 1 ) {
         // make it even
         lshift++;
