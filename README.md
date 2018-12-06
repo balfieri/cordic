@@ -125,29 +125,29 @@ By default, implicit conversions to/from freal will cause an error.  If you woul
 a Cordic and call these static functions one time:
 </p>
 
-<pre>
+<code>
 #include "freal.h"
-typedef freal<> real;           // so you don't have to type freal<> everywhere :-)
+typedef freal&lt;&gt; real;           // so you don't have to type freal<> everywhere :-)
 
 inline void real_init( void ) 
 {
     // one-time calls to static methods
-    real::implicit_to_set( new Cordic<>( 7, 24 ) ); // allow implicit conversion  TO   freal (fixed-point 1.7.24)
+    real::implicit_to_set( new Cordic&lt;&gt;( 7, 24 ) ); // allow implicit conversion  TO   freal (fixed-point 1.7.24)
     real::implicit_from_set( true );                // allow implicit conversions FROM freal (to int, double, etc.)
 }
 
 [have your main program call real_init() before using real numbers.]
-</pre>
+</code>
 
 <p>
 Note that implicit conversions from int,double,etc. are not allowed for binary operators like +, -, etc.  You must 
 explicitly convert them as in this example:
 </p>
 
-<pre>
+<code>
 real a = 5.2;          // this will implicitly convert 5.2 to real because no operator involved
 real c = real(1) + a;  // this is an operator, so must explicity convert the 1 to disambiguate for C++
-</pre>
+</code>
 
 <h1>Complex Numbers</h1>
 
@@ -157,10 +157,10 @@ and all the associated complex math functions will just work:
 </p>
 
 <pre>
-#include <complex>
+#include &lt;complex&gt;
 #include "freal.h"
-typedef freal<> real;
-typedef complex<real> creal;
+typedef freal&lt;&gt; real;
+typedef complex&lt;real&gt; creal;
 </pre>
 
 <h1>Installation</h1>
