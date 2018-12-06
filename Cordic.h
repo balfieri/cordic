@@ -127,7 +127,7 @@ public:
     //
     // sqrt(x)          = sqrt((x+0.25)^2 - (x-0.25)^2)         allows use of hyperbolic_vectoring
     // sqrt(x)          = sqrt((x+1)^2 - (x-1)^2) / 2           ditto, but easier to make sure |atanh((x-1)/(x+1))| is small enough
-    // sqrt(x*y)        = sqrt((x+y)^2 - (x-y)^2) / 2           ditto
+    // sqrt(x*y)        = sqrt((x+y)^2 - (x-y)^2) / 2           ditto, y doesn't matter
     // sqrt(x*y)        = sqrt(|x|) * sqrt(|y|)                 assuming x*y >= 0
     // sqrt(x^2 - y^2)  = sqrt((m+d)^2 - (m-d)^2) = 2*sqrt(m*d) where m=(x+y)/2, d=(x-y)/2 
     //                                                          factor m*d=p*s so that p is a power-of-2 and s is within -1 .. 1

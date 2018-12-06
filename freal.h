@@ -197,14 +197,10 @@ private:
     T                           v;              // this value encoded in type T
 };
 
-// std:xxx() calls should pick these up automatically
+// Well-Known std:xxx() Functions 
 //
 namespace std
 {
-
-template< typename T=int64_t, typename FLT=double >              
-static inline std::string   to_string( const freal<T,FLT>& a )
-{ return a.to_string();                 }
 
 template< typename T=int64_t, typename FLT=double >              
 static inline std::istream& operator >> ( std::istream &in, freal<T,FLT>& a )
@@ -226,6 +222,10 @@ static inline std::ostream& operator << ( std::ostream &out, const freal<T,FLT>&
     out << a.to_string(); 
     return out;     
 }
+
+template< typename T=int64_t, typename FLT=double >              
+static inline std::string   to_string( const freal<T,FLT>& a )
+{ return a.to_string();                 }
 
 template< typename T=int64_t, typename FLT=double >              
 static inline freal<T,FLT>  abs( const freal<T,FLT>& a )
@@ -631,7 +631,7 @@ const Cordic<T,FLT> * freal<T,FLT>::c( const freal<T,FLT>& b, const freal<T,FLT>
 }
 
 //-----------------------------------------------------
-// Standard Operators
+// Standard Operators 
 //-----------------------------------------------------               
 template< typename T, typename FLT >              
 inline freal<T,FLT>  freal<T,FLT>::operator -  () const 
