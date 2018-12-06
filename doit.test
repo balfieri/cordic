@@ -16,8 +16,7 @@ my $CFLAGS = "-std=c++17 -Wextra -Wstrict-aliasing -pedantic -Werror -Wcast-alig
 
 system( "rm -f ${prog}.o ${prog} Cordic.o" );
 system( "g++ -g -o ${prog}.o ${CFLAGS} -c ${prog}.cpp" ) == 0 or die "ERROR: compile failed\n";
-system( "g++ -g -o Cordic.o ${CFLAGS} -c Cordic.cpp" ) == 0 or die "ERROR: compile failed\n";
-system( "g++ -g -o ${prog} ${prog}.o Cordic.o -lm" ) == 0 or die "ERROR: link failed\n";
+system( "g++ -g -o ${prog} ${prog}.o -lm" ) == 0 or die "ERROR: link failed\n";
 my $cmd = "./${prog} ${other_args}";
 print "$cmd\n";
 if ( system( $cmd ) != 0 ) {

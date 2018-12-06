@@ -125,7 +125,7 @@ doit.test 0 test_basic -int_w 8         - change int_w from default to 8 bits
 
 <p>
 test_basic.cpp does its own checking using macros in test_helpers.h.  In the near future, 
-Cordic.cpp should do optional checking of computations so that test_helpers.h can be deleted or greatly simplified.
+Cordic should do optional checking of computations so that test_helpers.h can be deleted or greatly simplified.
 </p>
 
 <h1>Notes</h1>
