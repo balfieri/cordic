@@ -463,14 +463,14 @@ freal<T,FLT>::freal( const freal& other, FLT f )
 template< typename T, typename FLT >              
 freal<T,FLT>::freal( const Cordic<T,FLT> * _cordic, FLT f )
 {
+    cassert( _cordic != nullptr && "freal(cordic, f) cordic argument must be non-null" );
     cordic = _cordic;
-    v      = cordic ? cordic->to_t( f ) : T(667);
+    v      = cordic->to_t( f );
 }
 
 template< typename T, typename FLT >              
 freal<T,FLT> freal<T,FLT>::make_fixed( uint32_t int_w, uint32_t frac_w, FLT init_f )
 {
-    std::cout << "make_fixed\n";
     return freal( new Cordic<T,FLT>( int_w, frac_w ), init_f );
 }
 
