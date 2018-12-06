@@ -81,13 +81,12 @@ int main( int argc, const char * argv[] )
     //---------------------------------------------------------------------------
     // Put fixed bugs here so they get regressed.
     //---------------------------------------------------------------------------
-    FLT xx = 0.810431798013170871;
-    FLT yy = 0.681807431807431031;
-    do_op1(  "5) cos",         cos,    std::cos,      1.6214,        do_reduce );
-    do_op1(  "4) sqrt",        sqrt,   std::sqrt,     xx+3.0,        do_reduce );
-    do_op2(  "3) normh",       normh,  normh,         xx+0.0, yy,    do_reduce );          
-    do_op2(  "2) mul",         mul,    mul,           1.45, 0.4782,  do_reduce );
-    do_op1(  "1) log",         log,    std::log,      1.53,          do_reduce );
+    do_op2(  "6) norm",        norm,   norm,          0.70710676908493042, 0.70710664987564087, do_reduce );
+    do_op1(  "5) cos",         cos,    std::cos,      1.6214,           do_reduce );
+    do_op1(  "4) sqrt",        sqrt,   std::sqrt,     3.8104,           do_reduce );
+    do_op2(  "3) normh",       normh,  normh,         0.8104, 0.6818,   do_reduce );          
+    do_op2(  "2) mul",         mul,    mul,           1.45, 0.4782,     do_reduce );
+    do_op1(  "1) log",         log,    std::log,      1.53,             do_reduce );
 
     //---------------------------------------------------------------------------
     // Run through all operations quickly with do_reduce=true.

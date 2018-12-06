@@ -1648,6 +1648,7 @@ T Cordic<T,FLT>::atan2( const T& _y, const T& _x, bool do_reduce, bool x_is_one,
             return pi();
         }
 
+        // TODO: norm() can fail here if y only slightly less than x
         const T norm_plus_x = norm( x, y, true ) + x;
         if ( debug ) std::cout << "atan2 cordic begin: y=y=" << to_flt(y) << " x=norm_plus_x=" << to_flt(norm_plus_x) << " swapped=" << swapped << "\n";
         circular_vectoring( norm_plus_x, y, zero(), xx, yy, zz );
