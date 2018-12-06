@@ -102,6 +102,19 @@ number), it is changed to zero.
 Denorm-As-Zero (DAZ) means that any denorm input to an operation is first changed to zero.
 </p>
 
+<h1>freal</h1>
+
+<p>
+The library an "freal" flexible real number class that follows all the rules of any C++ floating-point number 
+(e.g., double, float), but uses Cordic as its underlying implementation. <b>See freal.h for the full list of constructors,
+conversions, operators, and std::xxx functions.</b>
+</p>
+
+<p>
+If you use freal.h, you don't need to use Cordic.h unless you want to set up a default Cordic to
+use for implicit conversions to freal.
+</p>
+
 <h1>Installation</h1>
 
 <p>
@@ -128,12 +141,11 @@ test_basic.cpp does its own checking using macros in test_helpers.h.  In the nea
 Cordic should do optional checking of computations so that test_helpers.h can be deleted or greatly simplified.
 </p>
 
-<h1>Notes</h1>
-
 <p>
-The library needs an "freal" flexible real number class that follows all the rules of any C++ floating-point number but uses Cordic 
-as its underlying implementation.  freal should keep track of ranges and automatically change the underlying fixed-point and floating-point 
-representations, ideally mixing fixed-point and floating-point.
+For normal usage, there are no .cpp files to compile.  Everything is in the Cordic.h and freal.h headers.
+</p>
+
+<h1>Notes</h1>
 
 <p>
 There should never be a need for this library to do something special for complex numbers. The C++ complex<> 
