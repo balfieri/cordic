@@ -793,7 +793,7 @@ std::string Cordic<T,FLT>::to_bstring( const T& _x ) const
     std::string bs = "";
     for( uint32_t i = 0; i < width; i++ )
     {
-        if ( i == int_w() || i == frac_w() ) bs = " " + bs;
+        if ( i == (int_w()+frac_w()) || i == frac_w() ) bs = " " + bs;
         const char * b = (x & 1) ? "1" : "0";
         bs = b + bs;
         x >>= 1;
