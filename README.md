@@ -125,7 +125,7 @@ By default, implicit conversions to/from freal will cause an error.  If you woul
 a Cordic and call these static functions one time:
 </p>
 
-<code>
+<pre>
 #include "freal.h"
 typedef freal&lt;&gt; real;           // so you don't have to type freal<> everywhere :-)
 
@@ -137,17 +137,17 @@ inline void real_init( void )
 }
 
 [have your main program call real_init() before using real numbers.]
-</code>
+</pre>
 
 <p>
 Note that implicit conversions from int,double,etc. are not allowed for binary operators like +, -, etc.  You must 
 explicitly convert them as in this example:
 </p>
 
-<code>
+<pre>
 real a = 5.2;          // this will implicitly convert 5.2 to real because no operator involved
 real c = real(1) + a;  // this is an operator, so must explicity convert the 1 to disambiguate for C++
-</code>
+</pre>
 
 <h1>Complex Numbers</h1>
 
