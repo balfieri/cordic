@@ -1190,7 +1190,6 @@ T Cordic<T,FLT>::sub( const T& x, const T& y ) const
     bool y_sign = y < T(0);
     T    sum    = x - y;
     T    sign_mask = sum >> (int_w() + frac_w());
-    cassert( (x_sign != y_sign || ((sum < T(0)) == x_sign)) && "sub caused overflow" );
     cassert( sign_mask == 0 || sign_mask == T(-1) && "sub caused overflow" );
     return sum;
 }
