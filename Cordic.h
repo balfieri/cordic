@@ -554,7 +554,7 @@ Cordic<T,FLT>::Cordic( uint32_t int_w, uint32_t frac_w, bool do_reduce, uint32_t
 
     // construct LUTs used by reduce_sin_cos_arg() and reduce_sinh_cosh_arg();
     // use integer part plus 0.5 bit of fraction
-    cassert( int_w < 14 && "too many cases to worry about" );
+    cassert( int_w <= 16 && "too many cases to worry about" );
     uint32_t N = 1 << (1+int_w);
     T *        addend       = new T[N];
     uint32_t * quadrant     = new uint32_t[N];
