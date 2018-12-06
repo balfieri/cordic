@@ -115,6 +115,13 @@ If you use freal.h, you don't need to use Cordic.h unless you want to set up a d
 use for implicit conversions to freal from int, double, etc.
 </p>
 
+<h1>Complex Numbers</h1>
+
+<p>
+This library does nothing special for complex numbers. Simply use the C++ complex&lt;freal&gt; template class
+and all the associated complex math functions will just work.
+</p>
+
 <h1>Installation</h1>
 
 <p>
@@ -144,13 +151,6 @@ doit.test 0 test_basic -int_w 8         - change int_w from default to 8 bits
 <p>
 test_basic.cpp does its own checking using macros in test_helpers.h.  In the near future, 
 Cordic should do optional checking of computations so that test_helpers.h can be deleted or greatly simplified.
-</p>
-
-<h1>Notes</h1>
-
-<p>
-There should never be a need for this library to do something special for complex numbers. The C++ complex<> 
-class and associated math functions fall out naturally by using complex&lt;freal&gt;.
 </p>
 
 <p>
