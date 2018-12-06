@@ -388,7 +388,7 @@ public:
 
 private:
     class Impl;
-    std::unique_ptr<Impl> impl;
+    Impl * impl;
 };
 
 #ifdef DEBUG_LEVEL
@@ -475,7 +475,7 @@ Cordic<T,FLT>::Cordic( uint32_t int_w, uint32_t frac_w, bool do_reduce, uint32_t
     cassert( int_w  != 0 && "int_w must be > 0 currently" );
     cassert( frac_w != 0 && "frac_w must be > 0 currently" );
 
-    impl = std::make_unique<Impl>();
+    impl = new Impl;
 
     impl->int_w   = int_w;
     impl->frac_w  = frac_w;
@@ -612,6 +612,7 @@ Cordic<T,FLT>::Cordic( uint32_t int_w, uint32_t frac_w, bool do_reduce, uint32_t
 template< typename T, typename FLT >
 Cordic<T,FLT>::~Cordic( void )
 {
+    delete impl;
     impl = nullptr;
 }
 
