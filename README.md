@@ -115,6 +115,40 @@ If you use freal.h, you don't need to use Cordic.h unless you want to set up a d
 use for implicit conversions to freal from int, double, etc.
 </p>
 
+<p>
+The default freal container T is int64_t and the default floating-point format is double.  These are the same defaults as
+for Cordic<>.  If you use freal<> as your number type, then you'll pick up these defaults.
+</p>
+
+<p>
+By default, implicit conversions to/from freal will cause an error.  If you would like to enable both, then create
+a Cordic and call these static functions one time:
+</p>
+
+<pre>
+#include "freal.h"
+typedef freal<> real;           // so you don't have to type freal<> everywhere :-)
+
+inline void real_init( void ) 
+{
+    // one-time calls to static methods
+    real::implicit_to_set( new Cordic<>( 7, 24 ) ); // allow implicit conversion  TO   freal (fixed-point 1.7.24)
+    real::implicit_from_set( true );                // allow implicit conversions FROM freal (to int, double, etc.)
+}
+
+[have your main program call real_init() before using real numbers.]
+</pre>
+
+<p>
+Note that implicit conversions from int,double,etc. are not allowed for operators like +, -, etc.  You must 
+explicitly convert them as in this example:
+</p>
+
+<pre>
+real a = 5.2;          // this will implicitly convert 5.2 to real because no operator involved
+real c = real(1) + a;  // this is an operator, so much explicity convert the 1 to disambiguate for C++
+</pre>
+
 <h1>Complex Numbers</h1>
 
 <p>
