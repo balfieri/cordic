@@ -77,16 +77,17 @@ int main( int argc, const char * argv[] )
         // Put new bugs here.
         // Once fixed, they will be moved to below.
         //---------------------------------------------------------------------------
-        FLT x = 0.810431798013170871;
-        FLT y = 0.681807431807431031;
-        do_op2(  "3) normh(x,y)",        normh,  normh,         x+0.0, y, do_reduce );          // y/x has to be less than a certain amount
-        do_op1(  "   sqrt(x)",           sqrt,   std::sqrt,     x+3.0   , do_reduce );
     }
     //---------------------------------------------------------------------------
     // Put fixed bugs here so they get regressed.
     //---------------------------------------------------------------------------
-    do_op2(  "2) mul",                   mul,    mul,           1.45, 0.4782,  do_reduce );
-    do_op1(  "1) log",                   log,    std::log,      1.53,          do_reduce );
+    FLT xx = 0.810431798013170871;
+    FLT yy = 0.681807431807431031;
+    do_op1(  "5) cos",         cos,    std::cos,      1.6214,        do_reduce );
+    do_op1(  "4) sqrt",        sqrt,   std::sqrt,     xx+3.0,        do_reduce );
+    do_op2(  "3) normh",       normh,  normh,         xx+0.0, yy,    do_reduce );          
+    do_op2(  "2) mul",         mul,    mul,           1.45, 0.4782,  do_reduce );
+    do_op1(  "1) log",         log,    std::log,      1.53,          do_reduce );
 
     //---------------------------------------------------------------------------
     // Run through all operations quickly with do_reduce=true.

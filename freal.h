@@ -108,6 +108,8 @@ public:
     freal pi( void );                                           // PI
     freal pi_div_2( void );                                     // PI/2
     freal pi_div_4( void );                                     // PI/4
+    freal two_div_pi( void );                                   // 2/PI
+    freal four_div_pi( void );                                  // 4/PI
     freal e( void );                                            // natural exponent
 
     //-----------------------------------------------------
@@ -750,6 +752,24 @@ inline freal<T,FLT> freal<T,FLT>::pi_div_4( void )
     freal r;
     r.cordic = c();
     r.v      = cordic->pi_div_4();
+    return r;
+}
+
+template< typename T, typename FLT >              
+inline freal<T,FLT> freal<T,FLT>::two_div_pi( void ) 
+{ 
+    freal r;
+    r.cordic = c();
+    r.v      = cordic->two_div_pi();
+    return r;
+}
+
+template< typename T, typename FLT >              
+inline freal<T,FLT> freal<T,FLT>::four_div_pi( void ) 
+{ 
+    freal r;
+    r.cordic = c();
+    r.v      = cordic->four_div_pi();
     return r;
 }
 
