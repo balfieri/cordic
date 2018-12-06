@@ -94,6 +94,23 @@ public:
     operator int32_t( void );
 
     //-----------------------------------------------------
+    // Constants
+    //-----------------------------------------------------               
+    freal maxval( void );                                       // maximum positive value 
+    freal minval( void );                                       // minimum positive value
+    T     maxint( void );                                       // largest positive integer (just integer part, does not include fraction)
+    freal zero( void );                                         // 0.0
+    freal one( void );                                          // 1.0
+    freal half( void );                                         // 0.5
+    freal quarter( void );                                      // 0.25
+    freal sqrt2( void );                                        // sqrt(2)
+    freal sqrt2_div_2( void );                                  // sqrt(2)/2
+    freal pi( void );                                           // PI
+    freal pi_div_2( void );                                     // PI/2
+    freal pi_div_4( void );                                     // PI/4
+    freal e( void );                                            // natural exponent
+
+    //-----------------------------------------------------
     // Standard Operators
     //-----------------------------------------------------               
     freal  operator -  ()                 const;                // -x
@@ -629,6 +646,61 @@ const Cordic<T,FLT> * freal<T,FLT>::c( const freal<T,FLT>& b, const freal<T,FLT>
     cassert( cordic == b.cordic && cordic == _c.cordic && "a and b and c must have same type currently" );
     return cordic;
 }
+
+//-----------------------------------------------------
+// Constants
+//-----------------------------------------------------               
+template< typename T, typename FLT >              
+inline freal<T,FLT> freal<T,FLT>::maxval( void ) 
+{ return c()->maxval(); }
+
+template< typename T, typename FLT >              
+inline freal<T,FLT> freal<T,FLT>::minval( void ) 
+{ return c()->minval(); }
+
+template< typename T, typename FLT >              
+inline T            freal<T,FLT>::maxint( void ) 
+{ return c()->maxint(); }
+
+template< typename T, typename FLT >              
+inline freal<T,FLT> freal<T,FLT>::zero( void ) 
+{ return c()->zero(); }
+
+template< typename T, typename FLT >              
+inline freal<T,FLT> freal<T,FLT>::one( void ) 
+{ return c()->one(); }
+
+template< typename T, typename FLT >              
+inline freal<T,FLT> freal<T,FLT>::half( void ) 
+{ return c()->half(); }
+
+template< typename T, typename FLT >              
+inline freal<T,FLT> freal<T,FLT>::quarter( void ) 
+{ return c()->quarter(); }
+
+template< typename T, typename FLT >              
+inline freal<T,FLT> freal<T,FLT>::sqrt2( void ) 
+{ return c()->sqrt2(); }
+
+template< typename T, typename FLT >              
+inline freal<T,FLT> freal<T,FLT>::sqrt2_div_2( void ) 
+{ return c()->sqrt2_div_2(); }
+
+template< typename T, typename FLT >              
+inline freal<T,FLT> freal<T,FLT>::pi( void ) 
+{ return c()->pi(); }
+
+template< typename T, typename FLT >              
+inline freal<T,FLT> freal<T,FLT>::pi_div_2( void ) 
+{ return c()->pi_div_2(); }
+
+template< typename T, typename FLT >              
+inline freal<T,FLT> freal<T,FLT>::pi_div_4( void ) 
+{ return c()->pi_div_4(); }
+
+template< typename T, typename FLT >              
+inline freal<T,FLT> freal<T,FLT>::e( void ) 
+{ return c()->e(); }
 
 //-----------------------------------------------------
 // Standard Operators 

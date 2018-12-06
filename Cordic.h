@@ -65,6 +65,27 @@ public:
     T       make_float( bool sign, T e, T f );  // encode a floating-point value using sign, exponent part 3, and fractional part f
 
     //-----------------------------------------------------
+    // Constants 
+    //-----------------------------------------------------
+    uint32_t int_w( void ) const;                       // int_w  from above
+    uint32_t frac_w( void ) const;                      // frac_w from above
+    uint32_t n( void ) const;                           // n      from above
+
+    T maxval( void ) const;                             // maximum positive value 
+    T minval( void ) const;                             // minimum positive value
+    T maxint( void ) const;                             // largest positive integer (just integer part, does not include fraction)
+    T zero( void ) const;                               // encoded 0.0
+    T one( void ) const;                                // encoded 1.0
+    T half( void ) const;                               // encoded 0.5
+    T quarter( void ) const;                            // encoded 0.25
+    T sqrt2( void ) const;                              // encoded sqrt(2)
+    T sqrt2_div_2( void ) const;                        // encoded sqrt(2)/2
+    T pi( void ) const;                                 // encoded PI
+    T pi_div_2( void ) const;                           // encoded PI/2
+    T pi_div_4( void ) const;                           // encoded PI/4
+    T e( void ) const;                                  // encoded natural exponent
+
+    //-----------------------------------------------------
     // Well-Known Math Functions Implemented Using CORDIC
     //
     // (2) means requires 2 applications of a CORDIC algorithm.              functionality
@@ -320,24 +341,8 @@ public:
     void linear_vectoring( const T& x0, const T& y0, const T& z0, T& x, T& y, T& z ) const;
 
     //-----------------------------------------------------
-    // Constants 
+    // More Constants 
     //-----------------------------------------------------
-    uint32_t int_w( void ) const;
-    uint32_t frac_w( void ) const;
-    uint32_t n( void ) const;                            // n
-
-    T maxint( void ) const;                              // largest positive integer (just integer part, does not include fraction)
-    T zero( void ) const;                                // encoded 0.0
-    T one( void ) const;                                 // encoded 1.0
-    T half( void ) const;                                // encoded 0.5
-    T quarter( void ) const;                             // encoded 0.25
-    T sqrt2( void ) const;                               // encoded sqrt(2)
-    T sqrt2_div_2( void ) const;                         // encoded sqrt(2)/2
-    T pi( void ) const;                                  // encoded PI
-    T pi_div_2( void ) const;                            // encoded PI/2
-    T pi_div_4( void ) const;                            // encoded PI/4
-    T e( void ) const;                                   // encoded natural exponent
-
     T circular_rotation_gain( void ) const;              // circular_rotation()     x result with x0=1, y0=0, z0=0 (1.646760258121066...)
     T circular_vectoring_gain( void ) const;             // circular_vectoring()    x result with x0=1, y0=0, z0=0 (1.646760258121066...)
     T hyperbolic_rotation_gain( void ) const;            // hyperbolic_rotation()   x result with x0=1, y0=0, z0=0 (0.828159360960214...)
@@ -425,6 +430,8 @@ struct Cordic<T,FLT>::Impl
     uint32_t                    n;
 
     T                           maxint;
+    T                           maxval;
+    T                           minval;
     T                           zero;
     T                           one;
     T                           half;
@@ -483,6 +490,8 @@ Cordic<T,FLT>::Cordic( uint32_t int_w, uint32_t frac_w, bool do_reduce, uint32_t
     impl->n       = n;
 
     impl->maxint        = (T(1) << int_w) - 1;
+    impl->maxval        = (T(1) << (int_w+frac_w)) - 1;
+    impl->minval        = T(1);
     impl->zero          = 0;
     impl->one           = T(1) << frac_w;
     impl->half          = T(1) << (frac_w-1);
@@ -641,6 +650,18 @@ template< typename T, typename FLT >
 T Cordic<T,FLT>::maxint( void ) const
 {
     return impl->maxint;
+}
+
+template< typename T, typename FLT >
+T Cordic<T,FLT>::maxval( void ) const
+{
+    return impl->maxval;
+}
+
+template< typename T, typename FLT >
+T Cordic<T,FLT>::minval( void ) const
+{
+    return impl->minval;
 }
 
 template< typename T, typename FLT >
