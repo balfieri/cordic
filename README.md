@@ -105,14 +105,14 @@ Denorm-As-Zero (DAZ) means that any denorm input to an operation is first change
 <h1>freal</h1>
 
 <p>
-The library an "freal" flexible real number class that follows all the rules of any C++ floating-point number 
+The library provides an "freal" flexible real number class that follows all the rules of any C++ floating-point number 
 (e.g., double, float), but uses Cordic as its underlying implementation. <b>See freal.h for the full list of constructors,
 conversions, operators, and std::xxx functions.</b>
 </p>
 
 <p>
 If you use freal.h, you don't need to use Cordic.h unless you want to set up a default Cordic to
-use for implicit conversions to freal.
+use for implicit conversions to freal from int, double, etc.
 </p>
 
 <h1>Installation</h1>
@@ -126,7 +126,12 @@ cd cordic
 </pre>
 
 <p>
-To build and run the basic "smoke" test, <b>test_basic.cpp</b>, on Linux, Cygwin, or macOS:
+For normal usage, there are no .cpp files to compile.  Everything is in the Cordic.h and freal.h headers.
+Simply add this directory to your compiler search path and enable -std=c++17.
+</p>
+
+<p>
+To build and run the basic "smoke" test, <b>test_basic.cpp</b>, on Linux, Cygwin, or macOS, run:
 </p>
 <pre>
 doit.test
@@ -141,15 +146,11 @@ test_basic.cpp does its own checking using macros in test_helpers.h.  In the nea
 Cordic should do optional checking of computations so that test_helpers.h can be deleted or greatly simplified.
 </p>
 
-<p>
-For normal usage, there are no .cpp files to compile.  Everything is in the Cordic.h and freal.h headers.
-</p>
-
 <h1>Notes</h1>
 
 <p>
 There should never be a need for this library to do something special for complex numbers. The C++ complex<> 
-class and associated math functions fall out naturally by using complex&lt;freal&gt; or whatever.
+class and associated math functions fall out naturally by using complex&lt;freal&gt;.
 </p>
 
 <p>
