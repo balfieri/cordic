@@ -1178,7 +1178,6 @@ T Cordic<T,FLT>::add( const T& x, const T& y ) const
     bool y_sign = y < T(0);
     T    sum    = x + y;
     T    sign_mask = sum >> (int_w() + frac_w());
-    cassert( (x_sign != y_sign || ((sum < T(0)) == x_sign)) && "add caused overflow" );
     cassert( sign_mask == T(0) || sign_mask == T(-1) && "add caused overflow" );
     return sum;
 }
