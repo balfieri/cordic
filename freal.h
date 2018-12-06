@@ -492,35 +492,6 @@ freal<T,FLT>::~freal()
 }
 
 //-----------------------------------------------------
-// Check CORDIC(s)
-//-----------------------------------------------------
-template< typename T, typename FLT >              
-const Cordic<T,FLT> * freal<T,FLT>::c( void ) const
-{
-    cassert( cordic != nullptr && "undefined type" );
-    return cordic;
-}
-
-template< typename T, typename FLT >              
-const Cordic<T,FLT> * freal<T,FLT>::c( const freal<T,FLT>& b ) const
-{
-    cassert( cordic   != nullptr && "a has undefined type" );
-    cassert( b.cordic != nullptr && "b has undefined type" );
-    cassert( cordic == b.cordic && "a and b must have same type currently" );
-    return cordic;
-}
-
-template< typename T, typename FLT >              
-const Cordic<T,FLT> * freal<T,FLT>::c( const freal<T,FLT>& b, const freal<T,FLT>& _c ) const
-{
-    cassert( cordic    != nullptr && "a has undefined type" );
-    cassert( b.cordic  != nullptr && "b has undefined type" );
-    cassert( _c.cordic != nullptr && "c has undefined type" );
-    cassert( cordic == b.cordic && cordic == _c.cordic && "a and b and c must have same type currently" );
-    return cordic;
-}
-
-//-----------------------------------------------------
 // Explicit Conversions
 //-----------------------------------------------------
 template< typename T, typename FLT >              
@@ -628,6 +599,35 @@ freal<T,FLT>::operator int32_t( void )
 { 
     cassert( implicit_from && "implicit_from_set( true ) must be called before relying on any implicit from freal<> to int32_t" );
     return int32_t( to_flt() );
+}
+
+//-----------------------------------------------------
+// Check that cordic(s) defined and return it.
+//-----------------------------------------------------
+template< typename T, typename FLT >              
+const Cordic<T,FLT> * freal<T,FLT>::c( void ) const
+{
+    cassert( cordic != nullptr && "undefined type" );
+    return cordic;
+}
+
+template< typename T, typename FLT >              
+const Cordic<T,FLT> * freal<T,FLT>::c( const freal<T,FLT>& b ) const
+{
+    cassert( cordic   != nullptr && "a has undefined type" );
+    cassert( b.cordic != nullptr && "b has undefined type" );
+    cassert( cordic == b.cordic && "a and b must have same type currently" );
+    return cordic;
+}
+
+template< typename T, typename FLT >              
+const Cordic<T,FLT> * freal<T,FLT>::c( const freal<T,FLT>& b, const freal<T,FLT>& _c ) const
+{
+    cassert( cordic    != nullptr && "a has undefined type" );
+    cassert( b.cordic  != nullptr && "b has undefined type" );
+    cassert( _c.cordic != nullptr && "c has undefined type" );
+    cassert( cordic == b.cordic && cordic == _c.cordic && "a and b and c must have same type currently" );
+    return cordic;
 }
 
 //-----------------------------------------------------
