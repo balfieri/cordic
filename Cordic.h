@@ -2067,7 +2067,7 @@ void Cordic<T,FLT>::reduce_sin_cos_arg( T& a, uint32_t& quad, bool& sign, bool& 
     a        -= s;
     quad      = (i >> 1) & 3;
     did_minus_pi_div_4 = i & 1;
-    if ( 1 ) std::cout << "reduce_sin_cos_arg: a_orig=" << to_flt(a_orig) << " m=" << to_flt(m) << " i=" << i << 
+    if ( debug ) std::cout << "reduce_sin_cos_arg: a_orig=" << to_flt(a_orig) << " m=" << to_flt(m) << " i=" << i << 
                               " subtract=" << to_flt(s) << " a_reduced=" << to_flt(a) << 
                               " quadrant=" << quad << " did_minus_pi_div_4=" << did_minus_pi_div_4 << "\n"; 
 
