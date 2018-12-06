@@ -58,7 +58,8 @@ public:
     //-----------------------------------------------------
     T       to_t( FLT x ) const;                // FLT to T encoded value
     FLT     to_flt( const T& x ) const;         // T encoded value to FLT
-    std::string to_string( const T& x) const;   // T to std::string
+    std::string to_string( const T& x ) const;  // T to std::string
+    std::string to_bstring( const T& x ) const; // T to std::string in binary format, like "1 001 101101011010"
 
     T       make_fixed( bool sign, T i, T f );  // encode a fixed-point    value using sign, integer  part i, and fractional part f
     T       make_float( bool sign, T e, T f );  // encode a floating-point value using sign, exponent part 3, and fractional part f
@@ -782,6 +783,22 @@ template< typename T, typename FLT >
 std::string Cordic<T,FLT>::to_string( const T& x ) const
 {
     return std::to_string( to_flt( x ) );  
+}
+
+template< typename T, typename FLT >
+std::string Cordic<T,FLT>::to_bstring( const T& _x ) const
+{
+    T x = _x;
+    uint32_t width = 1 + int_w() + frac_w();
+    std::string bs = "";
+    for( uint32_t i = 0; i < width; i++ )
+    {
+        if ( i == int_w() || i == frac_w() ) bs = " " + bs;
+        const char * b = (x & 1) ? "1" : "0";
+        bs = b + bs;
+        x >>= 1;
+    }
+    return bs;
 }
 
 template< typename T, typename FLT >
