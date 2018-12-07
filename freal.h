@@ -497,7 +497,7 @@ template< typename T, typename FLT >
 const Cordic<T,FLT> * freal<T,FLT>::implicit_to = nullptr;  // disallow
 
 template< typename T, typename FLT >              
-inline bool                  freal<T,FLT>::implicit_from = false;      // disallow
+bool                  freal<T,FLT>::implicit_from = false;  // disallow
 
 //-----------------------------------------------------
 // Constructors
@@ -512,23 +512,31 @@ inline freal<T,FLT>::freal( void )
 template< typename T, typename FLT >              
 inline freal<T,FLT>::~freal()
 {
-    cordic = nullptr;  // maybe assert that was assigned at least once?
-    v      = T(668);
-}
-
-template< typename T, typename FLT >              
-inline freal<T,FLT>::freal( const freal& other )
-{
-    cordic = other.c();
-    v      = other.v;
+    if ( cordic != nullptr ) {
+        cordic->destructed( v );
+        cordic = nullptr;
+    }
+    v = T(668);
 }
 
 template< typename T, typename FLT >              
 inline freal<T,FLT>::freal( const Cordic<T,FLT> * _cordic, FLT f )
 {
     cassert( _cordic != nullptr, "freal(cordic, f) cordic argument must be non-null" );
+    if ( cordic != nullptr ) cordic->destructed( v );
     cordic = _cordic;
-    v      = cordic->to_t( f );
+    cordic->constructed( v );
+    cordic->assign( v, cordic->to_t( f ) );
+}
+
+template< typename T, typename FLT >              
+inline freal<T,FLT>::freal( const freal& other )
+{
+    if ( cordic != nullptr ) cordic->destructed( v );
+    cordic = other.c();
+    v      = other.v;
+    cordic->constructed( v );
+    cordic->assign( v, other.v ); 
 }
 
 template< typename T, typename FLT >              
@@ -559,7 +567,8 @@ inline freal<T,FLT> freal<T,FLT>::make_raw( const Cordic<T,FLT> * cordic, const 
     cassert( cordic != nullptr, "make_raw(cordic, encoded) called with null cordic" );
     freal r;
     r.cordic = cordic;
-    r.v      = encoded;
+    cordic->constructed( r.v );
+    cordic->assign( r.v, encoded );
     return r;
 }
 

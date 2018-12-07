@@ -93,6 +93,8 @@ public:
     //
     // (2) means requires 2 applications of a CORDIC algorithm.              functionality
     //-----------------------------------------------------               ---------------------------
+    void constructed( const T& x ) const;                                 // so we can log creation of x
+    void destructed( const T& x ) const;                                  // so we can log destruction of x
     T&   assign( T& x, const T& y ) const;                                // x = y  (this exists so we can log assignments)
 
     bool isgreater( const T& x, const T& y ) const;                       // x > y
@@ -1297,6 +1299,18 @@ void Cordic<T,FLT>::linear_vectoring_xy( const T& x0, const T& y0, T& x, T& y ) 
         }
         y = yi;
     }
+}
+
+template< typename T, typename FLT >
+inline void Cordic<T,FLT>::constructed( const T& x ) const
+{
+    (void)x;
+}
+
+template< typename T, typename FLT >
+inline void Cordic<T,FLT>::destructed( const T& x ) const
+{
+    (void)x;
 }
 
 template< typename T, typename FLT >
