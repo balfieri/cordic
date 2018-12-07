@@ -133,12 +133,12 @@ public:
     freal& operator <<=(       int    b );
     freal& operator >>=(       int    b );
 
-    bool   operator == ( const freal& b ) const;
-    bool   operator != ( const freal& b ) const;
-    bool   operator <  ( const freal& b ) const;
-    bool   operator <= ( const freal& b ) const;
     bool   operator >  ( const freal& b ) const;
     bool   operator >= ( const freal& b ) const;
+    bool   operator <  ( const freal& b ) const;
+    bool   operator <= ( const freal& b ) const;
+    bool   operator != ( const freal& b ) const;
+    bool   operator == ( const freal& b ) const;
 
     //-----------------------------------------------------
     // Well-Known Math Operators and Functions 
@@ -147,6 +147,17 @@ public:
     //
     // a = *this
     //-----------------------------------------------------               
+    freal& assign( const freal& b ) const;                      
+
+    bool   isgreater( const freal& b ) const;                        
+    bool   isgreaterequal( const freal& b ) const;                 
+    bool   isless( const freal& b ) const;                          
+    bool   islessequal( const freal& b ) const;                   
+    bool   islessgreater( const freal& b ) const;                
+    bool   isunordered( const freal& b ) const;              
+    bool   isunequal( const freal& b ) const;                 
+    bool   isequal( const freal& b ) const;                   
+
     freal  abs( void ) const;
     freal  neg( void ) const; 
     freal  floor( void ) const;
@@ -245,6 +256,38 @@ static inline std::ostream& operator << ( std::ostream &out, const freal<T,FLT>&
 template< typename T=int64_t, typename FLT=double >              
 static inline std::string   to_string( const freal<T,FLT>& a )
 { return a.to_string();                 }
+
+template< typename T=int64_t, typename FLT=double >              
+static inline bool          isgreater( const freal<T,FLT>& a, const freal<T,FLT>& b )
+{ return a.isgreater( b );              }
+
+template< typename T=int64_t, typename FLT=double >              
+static inline bool          isgreaterequal( const freal<T,FLT>& a, const freal<T,FLT>& b )
+{ return a.isgreaterequal( b );         }
+
+template< typename T=int64_t, typename FLT=double >              
+static inline bool          isless( const freal<T,FLT>& a, const freal<T,FLT>& b )
+{ return a.isless( b );                 }
+
+template< typename T=int64_t, typename FLT=double >              
+static inline bool          islessequal( const freal<T,FLT>& a, const freal<T,FLT>& b )
+{ return a.islessequal( b );            }
+
+template< typename T=int64_t, typename FLT=double >              
+static inline bool          islessgreater( const freal<T,FLT>& a, const freal<T,FLT>& b )
+{ return a.islessgreater( b );          }
+
+template< typename T=int64_t, typename FLT=double >              
+static inline bool          isunordered( const freal<T,FLT>& a, const freal<T,FLT>& b )
+{ return a.isunordered( b );            }
+
+template< typename T=int64_t, typename FLT=double >              
+static inline bool          isunequal( const freal<T,FLT>& a, const freal<T,FLT>& b )
+{ return a.isunequal( b );              }
+
+template< typename T=int64_t, typename FLT=double >              
+static inline bool          isequal( const freal<T,FLT>& a, const freal<T,FLT>& b )
+{ return a.isequal( b );                }
 
 template< typename T=int64_t, typename FLT=double >              
 static inline freal<T,FLT>  abs( const freal<T,FLT>& a )
@@ -815,65 +858,101 @@ inline freal<T,FLT>  freal<T,FLT>::operator >> (       int    b ) const
 
 template< typename T, typename FLT >              
 inline freal<T,FLT>& freal<T,FLT>::operator =  ( const freal<T,FLT>& b ) 
-{ cordic = b.c(); v = b.v; return *this;}
+{ return assign( b );                   }
 
 template< typename T, typename FLT >              
 inline freal<T,FLT>& freal<T,FLT>::operator =  ( const FLT&   b )
-{ v = c()->to_t( b ); return *this;     }
+{ return assign( freal<T,FLT>( b ) );   }
 
 template< typename T, typename FLT >              
 inline freal<T,FLT>& freal<T,FLT>::operator += ( const freal<T,FLT>& b )
-{ *this = *this + b; return *this;      }
+{ return assign( add( b ) );            }
 
 template< typename T, typename FLT >              
 inline freal<T,FLT>& freal<T,FLT>::operator -= ( const freal<T,FLT>& b )
-{ *this = *this - b; return *this;      }
+{ return assign( sub( b ) );            }
 
 template< typename T, typename FLT >              
 inline freal<T,FLT>& freal<T,FLT>::operator *= ( const freal<T,FLT>& b )
-{ *this = *this * b; return *this;      }
+{ return assign( mul( b ) );            }
 
 template< typename T, typename FLT >              
 inline freal<T,FLT>& freal<T,FLT>::operator /= ( const freal<T,FLT>& b )
-{ *this = *this / b; return *this;      }
+{ return assign( div( b ) );            }
 
 template< typename T, typename FLT >              
 inline freal<T,FLT>& freal<T,FLT>::operator <<=(       int    b )
-{ *this = *this << b; return *this;     }
+{ return assign( lshift( b ) );         }
 
 template< typename T, typename FLT >              
 inline freal<T,FLT>& freal<T,FLT>::operator >>=(       int    b )
-{ *this = *this >> b; return *this;     }
-
-template< typename T, typename FLT >              
-inline bool   freal<T,FLT>::operator == ( const freal<T,FLT>& b ) const                                        
-{ return c( b ) && v == b.v;            }
-
-template< typename T, typename FLT >              
-inline bool   freal<T,FLT>::operator != ( const freal<T,FLT>& b ) const                                        
-{ return c( b ) && v != b.v;            }
-
-template< typename T, typename FLT >              
-inline bool   freal<T,FLT>::operator <  ( const freal<T,FLT>& b ) const                                        
-{ return c( b ) && v <  b.v;            }
-
-template< typename T, typename FLT >              
-inline bool   freal<T,FLT>::operator <= ( const freal<T,FLT>& b ) const                                        
-{ return c( b ) && v <= b.v;            }
+{ return assign( rshift( b ) );         }
 
 template< typename T, typename FLT >             
 inline bool   freal<T,FLT>::operator >  ( const freal<T,FLT>& b ) const                                        
-{ return c( b ) && v >  b.v;            }
+{ return isgreater( b );                }
 
 template< typename T, typename FLT >              
 inline bool   freal<T,FLT>::operator >= ( const freal<T,FLT>& b ) const                                        
-{ return c( b ) && v >= b.v;            }
+{ return isgreaterequal( b );           }
+
+template< typename T, typename FLT >              
+inline bool   freal<T,FLT>::operator <  ( const freal<T,FLT>& b ) const                                        
+{ return isless( b );                   }
+
+template< typename T, typename FLT >              
+inline bool   freal<T,FLT>::operator <= ( const freal<T,FLT>& b ) const                                        
+{ return islessequal( b );              }
+
+template< typename T, typename FLT >              
+inline bool   freal<T,FLT>::operator != ( const freal<T,FLT>& b ) const                                        
+{ return isunequal( b );                }
+
+template< typename T, typename FLT >              
+inline bool   freal<T,FLT>::operator == ( const freal<T,FLT>& b ) const                                        
+{ return isequal( b );                  }
 
 //-----------------------------------------------------
 // Well-Known Math Operators and Functions 
 //
 // a = *this
 //-----------------------------------------------------               
+
+template< typename T, typename FLT >              
+inline freal<T,FLT>& freal<T,FLT>::assign( const freal<T,FLT>& b ) const                                    
+{ c( b )->assign( v, b.v ); return *this; }
+
+template< typename T, typename FLT >              
+inline bool freal<T,FLT>::isgreater( const freal<T,FLT>& b ) const                                    
+{ return c( b )->isgreater( v, b.v );   }
+
+template< typename T, typename FLT >              
+inline bool freal<T,FLT>::isgreaterequal( const freal<T,FLT>& b ) const                                    
+{ return c( b )->isgreaterequal( v, b.v );   }
+
+template< typename T, typename FLT >              
+inline bool freal<T,FLT>::isless( const freal<T,FLT>& b ) const                                    
+{ return c( b )->isless( v, b.v );   }
+
+template< typename T, typename FLT >              
+inline bool freal<T,FLT>::islessequal( const freal<T,FLT>& b ) const                                    
+{ return c( b )->islessequal( v, b.v );   }
+
+template< typename T, typename FLT >              
+inline bool freal<T,FLT>::islessgreater( const freal<T,FLT>& b ) const                                    
+{ return c( b )->islessgreater( v, b.v );   }
+
+template< typename T, typename FLT >              
+inline bool freal<T,FLT>::isunordered( const freal<T,FLT>& b ) const                                    
+{ return c( b )->isunordered( v, b.v );   }
+
+template< typename T, typename FLT >              
+inline bool freal<T,FLT>::isunequal( const freal<T,FLT>& b ) const                                    
+{ return c( b )->isunequal( v, b.v );   }
+
+template< typename T, typename FLT >              
+inline bool freal<T,FLT>::isequal( const freal<T,FLT>& b ) const                                    
+{ return c( b )->isequal( v, b.v );   }
 
 template< typename T, typename FLT >              
 inline freal<T,FLT>  freal<T,FLT>::abs( void ) const

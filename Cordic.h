@@ -100,9 +100,9 @@ public:
     bool isless( const T& x, const T& y ) const;                          // x > y
     bool islessequal( const T& x, const T& y ) const;                     // x >= y
     bool islessgreater( const T& x, const T& y ) const;                   // x != y (but returns false if at least one is NaN)
-    bool isnotequal( const T& x, const T& y ) const;                      // x != y (returns true if only one is NaN)
-    bool isequal( const T& x, const T& y ) const;                         // x == y (returns true if both are NaN)
     bool isunordered( const T& x, const T& y ) const;                     // returns true if x is a NaN OR y is a NaN
+    bool isunequal( const T& x, const T& y ) const;                      // x != y (returns true if only one is NaN)
+    bool isequal( const T& x, const T& y ) const;                         // x == y (returns true if both are NaN)
 
     T    abs( const T& x ) const;                                         // |x|
     T    neg( const T& x ) const;                                         // -x
@@ -1337,7 +1337,13 @@ inline bool Cordic<T,FLT>::islessgreater( const T& x, const T& y ) const
 }
 
 template< typename T, typename FLT >
-inline bool Cordic<T,FLT>::isnotequal( const T& x, const T& y ) const
+inline bool Cordic<T,FLT>::isunordered( const T& x, const T& y ) const
+{
+    return !(x == y || x != y);
+}
+
+template< typename T, typename FLT >
+inline bool Cordic<T,FLT>::isunequal( const T& x, const T& y ) const
 {
     return x != y;
 }
@@ -1346,12 +1352,6 @@ template< typename T, typename FLT >
 inline bool Cordic<T,FLT>::isequal( const T& x, const T& y ) const
 {
     return x == y;
-}
-
-template< typename T, typename FLT >
-inline bool Cordic<T,FLT>::isunordered( const T& x, const T& y ) const
-{
-    return !(x == y || x != y);
 }
 
 template< typename T, typename FLT >
