@@ -964,9 +964,9 @@ void Cordic<T,FLT>::circular_vectoring_xy( const T& x0, const T& y0, T& x, T& y 
     //-----------------------------------------------------
     const T ONE = one();
     const T THREE = 3*ONE;
-    if ( debug ) std::cout << "circular_vectoring begin: x0,y0=[ " << to_flt(x0) << ", " << to_flt(y0) << "\n";
-    cassert( x0 >= -THREE && x0 <= THREE && "circular_vectoring x0 must be in the range -3 .. 3" );
-    cassert( y0 >= -ONE   && y0 <= ONE   && "circular_vectoring y0 must be in the range -1 .. 1" );
+    if ( debug ) std::cout << "circular_vectoring_xy begin: x0,y0=[ " << to_flt(x0) << ", " << to_flt(y0) << "\n";
+    cassert( x0 >= -THREE && x0 <= THREE && "circular_vectoring_xy x0 must be in the range -3 .. 3" );
+    cassert( y0 >= -ONE   && y0 <= ONE   && "circular_vectoring_xy y0 must be in the range -1 .. 1" );
 
     //-----------------------------------------------------
     // d = (y < 0) ? 1 : -1
@@ -980,7 +980,7 @@ void Cordic<T,FLT>::circular_vectoring_xy( const T& x0, const T& y0, T& x, T& y 
     {
         T xi;
         T yi;
-        if ( debug ) printf( "circular_vectoring: i=%d xy=[%.30f,%.30f] test=%d\n", i, to_flt(x), to_flt(y), int(y < zero()) );
+        if ( debug ) printf( "circular_vectoring_xy: i=%d xy=[%.30f,%.30f] test=%d\n", i, to_flt(x), to_flt(y), int(y < zero()) );
         if ( y < T(0) ) {
             xi = x - (y >> i);
             yi = y + (x >> i);
@@ -1117,8 +1117,8 @@ void Cordic<T,FLT>::hyperbolic_vectoring_xy( const T& x0, const T& y0, T& x, T& 
     const T TWO = one() << 1;
     const T PI  = pi();
     if ( debug ) std::cout << "hyperbolic_vectoring_xy begin: x0,y0=[ " << to_flt(x0) << ", " << to_flt(y0) << "\n";
-    cassert( x0 >= -TWO && x0 <= TWO && "hyperbolic_vectoring x0 must be in the range -2 .. 2" );
-    cassert( y0 >= -TWO && y0 <= TWO && "hyperbolic_vectoring y0 must be in the range -2 .. 2" );
+    cassert( x0 >= -TWO && x0 <= TWO && "hyperbolic_vectoring_xy x0 must be in the range -2 .. 2" );
+    cassert( y0 >= -TWO && y0 <= TWO && "hyperbolic_vectoring_xy y0 must be in the range -2 .. 2" );
 
     //-----------------------------------------------------
     // d = (y < 0) ? 1 : -1
@@ -1133,7 +1133,7 @@ void Cordic<T,FLT>::hyperbolic_vectoring_xy( const T& x0, const T& y0, T& x, T& 
     {
         T xi;
         T yi;
-        if ( debug ) printf( "hyperbolic_vectoring: i=%d xy=[%.30f,%.30f] test=%d\n", i, to_flt(x), to_flt(y), int(y < zero()) );
+        if ( debug ) printf( "hyperbolic_vectoring_xy: i=%d xy=[%.30f,%.30f] test=%d\n", i, to_flt(x), to_flt(y), int(y < zero()) );
         if ( y < T(0) ) {
             xi = x + (y >> i);
             yi = y + (x >> i);
@@ -1207,10 +1207,10 @@ void Cordic<T,FLT>::linear_vectoring( const T& x0, const T& y0, const T& z0, T& 
     const T ONE = one();
     const T TWO = ONE << 1;
     if ( debug ) std::cout << "linear_vectoring begin: x0,y0,z0=[ " << to_flt(x0) << ", " << to_flt(y0) << ", " << to_flt(z0) << "]\n";
-    cassert( x0 >= -TWO && x0 <= TWO && "linear_rotation x0 must be in the range -2 .. 2" );
-    cassert( y0 >= -TWO && y0 <= TWO && "linear_rotation y0 must be in the range -2 .. 2" );
+    cassert( x0 >= -TWO && x0 <= TWO && "linear_vectoring x0 must be in the range -2 .. 2" );
+    cassert( y0 >= -TWO && y0 <= TWO && "linear_vectoring y0 must be in the range -2 .. 2" );
     //cassert( std::abs( to_flt(y0) / to_flt(x0) ) <= FLT(1.0) &&
-    //                                    "linear_rotation y0/x0 must be in the range -1 .. 1" );
+    //                                    "linear_vectoring y0/x0 must be in the range -1 .. 1" );
     
     //-----------------------------------------------------
     // d = (y < 0) ? 1 : -1
@@ -1249,9 +1249,9 @@ void Cordic<T,FLT>::linear_vectoring_xy( const T& x0, const T& y0, T& x, T& y ) 
     //      -2      <= y0 <= 2
     //-----------------------------------------------------
     const T TWO = one() << 1;
-    if ( debug ) std::cout << "linear_vectoring begin: x0,y0=[ " << to_flt(x0) << ", " << to_flt(y0) << "\n";
-    cassert( x0 >= -TWO && x0 <= TWO && "linear_rotation x0 must be in the range -2 .. 2" );
-    cassert( y0 >= -TWO && y0 <= TWO && "linear_rotation y0 must be in the range -2 .. 2" );
+    if ( debug ) std::cout << "linear_vectoring_xy begin: x0,y0=[ " << to_flt(x0) << ", " << to_flt(y0) << "\n";
+    cassert( x0 >= -TWO && x0 <= TWO && "linear_vectoring_xy x0 must be in the range -2 .. 2" );
+    cassert( y0 >= -TWO && y0 <= TWO && "linear_vectoring_xy y0 must be in the range -2 .. 2" );
     
     //-----------------------------------------------------
     // d = (y < 0) ? 1 : -1
@@ -1263,7 +1263,7 @@ void Cordic<T,FLT>::linear_vectoring_xy( const T& x0, const T& y0, T& x, T& y ) 
     uint32_t n = impl->n;
     for( uint32_t i = 0; i <= n; i++ )
     {
-        if ( debug ) printf( "linear_vectoring: i=%d xy=[%.30f,%.30f] test=%d\n", i, to_flt(x), to_flt(y), int(y < zero()) );
+        if ( debug ) printf( "linear_vectoring_xy: i=%d xy=[%.30f,%.30f] test=%d\n", i, to_flt(x), to_flt(y), int(y < zero()) );
         T yi;
         if ( y < T(0) ) {
             yi = y + (x >> i);
@@ -1493,8 +1493,8 @@ T Cordic<T,FLT>::sqrt( const T& _x ) const
     int32_t ls;
     if ( impl->do_reduce ) reduce_sqrt_arg( x, ls );
 
-    T xx, yy, zz;
-    hyperbolic_vectoring( x+one(), x-one(), zero(), xx, yy, zz );  // gain*sqrt((s+1)^2 - (s-1)^2)
+    T xx, yy;
+    hyperbolic_vectoring_xy( x+one(), x-one(), xx, yy );  // gain*sqrt((s+1)^2 - (s-1)^2)
     xx = mul( xx, hyperbolic_vectoring_one_over_gain(), false );   // sucks that we have to do this
     if ( impl->do_reduce ) xx = lshift( xx, ls );                  // log2(p)/2 - 1
 
@@ -1824,7 +1824,7 @@ T Cordic<T,FLT>::norm( const T& _x, const T& _y, bool do_reduce ) const
     if ( do_reduce ) reduce_norm_args( x, y, ls, swapped );
 
     T xx, yy, zz;
-    circular_vectoring( x, y, zero(), xx, yy, zz );
+    circular_vectoring_xy( x, y, xx, yy );
     xx = mul( xx, circular_vectoring_one_over_gain(), true );
     if ( do_reduce ) xx = lshift( xx, ls );
     if ( debug ) std::cout << "norm end: x=" << to_flt(x) << " y=" << to_flt(y) << " do_reduce=" << do_reduce << " xx=" << to_flt(xx) << "\n";
