@@ -63,7 +63,7 @@ static inline FLT tolerance( uint32_t frac_w, FLT expected, FLT tol, int32_t& to
     std::cout << "Actual:   " << std::setw(30) << fltz   << " (" << c->to_bstring( tz )   << ")\n"; \
     std::cout << "Diff:     " << std::setw(30) << flterr << " (" << c->to_bstring( terr ) << ")\n"; \
     std::cout << "Tol:      " << std::setw(30) << tol    << " (" << tol_bits              << " bits)\n\n"; \
-    cassert( flterr <= tol );			                        \
+    cassert( flterr <= tol, "outside tolerance" );			\
 }    
 
 #define do_op12( str, c_fn, exp_fn, fltx, do_reduce )                   \
@@ -101,8 +101,8 @@ static inline FLT tolerance( uint32_t frac_w, FLT expected, FLT tol, int32_t& to
     std::cout << "Diff:     " << std::setw(30) << flterr2 << " (" << c->to_bstring( terr2 ) << ")\n"; \
     std::cout << "Tol:      " << std::setw(30) << tol1    << " (" << tol1_bits              << " bits)\n"; \
     std::cout << "Tol:      " << std::setw(30) << tol2    << " (" << tol2_bits              << " bits)\n\n"; \
-    cassert( flterr1 <= tol1 );			                        \
-    cassert( flterr2 <= tol2 );			                        \
+    cassert( flterr1 <= tol1, "outside tolerance" );			\
+    cassert( flterr2 <= tol2, "outside tolerance" );			\
 }    
 
 #define do_op2( str, c_fn, exp_fn, fltx, flty, do_reduce )              \
@@ -129,7 +129,7 @@ static inline FLT tolerance( uint32_t frac_w, FLT expected, FLT tol, int32_t& to
     std::cout << "Actual:   " << std::setw(30) << fltz   << " (" << c->to_bstring( tz )   << ")\n"; \
     std::cout << "Diff:     " << std::setw(30) << flterr << " (" << c->to_bstring( terr ) << ")\n"; \
     std::cout << "Tol:      " << std::setw(30) << tol    << " (" << tol_bits              << " bits)\n\n"; \
-    cassert( flterr <= tol );			                        \
+    cassert( flterr <= tol, "outside tolerance" );			\
 }    
 
 #define do_op22( str, c_fn, exp_fn, fltx, flty, do_reduce )             \
@@ -169,8 +169,8 @@ static inline FLT tolerance( uint32_t frac_w, FLT expected, FLT tol, int32_t& to
     std::cout << "Diff:     " << std::setw(30) << flterr2 << " (" << c->to_bstring( terr2 ) << ")\n"; \
     std::cout << "Tol:      " << std::setw(30) << tol1    << " (" << tol1_bits              << " bits)\n"; \
     std::cout << "Tol:      " << std::setw(30) << tol2    << " (" << tol2_bits              << " bits)\n\n"; \
-    cassert( flterr1 <= tol1 );			                        \
-    cassert( flterr2 <= tol2 );			                        \
+    cassert( flterr1 <= tol1, "outside tolerance" );			\
+    cassert( flterr2 <= tol2, "outside tolerance" );			\
 }    
 
 #define do_op3( str, c_fn, exp_fn, fltx, flty, fltw, do_reduce )        \
@@ -199,7 +199,7 @@ static inline FLT tolerance( uint32_t frac_w, FLT expected, FLT tol, int32_t& to
     std::cout << "Actual:   " << std::setw(30) << fltz   << " (" << c->to_bstring( tz )   << ")\n"; \
     std::cout << "Diff:     " << std::setw(30) << flterr << " (" << c->to_bstring( terr ) << ")\n"; \
     std::cout << "Tol:      " << std::setw(30) << tol    << " (" << tol_bits              << " bits)\n\n"; \
-    cassert( flterr <= tol );			                        \
+    cassert( flterr <= tol, "outside tolerance" );			\
 }    
 
 // FLT wrapper routines for those that are not in std::

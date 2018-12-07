@@ -81,6 +81,7 @@ int main( int argc, const char * argv[] )
     //---------------------------------------------------------------------------
     // Put fixed bugs here so they get regressed.
     //---------------------------------------------------------------------------
+    do_op2(  "7) pow",         pow,    std::pow,      0.004999995231628418, 0.45454543828964233, do_reduce );
     do_op2(  "6) norm",        norm,   norm,          0.70710676908493042, 0.70710664987564087, do_reduce );
     do_op1(  "5) cos",         cos,    std::cos,      1.6214,           do_reduce );
     do_op1(  "4) sqrt",        sqrt,   std::sqrt,     3.8104,           do_reduce );

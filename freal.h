@@ -482,7 +482,7 @@ freal<T,FLT>::freal( const freal& other, FLT f )
 template< typename T, typename FLT >              
 freal<T,FLT>::freal( const Cordic<T,FLT> * _cordic, FLT f )
 {
-    cassert( _cordic != nullptr && "freal(cordic, f) cordic argument must be non-null" );
+    cassert( _cordic != nullptr, "freal(cordic, f) cordic argument must be non-null" );
     cordic = _cordic;
     v      = cordic->to_t( f );
 }
@@ -496,7 +496,7 @@ freal<T,FLT> freal<T,FLT>::make_fixed( uint32_t int_w, uint32_t frac_w, FLT init
 template< typename T, typename FLT >              
 freal<T,FLT> freal<T,FLT>::make_float( uint32_t exp_w, uint32_t frac_w, FLT init_f )
 {
-    cassert( false && "can't encode floating-point values right now" );
+    cassert( false, "can't encode floating-point values right now" );
     (void)exp_w;   // unused
     (void)frac_w;
     (void)init_f;
@@ -539,84 +539,84 @@ void freal<T,FLT>::implicit_from_set( bool allow )
 template< typename T, typename FLT >              
 freal<T,FLT>::freal( double f )
 {
-    cassert( implicit_to != nullptr && "implicit_to_set() must be called before relying on any implicit from double to freal<>" );
+    cassert( implicit_to != nullptr, "implicit_to_set() must be called before relying on any implicit from double to freal<>" );
     *this = freal( implicit_to, FLT(f) );
 }
 
 template< typename T, typename FLT >              
 freal<T,FLT>::freal( float f )
 {
-    cassert( implicit_to != nullptr && "implicit_to_set() must be called before relying on any implicit from float to freal<>" );
+    cassert( implicit_to != nullptr, "implicit_to_set() must be called before relying on any implicit from float to freal<>" );
     *this = freal( implicit_to, FLT(f) );
 }
 
 template< typename T, typename FLT >              
 freal<T,FLT>::freal( uint64_t i )
 {
-    cassert( implicit_to != nullptr && "implicit_to_set() must be called before relying on any implicit from uint64_t to freal<>" );
+    cassert( implicit_to != nullptr, "implicit_to_set() must be called before relying on any implicit from uint64_t to freal<>" );
     *this = freal( implicit_to, FLT(i) );
 }
 
 template< typename T, typename FLT >              
 freal<T,FLT>::freal( int64_t i )
 {
-    cassert( implicit_to != nullptr && "implicit_to_set() must be called before relying on any implicit from int64_t to freal<>" );
+    cassert( implicit_to != nullptr, "implicit_to_set() must be called before relying on any implicit from int64_t to freal<>" );
     *this = freal( implicit_to, FLT(i) );
 }
 
 template< typename T, typename FLT >              
 freal<T,FLT>::freal( uint32_t i )
 {
-    cassert( implicit_to != nullptr && "implicit_to_set() must be called before relying on any implicit from uint32_t to freal<>" );
+    cassert( implicit_to != nullptr, "implicit_to_set() must be called before relying on any implicit from uint32_t to freal<>" );
     *this = freal( implicit_to, FLT(i) );
 }
 
 template< typename T, typename FLT >              
 freal<T,FLT>::freal( int32_t i )
 {
-    cassert( implicit_to != nullptr && "implicit_to_set() must be called before relying on any implicit from int32_t to freal<>" );
+    cassert( implicit_to != nullptr, "implicit_to_set() must be called before relying on any implicit from int32_t to freal<>" );
     *this = freal( implicit_to, FLT(i) );
 }
 
 template< typename T, typename FLT >              
 freal<T,FLT>::operator double( void )
 { 
-    cassert( implicit_from && "implicit_from_set( true ) must be called before relying on any implicit from freal<> to double" );
+    cassert( implicit_from, "implicit_from_set( true ) must be called before relying on any implicit from freal<> to double" );
     return to_flt();
 }
 
 template< typename T, typename FLT >              
 freal<T,FLT>::operator float( void )
 { 
-    cassert( implicit_from && "implicit_from_set( true ) must be called before relying on any implicit from freal<> to float" );
+    cassert( implicit_from, "implicit_from_set( true ) must be called before relying on any implicit from freal<> to float" );
     return to_flt();
 }
 
 template< typename T, typename FLT >              
 freal<T,FLT>::operator uint64_t( void )
 { 
-    cassert( implicit_from && "implicit_from_set( true ) must be called before relying on any implicit from freal<> to uint64_t" );
+    cassert( implicit_from, "implicit_from_set( true ) must be called before relying on any implicit from freal<> to uint64_t" );
     return uint64_t( to_flt() );
 }
 
 template< typename T, typename FLT >              
 freal<T,FLT>::operator int64_t( void )
 { 
-    cassert( implicit_from && "implicit_from_set( true ) must be called before relying on any implicit from freal<> to int64_t" );
+    cassert( implicit_from, "implicit_from_set( true ) must be called before relying on any implicit from freal<> to int64_t" );
     return int64_t( to_flt() );
 }
 
 template< typename T, typename FLT >              
 freal<T,FLT>::operator uint32_t( void )
 { 
-    cassert( implicit_from && "implicit_from_set( true ) must be called before relying on any implicit from freal<> to uint32_t" );
+    cassert( implicit_from, "implicit_from_set( true ) must be called before relying on any implicit from freal<> to uint32_t" );
     return uint32_t( to_flt() );
 }
 
 template< typename T, typename FLT >              
 freal<T,FLT>::operator int32_t( void )
 { 
-    cassert( implicit_from && "implicit_from_set( true ) must be called before relying on any implicit from freal<> to int32_t" );
+    cassert( implicit_from, "implicit_from_set( true ) must be called before relying on any implicit from freal<> to int32_t" );
     return int32_t( to_flt() );
 }
 
@@ -626,26 +626,26 @@ freal<T,FLT>::operator int32_t( void )
 template< typename T, typename FLT >              
 const Cordic<T,FLT> * freal<T,FLT>::c( void ) const
 {
-    cassert( cordic != nullptr && "undefined type" );
+    cassert( cordic != nullptr, "undefined type" );
     return cordic;
 }
 
 template< typename T, typename FLT >              
 const Cordic<T,FLT> * freal<T,FLT>::c( const freal<T,FLT>& b ) const
 {
-    cassert( cordic   != nullptr && "a has undefined type" );
-    cassert( b.cordic != nullptr && "b has undefined type" );
-    cassert( cordic == b.cordic && "a and b must have same type currently" );
+    cassert( cordic   != nullptr, "a has undefined type" );
+    cassert( b.cordic != nullptr, "b has undefined type" );
+    cassert( cordic == b.cordic, "a and b must have same type currently" );
     return cordic;
 }
 
 template< typename T, typename FLT >              
 const Cordic<T,FLT> * freal<T,FLT>::c( const freal<T,FLT>& b, const freal<T,FLT>& _c ) const
 {
-    cassert( cordic    != nullptr && "a has undefined type" );
-    cassert( b.cordic  != nullptr && "b has undefined type" );
-    cassert( _c.cordic != nullptr && "c has undefined type" );
-    cassert( cordic == b.cordic && cordic == _c.cordic && "a and b and c must have same type currently" );
+    cassert( cordic    != nullptr, "a has undefined type" );
+    cassert( b.cordic  != nullptr, "b has undefined type" );
+    cassert( _c.cordic != nullptr, "c has undefined type" );
+    cassert( cordic == b.cordic && cordic == _c.cordic, "a and b and c must have same type currently" );
     return cordic;
 }
 

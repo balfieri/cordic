@@ -25,7 +25,8 @@
 #include <iostream>
 #include <iomanip>
 
-#define cassert(expr) if ( !(expr) ) { printf( "ERROR: assertion failure: '%s' at %s:%d\n", #expr, __FILE__, __LINE__ ); exit( 1 ); }
+#define cassert(expr, msg) if ( !(expr) ) \
+                { std::cout << "ERROR: assertion failure: " << (msg) << " at " << __FILE__ << ":" << __LINE__ << "\n"; exit( 1 ); }
 
 
 // T      = some signed integer type that can hold fixed-point values (default is int64_t)
@@ -483,9 +484,9 @@ template< typename T, typename FLT >
 Cordic<T,FLT>::Cordic( uint32_t int_w, uint32_t frac_w, bool do_reduce, uint32_t n )
 {
     if ( n == 0 ) n = frac_w;
-    cassert( (1+int_w+frac_w) <= (sizeof( T ) * 8) && "1+int_w+frac_w does not fit in T container" );
-    cassert( int_w  != 0 && "int_w must be > 0 currently" );
-    cassert( frac_w != 0 && "frac_w must be > 0 currently" );
+    cassert( (1+int_w+frac_w) <= (sizeof( T ) * 8), "1+int_w+frac_w does not fit in T container" );
+    cassert( int_w  != 0, "int_w must be > 0 currently" );
+    cassert( frac_w != 0, "frac_w must be > 0 currently" );
 
     impl = new Impl;
 
@@ -561,7 +562,7 @@ Cordic<T,FLT>::Cordic( uint32_t int_w, uint32_t frac_w, bool do_reduce, uint32_t
 
     // construct LUT used by reduce_sinh_cosh_arg();
     // use integer part plus 0.25 bit of fraction
-    cassert( int_w <= 24 && "too many cases to worry about" );
+    cassert( int_w <= 24, "too many cases to worry about" );
     uint32_t N = 1 << (2+int_w);
     T *        addend       = new T[N];
     uint32_t * quadrant     = new uint32_t[N];
@@ -802,7 +803,7 @@ T Cordic<T,FLT>::to_t( FLT _x ) const
     FLT x = _x;
     bool is_neg = x < 0.0;
     if ( is_neg ) x = -x;
-    cassert( T(x) < (T(1) << int_w()) && "to_t: integer part of |x| does not fit in int_w bits" ); 
+    cassert( T(x) < (T(1) << int_w()), "to_t: integer part of |x| does not fit in int_w bits" ); 
     T x_t = x * FLT( one() );
     if ( is_neg ) x_t = -x_t;
     return x_t;
@@ -844,8 +845,8 @@ std::string Cordic<T,FLT>::to_bstring( const T& _x ) const
 template< typename T, typename FLT >
 T Cordic<T,FLT>::make_fixed( bool sign, T i, T f )
 {
-    cassert( i >= 0 && i <= maxint()               && "make_fixed integer part must be in range 0 .. maxint()" );
-    cassert( f >= 0 && f <= ((T(1) << frac_w())-1) && "make_fixed fractional part must be in range 0 .. (1 << frac_w)-1" );
+    cassert( i >= 0 && i <= maxint()              , "make_fixed integer part must be in range 0 .. maxint()" );
+    cassert( f >= 0 && f <= ((T(1) << frac_w())-1), "make_fixed fractional part must be in range 0 .. (1 << frac_w)-1" );
 
     return (T(sign) << (int_w() + frac_w())) |
            (T(i)    << frac_w())             |
@@ -867,9 +868,9 @@ void Cordic<T,FLT>::circular_rotation( const T& x0, const T& y0, const T& z0, T&
     const T ONE = one();
     const T ANGLE_MAX = circular_angle_max();
     if ( debug ) std::cout << "circular_rotation begin: x0,y0,z0=[ " << to_flt(x0) << ", " << to_flt(y0) << ", " << to_flt(z0) << "]\n";
-    cassert( x0 >= -ONE       && x0 <= ONE &&       "circular_rotation x0 must be in the range -1 .. 1" );
-    cassert( y0 >= -ONE       && y0 <= ONE &&       "circular_rotation y0 must be in the range -1 .. 1" );
-    cassert( z0 >= -ANGLE_MAX && z0 <= ANGLE_MAX && "circular_rotation |z0| must be <= circular_angle_max()" );
+    cassert( x0 >= -ONE       && x0 <= ONE,       "circular_rotation x0 must be in the range -1 .. 1" );
+    cassert( y0 >= -ONE       && y0 <= ONE,       "circular_rotation y0 must be in the range -1 .. 1" );
+    cassert( z0 >= -ANGLE_MAX && z0 <= ANGLE_MAX, "circular_rotation |z0| must be <= circular_angle_max()" );
 
     //-----------------------------------------------------
     // d = (z >= 0) ? 1 : -1
@@ -917,10 +918,10 @@ void Cordic<T,FLT>::circular_vectoring( const T& x0, const T& y0, const T& z0, T
     const T PI  = pi();
     const T ANGLE_MAX = circular_angle_max();
     if ( debug ) std::cout << "circular_vectoring begin: x0,y0,z0=[ " << to_flt(x0) << ", " << to_flt(y0) << ", " << to_flt(z0) << "]\n";
-    cassert( x0 >= -THREE && x0 <= THREE && "circular_vectoring x0 must be in the range -3 .. 3" );
-    cassert( y0 >= -ONE   && y0 <= ONE   && "circular_vectoring y0 must be in the range -1 .. 1" );
-    cassert( z0 >= -PI    && z0 <= PI    && "circular_vectoring z0 must be in the range -PI .. PI" );
-    cassert( std::abs( std::atan( to_flt(y0) / to_flt(x0) ) ) <= to_flt(ANGLE_MAX) && 
+    cassert( x0 >= -THREE && x0 <= THREE, "circular_vectoring x0 must be in the range -3 .. 3" );
+    cassert( y0 >= -ONE   && y0 <= ONE  , "circular_vectoring y0 must be in the range -1 .. 1" );
+    cassert( z0 >= -PI    && z0 <= PI   , "circular_vectoring z0 must be in the range -PI .. PI" );
+    cassert( std::abs( std::atan( to_flt(y0) / to_flt(x0) ) ) <= to_flt(ANGLE_MAX),
                                         "circular_vectoring |atan(y0/x0)| must be <= circular_angle_max()" );
 
     //-----------------------------------------------------
@@ -965,8 +966,8 @@ void Cordic<T,FLT>::circular_vectoring_xy( const T& x0, const T& y0, T& x, T& y 
     const T ONE = one();
     const T THREE = 3*ONE;
     if ( debug ) std::cout << "circular_vectoring_xy begin: x0,y0=[ " << to_flt(x0) << ", " << to_flt(y0) << "\n";
-    cassert( x0 >= -THREE && x0 <= THREE && "circular_vectoring_xy x0 must be in the range -3 .. 3" );
-    cassert( y0 >= -ONE   && y0 <= ONE   && "circular_vectoring_xy y0 must be in the range -1 .. 1" );
+    cassert( x0 >= -THREE && x0 <= THREE, "circular_vectoring_xy x0 must be in the range -3 .. 3" );
+    cassert( y0 >= -ONE   && y0 <= ONE  , "circular_vectoring_xy y0 must be in the range -1 .. 1" );
 
     //-----------------------------------------------------
     // d = (y < 0) ? 1 : -1
@@ -1005,9 +1006,9 @@ void Cordic<T,FLT>::hyperbolic_rotation( const T& x0, const T& y0, const T& z0, 
     const T TWO = one() << 1;
     const T ANGLE_MAX = hyperbolic_angle_max();
     if ( debug ) std::cout << "hyperbolic_rotation begin: x0,y0,z0=[ " << to_flt(x0) << ", " << to_flt(y0) << ", " << to_flt(z0) << "]\n";
-    cassert( x0 >= -TWO       && x0 <= TWO &&       "hyperbolic_rotation x0 must be in the range -2 .. 2" );
-    cassert( y0 >= -TWO       && y0 <= TWO &&       "hyperbolic_rotation y0 must be in the range -2 .. 2" );
-    cassert( z0 >= -ANGLE_MAX && z0 <= ANGLE_MAX && "hyperbolic_rotation |z0| must be <= hyperbolic_angle_max()" );
+    cassert( x0 >= -TWO       && x0 <= TWO,       "hyperbolic_rotation x0 must be in the range -2 .. 2" );
+    cassert( y0 >= -TWO       && y0 <= TWO,       "hyperbolic_rotation y0 must be in the range -2 .. 2" );
+    cassert( z0 >= -ANGLE_MAX && z0 <= ANGLE_MAX, "hyperbolic_rotation |z0| must be <= hyperbolic_angle_max()" );
 
     //-----------------------------------------------------
     // d = (z >= 0) ? 1 : -1
@@ -1061,10 +1062,10 @@ void Cordic<T,FLT>::hyperbolic_vectoring( const T& x0, const T& y0, const T& z0,
     const T PI  = pi();
     const T ANGLE_MAX = hyperbolic_angle_max();
     if ( debug ) std::cout << "hyperbolic_vectoring begin: x0,y0,z0=[ " << to_flt(x0) << ", " << to_flt(y0) << ", " << to_flt(z0) << "]\n";
-    cassert( x0 >= -TWO && x0 <= TWO && "hyperbolic_vectoring x0 must be in the range -2 .. 2" );
-    cassert( y0 >= -TWO && y0 <= TWO && "hyperbolic_vectoring y0 must be in the range -2 .. 2" );
-    cassert( z0 >= -PI  && z0 <= PI  && "hyperbolic_vectoring z0 must be in the range -PI .. PI" );
-    cassert( (ANGLE_MAX == 0 || std::abs( std::atanh( to_flt(y0) / to_flt(x0) ) ) <= to_flt(ANGLE_MAX)) && 
+    cassert( x0 >= -TWO && x0 <= TWO, "hyperbolic_vectoring x0 must be in the range -2 .. 2" );
+    cassert( y0 >= -TWO && y0 <= TWO, "hyperbolic_vectoring y0 must be in the range -2 .. 2" );
+    cassert( z0 >= -PI  && z0 <= PI , "hyperbolic_vectoring z0 must be in the range -PI .. PI" );
+    cassert( (ANGLE_MAX == 0 || std::abs( std::atanh( to_flt(y0) / to_flt(x0) ) ) <= to_flt(ANGLE_MAX)),
                                         "hyperbolic_vectoring |atanh(y0/x0)| must be <= hyperbolic_angle_max()" );
 
     //-----------------------------------------------------
@@ -1117,8 +1118,8 @@ void Cordic<T,FLT>::hyperbolic_vectoring_xy( const T& x0, const T& y0, T& x, T& 
     const T TWO = one() << 1;
     const T PI  = pi();
     if ( debug ) std::cout << "hyperbolic_vectoring_xy begin: x0,y0=[ " << to_flt(x0) << ", " << to_flt(y0) << "\n";
-    cassert( x0 >= -TWO && x0 <= TWO && "hyperbolic_vectoring_xy x0 must be in the range -2 .. 2" );
-    cassert( y0 >= -TWO && y0 <= TWO && "hyperbolic_vectoring_xy y0 must be in the range -2 .. 2" );
+    cassert( x0 >= -TWO && x0 <= TWO, "hyperbolic_vectoring_xy x0 must be in the range -2 .. 2" );
+    cassert( y0 >= -TWO && y0 <= TWO, "hyperbolic_vectoring_xy y0 must be in the range -2 .. 2" );
 
     //-----------------------------------------------------
     // d = (y < 0) ? 1 : -1
@@ -1164,9 +1165,9 @@ void Cordic<T,FLT>::linear_rotation( const T& x0, const T& y0, const T& z0, T& x
     const T ONE = one();
     const T TWO = ONE << 1;
     if ( debug ) std::cout << "linear_rotation begin: x0,y0,z0=[ " << to_flt(x0) << ", " << to_flt(y0) << ", " << to_flt(z0) << "]\n";
-    cassert( x0 >= -TWO && x0 <= TWO && "linear_rotation x0 must be in the range -2 .. 2" );
-    cassert( y0 >= -TWO && y0 <= TWO && "linear_rotation y0 must be in the range -2 .. 2" );
-    //cassert( z0 >= -ONE && z0 <= ONE && "linear_rotation z0 must be in the range -1 .. 1" );
+    cassert( x0 >= -TWO && x0 <= TWO, "linear_rotation x0 must be in the range -2 .. 2" );
+    cassert( y0 >= -TWO && y0 <= TWO, "linear_rotation y0 must be in the range -2 .. 2" );
+    //cassert( z0 >= -ONE && z0 <= ONE, "linear_rotation z0 must be in the range -1 .. 1" );
     
     //-----------------------------------------------------
     // d = (z >= 0) ? 1 : -1
@@ -1207,8 +1208,8 @@ void Cordic<T,FLT>::linear_vectoring( const T& x0, const T& y0, const T& z0, T& 
     const T ONE = one();
     const T TWO = ONE << 1;
     if ( debug ) std::cout << "linear_vectoring begin: x0,y0,z0=[ " << to_flt(x0) << ", " << to_flt(y0) << ", " << to_flt(z0) << "]\n";
-    cassert( x0 >= -TWO && x0 <= TWO && "linear_vectoring x0 must be in the range -2 .. 2" );
-    cassert( y0 >= -TWO && y0 <= TWO && "linear_vectoring y0 must be in the range -2 .. 2" );
+    cassert( x0 >= -TWO && x0 <= TWO, "linear_vectoring x0 must be in the range -2 .. 2, got " + to_string(x0) );
+    cassert( y0 >= -TWO && y0 <= TWO, "linear_vectoring y0 must be in the range -2 .. 2, got " + to_string(y0) );
     //cassert( std::abs( to_flt(y0) / to_flt(x0) ) <= FLT(1.0) &&
     //                                    "linear_vectoring y0/x0 must be in the range -1 .. 1" );
     
@@ -1250,8 +1251,8 @@ void Cordic<T,FLT>::linear_vectoring_xy( const T& x0, const T& y0, T& x, T& y ) 
     //-----------------------------------------------------
     const T TWO = one() << 1;
     if ( debug ) std::cout << "linear_vectoring_xy begin: x0,y0=[ " << to_flt(x0) << ", " << to_flt(y0) << "\n";
-    cassert( x0 >= -TWO && x0 <= TWO && "linear_vectoring_xy x0 must be in the range -2 .. 2" );
-    cassert( y0 >= -TWO && y0 <= TWO && "linear_vectoring_xy y0 must be in the range -2 .. 2" );
+    cassert( x0 >= -TWO && x0 <= TWO, "linear_vectoring_xy x0 must be in the range -2 .. 2" );
+    cassert( y0 >= -TWO && y0 <= TWO, "linear_vectoring_xy y0 must be in the range -2 .. 2" );
     
     //-----------------------------------------------------
     // d = (y < 0) ? 1 : -1
@@ -1281,7 +1282,7 @@ T Cordic<T,FLT>::abs( const T& x ) const
     bool x_sign = x_abs < T(0);
     if ( x_sign ) x_abs = -x;
     T    sign_mask = x_abs >> (int_w() + frac_w());
-    cassert( (sign_mask == T(0) || sign_mask == T(-1)) && "abs caused overflow" ); 
+    cassert( (sign_mask == T(0) || sign_mask == T(-1)), "abs caused overflow" ); 
     return x_abs;
 }
 
@@ -1291,7 +1292,7 @@ T Cordic<T,FLT>::neg( const T& x ) const
     bool x_sign = x < 0;
     T    x_neg  = -x;
     T    sign_mask = x_neg >> (int_w() + frac_w());
-    cassert( (x == 0 || sign_mask == (x_sign ? T(0) : T(-1))) && "neg caused overflow" ); 
+    cassert( (x == 0 || sign_mask == (x_sign ? T(0) : T(-1))), "neg caused overflow" ); 
     return x_neg;
 }
 
@@ -1328,7 +1329,7 @@ T Cordic<T,FLT>::add( const T& x, const T& y ) const
     bool y_sign = y < T(0);
     T    sum    = x + y;
     T    sign_mask = sum >> (int_w() + frac_w());
-    cassert( sign_mask == T(0) || sign_mask == T(-1) && "add caused overflow" );
+    cassert( sign_mask == T(0) || sign_mask == T(-1), "add caused overflow" );
     return sum;
 }
 
@@ -1339,7 +1340,7 @@ T Cordic<T,FLT>::sub( const T& x, const T& y ) const
     bool y_sign = y < T(0);
     T    sum    = x - y;
     T    sign_mask = sum >> (int_w() + frac_w());
-    cassert( sign_mask == 0 || sign_mask == T(-1) && "sub caused overflow" );
+    cassert( sign_mask == 0 || sign_mask == T(-1), "sub caused overflow" );
     return sum;
 }
 
@@ -1349,7 +1350,7 @@ T Cordic<T,FLT>::mad( const T& _x, const T& _y, const T addend, bool do_reduce )
     T x = _x;
     T y = _y;
     if ( debug ) std::cout << "mad begin: x_orig=" << to_flt(x) << " y_orig=" << to_flt(y) << " addend=" << to_flt(addend) << " do_reduce=" << do_reduce << "\n";
-    cassert( do_reduce || addend >= 0 && "mad addend must be non-negative" );
+    cassert( do_reduce || addend >= 0, "mad addend must be non-negative" );
     int32_t x_lshift;
     int32_t y_lshift;
     bool    sign;
@@ -1394,7 +1395,7 @@ T Cordic<T,FLT>::mul( const T& x, const T& y, bool do_reduce ) const
 template< typename T, typename FLT >
 T Cordic<T,FLT>::lshift( const T& x, int ls ) const
 {
-    cassert( x >= 0 && "lshift x should be non-negative" );
+    cassert( x >= 0, "lshift x should be non-negative" );
     if ( ls > 0 ) {
         //-----------------------------------------------------
         // For now, crap out if we overflow.
@@ -1402,7 +1403,7 @@ T Cordic<T,FLT>::lshift( const T& x, int ls ) const
         //-----------------------------------------------------
         int32_t ls_max = int_w();
         uint32_t i = x >> frac_w();
-        cassert( i <= maxint() && "lshift x integer part should be <= maxint()"  );
+        cassert( i <= maxint(), "lshift x integer part should be <= maxint()"  );
         while( i != 0 ) 
         {
             ls_max--;
@@ -1432,8 +1433,8 @@ T Cordic<T,FLT>::dad( const T& _y, const T& _x, const T addend, bool do_reduce )
     T x = _x;
     T y = _y;
     if ( debug ) std::cout << "dad begin: x_orig=" << to_flt(x) << " y_orig=" << to_flt(y) << " addend=" << to_flt(addend) << " do_reduce=" << do_reduce << "\n";
-    cassert( x != 0  && "dad x (denominator) must be non-zero" );
-    cassert( do_reduce || addend >= 0 && "dad addend must be non-negative (need to fix this soon)" );
+    cassert( x != 0 , "dad x (denominator) must be non-zero" );
+    cassert( do_reduce || addend >= 0, "dad addend must be non-negative (need to fix this soon)" );
     int32_t x_lshift;
     int32_t y_lshift;
     bool    sign;
@@ -1506,7 +1507,7 @@ template< typename T, typename FLT >
 T Cordic<T,FLT>::one_over_sqrt( const T& x ) const
 { 
     if ( debug ) std::cout << "one_over_sqrt begin: x_orig=" << to_flt(x) << " do_reduce=" << impl->do_reduce << "\n";
-    cassert( x != 0 && "one_over_sqrt x must not be 0" );
+    cassert( x != 0, "one_over_sqrt x must not be 0" );
 
     // There might be a better way, but exp(-log(x)/2) is probably not it
     return div( one(), sqrt( x ) );
@@ -1535,16 +1536,16 @@ T Cordic<T,FLT>::exp( const T& _x ) const
 template< typename T, typename FLT >
 T Cordic<T,FLT>::pow( const T& b, const T& x ) const
 { 
-    cassert( b > 0 && "pow b must be positive" );
+    cassert( b > 0, "pow b must be positive" );
     return exp( mul( x, log( b, true ) ) );
 }
 
 template< typename T, typename FLT >
 T Cordic<T,FLT>::powc( const FLT& b, const T& x ) const
 { 
-    cassert( b > 0 && "powc b must be positive" );
+    cassert( b > 0, "powc b must be positive" );
     const FLT log_b_f = std::log( b );
-    cassert( log_b_f >= 0.0 && "powc log(b) must be non-negative" );
+    cassert( log_b_f >= 0.0, "powc log(b) must be non-negative" );
     const T   log_b   = to_t( log_b_f );
     return exp( mul( x, log_b ) );
 }
@@ -1565,7 +1566,7 @@ template< typename T, typename FLT >
 T Cordic<T,FLT>::log( const T& _x, bool do_reduce ) const
 { 
     T x = _x;
-    cassert( x > 0 && "log: x must be positive" );
+    cassert( x > 0, "log: x must be positive" );
     T addend;
     if ( do_reduce ) reduce_log_arg( x, addend );
     T dv = div( x-one(), x+one(), false );
@@ -1584,14 +1585,14 @@ T Cordic<T,FLT>::log( const T& _x ) const
 template< typename T, typename FLT >
 T Cordic<T,FLT>::logb( const T& x, const T& b ) const
 { 
-    cassert( b > 0 && "logb b must be positive" );
+    cassert( b > 0, "logb b must be positive" );
     return div( log(x), log(b) );
 }
 
 template< typename T, typename FLT >
 T Cordic<T,FLT>::logc( const T& x, const FLT& b ) const
 { 
-    cassert( b > 0.0 && "logc b must be positive" );
+    cassert( b > 0.0, "logc b must be positive" );
     const FLT  one_over_log_b_f = FLT(1) / std::log( b );
     const T    one_over_log_b   = to_t( one_over_log_b_f );
           T    log_x            = log( x );
@@ -1709,21 +1710,21 @@ T Cordic<T,FLT>::tan( const T& x ) const
 template< typename T, typename FLT >
 T Cordic<T,FLT>::asin( const T& x ) const
 { 
-    cassert( x >= -one() && x <= one() && "asin x must be between -1 and 1" );
+    cassert( x >= -one() && x <= one(), "asin x must be between -1 and 1" );
     return atan2( x, normh( one(), x ) );
 }
 
 template< typename T, typename FLT >
 T Cordic<T,FLT>::acos( const T& x ) const
 { 
-    cassert( x >= -one() && x <= one() && "acos x must be between -1 and 1" );
+    cassert( x >= -one() && x <= one(), "acos x must be between -1 and 1" );
     return atan2( normh( one(), x ), x, true );
 }
 
 template< typename T, typename FLT >
 T Cordic<T,FLT>::atan( const T& x ) const
 { 
-    cassert( x >= -one() && x <= one() && "atan x must be between -1 and 1" );
+    cassert( x >= -one() && x <= one(), "atan x must be between -1 and 1" );
     return atan2( x, one(), impl->do_reduce, true );
 }
 
@@ -1755,7 +1756,7 @@ T Cordic<T,FLT>::atan2( const T& _y, const T& _x, bool do_reduce, bool x_is_one,
     //     the denominator, then use PI/2 - atan(x/y)
     //-----------------------------------------------------
     if ( debug ) std::cout << "atan2 begin: y=" << to_flt(y) << " x=" << to_flt(x) << " do_reduce=" << do_reduce << " x_is_one=" << x_is_one << "\n";
-    cassert( (x != 0 || y != 0) && "atan2: x or y needs to be non-zero for result to be defined" );
+    cassert( (x != 0 || y != 0), "atan2: x or y needs to be non-zero for result to be defined" );
     T xx, yy, zz;
     if ( r != nullptr ) *r = norm( _x, _y, do_reduce );  // optimize this later with below norm() of reduced x,y
     if ( do_reduce ) {
@@ -1840,7 +1841,7 @@ T Cordic<T,FLT>::normh( const T& x, const T& y ) const
     //     Try this easy way, though I suspect there will be issues.
     //-----------------------------------------------------
     if ( debug ) std::cout << "normh begin: x=" << to_flt(x) << " y=" << to_flt(y) << " do_reduce=" << impl->do_reduce << "\n";
-    cassert( x >= y && "normh x must be >= y" );
+    cassert( x >= y, "normh x must be >= y" );
     return sqrt( mul( x+y, x-y ) );
 }
 
@@ -1934,7 +1935,7 @@ T Cordic<T,FLT>::asinh( const T& x ) const
 template< typename T, typename FLT >
 T Cordic<T,FLT>::acosh( const T& x ) const
 { 
-    cassert( x >= one() && "acosh x must be >= 1" );
+    cassert( x >= one(), "acosh x must be >= 1" );
     return log( x + normh( x, one() ) );
 }
 
@@ -1975,7 +1976,7 @@ T Cordic<T,FLT>::atanh2( const T& _y, const T& _x, bool do_reduce, bool x_is_one
         sign = y_sign != x_sign;
     }
     int32_t lshift = x_lshift + y_lshift;
-    cassert( lshift == 0 && "atanh2: abs(y/x) must be between 0 and 1" );
+    cassert( lshift == 0, "atanh2: abs(y/x) must be between 0 and 1" );
 
     T xx, yy, zz;
     hyperbolic_vectoring( x, y, zero(), xx, yy, zz );
@@ -2047,7 +2048,7 @@ void Cordic<T,FLT>::reduce_sqrt_arg( T& x, int32_t& lshift ) const
     //     Use hyperbolic_vectoring() for sqrt((s+1)^2 - (s-1)^2).
     //     Then lshift that by log2(p)/2 - 1.
     //-----------------------------------------------------
-    cassert( x >= 0 && "reduce_sqrt_arg x must be non-negative" );
+    cassert( x >= 0, "reduce_sqrt_arg x must be non-negative" );
     T x_orig = x;
     bool sign;
     reduce_arg( x, lshift, sign, true, true, true );
@@ -2099,11 +2100,11 @@ void Cordic<T,FLT>::reduce_log_arg( T& x, T& addend ) const
     // Normalize x so that it's in 1.00 .. 2.00.
     // Then addend = log(1 << lshift).
     //-----------------------------------------------------
-    cassert( x >= 0 && "log argument may not be negative for fixed-point numbers" );
+    cassert( x >= 0, "log argument may not be negative for fixed-point numbers" );
     T x_orig = x;
     int32_t x_lshift;
     bool x_sign;
-    reduce_arg( x, x_lshift, x_sign, true );
+    reduce_arg( x, x_lshift, x_sign, true, true );
     const T * addends = impl->reduce_log_addend.get();
     addend = addends[frac_w()+x_lshift];
     if ( debug ) std::cout << "reduce_log_arg: x_orig=" << to_flt(x_orig) << " x_reduced=" << to_flt(x) << " addend=" << to_flt(addend) << "\n"; 
@@ -2123,7 +2124,7 @@ void Cordic<T,FLT>::reduce_atan2_args( T& y, T& x, bool& y_sign, bool& x_sign, b
     //-----------------------------------------------------
     const T y_orig = y;
     const T x_orig = x;
-    cassert( (x != 0 || y != 0) && "atan2: x or y needs to be non-zero for result to be defined" );
+    cassert( (x != 0 || y != 0), "atan2: x or y needs to be non-zero for result to be defined" );
 
     x_sign = x < 0;
     y_sign = y < 0;
@@ -2223,8 +2224,8 @@ void Cordic<T,FLT>::reduce_sinh_cosh_arg( T& x, T& sinh_i, T& cosh_i, bool& sign
     const T *    cosh_i_vals   = impl->reduce_sinh_cosh_cosh_i.get();
     const bool * sinh_i_oflows = impl->reduce_sinh_cosh_sinh_i_oflow.get();
     const bool * cosh_i_oflows = impl->reduce_sinh_cosh_cosh_i_oflow.get();
-    cassert( !sinh_i_oflows[i] && "reduce_sinh_cosh_arg x will cause an overflow for sinh" );
-    cassert( !cosh_i_oflows[i] && "reduce_sinh_cosh_arg x will cause an overflow for cosh" );
+    cassert( !sinh_i_oflows[i], "reduce_sinh_cosh_arg x will cause an overflow for sinh" );
+    cassert( !cosh_i_oflows[i], "reduce_sinh_cosh_arg x will cause an overflow for cosh" );
     sinh_i = sinh_i_vals[i];
     cosh_i = cosh_i_vals[i];
     if ( debug ) std::cout << "reduce_sinh_cosh_arg: x_orig=" << to_flt(x_orig) << " sinh_i[" << i << "]=" << to_flt(sinh_i) << 
