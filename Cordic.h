@@ -1558,7 +1558,8 @@ T Cordic<T,FLT>::exp( const T& _x ) const
 template< typename T, typename FLT >
 T Cordic<T,FLT>::pow( const T& b, const T& x ) const
 { 
-    cassert( b > 0, "pow b must be positive" );
+    if ( b == zero() ) return zero();
+    cassert( b >= 0, "pow base b must be non-negative" );
     return exp( mul( x, log( b, true ) ) );
 }
 
