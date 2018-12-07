@@ -168,5 +168,8 @@ int main( int argc, const char * argv[] )
         do_op22( "polar_to_rect(x,y)", polar_to_rect, polar_to_rect, x, y, do_reduce );
     }
 
+    delete cordicr;
+    delete cordicnr;
+
     return 0;
 }

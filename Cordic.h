@@ -455,28 +455,27 @@ struct Cordic<T,FLT>::Impl
     T                           log2;                                   
     T                           log10;                                 
 
-    std::unique_ptr<T[]>        circular_atan;                          // circular atan values
+    T *                         circular_atan;                          // circular atan values
     T                           circular_rotation_gain;                 // circular rotation gain
     T                           circular_rotation_one_over_gain;        // circular rotation 1/gain
     T                           circular_vectoring_gain;                // circular vectoring gain
     T                           circular_vectoring_one_over_gain;       // circular vectoring 1/gain
     T                           circular_angle_max;                     // circular vectoring |z0| max value
 
-    std::unique_ptr<T[]>        hyperbolic_atanh;                       // hyperbolic atanh values
+    T *                         hyperbolic_atanh;                       // hyperbolic atanh values
     T                           hyperbolic_rotation_gain;               // hyperbolic rotation gain
     T                           hyperbolic_rotation_one_over_gain;      // hyperbolic rotation 1/gain
     T                           hyperbolic_vectoring_gain;              // hyperbolic vectoring gain
     T                           hyperbolic_vectoring_one_over_gain;     // hyperbolic vectoring 1/gain
     T                           hyperbolic_angle_max;                   // hyperbolic vectoring |z0| max value
 
-    std::unique_ptr<T[]>        linear_pow2;                    // linear 2^(-i) values
-
-    std::unique_ptr<T[]>        reduce_sinh_cosh_sinh_i;        // for each possible integer value, sinh(i)
-    std::unique_ptr<T[]>        reduce_sinh_cosh_cosh_i;        // for each possible integer value, cosh(i)
-    std::unique_ptr<bool[]>     reduce_sinh_cosh_sinh_i_oflow;  // boolean indicating if this index creates too big of a number
-    std::unique_ptr<bool[]>     reduce_sinh_cosh_cosh_i_oflow;  // boolean indicating if this index creates too big of a number
-    std::unique_ptr<FLT[]>      reduce_exp_factor;              // for each possible integer value, exp(i)
-    std::unique_ptr<T[]>        reduce_log_addend;              // for each possible lshift value, log( 1 << lshift )
+    T *                         linear_pow2;                            // linear 2^(-i) values
+    T *                         reduce_sinh_cosh_sinh_i;                // for each possible integer value, sinh(i)
+    T *                         reduce_sinh_cosh_cosh_i;                // for each possible integer value, cosh(i)
+    bool *                      reduce_sinh_cosh_sinh_i_oflow;          // boolean indicating if this index creates too big of a number
+    bool *                      reduce_sinh_cosh_cosh_i_oflow;          // boolean indicating if this index creates too big of a number
+    FLT *                       reduce_exp_factor;                      // for each possible integer value, std::exp(i)
+    T *                         reduce_log_addend;                      // for each possible lshift value, log( 1 << lshift )
 };
 
 //-----------------------------------------------------
@@ -515,9 +514,9 @@ Cordic<T,FLT>::Cordic( uint32_t int_w, uint32_t frac_w, bool do_reduce, uint32_t
     impl->log2          = to_t( std::log( FLT(  2 ) ) );
     impl->log10         = to_t( std::log( FLT( 10 ) ) );
 
-    impl->circular_atan    = std::unique_ptr<T[]>( new T[n+1] );
-    impl->hyperbolic_atanh = std::unique_ptr<T[]>( new T[n+1] );
-    impl->linear_pow2      = std::unique_ptr<T[]>( new T[n+1] );
+    impl->circular_atan    = new T[n+1];
+    impl->hyperbolic_atanh = new T[n+1];
+    impl->linear_pow2      = new T[n+1];
 
     // compute atan/atanh table in high-resolution floating point
     //
@@ -573,10 +572,10 @@ Cordic<T,FLT>::Cordic( uint32_t int_w, uint32_t frac_w, bool do_reduce, uint32_t
     T *        cosh_i       = new T[N];
     bool *     sinh_i_oflow = new bool[N];
     bool *     cosh_i_oflow = new bool[N];
-    impl->reduce_sinh_cosh_sinh_i       = std::unique_ptr<T[]>( sinh_i );
-    impl->reduce_sinh_cosh_cosh_i       = std::unique_ptr<T[]>( cosh_i );
-    impl->reduce_sinh_cosh_sinh_i_oflow = std::unique_ptr<bool[]>( sinh_i_oflow );
-    impl->reduce_sinh_cosh_cosh_i_oflow = std::unique_ptr<bool[]>( cosh_i_oflow );
+    impl->reduce_sinh_cosh_sinh_i       = sinh_i;
+    impl->reduce_sinh_cosh_cosh_i       = cosh_i;
+    impl->reduce_sinh_cosh_sinh_i_oflow = sinh_i_oflow;
+    impl->reduce_sinh_cosh_cosh_i_oflow = cosh_i_oflow;
     const FLT PI       = M_PI;
     const FLT PI_DIV_2 = PI / 2.0;
     const FLT PI_DIV_4 = PI / 4.0;
@@ -600,7 +599,7 @@ Cordic<T,FLT>::Cordic( uint32_t int_w, uint32_t frac_w, bool do_reduce, uint32_t
     // construct LUT used by reduce_exp_arg()
     // values for negative integers come first.
     FLT * factor = new FLT[2*N];
-    impl->reduce_exp_factor = std::unique_ptr<FLT[]>( factor );
+    impl->reduce_exp_factor = factor;
     T MIN_INT = -maxint() - 1;
     for( T i = MIN_INT; i <= maxint(); i++ )
     {
@@ -611,7 +610,7 @@ Cordic<T,FLT>::Cordic( uint32_t int_w, uint32_t frac_w, bool do_reduce, uint32_t
 
     // construct LUT used by reduce_log_arg()
     addend = new T[frac_w+int_w];
-    impl->reduce_log_addend = std::unique_ptr<T[]>( addend );
+    impl->reduce_log_addend = addend;
     for( int32_t i = -frac_w; i <= int32_t(int_w); i++ )
     {
         double addend_f = std::log( std::pow( 2.0, double( i ) ) );
@@ -624,6 +623,15 @@ Cordic<T,FLT>::Cordic( uint32_t int_w, uint32_t frac_w, bool do_reduce, uint32_t
 template< typename T, typename FLT >
 Cordic<T,FLT>::~Cordic( void )
 {
+    delete impl->circular_atan;
+    delete impl->hyperbolic_atanh;
+    delete impl->linear_pow2;
+    delete impl->reduce_sinh_cosh_sinh_i;
+    delete impl->reduce_sinh_cosh_cosh_i;
+    delete impl->reduce_sinh_cosh_sinh_i_oflow;
+    delete impl->reduce_sinh_cosh_cosh_i_oflow;
+    delete impl->reduce_exp_factor;
+    delete impl->reduce_log_addend;
     delete impl;
     impl = nullptr;
 }
@@ -2104,7 +2112,7 @@ void Cordic<T,FLT>::reduce_exp_arg( FLT b, T& x, T& factor ) const
     const T MININT = -maxint() - 1;
     T x_orig = x;
     if ( debug ) std::cout << "reduce_exp_arg: b=" << b << " x_orig=" << to_flt(x_orig) << "\n";
-    const FLT * factors_f = impl->reduce_exp_factor.get();
+    const FLT * factors_f = impl->reduce_exp_factor;
     T   i         = x >> frac_w();  // can be + or -
     T   index     = -MININT + i;
     FLT factor_f  = std::log(b) * factors_f[index];   // could build per-b factors_f[] LUT with multiply already done
@@ -2129,7 +2137,7 @@ void Cordic<T,FLT>::reduce_log_arg( T& x, T& addend ) const
     int32_t x_lshift;
     bool x_sign;
     reduce_arg( x, x_lshift, x_sign, true, true, true );
-    const T * addends = impl->reduce_log_addend.get();
+    const T * addends = impl->reduce_log_addend;
     addend = addends[frac_w()+x_lshift];
     if ( debug ) std::cout << "reduce_log_arg: x_orig=" << to_flt(x_orig) << " x_reduced=" << to_flt(x) << " addend=" << to_flt(addend) << "\n"; 
 }
@@ -2244,10 +2252,10 @@ void Cordic<T,FLT>::reduce_sinh_cosh_arg( T& x, T& sinh_i, T& cosh_i, bool& sign
     const T MASK = (T(1) << (int_w()+2)) - T(1);  // include 0.25 bit of fraction
     T i = (x >> (frac_w()-2)) & MASK;
     x   = x & ((T(1) << (frac_w()-2))-T(1));
-    const T *    sinh_i_vals   = impl->reduce_sinh_cosh_sinh_i.get();
-    const T *    cosh_i_vals   = impl->reduce_sinh_cosh_cosh_i.get();
-    const bool * sinh_i_oflows = impl->reduce_sinh_cosh_sinh_i_oflow.get();
-    const bool * cosh_i_oflows = impl->reduce_sinh_cosh_cosh_i_oflow.get();
+    const T *    sinh_i_vals   = impl->reduce_sinh_cosh_sinh_i;
+    const T *    cosh_i_vals   = impl->reduce_sinh_cosh_cosh_i;
+    const bool * sinh_i_oflows = impl->reduce_sinh_cosh_sinh_i_oflow;
+    const bool * cosh_i_oflows = impl->reduce_sinh_cosh_cosh_i_oflow;
     cassert( !sinh_i_oflows[i], "reduce_sinh_cosh_arg x will cause an overflow for sinh" );
     cassert( !cosh_i_oflows[i], "reduce_sinh_cosh_arg x will cause an overflow for cosh" );
     sinh_i = sinh_i_vals[i];
