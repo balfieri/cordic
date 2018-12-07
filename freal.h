@@ -59,6 +59,7 @@ public:
 
     static freal make_fixed( uint32_t int_w, uint32_t frac_w, FLT init_f=FLT(0) );  // make a signed fixed-point    number 
     static freal make_float( uint32_t exp_w, uint32_t frac_w, FLT init_f=FLT(0) );  // make a signed floating-point number
+    static freal make_raw(   const Cordic<T,FLT> * cordic, const T& encoded );      // use encoded as the raw bits (dangerous)
     ~freal();
 
     //-----------------------------------------------------
@@ -547,6 +548,16 @@ inline freal<T,FLT> freal<T,FLT>::make_float( uint32_t exp_w, uint32_t frac_w, F
 }
 
 template< typename T, typename FLT >              
+inline freal<T,FLT> freal<T,FLT>::make_raw( const Cordic<T,FLT> * cordic, const T& encoded )
+{
+    cassert( cordic != nullptr, "make_raw(cordic, encoded) called with null cordic" );
+    freal r;
+    r.cordic = cordic;
+    r.v      = encoded;
+    return r;
+}
+
+template< typename T, typename FLT >              
 inline freal<T,FLT>::~freal()
 {
     cordic = nullptr;
@@ -697,16 +708,11 @@ inline const Cordic<T,FLT> * freal<T,FLT>::c( const freal<T,FLT>& b, const freal
 //-----------------------------------------------------               
 template< typename T, typename FLT >              
 inline T            freal<T,FLT>::maxint( void ) 
-{ return c()->maxint(); } 
+{ return( c(), cordic->maxint() );      } 
 
 template< typename T, typename FLT >              
 inline freal<T,FLT> freal<T,FLT>::max( void ) 
-{ 
-    freal r;
-    r.cordic = c();
-    r.v      = cordic->max();
-    return r;
-}
+{ return( c(), make_raw( cordic, cordic->max() ) ); }
 
 template< typename T, typename FLT >              
 inline freal<T,FLT> freal<T,FLT>::min( void ) 
