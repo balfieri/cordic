@@ -158,7 +158,9 @@ public:
     //                                                          2*sqrt(m*d) = 2*sqrt(p) * sqrt(s) = sqrt(p) * sqrt((s+1)^2 - (s-1)^2)
     //                                                          if log2(p) is even and >= 2, then sqrt(p) = 2^(log2(p)/2) = some integer
     //
+    // pow(b,x)         = exp(log(b) * x)
     // exp(x)           = sinh(x) + cosh(x)
+    // exp(-x)          = 1/exp(x)
     // exp(x+y)         = exp(x) * exp(y)
     // exp(ix)          = cos(x) + i*sin(x)                     Euler's Formula, i = sqrt(-1)
     // exp(i*PI) + 1    = 0                                     Euler's Identity
@@ -390,7 +392,7 @@ public:
     void reduce_mul_args( T& x, T& y, int32_t& x_lshift, int32_t& y_lshift, bool& sign ) const; 
     void reduce_div_args( T& y, T& x, int32_t& y_lshift, int32_t& x_lshift, bool& sign ) const;
     void reduce_sqrt_arg( T& x, int32_t& lshift ) const;
-    void reduce_exp_arg( FLT b, T& x, T& factor, bool& sign ) const;                          
+    void reduce_exp_arg( FLT b, T& x, T& factor ) const;
     void reduce_log_arg( T& x, T& addend ) const;                                            
     void reduce_atan2_args( T& y, T& x, bool& y_sign, bool& x_sign, bool& swapped, bool& is_pi ) const;     
     void reduce_norm_args( T& x, T& y, int32_t& lshift, bool& swapped ) const;
@@ -596,12 +598,15 @@ Cordic<T,FLT>::Cordic( uint32_t int_w, uint32_t frac_w, bool do_reduce, uint32_t
     }
 
     // construct LUT used by reduce_exp_arg()
-    FLT * factor = new FLT[N];
+    // values for negative integers come first.
+    FLT * factor = new FLT[2*N];
     impl->reduce_exp_factor = std::unique_ptr<FLT[]>( factor );
-    for( T i = 0; i <= maxint(); i++ )
+    T MIN_INT = -maxint() - 1;
+    for( T i = MIN_INT; i <= maxint(); i++ )
     {
-        factor[i] = std::exp(FLT(i));
-        if ( debug ) std::cout << "reduce_exp_arg LUT: factor[" << i << "]=" << factor[i] << "\n";
+        T index = i - MIN_INT;
+        factor[index] = std::exp(FLT(i));
+        if ( debug ) std::cout << "reduce_exp_arg LUT: factor[" << i << "]=" << factor[index] << " index=" << index << "\n";
     }
 
     // construct LUT used by reduce_log_arg()
@@ -1363,8 +1368,11 @@ T Cordic<T,FLT>::mad( const T& _x, const T& _y, const T addend, bool do_reduce )
         yy += addend;
         if ( sign ) yy = -yy;
     }
-    if ( debug ) std::cout << "mad end: x_orig=" << to_flt(_x) << " y_orig=" << to_flt(_y) << " addend=" << to_flt(addend) << " do_reduce=" << do_reduce << 
-                                  " yy=" << to_flt(yy) << " x_lshift=" << x_lshift << " y_lshift=" << y_lshift << " sign=" << sign << "\n";
+    if ( debug ) std::cout << "mad end: x_orig=" << to_flt(_x) << " y_orig=" << to_flt(_y) << 
+                              " addend=" << to_flt(addend) << " do_reduce=" << do_reduce << 
+                              " x_reduced=" << to_flt(x) << " y_reduced=" << to_flt(y) << 
+                              " yy=" << to_flt(yy) << " x_lshift=" << x_lshift << " y_lshift=" << y_lshift << 
+                              " sign=" << sign << "\n";
     return yy;
 }
 
@@ -1447,8 +1455,11 @@ T Cordic<T,FLT>::dad( const T& _y, const T& _x, const T addend, bool do_reduce )
         zz += addend;
         if ( sign ) zz = -zz;
     }
-    if ( debug ) std::cout << "dad end: x_orig=" << to_flt(_x) << " y_orig=" << to_flt(_y) << " addend=" << to_flt(addend) << " do_reduce=" << do_reduce <<
-                              " zz_final=" << to_flt(zz) << " x_lshift=" << x_lshift << " y_lshift=" << y_lshift << " sign=" << sign << "\n";
+    if ( debug ) std::cout << "dad end: x_orig=" << to_flt(_x) << " y_orig=" << to_flt(_y) << 
+                              " addend=" << to_flt(addend) << " do_reduce=" << do_reduce <<
+                              " x_reduced=" << to_flt(x) << " y_reduced=" << to_flt(y) << 
+                              " zz=" << to_flt(zz) << " x_lshift=" << x_lshift << " y_lshift=" << y_lshift << 
+                              " sign=" << sign << "\n";
     return zz;
 }
 
@@ -1516,20 +1527,31 @@ T Cordic<T,FLT>::one_over_sqrt( const T& x ) const
 template< typename T, typename FLT >
 T Cordic<T,FLT>::exp( const T& _x ) const
 { 
+    //-----------------------------------------------------
+    // Identities:
+    //     Assume: x = i + f  (integer plus fraction)
+    //     exp(i+f) = exp(i) * exp(f)
+    //     pow(b,x) = log(b) * exp(x) = [log(b)*exp(i)] * exp(f)
+    //
+    // Strategy:
+    //     Find i such that x-i is in -1 .. 1.
+    //     Because x can be negative, so can i.
+    //     exp(i) comes from a pre-built LUT kept in FLT
+    //     so we can multiply it by log(e)==1 before converting to type T and
+    //     then multiplying by exp(f) here.
+    //-----------------------------------------------------
     T x = _x;
     T factor;
-    bool sign;
-    if ( impl->do_reduce ) reduce_exp_arg( M_E, x, factor, sign );
+    if ( impl->do_reduce ) reduce_exp_arg( M_E, x, factor );  // x=log(f) factor=log(e)*exp(i)
 
     T xx, yy, zz;
     hyperbolic_rotation( hyperbolic_rotation_one_over_gain(), hyperbolic_rotation_one_over_gain(), x, xx, yy, zz );
     if ( impl->do_reduce ) {
-        if ( !sign ) {
-            xx = mul( xx, factor, true );
-        } else {
-            xx = div( xx, factor, true );       // could do mul() of 1/factor but not as accurate
-        }
+        if ( debug ) std::cout << "exp mid: b=" << M_E << " x_orig=" << to_flt(_x) << " f=reduced_x=" << to_flt(x) << 
+                                  " exp(f)=" << to_flt(xx) << " log(b)*log(i)=" << to_flt(factor) << "\n";
+        xx = mul( xx, factor, true );
     }
+    if ( debug ) std::cout << "exp: x_orig=" << to_flt(_x) << " reduced_x=" << to_flt(x) << " exp=" << to_flt(xx) << "\n";
     return xx;
 }
 
@@ -2062,33 +2084,34 @@ void Cordic<T,FLT>::reduce_sqrt_arg( T& x, int32_t& lshift ) const
 }
 
 template< typename T, typename FLT >
-void Cordic<T,FLT>::reduce_exp_arg( FLT b, T& x, T& factor, bool& sign ) const 
+void Cordic<T,FLT>::reduce_exp_arg( FLT b, T& x, T& factor ) const
 {
     //-----------------------------------------------------
-    // Identity:
+    // Identities:
     //     Assume: x = i + f  (integer plus fraction)
-    //     exp(x) = exp(i) * exp(f)
+    //     exp(i+f) = exp(i) * exp(f)
     //     pow(b,x) = log(b) * exp(x) = [log(b)*exp(i)] * exp(f)
     //
-    // If x is non-negative:
+    // Strategy:
+    //     Find i such that x-i is in -1 .. 1.
+    //     Because x can be negative, so can i.
     //     exp(i) comes from a pre-built LUT kept in FLT
     //     so we can multiply it by log(b) before converting to type T and
     //     then multiplying by exp(f) in the caller.
-    //
-    // If x is negative:
-    //     x = -x
-    //     [do above but the callere will divide by factor rather than multiplying]
     //-----------------------------------------------------
+    const T TWO = one() << 1;
+    const T MININT = -maxint() - 1;
     T x_orig = x;
     if ( debug ) std::cout << "reduce_exp_arg: b=" << b << " x_orig=" << to_flt(x_orig) << "\n";
     const FLT * factors_f = impl->reduce_exp_factor.get();
-    sign         = x < 0;
-    if ( sign ) x = -x;
-    T   index    = (x >> frac_w()) & maxint();
-    FLT factor_f = std::log(b) * factors_f[index];   // could build per-b factors_f[] LUT with multiply already done
-    factor       = to_t( factor_f );
-    x           &= (T(1) << frac_w())-T(1); // fraction only
-    if ( debug ) std::cout << "reduce_exp_arg: b=" << b << " x_orig=" << to_flt(x_orig) << " x_reduced=" << to_flt(x) << " factor=" << to_flt(factor) << "\n"; 
+    T   i         = x >> frac_w();  // can be + or -
+    T   index     = -MININT + i;
+    FLT factor_f  = std::log(b) * factors_f[index];   // could build per-b factors_f[] LUT with multiply already done
+    factor        = to_t( factor_f );
+    x            -= i << frac_w();
+    if ( debug ) std::cout << "reduce_exp_arg: b=" << b << " x_orig=" << to_flt(x_orig) << 
+                              " i=" << i << " index=" << index << " log(b)*exp(i)=" << to_flt(factor) << 
+                              " f=x_reduced=" << to_flt(x) << "\n"; 
 }
 
 template< typename T, typename FLT >
