@@ -2104,7 +2104,7 @@ void Cordic<T,FLT>::reduce_log_arg( T& x, T& addend ) const
     T x_orig = x;
     int32_t x_lshift;
     bool x_sign;
-    reduce_arg( x, x_lshift, x_sign, true, true );
+    reduce_arg( x, x_lshift, x_sign, true, true, true );
     const T * addends = impl->reduce_log_addend.get();
     addend = addends[frac_w()+x_lshift];
     if ( debug ) std::cout << "reduce_log_arg: x_orig=" << to_flt(x_orig) << " x_reduced=" << to_flt(x) << " addend=" << to_flt(addend) << "\n"; 
