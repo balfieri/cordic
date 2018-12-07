@@ -93,6 +93,17 @@ public:
     //
     // (2) means requires 2 applications of a CORDIC algorithm.              functionality
     //-----------------------------------------------------               ---------------------------
+    T&   assign( T& x, const T& y ) const;                                // x = y  (this exists so we can log assignments)
+
+    bool isgreater( const T& x, const T& y ) const;                       // x > y
+    bool isgreaterequal( const T& x, const T& y ) const;                  // x >= y
+    bool isless( const T& x, const T& y ) const;                          // x > y
+    bool islessequal( const T& x, const T& y ) const;                     // x >= y
+    bool islessgreater( const T& x, const T& y ) const;                   // x != y (but returns false if at least one is NaN)
+    bool isnotequal( const T& x, const T& y ) const;                      // x != y (returns true if only one is NaN)
+    bool isequal( const T& x, const T& y ) const;                         // x == y (returns true if both are NaN)
+    bool isunordered( const T& x, const T& y ) const;                     // returns true if x is a NaN OR y is a NaN
+
     T    abs( const T& x ) const;                                         // |x|
     T    neg( const T& x ) const;                                         // -x
     T    floor( const T& x ) const;                                       // largest  integral value <= x
@@ -1286,6 +1297,61 @@ void Cordic<T,FLT>::linear_vectoring_xy( const T& x0, const T& y0, T& x, T& y ) 
         }
         y = yi;
     }
+}
+
+template< typename T, typename FLT >
+inline T&   Cordic<T,FLT>::assign( T& x, const T& y ) const
+{
+    x = y;
+    return x;
+}
+
+template< typename T, typename FLT >
+inline bool Cordic<T,FLT>::isgreater( const T& x, const T& y ) const
+{
+    return x > y;
+}
+
+template< typename T, typename FLT >
+inline bool Cordic<T,FLT>::isgreaterequal( const T& x, const T& y ) const
+{
+    return x >= y;
+}
+
+template< typename T, typename FLT >
+inline bool Cordic<T,FLT>::isless( const T& x, const T& y ) const
+{
+    return x < y;
+}
+
+template< typename T, typename FLT >
+inline bool Cordic<T,FLT>::islessequal( const T& x, const T& y ) const
+{
+    return x <= y;
+}
+
+template< typename T, typename FLT >
+inline bool Cordic<T,FLT>::islessgreater( const T& x, const T& y ) const
+{
+    return x < y || x > y;
+}
+
+template< typename T, typename FLT >
+inline bool Cordic<T,FLT>::isnotequal( const T& x, const T& y ) const
+{
+    return x != y;
+}
+
+template< typename T, typename FLT >
+inline bool Cordic<T,FLT>::isequal( const T& x, const T& y ) const
+{
+    return x == y;
+}
+
+template< typename T, typename FLT >
+inline bool Cordic<T,FLT>::isunordered( const T& x, const T& y ) const
+{
+    return !(x == y || x != y);
 }
 
 template< typename T, typename FLT >
