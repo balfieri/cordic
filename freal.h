@@ -147,7 +147,7 @@ public:
     //
     // a = *this
     //-----------------------------------------------------               
-    freal& assign( const freal& b ) const;                      
+    freal& assign( const freal& b );
 
     bool   isgreater( const freal& b ) const;                        
     bool   isgreaterequal( const freal& b ) const;                 
@@ -919,8 +919,13 @@ inline bool   freal<T,FLT>::operator == ( const freal<T,FLT>& b ) const
 //-----------------------------------------------------               
 
 template< typename T, typename FLT >              
-inline freal<T,FLT>& freal<T,FLT>::assign( const freal<T,FLT>& b ) const                                    
-{ c( b )->assign( v, b.v ); return *this; }
+inline freal<T,FLT>& freal<T,FLT>::assign( const freal<T,FLT>& b ) 
+{ 
+    cassert( b.cordic != nullptr, "assigning from undefined value b" );
+    cordic = b.cordic;
+    cordic->assign( v, b.v ); 
+    return *this;
+}
 
 template< typename T, typename FLT >              
 inline bool freal<T,FLT>::isgreater( const freal<T,FLT>& b ) const                                    
