@@ -2001,7 +2001,7 @@ void Cordic<T,FLT>::reduce_arg( T& x, int32_t& x_lshift, bool& sign, bool shift_
             other <<= 1;
         }
     }
-    while( normalize && x < other )
+    while( normalize && x > 0 && x < other )
     {
         x_lshift--;
         if ( shift_x ) {
