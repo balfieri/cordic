@@ -272,6 +272,7 @@ public:
     //      -PI  <= z <= PI     (if z0 == 0)
     //
     void circular_vectoring( const T& x0, const T& y0, const T& z0, T& x, T& y, T& z ) const;
+    void circular_vectoring_xy( const T& x0, const T& y0, T& x, T& y ) const;  // if z not needed
 
     // hyperbolic rotation mode results after step n:
     //      x = gain*(x0*cosh(z0) + y0*sinh(z0))        gain=0.828159...
@@ -307,6 +308,7 @@ public:
     //      -PI/2 <= z <= PI/2  (if z0 == 0)
     //
     void hyperbolic_vectoring( const T& x0, const T& y0, const T& z0, T& x, T& y, T& z ) const;
+    void hyperbolic_vectoring_xy( const T& x0, const T& y0, T& x, T& y ) const;  // if z not needed
 
     // linear rotation mode results after step n:
     //      x = x0
@@ -341,6 +343,7 @@ public:
     //      -PI/2 <= z <= PI/2  (if z0 == 0)
     //
     void linear_vectoring( const T& x0, const T& y0, const T& z0, T& x, T& y, T& z ) const;
+    void linear_vectoring_xy( const T& x0, const T& y0, T& x, T& y ) const;   // if z not needed
 
     //-----------------------------------------------------
     // More Constants 
@@ -952,6 +955,45 @@ void Cordic<T,FLT>::circular_vectoring( const T& x0, const T& y0, const T& z0, T
 }
 
 template< typename T, typename FLT >
+void Cordic<T,FLT>::circular_vectoring_xy( const T& x0, const T& y0, T& x, T& y ) const
+{
+    //-----------------------------------------------------
+    // input ranges allowed:
+    //      -3  <= x0 <= 3
+    //      -1  <= y0 <= 1
+    //-----------------------------------------------------
+    const T ONE = one();
+    const T THREE = 3*ONE;
+    if ( debug ) std::cout << "circular_vectoring begin: x0,y0=[ " << to_flt(x0) << ", " << to_flt(y0) << "\n";
+    cassert( x0 >= -THREE && x0 <= THREE && "circular_vectoring x0 must be in the range -3 .. 3" );
+    cassert( y0 >= -ONE   && y0 <= ONE   && "circular_vectoring y0 must be in the range -1 .. 1" );
+
+    //-----------------------------------------------------
+    // d = (y < 0) ? 1 : -1
+    // xi = x - d*(y >> i)
+    // yi = y + d*(x >> i)
+    //-----------------------------------------------------
+    x = x0;
+    y = y0;
+    uint32_t n = impl->n;
+    for( uint32_t i = 0; i <= n; i++ )
+    {
+        T xi;
+        T yi;
+        if ( debug ) printf( "circular_vectoring: i=%d xy=[%.30f,%.30f] test=%d\n", i, to_flt(x), to_flt(y), int(y < zero()) );
+        if ( y < T(0) ) {
+            xi = x - (y >> i);
+            yi = y + (x >> i);
+        } else {
+            xi = x + (y >> i);
+            yi = y - (x >> i);
+        }
+        x = xi;
+        y = yi;
+    }
+}
+
+template< typename T, typename FLT >
 void Cordic<T,FLT>::hyperbolic_rotation( const T& x0, const T& y0, const T& z0, T& x, T& y, T& z ) const
 {
     //-----------------------------------------------------
@@ -963,9 +1005,9 @@ void Cordic<T,FLT>::hyperbolic_rotation( const T& x0, const T& y0, const T& z0, 
     const T TWO = one() << 1;
     const T ANGLE_MAX = hyperbolic_angle_max();
     if ( debug ) std::cout << "hyperbolic_rotation begin: x0,y0,z0=[ " << to_flt(x0) << ", " << to_flt(y0) << ", " << to_flt(z0) << "]\n";
-    cassert( x0 >= -TWO       && x0 <= TWO &&       "hyperbolic_vectoring x0 must be in the range -2 .. 2" );
-    cassert( y0 >= -TWO       && y0 <= TWO &&       "hyperbolic_vectoring y0 must be in the range -2 .. 2" );
-    cassert( z0 >= -ANGLE_MAX && z0 <= ANGLE_MAX && "hyperbolic_vectoring |z0| must be <= hyperbolic_angle_max()" );
+    cassert( x0 >= -TWO       && x0 <= TWO &&       "hyperbolic_rotation x0 must be in the range -2 .. 2" );
+    cassert( y0 >= -TWO       && y0 <= TWO &&       "hyperbolic_rotation y0 must be in the range -2 .. 2" );
+    cassert( z0 >= -ANGLE_MAX && z0 <= ANGLE_MAX && "hyperbolic_rotation |z0| must be <= hyperbolic_angle_max()" );
 
     //-----------------------------------------------------
     // d = (z >= 0) ? 1 : -1
@@ -1065,6 +1107,52 @@ void Cordic<T,FLT>::hyperbolic_vectoring( const T& x0, const T& y0, const T& z0,
 }
 
 template< typename T, typename FLT >
+void Cordic<T,FLT>::hyperbolic_vectoring_xy( const T& x0, const T& y0, T& x, T& y ) const
+{
+    //-----------------------------------------------------
+    // input ranges allowed:
+    //      -2  <= x0 <= 2
+    //      -2  <= y0 <= 2
+    //-----------------------------------------------------
+    const T TWO = one() << 1;
+    const T PI  = pi();
+    if ( debug ) std::cout << "hyperbolic_vectoring_xy begin: x0,y0=[ " << to_flt(x0) << ", " << to_flt(y0) << "\n";
+    cassert( x0 >= -TWO && x0 <= TWO && "hyperbolic_vectoring x0 must be in the range -2 .. 2" );
+    cassert( y0 >= -TWO && y0 <= TWO && "hyperbolic_vectoring y0 must be in the range -2 .. 2" );
+
+    //-----------------------------------------------------
+    // d = (y < 0) ? 1 : -1
+    // xi = x - d*(y >> i)
+    // yi = y + d*(x >> i)
+    //-----------------------------------------------------
+    x = x0;
+    y = y0;
+    uint32_t n = impl->n;
+    uint32_t next_dup_i = 4;     
+    for( uint32_t i = 1; i <= n; i++ )
+    {
+        T xi;
+        T yi;
+        if ( debug ) printf( "hyperbolic_vectoring: i=%d xy=[%.30f,%.30f] test=%d\n", i, to_flt(x), to_flt(y), int(y < zero()) );
+        if ( y < T(0) ) {
+            xi = x + (y >> i);
+            yi = y + (x >> i);
+        } else {
+            xi = x - (y >> i);
+            yi = y - (x >> i);
+        }
+        x = xi;
+        y = yi;
+
+        if ( i == next_dup_i ) {
+            // for hyperbolic, we must duplicate iterations 4, 13, 40, 121, ..., 3*i+1
+            next_dup_i = 3*i + 1;
+            i--;
+        }
+    }
+}
+
+template< typename T, typename FLT >
 void Cordic<T,FLT>::linear_rotation( const T& x0, const T& y0, const T& z0, T& x, T& y, T& z ) const
 {
     //-----------------------------------------------------
@@ -1136,7 +1224,8 @@ void Cordic<T,FLT>::linear_vectoring( const T& x0, const T& y0, const T& z0, T& 
     uint32_t n = impl->n;
     for( uint32_t i = 0; i <= n; i++ )
     {
-        if ( debug ) printf( "linear_vectoring: i=%d xyz=[%.30f,%.30f,%.30f] test=%d\n", i, to_flt(x), to_flt(y), to_flt(z), int((x < zero()) != (y < zero())) );
+        if ( debug ) printf( "linear_vectoring: i=%d xyz=[%.30f,%.30f,%.30f] test=%d\n", 
+                             i, to_flt(x), to_flt(y), to_flt(z), int(y < zero()) );
         T yi;
         T zi;
         if ( y < T(0) ) {
@@ -1148,6 +1237,40 @@ void Cordic<T,FLT>::linear_vectoring( const T& x0, const T& y0, const T& z0, T& 
         }
         y = yi;
         z = zi;
+    }
+}
+
+template< typename T, typename FLT >
+void Cordic<T,FLT>::linear_vectoring_xy( const T& x0, const T& y0, T& x, T& y ) const
+{
+    //-----------------------------------------------------
+    // input ranges allowed:
+    //      -2      <= x0 <= 2
+    //      -2      <= y0 <= 2
+    //-----------------------------------------------------
+    const T TWO = one() << 1;
+    if ( debug ) std::cout << "linear_vectoring begin: x0,y0=[ " << to_flt(x0) << ", " << to_flt(y0) << "\n";
+    cassert( x0 >= -TWO && x0 <= TWO && "linear_rotation x0 must be in the range -2 .. 2" );
+    cassert( y0 >= -TWO && y0 <= TWO && "linear_rotation y0 must be in the range -2 .. 2" );
+    
+    //-----------------------------------------------------
+    // d = (y < 0) ? 1 : -1
+    // xi = x
+    // yi = y + d*(x >> i)
+    //-----------------------------------------------------
+    x = x0;
+    y = y0;
+    uint32_t n = impl->n;
+    for( uint32_t i = 0; i <= n; i++ )
+    {
+        if ( debug ) printf( "linear_vectoring: i=%d xy=[%.30f,%.30f] test=%d\n", i, to_flt(x), to_flt(y), int(y < zero()) );
+        T yi;
+        if ( y < T(0) ) {
+            yi = y + (x >> i);
+        } else {
+            yi = y - (x >> i);
+        }
+        y = yi;
     }
 }
 
