@@ -59,7 +59,8 @@ public:
     //-----------------------------------------------------
     T       to_t( FLT x ) const;                // FLT to T encoded value
     FLT     to_flt( const T& x ) const;         // T encoded value to FLT
-    std::string to_string( const T& x ) const;  // T to std::string
+    std::string to_string( const T& x ) const;  // T to std::string in decimal floating-point format
+    std::string to_rstring( const T& _x ) const;// T to std::string in raw decimal integer format 
     std::string to_bstring( const T& x ) const; // T to std::string in binary format, like "1 001 101101011010"
 
     T       make_fixed( bool sign, T i, T f );  // encode a fixed-point    value using sign, integer  part i, and fractional part f
@@ -618,7 +619,8 @@ Cordic<T,FLT>::Cordic( uint32_t int_w, uint32_t frac_w, bool do_reduce, uint32_t
     {
         T index = i - MIN_INT;
         factor[index] = std::exp(FLT(i));
-        if ( debug ) std::cout << "reduce_exp_arg LUT: factor[" << i << "]=" << factor[index] << " index=" << index << "\n";
+        if ( debug ) std::cout << "reduce_exp_arg LUT: factor[" << to_rstring(i) << "]=" << factor[index] << 
+                                  " index=" << to_rstring(index) << "\n";
     }
 
     // construct LUT used by reduce_log_arg()
@@ -628,8 +630,9 @@ Cordic<T,FLT>::Cordic( uint32_t int_w, uint32_t frac_w, bool do_reduce, uint32_t
     {
         double addend_f = std::log( std::pow( 2.0, double( i ) ) );
         addend[frac_w+i] = to_t( addend_f );
-        if ( debug ) std::cout << "addend[]=0x" << std::hex << addend[frac_w+i] << "\n" << std::dec;
-        if ( debug ) std::cout << "reduce_log_arg LUT: addend[" << i << "]=" << to_flt(addend[frac_w+i]) << " addend_f=" << addend_f << "\n";
+        if ( debug ) std::cout << "addend[]=0x" << std::hex << to_rstring(addend[frac_w+i]) << "\n" << std::dec;
+        if ( debug ) std::cout << "reduce_log_arg LUT: addend[" << to_rstring(i) << "]=" << to_flt(addend[frac_w+i]) << 
+                                  " addend_f=" << addend_f << "\n";
     }
 }
 
@@ -829,7 +832,7 @@ inline T Cordic<T,FLT>::to_t( FLT _x ) const
     FLT x = _x;
     bool is_neg = x < 0.0;
     if ( is_neg ) x = -x;
-    cassert( T(x) < (T(1) << int_w()), "to_t: integer part of |x| does not fit in int_w bits" ); 
+    cassert( T(x) < (T(1) << int_w()), "to_t: integer part of |x| " + to_rstring(x) + " does not fit in int_w bits" ); 
     T x_t = x * FLT( one() );
     if ( is_neg ) x_t = -x_t;
     return x_t;
@@ -849,12 +852,63 @@ inline FLT Cordic<T,FLT>::to_flt( const T& _x ) const
 template< typename T, typename FLT >
 inline std::string Cordic<T,FLT>::to_string( const T& x ) const
 {
+    // floating-point representation
     return std::to_string( to_flt( x ) );  
+}
+
+template< typename T, typename FLT >
+inline std::string Cordic<T,FLT>::to_rstring( const T& _x ) const
+{
+    // raw integer representation
+    T x = _x;
+    bool sign = x < 0;
+    if ( sign ) x = -x;
+    int32_t twidth = 8 * sizeof( T );
+    int32_t bwidth = int_w() + frac_w();
+    int32_t dwidth = FLT(bwidth) / std::ceil( std::log2( 10 ) );
+    char s[1024];
+    cassert( (dwidth+2) < int32_t(sizeof(s)), "to_rstring: need to make s buffer bigger" );
+    memset( s, 0, dwidth+1 );
+    int32_t m = dwidth;
+    int32_t i;
+    for( i = bwidth-1; i >= 0; i-- )
+    {
+        // avoiding divides 
+        bool carry = (x >> i) & 1; 
+        int32_t j;
+        for( j = dwidth-1; j >= (m + 1) || carry; j-- ) {
+            int32_t d = 2 * s[j] + carry;
+            carry = d > 9;
+            s[j] = carry ? (d - 10) : d;
+        }
+        m = j;
+    }
+
+    // skip leading zeros
+    for( i = 0; i < (dwidth-1); i++ ) 
+    {
+        if ( s[i] != 0 ) break;  
+    }
+
+    // convert to characters
+    for( int32_t j = i; j < dwidth; j++ ) 
+    {
+        s[j] += '0';
+    }
+
+    // add optional sign
+    if ( sign ) {
+        i--;
+        s[i] = '-';
+    }        
+
+    return s+i;
 }
 
 template< typename T, typename FLT >
 inline std::string Cordic<T,FLT>::to_bstring( const T& _x ) const
 {
+    // binary representation
     T x = _x;
     uint32_t width = 1 + int_w() + frac_w();
     std::string bs = "";
@@ -2199,7 +2253,7 @@ inline void Cordic<T,FLT>::reduce_exp_arg( FLT b, T& x, T& factor ) const
     factor        = to_t( factor_f );
     x            -= i << frac_w();
     if ( debug ) std::cout << "reduce_exp_arg: b=" << b << " x_orig=" << to_flt(x_orig) << 
-                              " i=" << i << " index=" << index << " log(b)*exp(i)=" << to_flt(factor) << 
+                              " i=" << to_rstring(i) << " index=" << to_rstring(index) << " log(b)*exp(i)=" << to_flt(factor) << 
                               " f=x_reduced=" << to_flt(x) << "\n"; 
 }
 
@@ -2303,7 +2357,7 @@ inline void Cordic<T,FLT>::reduce_sin_cos_arg( T& a, uint32_t& quad, bool& sign,
     a        -= s;
     quad      = (i >> 1) & 3;
     did_minus_pi_div_4 = i & 1;
-    if ( debug ) std::cout << "reduce_sin_cos_arg: a_orig=" << to_flt(a_orig) << " m=" << to_flt(m) << " i=" << i << 
+    if ( debug ) std::cout << "reduce_sin_cos_arg: a_orig=" << to_flt(a_orig) << " m=" << to_flt(m) << " i=" << to_rstring(i) << 
                               " subtract=" << to_flt(s) << " a_reduced=" << to_flt(a) << 
                               " quadrant=" << quad << " did_minus_pi_div_4=" << did_minus_pi_div_4 << "\n"; 
 
@@ -2340,8 +2394,9 @@ inline void Cordic<T,FLT>::reduce_sinh_cosh_arg( T& x, T& sinh_i, T& cosh_i, boo
     cassert( !cosh_i_oflows[i], "reduce_sinh_cosh_arg x will cause an overflow for cosh" );
     sinh_i = sinh_i_vals[i];
     cosh_i = cosh_i_vals[i];
-    if ( debug ) std::cout << "reduce_sinh_cosh_arg: x_orig=" << to_flt(x_orig) << " sinh_i[" << i << "]=" << to_flt(sinh_i) << 
-                              " coshh_i[" << i << "]=" << to_flt(cosh_i) << " x_reduced=" << to_flt(x) << "\n";
+    if ( debug ) std::cout << "reduce_sinh_cosh_arg: x_orig=" << to_flt(x_orig) << " sinh_i[" << to_rstring(i) << 
+                              "]=" << to_flt(sinh_i) << " coshh_i[" << to_rstring(i) << "]=" << to_flt(cosh_i) << 
+                              " x_reduced=" << to_flt(x) << "\n";
 }
 
 template class Cordic<int64_t, double>;

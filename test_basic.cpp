@@ -65,8 +65,8 @@ int main( int argc, const char * argv[] )
     //---------------------------------------------------------------------------
     // Allocate do_reduce=true and do_reduce=false Cordic objects.
     //---------------------------------------------------------------------------
-    Cordic<T, FLT> * cordicr  = new Cordic( int_w, frac_w, true );     // with arg reduction
-    Cordic<T, FLT> * cordicnr = new Cordic( int_w, frac_w, false );    // without arg reduction
+    Cordic<T, FLT> * cordicr  = new Cordic<T,FLT>( int_w, frac_w, true );     // with arg reduction
+    Cordic<T, FLT> * cordicnr = new Cordic<T,FLT>( int_w, frac_w, false );    // without arg reduction
 
     //---------------------------------------------------------------------------
     // New and fixed bugs.
