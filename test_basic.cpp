@@ -24,7 +24,7 @@
 #include "freal.h"                                      // not used yet, just here to test build
 
 using FLT  = double;                                    // later, use a more precise float type
-using T    = int64_t;                                   // integer container to hold encoded numbers
+using T    = __int128_t;                                // integer container to hold encoded numbers (int64_t also works)
 using real = freal<>;                                   // real number (not used yet)
 
 #include "test_helpers.h"                               // must be included after FLT is defined

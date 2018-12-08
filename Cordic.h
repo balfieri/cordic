@@ -541,7 +541,7 @@ Cordic<T,FLT>::Cordic( uint32_t int_w, uint32_t frac_w, bool do_reduce, uint32_t
         FLT a                     = std::atan( pow2 );
         FLT ah                    = std::atanh( pow2 );
         impl->circular_atan[i]    = to_t( a );
-        impl->hyperbolic_atanh[i] = to_t( ah );
+        impl->hyperbolic_atanh[i] = (i == 0) ? to_t(-1) : to_t( ah );
 
         if ( debug ) printf( "i=%2d a=%30.27g ah=%30.27g y=%30.27g\n", i, double(a), double(ah), double(pow2) );
     }
