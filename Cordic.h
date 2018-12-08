@@ -832,8 +832,8 @@ inline T Cordic<T,FLT>::to_t( FLT _x ) const
     FLT x = _x;
     bool is_neg = x < 0.0;
     if ( is_neg ) x = -x;
-    cassert( T(x) < (T(1) << int_w()), "to_t: integer part of |x| " + to_rstring(x) + " does not fit in int_w bits" ); 
-    T x_t = x * FLT( one() );
+    cassert( T(x) < (T(1) << int_w()), "to_t: integer part of |x| " + std::to_string(x) + " does not fit in int_w bits" ); 
+    T x_t = x * FLT( one() ); // need to round
     if ( is_neg ) x_t = -x_t;
     return x_t;
 }
