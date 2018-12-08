@@ -77,6 +77,7 @@ public:
     // IMPORTANT: implicit_from_set() must be called before
     // using any implicit conversions FROM freal.
     //-----------------------------------------------------
+    static void implicit_to_set( uint32_t int_w, uint32_t frac_w, bool is_fixed_point=true );
     static void implicit_to_set( const Cordic<T,FLT> * cordic );
     static void implicit_from_set( bool allow );
 
@@ -97,8 +98,8 @@ public:
     //-----------------------------------------------------
     // Constants
     //-----------------------------------------------------               
-    freal max( void );                                       // maximum positive value 
-    freal min( void );                                       // minimum positive value
+    freal maxval( void );                                       // maximum positive value 
+    freal minval( void );                                       // minimum positive value
     T     maxint( void );                                       // largest positive integer (just integer part, does not include fraction)
     freal zero( void );                                         // 0.0
     freal one( void );                                          // 1.0
@@ -593,6 +594,13 @@ inline void freal<T,FLT>::implicit_to_set( const Cordic<T,FLT> * cordic )
 }
 
 template< typename T, typename FLT >              
+inline void freal<T,FLT>::implicit_to_set( uint32_t int_w, uint32_t frac_w, bool is_fixed_point )
+{ 
+    cassert( is_fixed_point, "implicit_to_set() floating-point is not implemented yet" );
+    implicit_to = new Cordic<T,FLT>( int_w, frac_w );
+}
+
+template< typename T, typename FLT >              
 inline void freal<T,FLT>::implicit_from_set( bool allow )
 { 
     implicit_from = allow;
@@ -719,12 +727,12 @@ inline T            freal<T,FLT>::maxint( void )
 { return( c(), cordic->maxint() );      } 
 
 template< typename T, typename FLT >              
-inline freal<T,FLT> freal<T,FLT>::max( void ) 
-{ return( c(), make_raw( cordic, cordic->max() ) ); }
+inline freal<T,FLT> freal<T,FLT>::maxval( void ) 
+{ return( c(), make_raw( cordic, cordic->maxval() ) ); }
 
 template< typename T, typename FLT >              
-inline freal<T,FLT> freal<T,FLT>::min( void ) 
-{ return( c(), make_raw( cordic, cordic->min() ) ); }
+inline freal<T,FLT> freal<T,FLT>::minval( void ) 
+{ return( c(), make_raw( cordic, cordic->minval() ) ); }
 
 template< typename T, typename FLT >              
 inline freal<T,FLT> freal<T,FLT>::zero( void ) 

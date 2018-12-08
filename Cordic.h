@@ -73,8 +73,8 @@ public:
     uint32_t frac_w( void ) const;                      // frac_w from above
     uint32_t n( void ) const;                           // n      from above
 
-    T max( void ) const;                                // maximum positive encoded value 
-    T min( void ) const;                                // minimum positive encoded value
+    T maxval( void ) const;                             // maximum positive encoded value 
+    T minval( void ) const;                             // minimum positive encoded value
     T maxint( void ) const;                             // largest positive integer (just integer part, does not include fraction)
     T zero( void ) const;                               // encoded 0.0
     T one( void ) const;                                // encoded 1.0
@@ -452,8 +452,8 @@ struct Cordic<T,FLT>::Impl
     uint32_t                    n;
 
     T                           maxint;
-    T                           max;
-    T                           min;
+    T                           maxval;
+    T                           minval;
     T                           zero;
     T                           one;
     T                           half;
@@ -511,8 +511,8 @@ Cordic<T,FLT>::Cordic( uint32_t int_w, uint32_t frac_w, bool do_reduce, uint32_t
     impl->n       = n;
 
     impl->maxint        = (T(1) << int_w) - 1;
-    impl->max           = (T(1) << (int_w+frac_w)) - 1;
-    impl->min           = T(1);
+    impl->maxval        = (T(1) << (int_w+frac_w)) - 1;
+    impl->minval        = T(1);
     impl->zero          = 0;
     impl->one           = T(1) << frac_w;
     impl->half          = T(1) << (frac_w-1);
@@ -680,15 +680,15 @@ inline T Cordic<T,FLT>::maxint( void ) const
 }
 
 template< typename T, typename FLT >
-inline T Cordic<T,FLT>::max( void ) const
+inline T Cordic<T,FLT>::maxval( void ) const
 {
-    return impl->max;
+    return impl->maxval;
 }
 
 template< typename T, typename FLT >
-inline T Cordic<T,FLT>::min( void ) const
+inline T Cordic<T,FLT>::minval( void ) const
 {
-    return impl->min;
+    return impl->minval;
 }
 
 template< typename T, typename FLT >
