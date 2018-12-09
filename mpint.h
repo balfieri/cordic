@@ -27,7 +27,9 @@
 //
 //     #include mpint.h
 //     mpint::implicit_int_w = 128;             // change default int_w to 128 bits
-//     mpint i;                                 // will get allocated 128 bits
+//     mpint i;                                 // will get allocated 128 bits and initialized to 0
+//     mpint j( 12 );                           // will get allocated 128 bits and initialized to 12
+//     mpint k( 10, 56 );                       // will get allocated 56  bits and initialized to 10
 //
 #ifndef _mpint_h
 #define _mpint_h
