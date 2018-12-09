@@ -22,6 +22,7 @@
 //
 #include "Cordic.h"
 #include "freal.h"                                      // not used yet, just here to test build
+#include "mpint.h"
 
 using FLT  = double;                                    // later, use a more precise float type
 using T    = __int128_t;                                // integer container to hold encoded numbers (int64_t also works)

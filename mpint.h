@@ -32,16 +32,18 @@
 #ifndef _mpint_h
 #define _mpint_h
 
-#include <ctypes>
+#include <cmath>
 
 class mpint
 {
+public:
     static void implicit_int_w_set( uint32_t int_w );
     
     mpint( void );
     mpint( int64_t other );
-    mpint make_int( uint32_t int_w );
     ~mpint();
+    
+    static mpint make_int( uint32_t int_w );
 
     // bare minimum set of operators
     mpint& operator =  ( const mpint& other );
@@ -61,7 +63,7 @@ private:
     } u;
 };
 
-inline mpint::implicit_int_w = 64;
+uint32_t mpint::implicit_int_w = 64;
 
 inline mpint::mpint( void )
 {
@@ -72,13 +74,12 @@ inline mpint::mpint( void )
     }
 }
 
-inline mpint::make_int( uint32_t _int_w )
+inline mpint mpint::make_int( uint32_t int_w )
 {
-    int_w    = _int_w;
-    word_cnt = int_w / 64;
-    if ( word_cnt > 1 ) {
-        u.w = new uint64_t[word_cnt];
-    }
+    mpint r;
+    r.int_w    = int_w;
+    r.word_cnt = int_w / 64;
+    return r;
 }
 
 inline mpint::mpint( int64_t other )
@@ -120,7 +121,7 @@ inline mpint& mpint::operator = ( const mpint& other )
     return *this;
 }
 
-inline mpint mpint::operator + ( const mpint& other )
+inline mpint mpint::operator + ( const mpint& other ) const
 {
     mpint r;
 
@@ -138,7 +139,7 @@ inline mpint mpint::operator + ( const mpint& other )
     return r;
 }
 
-inline mpint mpint::operator - ( int shift )
+inline mpint mpint::operator - ( const mpint& other ) const
 {
     mpint r;
 
@@ -156,7 +157,7 @@ inline mpint mpint::operator - ( int shift )
     return r;
 }
 
-inline mpint mpint::operator << ( int shift )
+inline mpint mpint::operator << ( int shift ) const
 {
     if ( shift == 0 ) return *this;
 
@@ -170,7 +171,7 @@ inline mpint mpint::operator << ( int shift )
 
     for( uint32_t i = 0; i < word_cnt; i++ )
     {
-        u.r.w[i] = 0;
+        r.u.w[i] = 0;
     }
 
     for( uint32_t tb = 0; tb < word_cnt*8; tb++ )
@@ -188,7 +189,7 @@ inline mpint mpint::operator << ( int shift )
     return r;
 }
 
-inline mpint mpint::operator >> ( int shift )
+inline mpint mpint::operator >> ( int shift ) const
 {
     if ( shift == 0 ) return *this;
 
@@ -226,3 +227,5 @@ inline mpint mpint::operator >> ( int shift )
 
     return r;
 }
+
+#endif
