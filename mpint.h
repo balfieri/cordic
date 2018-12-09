@@ -39,8 +39,7 @@ class mpint
 public:
     static void implicit_int_w_set( uint32_t int_w );
     
-    mpint( void );
-    mpint( int64_t other );
+    mpint( int64_t init=0, uint32_t int_w=0 );
     ~mpint();
     
     static mpint make_int( uint32_t int_w );
@@ -65,38 +64,24 @@ private:
 
 uint32_t mpint::implicit_int_w = 64;
 
-inline mpint::mpint( void )
+inline mpint::mpint( int64_t init, uint32_t _int_w )
 {
-    int_w    = implicit_int_w;
+    int_w    = (_int_w == 0) ? implicit_int_w : _int_w;
     word_cnt = int_w / 64;
     if ( word_cnt > 1 ) {
         u.w = new uint64_t[word_cnt];
+
+        uint64_t sign = init < 0;
+        uint64_t sign_mask = uint64_t( -sign );
+
+        for( uint32_t i = 0; i < word_cnt-1; i++ )
+        {
+            u.w[i] = sign_mask;
+        }
+        u.w[word_cnt-1] = init;
+    } else {
+        u.w0 = init;
     }
-}
-
-inline mpint mpint::make_int( uint32_t int_w )
-{
-    mpint r;
-    r.int_w    = int_w;
-    r.word_cnt = int_w / 64;
-    return r;
-}
-
-inline mpint::mpint( int64_t other )
-{
-    if ( word_cnt == 1 ) {
-        u.w0 = other;
-        return;
-    }
-
-    uint64_t sign = other < 0;
-    uint64_t sign_mask = uint64_t( -sign );
-
-    for( uint32_t i = 0; i < word_cnt-1; i++ )
-    {
-        u.w[i] = sign_mask;
-    }
-    u.w[word_cnt-1] = other;
 }
 
 inline mpint::~mpint()
