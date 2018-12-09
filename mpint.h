@@ -40,6 +40,7 @@ class mpint
     
     mpint( void );
     mpint( int64_t other );
+    mpint make_int( uint32_t int_w );
     ~mpint();
 
     // bare minimum set of operators
@@ -65,7 +66,16 @@ inline mpint::implicit_int_w = 64;
 inline mpint::mpint( void )
 {
     int_w    = implicit_int_w;
-    word_cnt = implicit_int_w / 64;
+    word_cnt = int_w / 64;
+    if ( word_cnt > 1 ) {
+        u.w = new uint64_t[word_cnt];
+    }
+}
+
+inline mpint::make_int( uint32_t _int_w )
+{
+    int_w    = _int_w;
+    word_cnt = int_w / 64;
     if ( word_cnt > 1 ) {
         u.w = new uint64_t[word_cnt];
     }
