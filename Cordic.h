@@ -25,6 +25,8 @@
 #include <iostream>
 #include <iomanip>
 
+#include "Logger.h"
+
 #define cassert(expr, msg) if ( !(expr) ) \
                 { std::cout << "ERROR: assertion failure: " << (msg) << " at " << __FILE__ << ":" << __LINE__ << "\n"; exit( 1 ); }
 
@@ -44,14 +46,11 @@ public:
     // 1+int_w+frac_w must fit in T
     //
     // So the most significant bit is the sign, followed by int_w bits of integer, followed by frac_w bits of fraction.
-    //
-    // do_reduce indicates whether Cordic routines should first do argument reduction, which is usually the case.
-    // If you need a mix of reduce and no-reduce, then please allocate two different Cordic objects with different do_reduce
-    // settings but the same other parameters.
-    //
-    // n == number of iterations used during CORDIC proper (0 == default == frac_w)
     //-----------------------------------------------------
-    Cordic( uint32_t int_w, uint32_t frac_w, bool do_reduce=true, uint32_t n=0 );
+    Cordic( uint32_t int_w,                     // fixed-point integer width
+            uint32_t frac_w,                    // fixed-point fraction width
+            bool     do_reduce=true,            // whether to do range reduction by default
+            uint32_t n=0 );                     // number of iterations used for CORDIC proper (0 == default == frac_w)
     ~Cordic();
 
     //-----------------------------------------------------
