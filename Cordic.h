@@ -821,23 +821,12 @@ std::string Cordic<T,FLT>::op_to_str( uint16_t op )
     }
 }
 
-template< typename T, typename FLT >
-static inline void log1( const typename Cordic<T,FLT>::OP& op, const T& opnd1 )
-{
-    if ( Cordic<T,FLT>::logger != nullptr ) Cordic<T,FLT>::logger->op1( uint16_t(op), &opnd1 );
-}
-
-template< typename T, typename FLT >
-static inline void log2( const typename Cordic<T,FLT>::OP& op, const T& opnd1, const T& opnd2 )
-{
-    if ( Cordic<T,FLT>::logger != nullptr ) Cordic<T,FLT>::logger->op2( uint16_t(op), &opnd1, &opnd2 );
-}
-
-template< typename T, typename FLT >
-static inline void log3( const typename Cordic<T,FLT>::OP& op, const T& opnd1, const T& opnd2, const T& opnd3 )
-{
-    if ( Cordic<T,FLT>::logger != nullptr ) Cordic<T,FLT>::logger->op3( uint16_t(op), &opnd1, &opnd2, &opnd3 );
-}
+#define _log1( op, opnd1 ) \
+            if ( Cordic<T,FLT>::logger != nullptr ) Cordic<T,FLT>::logger->op1( uint16_t(Cordic<T,FLT>::OP::op), &opnd1 )
+#define _log2( op, opnd1, opnd2 ) \
+            if ( Cordic<T,FLT>::logger != nullptr ) Cordic<T,FLT>::logger->op2( uint16_t(Cordic<T,FLT>::OP::op), &opnd1, &opnd2 )
+#define _log3( op, opnd1, opnd2, opnd3 ) \
+            if ( Cordic<T,FLT>::logger != nullptr ) Cordic<T,FLT>::logger->op3( uint16_t(Cordic<T,FLT>::OP::op), &opnd1, &opnd2, &opnd3 )
 
 //-----------------------------------------------------
 // Constants
@@ -863,114 +852,133 @@ inline uint32_t Cordic<T,FLT>::n( void ) const
 template< typename T, typename FLT >
 inline T Cordic<T,FLT>::maxint( void ) const
 {
+    _log1( constant, impl->maxint );
     return impl->maxint;
 }
 
 template< typename T, typename FLT >
 inline T Cordic<T,FLT>::maxval( void ) const
 {
+    _log1( constant, impl->maxval );
     return impl->maxval;
 }
 
 template< typename T, typename FLT >
 inline T Cordic<T,FLT>::minval( void ) const
 {
+    _log1( constant, impl->minval );
     return impl->minval;
 }
 
 template< typename T, typename FLT >
 inline T Cordic<T,FLT>::zero( void ) const
 {
+    _log1( constant, impl->zero );
     return impl->zero;
 }
 
 template< typename T, typename FLT >
 inline T Cordic<T,FLT>::one( void ) const
 {
+    _log1( constant, impl->one ); 
     return impl->one;
 }
 
 template< typename T, typename FLT >
 inline T Cordic<T,FLT>::half( void ) const
 {
+    _log1( constant, impl->half ); 
     return impl->half;
 }
 
 template< typename T, typename FLT >
 inline T Cordic<T,FLT>::quarter( void ) const
 {
+    _log1( constant, impl->quarter ); 
     return impl->quarter;
 }
 
 template< typename T, typename FLT >
 inline T Cordic<T,FLT>::sqrt2( void ) const
 {
+    _log1( constant, impl->sqrt2 ); 
     return impl->sqrt2;
 }
 
 template< typename T, typename FLT >
 inline T Cordic<T,FLT>::sqrt2_div_2( void ) const
 {
+    _log1( constant, impl->sqrt2_div_2 ); 
     return impl->sqrt2_div_2;
 }
 
 template< typename T, typename FLT >
 inline T Cordic<T,FLT>::pi( void ) const
 {
+    _log1( constant, impl->pi ); 
     return impl->pi;
 }
 
 template< typename T, typename FLT >
 inline T Cordic<T,FLT>::pi_div_2( void ) const
 {
+    _log1( constant, impl->pi_div_2 ); 
     return impl->pi_div_2;
 }
 
 template< typename T, typename FLT >
 inline T Cordic<T,FLT>::pi_div_4( void ) const
 {
+    _log1( constant, impl->pi_div_4 ); 
     return impl->pi_div_4;
 }
 
 template< typename T, typename FLT >
 inline T Cordic<T,FLT>::two_div_pi( void ) const
 {
+    _log1( constant, impl->two_div_pi ); 
     return impl->two_div_pi;
 }
 
 template< typename T, typename FLT >
 inline T Cordic<T,FLT>::four_div_pi( void ) const
 {
+    _log1( constant, impl->four_div_pi ); 
     return impl->four_div_pi;
 }
 
 template< typename T, typename FLT >
 inline T Cordic<T,FLT>::e( void ) const
 {
+    _log1( constant, impl->e ); 
     return impl->e;
 }
 
 template< typename T, typename FLT >
 inline T Cordic<T,FLT>::circular_rotation_gain( void ) const
 {
+    _log1( constant, impl->circular_rotation_gain ); 
     return impl->circular_rotation_gain;
 }
 
 template< typename T, typename FLT >
 inline T Cordic<T,FLT>::circular_vectoring_gain( void ) const
 {
+    _log1( constant, impl->circular_vectoring_gain ); 
     return impl->circular_vectoring_gain;
 }
 
 template< typename T, typename FLT >
 inline T Cordic<T,FLT>::hyperbolic_rotation_gain( void ) const
 {
+    _log1( constant, impl->hyperbolic_rotation_gain ); 
     return impl->hyperbolic_rotation_gain;
 }
 
 template< typename T, typename FLT >
 inline T Cordic<T,FLT>::hyperbolic_vectoring_gain( void ) const
 {
+    _log1( constant, impl->hyperbolic_vectoring_gain ); 
     return impl->hyperbolic_vectoring_gain;
 }
 
@@ -983,30 +991,35 @@ inline T Cordic<T,FLT>::circular_rotation_one_over_gain( void ) const
 template< typename T, typename FLT >
 inline T Cordic<T,FLT>::circular_vectoring_one_over_gain( void ) const
 {
+    _log1( constant, impl->circular_vectoring_one_over_gain ); 
     return impl->circular_vectoring_one_over_gain;
 }
 
 template< typename T, typename FLT >
 inline T Cordic<T,FLT>::hyperbolic_rotation_one_over_gain( void ) const
 {
+    _log1( constant, impl->hyperbolic_rotation_one_over_gain ); 
     return impl->hyperbolic_rotation_one_over_gain;
 }
 
 template< typename T, typename FLT >
 inline T Cordic<T,FLT>::hyperbolic_vectoring_one_over_gain( void ) const
 {
+    _log1( constant, impl->hyperbolic_vectoring_one_over_gain ); 
     return impl->hyperbolic_vectoring_one_over_gain;
 }
 
 template< typename T, typename FLT >
 inline T Cordic<T,FLT>::circular_angle_max( void ) const
 {
+    _log1( constant, impl->circular_angle_max ); 
     return impl->circular_angle_max;
 }
 
 template< typename T, typename FLT >
 inline T Cordic<T,FLT>::hyperbolic_angle_max( void ) const
 {
+    _log1( constant, impl->hyperbolic_angle_max ); 
     return impl->hyperbolic_angle_max;
 }
 
