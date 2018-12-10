@@ -825,8 +825,14 @@ std::string Cordic<T,FLT>::op_to_str( uint16_t op )
             if ( Cordic<T,FLT>::logger != nullptr ) Cordic<T,FLT>::logger->op1( uint16_t(Cordic<T,FLT>::OP::op), &opnd1 )
 #define _log2( op, opnd1, opnd2 ) \
             if ( Cordic<T,FLT>::logger != nullptr ) Cordic<T,FLT>::logger->op2( uint16_t(Cordic<T,FLT>::OP::op), &opnd1, &opnd2 )
+#define _log2i( op, opnd1, opnd2 ) \
+            if ( Cordic<T,FLT>::logger != nullptr ) Cordic<T,FLT>::logger->op2( uint16_t(Cordic<T,FLT>::OP::op), &opnd1, opnd2 )
+#define _log2f( op, opnd1, opnd2 ) \
+            if ( Cordic<T,FLT>::logger != nullptr ) Cordic<T,FLT>::logger->op2( uint16_t(Cordic<T,FLT>::OP::op), &opnd1, opnd2 )
 #define _log3( op, opnd1, opnd2, opnd3 ) \
             if ( Cordic<T,FLT>::logger != nullptr ) Cordic<T,FLT>::logger->op3( uint16_t(Cordic<T,FLT>::OP::op), &opnd1, &opnd2, &opnd3 )
+#define _log4( op, opnd1, opnd2, opnd3, opnd4 ) \
+            if ( Cordic<T,FLT>::logger != nullptr ) Cordic<T,FLT>::logger->op4( uint16_t(Cordic<T,FLT>::OP::op), &opnd1, &opnd2, &opnd3, &opnd4 )
 
 //-----------------------------------------------------
 // Constants
@@ -1558,18 +1564,19 @@ void Cordic<T,FLT>::linear_vectoring_xy( const T& x0, const T& y0, T& x, T& y ) 
 template< typename T, typename FLT >
 inline void Cordic<T,FLT>::constructed( const T& x ) const
 {
-    (void)x;
+    if ( logger != nullptr ) logger->constructed( &x, this );
 }
 
 template< typename T, typename FLT >
 inline void Cordic<T,FLT>::destructed( const T& x ) const
 {
-    (void)x;
+    if ( logger != nullptr ) logger->destructed( &x, this );
 }
 
 template< typename T, typename FLT >
 inline T&   Cordic<T,FLT>::assign( T& x, const T& y ) const
 {
+    _log2( assign, x, y );
     x = y;
     return x;
 }
@@ -1577,54 +1584,63 @@ inline T&   Cordic<T,FLT>::assign( T& x, const T& y ) const
 template< typename T, typename FLT >
 inline bool Cordic<T,FLT>::isgreater( const T& x, const T& y ) const
 {
+    _log2( isgreater, x, y );
     return x > y;
 }
 
 template< typename T, typename FLT >
 inline bool Cordic<T,FLT>::isgreaterequal( const T& x, const T& y ) const
 {
+    _log2( isgreaterequal, x, y );
     return x >= y;
 }
 
 template< typename T, typename FLT >
 inline bool Cordic<T,FLT>::isless( const T& x, const T& y ) const
 {
+    _log2( isless, x, y );
     return x < y;
 }
 
 template< typename T, typename FLT >
 inline bool Cordic<T,FLT>::islessequal( const T& x, const T& y ) const
 {
+    _log2( islessequal, x, y );
     return x <= y;
 }
 
 template< typename T, typename FLT >
 inline bool Cordic<T,FLT>::islessgreater( const T& x, const T& y ) const
 {
+    _log2( islessgreater, x, y );
     return x < y || x > y;
 }
 
 template< typename T, typename FLT >
 inline bool Cordic<T,FLT>::isunordered( const T& x, const T& y ) const
 {
+    _log2( isunordered, x, y );
     return !(x == y || x != y);
 }
 
 template< typename T, typename FLT >
 inline bool Cordic<T,FLT>::isunequal( const T& x, const T& y ) const
 {
+    _log2( isunequal, x, y );
     return x != y;
 }
 
 template< typename T, typename FLT >
 inline bool Cordic<T,FLT>::isequal( const T& x, const T& y ) const
 {
+    _log2( isequal, x, y );
     return x == y;
 }
 
 template< typename T, typename FLT >
 inline T Cordic<T,FLT>::abs( const T& x ) const
 {
+    _log1( abs, x );
     T    x_abs  = x;
     bool x_sign = x_abs < T(0);
     if ( x_sign ) x_abs = -x;
@@ -1636,6 +1652,7 @@ inline T Cordic<T,FLT>::abs( const T& x ) const
 template< typename T, typename FLT >
 inline T Cordic<T,FLT>::neg( const T& x ) const
 {
+    _log1( neg, x );
     bool x_sign = x < 0;
     T    x_neg  = -x;
     T    sign_mask = x_neg >> (int_w() + frac_w());
@@ -1646,6 +1663,7 @@ inline T Cordic<T,FLT>::neg( const T& x ) const
 template< typename T, typename FLT >
 inline T Cordic<T,FLT>::floor( const T& x ) const
 {
+    _log1( floor, x );
     T frac_mask = (T(1) << frac_w()) - 1;
     if ( (x & frac_mask) == 0 ) {
         return x;
@@ -1659,6 +1677,7 @@ inline T Cordic<T,FLT>::floor( const T& x ) const
 template< typename T, typename FLT >
 inline T Cordic<T,FLT>::ceil( const T& x ) const
 {
+    _log1( ceil, x );
     T frac_mask = (T(1) << frac_w()) - 1;
     if ( (x & frac_mask) == 0 ) {
         return x;
@@ -1672,6 +1691,7 @@ inline T Cordic<T,FLT>::ceil( const T& x ) const
 template< typename T, typename FLT >
 inline T Cordic<T,FLT>::add( const T& x, const T& y ) const
 {
+    _log2( add, x, y );
     bool x_sign = x < T(0);
     bool y_sign = y < T(0);
     T    sum    = x + y;
@@ -1683,6 +1703,7 @@ inline T Cordic<T,FLT>::add( const T& x, const T& y ) const
 template< typename T, typename FLT >
 inline T Cordic<T,FLT>::sub( const T& x, const T& y ) const
 {
+    _log2( sub, x, y );
     bool x_sign = x < T(0);
     bool y_sign = y < T(0);
     T    sum    = x - y;
@@ -1694,6 +1715,7 @@ inline T Cordic<T,FLT>::sub( const T& x, const T& y ) const
 template< typename T, typename FLT >
 inline T Cordic<T,FLT>::mad( const T& _x, const T& _y, const T addend, bool do_reduce ) const
 {
+    _log3( mad, _x, _y, addend );
     T x = _x;
     T y = _y;
     if ( debug ) std::cout << "mad begin: x_orig=" << to_flt(x) << " y_orig=" << to_flt(y) << " addend=" << to_flt(addend) << " do_reduce=" << do_reduce << "\n";
@@ -1719,9 +1741,9 @@ inline T Cordic<T,FLT>::mad( const T& _x, const T& _y, const T addend, bool do_r
 }
 
 template< typename T, typename FLT >
-inline T Cordic<T,FLT>::mad( const T& _x, const T& _y, const T& addend ) const
+inline T Cordic<T,FLT>::mad( const T& x, const T& y, const T& addend ) const
 {
-    return mad( _x, _y, addend, impl->do_reduce );
+    return mad( x, y, addend, impl->do_reduce );
 }
 
 template< typename T, typename FLT >
@@ -1745,6 +1767,7 @@ inline T Cordic<T,FLT>::mul( const T& x, const T& y, bool do_reduce ) const
 template< typename T, typename FLT >
 T Cordic<T,FLT>::lshift( const T& x, int ls ) const
 {
+    _log2i( lshift, x, ls );
     cassert( x >= 0, "lshift x should be non-negative" );
     if ( ls > 0 ) {
         //-----------------------------------------------------
@@ -1780,6 +1803,7 @@ inline T Cordic<T,FLT>::rshift( const T& x, int rs ) const
 template< typename T, typename FLT >
 T Cordic<T,FLT>::dad( const T& _y, const T& _x, const T addend, bool do_reduce ) const
 {
+    _log3( dad, _y, _x, addend );
     T x = _x;
     T y = _y;
     if ( debug ) std::cout << "dad begin: x_orig=" << to_flt(x) << " y_orig=" << to_flt(y) << " addend=" << to_flt(addend) << " do_reduce=" << do_reduce << "\n";
@@ -1826,6 +1850,7 @@ inline T Cordic<T,FLT>::div( const T& y, const T& x, bool do_reduce ) const
 template< typename T, typename FLT >
 inline T Cordic<T,FLT>::one_over( const T& x ) const
 {
+    _log1( one_over, x );
     return div( one(), x );
 }
 
@@ -1842,6 +1867,7 @@ T Cordic<T,FLT>::sqrt( const T& _x ) const
     //     Use hyperbolic_vectoring() for sqrt((s+1)^2 - (s-1)^2).
     //     Then lshift that by log2(p)/2 - 1.
     //-----------------------------------------------------
+    _log1( sqrt, _x );
     T x = _x;
     if ( debug ) std::cout << "sqrt begin: x_orig=" << to_flt(_x) << " do_reduce=" << impl->do_reduce << "\n";
     int32_t ls;
@@ -1859,6 +1885,7 @@ T Cordic<T,FLT>::sqrt( const T& _x ) const
 template< typename T, typename FLT >
 T Cordic<T,FLT>::one_over_sqrt( const T& x ) const
 { 
+    _log1( one_over_sqrt, x );
     if ( debug ) std::cout << "one_over_sqrt begin: x_orig=" << to_flt(x) << " do_reduce=" << impl->do_reduce << "\n";
     cassert( x != 0, "one_over_sqrt x must not be 0" );
 
@@ -1882,6 +1909,7 @@ T Cordic<T,FLT>::exp( const T& _x ) const
     //     so we can multiply it by log(e)==1 before converting to type T and
     //     then multiplying by exp(f) here.
     //-----------------------------------------------------
+    _log1( exp, _x );
     T x = _x;
     T factor;
     if ( impl->do_reduce ) reduce_exp_arg( M_E, x, factor );  // x=log(f) factor=log(e)*exp(i)
@@ -1900,6 +1928,7 @@ T Cordic<T,FLT>::exp( const T& _x ) const
 template< typename T, typename FLT >
 inline T Cordic<T,FLT>::pow( const T& b, const T& x ) const
 { 
+    _log2( pow, b, x );
     if ( b == zero() ) return zero();
     cassert( b >= 0, "pow base b must be non-negative" );
     return exp( mul( x, log( b, true ) ) );
@@ -1908,6 +1937,7 @@ inline T Cordic<T,FLT>::pow( const T& b, const T& x ) const
 template< typename T, typename FLT >
 inline T Cordic<T,FLT>::powc( const FLT& b, const T& x ) const
 { 
+    _log2f( powc, x, b );
     cassert( b > 0, "powc b must be positive" );
     const FLT log_b_f = std::log( b );
     cassert( log_b_f >= 0.0, "powc log(b) must be non-negative" );
@@ -1930,6 +1960,7 @@ inline T Cordic<T,FLT>::pow10( const T& x ) const
 template< typename T, typename FLT >
 inline T Cordic<T,FLT>::log( const T& _x, bool do_reduce ) const
 { 
+    _log1( log, _x );
     T x = _x;
     cassert( x > 0, "log: x must be positive" );
     T addend;
@@ -1950,6 +1981,7 @@ inline T Cordic<T,FLT>::log( const T& _x ) const
 template< typename T, typename FLT >
 inline T Cordic<T,FLT>::logb( const T& x, const T& b ) const
 { 
+    _log2( logb, x, b );
     cassert( b > 0, "logb b must be positive" );
     return div( log(x), log(b) );
 }
@@ -1957,6 +1989,7 @@ inline T Cordic<T,FLT>::logb( const T& x, const T& b ) const
 template< typename T, typename FLT >
 inline T Cordic<T,FLT>::logc( const T& x, const FLT& b ) const
 { 
+    _log2f( logc, x, b );
     cassert( b > 0.0, "logc b must be positive" );
     const FLT  one_over_log_b_f = FLT(1) / std::log( b );
     const T    one_over_log_b   = to_t( one_over_log_b_f );
@@ -2007,6 +2040,11 @@ inline void Cordic<T,FLT>::sin_cos( const T& x, T& si, T& co, const T * r ) cons
 template< typename T, typename FLT >
 void Cordic<T,FLT>::sin_cos( const T& _x, T& si, T& co, bool do_reduce, bool need_si, bool need_co, const T * _r ) const             
 { 
+    if ( _r != nullptr ) {
+        _log4( sin_cos, _x, si, co, *_r );
+    } else {
+        _log3( sin_cos, _x, si, co );
+    }
     T x = _x;
     uint32_t quadrant;
     bool x_sign;
@@ -2067,6 +2105,7 @@ void Cordic<T,FLT>::sin_cos( const T& _x, T& si, T& co, bool do_reduce, bool nee
 template< typename T, typename FLT >
 inline T Cordic<T,FLT>::tan( const T& x ) const
 { 
+    _log1( tan, x );
     T si, co;
     sin_cos( x, si, co );
     return div( si, co );
@@ -2075,6 +2114,7 @@ inline T Cordic<T,FLT>::tan( const T& x ) const
 template< typename T, typename FLT >
 inline T Cordic<T,FLT>::asin( const T& x ) const
 { 
+    _log1( asin, x );
     cassert( x >= -one() && x <= one(), "asin x must be between -1 and 1" );
     return atan2( x, normh( one(), x ) );
 }
@@ -2082,6 +2122,7 @@ inline T Cordic<T,FLT>::asin( const T& x ) const
 template< typename T, typename FLT >
 inline T Cordic<T,FLT>::acos( const T& x ) const
 { 
+    _log1( acos, x );
     cassert( x >= -one() && x <= one(), "acos x must be between -1 and 1" );
     return atan2( normh( one(), x ), x, true );
 }
@@ -2102,6 +2143,7 @@ inline T Cordic<T,FLT>::atan2( const T& y, const T& x ) const
 template< typename T, typename FLT >
 T Cordic<T,FLT>::atan2( const T& _y, const T& _x, bool do_reduce, bool x_is_one, T * r ) const
 { 
+    _log2( atan2, _y, _x );
     T y = _y;
     T x = _x;
 
@@ -2155,6 +2197,7 @@ T Cordic<T,FLT>::atan2( const T& _y, const T& _x, bool do_reduce, bool x_is_one,
 template< typename T, typename FLT >
 inline void Cordic<T,FLT>::polar_to_rect( const T& r, const T& a, T& x, T& y ) const
 {
+    _log4( polar_to_rect, r, a, x, y );
     if ( debug ) std::cout << "polar_to_rect begin: r=" << to_flt(r) << " a=" << to_flt(a) << " do_reduce=" << impl->do_reduce << "\n";
     sin_cos( a, y, x, true, true, true, &r );
 }
@@ -2162,6 +2205,7 @@ inline void Cordic<T,FLT>::polar_to_rect( const T& r, const T& a, T& x, T& y ) c
 template< typename T, typename FLT >
 inline void Cordic<T,FLT>::rect_to_polar( const T& x, const T& y, T& r, T& a ) const
 {
+    _log4( rect_to_polar, x, y, r, a );
     if ( debug ) std::cout << "rect_to_polar begin: x=" << to_flt(x) << " y=" << to_flt(y) << " do_reduce=" << impl->do_reduce << "\n";
     a = atan2( y, x, true, false, &r );
 }
@@ -2181,6 +2225,7 @@ inline T Cordic<T,FLT>::hypot( const T& x, const T& y ) const
 template< typename T, typename FLT >
 inline T Cordic<T,FLT>::norm( const T& _x, const T& _y, bool do_reduce ) const
 {
+    _log2( norm, _x, _y );
     T x = _x;
     T y = _y;
     if ( debug ) std::cout << "norm begin: x=" << to_flt(x) << " y=" << to_flt(y) << " do_reduce=" << do_reduce << "\n";
@@ -2205,6 +2250,7 @@ inline T Cordic<T,FLT>::normh( const T& x, const T& y ) const
     // Strategy:
     //     Try this easy way, though I suspect there will be issues.
     //-----------------------------------------------------
+    _log2( normh, x, y );
     if ( debug ) std::cout << "normh begin: x=" << to_flt(x) << " y=" << to_flt(y) << " do_reduce=" << impl->do_reduce << "\n";
     cassert( x >= y, "normh x must be >= y" );
     return sqrt( mul( x+y, x-y ) );
@@ -2237,6 +2283,12 @@ inline void Cordic<T,FLT>::sinh_cosh( const T& x, T& sih, T& coh, const T * r ) 
 template< typename T, typename FLT >
 void Cordic<T,FLT>::sinh_cosh( const T& _x, T& sih, T& coh, bool do_reduce, bool need_sih, bool need_coh, const T * _r ) const
 { 
+    if ( _r != nullptr ) {
+        _log4( sinh_cosh, _x, sih, coh, *_r );
+    } else {
+        _log3( sinh_cosh, _x, sih, coh );
+    }
+
     //-----------------------------------------------------
     // Identities:
     //     sinh(-x)         = -sinh(x)
@@ -2286,6 +2338,7 @@ void Cordic<T,FLT>::sinh_cosh( const T& _x, T& sih, T& coh, bool do_reduce, bool
 template< typename T, typename FLT >
 T Cordic<T,FLT>::tanh( const T& x ) const
 { 
+    _log1( tanh, x );
     T sih, coh;
     sinh_cosh( x, sih, coh );
     return div( sih, coh );
@@ -2294,12 +2347,14 @@ T Cordic<T,FLT>::tanh( const T& x ) const
 template< typename T, typename FLT >
 T Cordic<T,FLT>::asinh( const T& x ) const
 { 
+    _log1( asinh, x );
     return log( x + norm( x, one() ) );
 }
 
 template< typename T, typename FLT >
 inline T Cordic<T,FLT>::acosh( const T& x ) const
 { 
+    _log1( acosh, x );
     cassert( x >= one(), "acosh x must be >= 1" );
     return log( x + normh( x, one() ) );
 }
@@ -2319,6 +2374,7 @@ inline T Cordic<T,FLT>::atanh2( const T& y, const T& x ) const
 template< typename T, typename FLT >
 T Cordic<T,FLT>::atanh2( const T& _y, const T& _x, bool do_reduce, bool x_is_one ) const             
 { 
+    _log2( atanh2, _y, _x );
     T y = _y;
     T x = _x;
 

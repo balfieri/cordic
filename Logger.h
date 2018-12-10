@@ -49,7 +49,10 @@ public:
     //
     virtual void op1( uint16_t op, const T * opnd1 );
     virtual void op2( uint16_t op, const T * opnd1, const T * opnd2 );
+    virtual void op2( uint16_t op, const T * opnd1, int       opnd2 );
+    virtual void op2( uint16_t op, const T * opnd1, FLT       opnd2 );
     virtual void op3( uint16_t op, const T * opnd1, const T * opnd2, const T * opnd3 );
+    virtual void op4( uint16_t op, const T * opnd1, const T * opnd2, const T * opnd3, const T * opnd4 );
 
 private:
     op_to_str_fn_t      op_to_str;
@@ -141,10 +144,34 @@ inline void Logger<T,FLT>::op2( uint16_t op, const T * opnd1, const T * opnd2 )
 }
 
 template< typename T, typename FLT >
+inline void Logger<T,FLT>::op2( uint16_t op, const T * opnd1, int opnd2 )
+{
+    if ( out_text ) {
+        out << "op2( " << op_to_str( op ) << ", " << opnd1 << ", " << opnd2 << " );\n";
+    }
+}
+
+template< typename T, typename FLT >
+inline void Logger<T,FLT>::op2( uint16_t op, const T * opnd1, FLT opnd2 )
+{
+    if ( out_text ) {
+        out << "op2( " << op_to_str( op ) << ", " << opnd1 << ", " << opnd2 << " );\n";
+    }
+}
+
+template< typename T, typename FLT >
 inline void Logger<T,FLT>::op3( uint16_t op, const T * opnd1, const T * opnd2, const T * opnd3 )
 {
     if ( out_text ) {
-        out << "op2( " << op_to_str( op ) << ", " << opnd1 << ", " << opnd2 << ", " << opnd3 << " );\n";
+        out << "op3( " << op_to_str( op ) << ", " << opnd1 << ", " << opnd2 << ", " << opnd3 << " );\n";
+    }
+}
+
+template< typename T, typename FLT >
+inline void Logger<T,FLT>::op4( uint16_t op, const T * opnd1, const T * opnd2, const T * opnd3, const T * opnd4 )
+{
+    if ( out_text ) {
+        out << "op2( " << op_to_str( op ) << ", " << opnd1 << ", " << opnd2 << ", " << opnd3 << ", " << opnd4 << " );\n";
     }
 }
 
