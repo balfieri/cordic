@@ -821,6 +821,24 @@ std::string Cordic<T,FLT>::op_to_str( uint16_t op )
     }
 }
 
+template< typename T, typename FLT >
+static inline void log1( const typename Cordic<T,FLT>::OP& op, const T& opnd1 )
+{
+    if ( Cordic<T,FLT>::logger != nullptr ) Cordic<T,FLT>::logger->op1( uint16_t(op), &opnd1 );
+}
+
+template< typename T, typename FLT >
+static inline void log2( const typename Cordic<T,FLT>::OP& op, const T& opnd1, const T& opnd2 )
+{
+    if ( Cordic<T,FLT>::logger != nullptr ) Cordic<T,FLT>::logger->op2( uint16_t(op), &opnd1, &opnd2 );
+}
+
+template< typename T, typename FLT >
+static inline void log3( const typename Cordic<T,FLT>::OP& op, const T& opnd1, const T& opnd2, const T& opnd3 )
+{
+    if ( Cordic<T,FLT>::logger != nullptr ) Cordic<T,FLT>::logger->op3( uint16_t(op), &opnd1, &opnd2, &opnd3 );
+}
+
 //-----------------------------------------------------
 // Constants
 //-----------------------------------------------------
