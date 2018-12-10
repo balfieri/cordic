@@ -412,9 +412,91 @@ public:
     void reduce_sin_cos_arg( T& a, uint32_t& quadrant, bool& sign, bool& did_minus_pi_div_4 ) const;
     void reduce_sinh_cosh_arg( T& x, T& sinh_i, T& cosh_i, bool& sign ) const;                  
 
+    //-----------------------------------------------------
+    // Logging Support
+    //
+    // There are many reasons you might want to log Cordic operations.
+    // You can use the default Logger (new Logger<T,FLT>( ... )) or supply your 
+    // own Logger subclass.  
+    //
+    // NOTE: Logging is done globally, not just for one Cordic.  
+    //       Thus the static methods here.
+    //-----------------------------------------------------
+    static void logger_set( Logger<T,FLT> * logger );  // null means use the default logger
+    static std::string op_to_str( uint16_t op );       // supply this to Logger constructor
+
+    enum class OP
+    {
+        assign,
+
+        isgreater,
+        isgreaterequal,
+        isless,
+        islessequal,
+        islessgreater,
+        isunordered,
+        isunequal,
+        isequal,
+
+        abs,
+        neg,
+        floor,
+        ceil,
+
+        add,
+        sub,
+        mad,
+        fma,
+        mul,
+        lshift,
+        rshift,
+        dad,
+        div,
+        one_over,
+        sqrt,
+        one_over_sqrt,
+
+        exp,
+        pow,
+        powc,
+        pow2,
+        pow10,
+        log,
+        logb,
+        logc,
+        log2,
+        log10,
+
+        sin,
+        cos,
+        sin_cos,
+        tan,
+        asin,
+        acos,
+        atan,
+        atan2,
+
+        polar_to_rect,
+        rect_to_polar,
+        norm,
+        hypot,
+        normh,
+
+        sinh,
+        cosh,
+        sinh_cosh,
+        tanh,
+        asinh,
+        acosh,
+        atanh,
+        atanh2,
+    };
+
 private:
     class Impl;
     Impl * impl;
+
+    static Logger<T,FLT> * logger;
 };
 
 #ifdef DEBUG_LEVEL
@@ -649,6 +731,92 @@ Cordic<T,FLT>::~Cordic( void )
     delete impl->reduce_log_addend;
     delete impl;
     impl = nullptr;
+}
+
+//-----------------------------------------------------
+// Logging
+//-----------------------------------------------------
+template< typename T, typename FLT >
+Logger<T,FLT> * Cordic<T,FLT>::logger = nullptr;
+
+template< typename T, typename FLT >
+void Cordic<T,FLT>::logger_set( Logger<T,FLT> * _logger )
+{
+    logger = _logger;
+}    
+
+template< typename T, typename FLT >
+std::string Cordic<T,FLT>::op_to_str( uint16_t op )
+{
+    #define _ocase( op ) case OP::op: return #op;
+    
+    switch( OP( op ) )
+    {
+        _ocase( assign )
+
+        _ocase( isgreater )
+        _ocase( isgreaterequal )
+        _ocase( isless )
+        _ocase( islessequal )
+        _ocase( islessgreater )
+        _ocase( isunordered )
+        _ocase( isunequal )
+        _ocase( isequal )
+
+        _ocase( abs )
+        _ocase( neg )
+        _ocase( floor )
+        _ocase( ceil )
+
+        _ocase( add )
+        _ocase( sub )
+        _ocase( mad )
+        _ocase( fma )
+        _ocase( mul )
+        _ocase( lshift )
+        _ocase( rshift )
+        _ocase( dad )
+        _ocase( div )
+        _ocase( one_over )
+        _ocase( sqrt )
+        _ocase( one_over_sqrt )
+
+        _ocase( exp )
+        _ocase( pow )
+        _ocase( powc )
+        _ocase( pow2 )
+        _ocase( pow10 )
+        _ocase( log )
+        _ocase( logb )
+        _ocase( logc )
+        _ocase( log2 )
+        _ocase( log10 )
+
+        _ocase( sin )
+        _ocase( cos )
+        _ocase( sin_cos )
+        _ocase( tan )
+        _ocase( asin )
+        _ocase( acos )
+        _ocase( atan )
+        _ocase( atan2 )
+
+        _ocase( polar_to_rect )
+        _ocase( rect_to_polar )
+        _ocase( norm )
+        _ocase( hypot )
+        _ocase( normh )
+
+        _ocase( sinh )
+        _ocase( cosh )
+        _ocase( sinh_cosh )
+        _ocase( tanh )
+        _ocase( asinh )
+        _ocase( acosh )
+        _ocase( atanh )
+        _ocase( atanh2 )
+        default: return "<unknown OP>";
+    }
 }
 
 //-----------------------------------------------------

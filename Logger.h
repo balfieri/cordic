@@ -32,10 +32,8 @@ class Logger
 {
 public:
     typedef std::string (*op_to_str_fn_t)( uint16_t op );
-    typedef std::string (*t_to_str_fn_t)(  const T& x );
 
     Logger( op_to_str_fn_t op_to_str,
-            t_to_str_fn_t  t_to_str,
             std::string    file_name = "" );       // "" means text output to std::cout
     ~Logger();
 
@@ -44,8 +42,8 @@ public:
     virtual void cordic_destructed(  const void * cordic );
 
     // log construction/destruction of T values
-    virtual void constructed( const T * v, void * cordic );
-    virtual void destructed(  const T * v );
+    virtual void constructed( const T * v, const void * cordic );
+    virtual void destructed(  const T * v, const void * cordic );
 
     // log operations
     //
@@ -55,7 +53,6 @@ public:
 
 private:
     op_to_str_fn_t      op_to_str;
-    t_to_str_fn_t       t_to_str;
     std::ostream&       out;
     bool                out_text;
 };
@@ -81,11 +78,9 @@ private:
 //-----------------------------------------------------
 template< typename T, typename FLT >
 Logger<T,FLT>::Logger( op_to_str_fn_t _op_to_str,
-                       t_to_str_fn_t  _t_to_str,
                        std::string    file_name )
 {
     op_to_str = _op_to_str;
-    t_to_str  = _t_to_str;
     out_text  = file_name == "";
     if ( out_text ) {
         out = std::cout;
@@ -114,7 +109,7 @@ inline void Logger<T,FLT>::cordic_destructed(  const void * cordic )
 }
 
 template< typename T, typename FLT >
-inline void Logger<T,FLT>::constructed( const T * v, void * cordic )
+inline void Logger<T,FLT>::constructed( const T * v, const void * cordic )
 {
     if ( out_text ) {
         out << "constructed( " << v << ", "  << cordic << " );\n";
@@ -122,10 +117,10 @@ inline void Logger<T,FLT>::constructed( const T * v, void * cordic )
 }
 
 template< typename T, typename FLT >
-inline void Logger<T,FLT>::destructed(  const T * v )
+inline void Logger<T,FLT>::destructed( const T * v, const void * cordic )
 {
     if ( out_text ) {
-        out << "constructed( " << v << " );\n";
+        out << "constructed( " << v << ", " << cordic << " );\n";
     }
 }
 
