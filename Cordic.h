@@ -427,6 +427,7 @@ public:
 
     enum class OP
     {
+        constant,
         assign,
 
         isgreater,
@@ -752,6 +753,7 @@ std::string Cordic<T,FLT>::op_to_str( uint16_t op )
     
     switch( OP( op ) )
     {
+        _ocase( constant )
         _ocase( assign )
 
         _ocase( isgreater )
