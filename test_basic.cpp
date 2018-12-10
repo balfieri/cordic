@@ -56,6 +56,10 @@ int main( int argc, const char * argv[] )
             new_bugs = true;
         } else if ( strcmp( argv[i], "-loop_cnt" ) == 0 ) {
             loop_cnt = std::atoi( argv[++i] );
+        } else if ( strcmp( argv[i], "-log" ) == 0 ) {
+            Cordic<T,FLT>::logger_set( new Logger<T,FLT>( Cordic<T,FLT>::op_to_str, "" ) );
+        } else if ( strcmp( argv[i], "-log_file" ) == 0 ) {
+            Cordic<T,FLT>::logger_set( new Logger<T,FLT>( Cordic<T,FLT>::op_to_str, argv[++i] ) );
         } else {
             std::cout << "ERROR: unknown option " << argv[i] << "\n";
             exit( 1 );
