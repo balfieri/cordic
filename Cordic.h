@@ -593,25 +593,25 @@ Cordic<T,FLT>::Cordic( uint32_t int_w, uint32_t frac_w, bool do_reduce, uint32_t
     impl->frac_w  = frac_w;
     impl->do_reduce = do_reduce;
     impl->n       = n;
-
     impl->maxint        = (T(1) << int_w) - 1;
     impl->one           = T(1) << frac_w;                       // required before calling to_t()
-    impl->maxval        = to_t( std::pow( 2.0, int_w ) - 1.0 );
-    impl->minval        = to_t( 1.0 / std::pow( 2.0, frac_w ) );
-    impl->zero          = to_t( 0.0 );
-    impl->one           = to_t( 1.0 );
-    impl->half          = to_t( 0.5 );
-    impl->quarter       = to_t( 0.25 );
-    impl->sqrt2         = to_t( std::sqrt( 2.0 ) );
-    impl->sqrt2_div_2   = to_t( std::sqrt( 2.0 ) / FLT(2.0) );
-    impl->pi            = to_t( std::acos( FLT(-1.0) ) );
-    impl->pi_div_2      = to_t( std::acos( FLT(-1.0) ) / FLT(2.0) );
-    impl->pi_div_4      = to_t( std::acos( FLT(-1.0) ) / FLT(4.0) );
-    impl->two_div_pi    = to_t( FLT(2.0) / std::acos( FLT(-1.0) ) );
-    impl->four_div_pi   = to_t( FLT(4.0) / std::acos( FLT(-1.0) ) );
-    impl->e             = to_t( std::exp( FLT(  1 ) ) );
-    impl->log2          = to_t( std::log( FLT(  2 ) ) );
-    impl->log10         = to_t( std::log( FLT( 10 ) ) );
+
+    assign( impl->maxval        , to_t( std::pow( 2.0, int_w ) - 1.0 ) );
+    assign( impl->minval        , to_t( 1.0 / std::pow( 2.0, frac_w ) ) );
+    assign( impl->zero          , to_t( 0.0 ) );
+    assign( impl->one           , to_t( 1.0 ) );
+    assign( impl->half          , to_t( 0.5 ) );
+    assign( impl->quarter       , to_t( 0.25 ) );
+    assign( impl->sqrt2         , to_t( std::sqrt( 2.0 ) ) );
+    assign( impl->sqrt2_div_2   , to_t( std::sqrt( 2.0 ) / FLT(2.0) ) );
+    assign( impl->pi            , to_t( std::acos( FLT(-1.0) ) ) );
+    assign( impl->pi_div_2      , to_t( std::acos( FLT(-1.0) ) / FLT(2.0) ) );
+    assign( impl->pi_div_4      , to_t( std::acos( FLT(-1.0) ) / FLT(4.0) ) );
+    assign( impl->two_div_pi    , to_t( FLT(2.0) / std::acos( FLT(-1.0) ) ) );
+    assign( impl->four_div_pi   , to_t( FLT(4.0) / std::acos( FLT(-1.0) ) ) );
+    assign( impl->e             , to_t( std::exp( FLT(  1 ) ) ) );
+    assign( impl->log2          , to_t( std::log( FLT(  2 ) ) ) );
+    assign( impl->log10         , to_t( std::log( FLT( 10 ) ) ) );
 
     impl->circular_atan    = new T[n+1];
     impl->hyperbolic_atanh = new T[n+1];
@@ -621,20 +621,20 @@ Cordic<T,FLT>::Cordic( uint32_t int_w, uint32_t frac_w, bool do_reduce, uint32_t
     //
     for( uint32_t i = 0; i <= n; i++ )
     {
-        impl->linear_pow2[i]      = T(1) << (frac_w-i);
+        assign( impl->linear_pow2[i], T(1) << (frac_w-i) );
         FLT pow2                  = to_flt( impl->linear_pow2[i] );
         FLT a                     = std::atan( pow2 );
         FLT ah                    = std::atanh( pow2 );
-        impl->circular_atan[i]    = to_t( a );
-        impl->hyperbolic_atanh[i] = (i == 0) ? to_t(-1) : to_t( ah );
+        assign( impl->circular_atan[i], to_t( a ) );
+        assign( impl->hyperbolic_atanh[i], (i == 0) ? to_t(-1) : to_t( ah ) );
 
         if ( debug ) printf( "i=%2d a=%30.27g ah=%30.27g y=%30.27g\n", i, double(a), double(ah), double(pow2) );
     }
 
     // calculate max |z0| angle allowed
     T xx, yy, zz;
-    impl->circular_angle_max   = impl->one;   // to avoid triggering assert
-    impl->hyperbolic_angle_max = impl->zero;  // to disable assert
+    assign( impl->circular_angle_max, impl->one );     // to avoid triggering assert
+    assign( impl->hyperbolic_angle_max, impl->zero );  // to disable assert
     circular_vectoring(   impl->one,     impl->one, impl->zero, xx, yy, impl->circular_angle_max );
     hyperbolic_vectoring( to_t(0.5), impl->one, impl->zero, xx, yy, impl->hyperbolic_angle_max );
     if ( debug ) std::cout << "circular_angle_max="             << std::setw(30) << to_flt(impl->circular_angle_max) << "\n";
@@ -647,10 +647,10 @@ Cordic<T,FLT>::Cordic( uint32_t int_w, uint32_t frac_w, bool do_reduce, uint32_t
     hyperbolic_vectoring( impl->one, impl->zero, impl->zero, impl->hyperbolic_vectoring_gain, yy, zz );
 
     // calculate 1/gain which are the multiplication factors
-    impl->circular_rotation_one_over_gain    = to_t( FLT(1) / to_flt(impl->circular_rotation_gain) );
-    impl->circular_vectoring_one_over_gain   = to_t( FLT(1) / to_flt(impl->circular_vectoring_gain) );
-    impl->hyperbolic_rotation_one_over_gain  = to_t( FLT(1) / to_flt(impl->hyperbolic_rotation_gain) );
-    impl->hyperbolic_vectoring_one_over_gain = to_t( FLT(1) / to_flt(impl->hyperbolic_vectoring_gain) );
+    assign( impl->circular_rotation_one_over_gain,    to_t( FLT(1) / to_flt(impl->circular_rotation_gain) ) );
+    assign( impl->circular_vectoring_one_over_gain,   to_t( FLT(1) / to_flt(impl->circular_vectoring_gain) ) );
+    assign( impl->hyperbolic_rotation_one_over_gain,  to_t( FLT(1) / to_flt(impl->hyperbolic_rotation_gain) ) );
+    assign( impl->hyperbolic_vectoring_one_over_gain, to_t( FLT(1) / to_flt(impl->hyperbolic_vectoring_gain) ) );
     if ( debug ) std::cout << "circular_rotation_gain="             << std::setw(30) << to_flt(impl->circular_rotation_gain) << "\n";
     if ( debug ) std::cout << "circular_vectoring_gain="            << std::setw(30) << to_flt(impl->circular_vectoring_gain) << "\n";
     if ( debug ) std::cout << "hyperbolic_rotation_gain="           << std::setw(30) << to_flt(impl->hyperbolic_rotation_gain) << "\n";
@@ -689,8 +689,8 @@ Cordic<T,FLT>::Cordic( uint32_t int_w, uint32_t frac_w, bool do_reduce, uint32_t
         FLT cosh_i_f    = std::cosh( i_f );
         sinh_i_oflow[i] = sinh_i_f > MAX_F;
         cosh_i_oflow[i] = cosh_i_f > MAX_F;
-        sinh_i[i]       = sinh_i_oflow[i] ? MAX : to_t( std::sinh( i_f ) );
-        cosh_i[i]       = cosh_i_oflow[i] ? MAX : to_t( std::cosh( i_f ) );
+        assign( sinh_i[i], sinh_i_oflow[i] ? MAX : to_t( std::sinh( i_f ) ) );
+        assign( cosh_i[i], cosh_i_oflow[i] ? MAX : to_t( std::cosh( i_f ) ) );
         if ( debug ) std::cout << "reduce_sinh_cosh_arg LUT: i_f=" << i_f << " sinh_i=" << to_flt(sinh_i[i]) << " cosh_i=" << to_flt(cosh_i[i]) << 
                                   " sinh_i_oflow=" << sinh_i_oflow[i] << " cosh_i_oflow=" << cosh_i_oflow[i] << "\n";
     }
@@ -714,7 +714,7 @@ Cordic<T,FLT>::Cordic( uint32_t int_w, uint32_t frac_w, bool do_reduce, uint32_t
     for( int32_t i = -frac_w; i <= int32_t(int_w); i++ )
     {
         double addend_f = std::log( std::pow( 2.0, double( i ) ) );
-        addend[frac_w+i] = to_t( addend_f );
+        assign( addend[frac_w+i], to_t( addend_f ) );
         if ( debug ) std::cout << "addend[]=0x" << std::hex << to_rstring(addend[frac_w+i]) << "\n" << std::dec;
         if ( debug ) std::cout << "reduce_log_arg LUT: addend[" << to_rstring(i) << "]=" << to_flt(addend[frac_w+i]) << 
                                   " addend_f=" << addend_f << "\n";
