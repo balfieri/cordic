@@ -583,6 +583,8 @@ template< typename T, typename FLT >
 Cordic<T,FLT>::Cordic( uint32_t int_w, uint32_t frac_w, bool do_reduce, uint32_t n )
 {
     if ( n == 0 ) n = frac_w;
+    if ( logger != nullptr ) logger->cordic_constructed( this, int_w, frac_w, n );
+
     cassert( (1+int_w+frac_w) <= (sizeof( T ) * 8), "1+int_w+frac_w does not fit in T container" );
     cassert( int_w  != 0, "int_w must be > 0 currently" );
     cassert( frac_w != 0, "frac_w must be > 0 currently" );
@@ -724,6 +726,8 @@ Cordic<T,FLT>::Cordic( uint32_t int_w, uint32_t frac_w, bool do_reduce, uint32_t
 template< typename T, typename FLT >
 Cordic<T,FLT>::~Cordic( void )
 {
+    if ( logger != nullptr ) logger->cordic_destructed( this );
+
     delete impl->circular_atan;
     delete impl->hyperbolic_atanh;
     delete impl->linear_pow2;
