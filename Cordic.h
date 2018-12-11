@@ -595,12 +595,13 @@ Cordic<T,FLT>::Cordic( uint32_t int_w, uint32_t frac_w, bool do_reduce, uint32_t
     impl->n       = n;
 
     impl->maxint        = (T(1) << int_w) - 1;
-    impl->maxval        = (T(1) << (int_w+frac_w)) - 1;
-    impl->minval        = T(1);
-    impl->zero          = 0;
-    impl->one           = T(1) << frac_w;
-    impl->half          = T(1) << (frac_w-1);
-    impl->quarter       = T(1) << (frac_w-2);
+    impl->one           = T(1) << frac_w;                       // required before calling to_t()
+    impl->maxval        = to_t( std::pow( 2.0, int_w ) - 1.0 );
+    impl->minval        = to_t( 1.0 / std::pow( 2.0, frac_w ) );
+    impl->zero          = to_t( 0.0 );
+    impl->one           = to_t( 1.0 );
+    impl->half          = to_t( 0.5 );
+    impl->quarter       = to_t( 0.25 );
     impl->sqrt2         = to_t( std::sqrt( 2.0 ) );
     impl->sqrt2_div_2   = to_t( std::sqrt( 2.0 ) / FLT(2.0) );
     impl->pi            = to_t( std::acos( FLT(-1.0) ) );
