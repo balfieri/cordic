@@ -633,18 +633,18 @@ Cordic<T,FLT>::Cordic( uint32_t int_w, uint32_t frac_w, bool do_reduce, uint32_t
 
     // calculate max |z0| angle allowed
     T xx, yy, zz;
-    impl->circular_angle_max   = one();   // to avoid triggering assert
-    impl->hyperbolic_angle_max = zero();  // to disable assert
-    circular_vectoring(   one(),     one(), zero(), xx, yy, impl->circular_angle_max );
-    hyperbolic_vectoring( to_t(0.5), one(), zero(), xx, yy, impl->hyperbolic_angle_max );
+    impl->circular_angle_max   = impl->one;   // to avoid triggering assert
+    impl->hyperbolic_angle_max = impl->zero;  // to disable assert
+    circular_vectoring(   impl->one,     impl->one, impl->zero, xx, yy, impl->circular_angle_max );
+    hyperbolic_vectoring( to_t(0.5), impl->one, impl->zero, xx, yy, impl->hyperbolic_angle_max );
     if ( debug ) std::cout << "circular_angle_max="             << std::setw(30) << to_flt(impl->circular_angle_max) << "\n";
     if ( debug ) std::cout << "hyperbolic_angle_max="           << std::setw(30) << to_flt(impl->hyperbolic_angle_max) << "\n";
     
     // calculate gain by plugging in x=1,y=0,z=0 into CORDICs
-    circular_rotation(    one(), zero(), zero(), impl->circular_rotation_gain,    yy, zz );
-    circular_vectoring(   one(), zero(), zero(), impl->circular_vectoring_gain,   yy, zz );
-    hyperbolic_rotation(  one(), zero(), zero(), impl->hyperbolic_rotation_gain,  yy, zz );
-    hyperbolic_vectoring( one(), zero(), zero(), impl->hyperbolic_vectoring_gain, yy, zz );
+    circular_rotation(    impl->one, impl->zero, impl->zero, impl->circular_rotation_gain,    yy, zz );
+    circular_vectoring(   impl->one, impl->zero, impl->zero, impl->circular_vectoring_gain,   yy, zz );
+    hyperbolic_rotation(  impl->one, impl->zero, impl->zero, impl->hyperbolic_rotation_gain,  yy, zz );
+    hyperbolic_vectoring( impl->one, impl->zero, impl->zero, impl->hyperbolic_vectoring_gain, yy, zz );
 
     // calculate 1/gain which are the multiplication factors
     impl->circular_rotation_one_over_gain    = to_t( FLT(1) / to_flt(impl->circular_rotation_gain) );
@@ -699,8 +699,8 @@ Cordic<T,FLT>::Cordic( uint32_t int_w, uint32_t frac_w, bool do_reduce, uint32_t
     // values for negative integers come first.
     FLT * factor = new FLT[2*N];
     impl->reduce_exp_factor = factor;
-    T MIN_INT = -maxint() - 1;
-    for( T i = MIN_INT; i <= maxint(); i++ )
+    T MIN_INT = -impl->maxint - 1;
+    for( T i = MIN_INT; i <= impl->maxint; i++ )
     {
         T index = i - MIN_INT;
         factor[index] = std::exp(FLT(i));
@@ -1048,8 +1048,8 @@ inline T Cordic<T,FLT>::to_t( FLT _x ) const
     FLT x = _x;
     bool is_neg = x < 0.0;
     if ( is_neg ) x = -x;
-    cassert( T(x) < (T(1) << int_w()), "to_t: integer part of |x| " + std::to_string(x) + " does not fit in int_w bits" ); 
-    T x_t = x * FLT( one() ); // need to round
+    cassert( T(x) < (T(1) << impl->int_w), "to_t: integer part of |x| " + std::to_string(x) + " does not fit in int_w bits" ); 
+    T x_t = x * FLT( impl->one ); // need to round
     if ( is_neg ) x_t = -x_t;
     _log2f( make_constant, x_t, _x );
     return x_t;
@@ -1061,7 +1061,7 @@ inline FLT Cordic<T,FLT>::to_flt( const T& _x ) const
     T x = _x;
     bool is_neg = x < 0;
     if ( is_neg ) x = -x;
-    FLT x_f = FLT( x ) / FLT( one() );
+    FLT x_f = FLT( x ) / FLT( impl->one );
     if ( is_neg ) x_f = -x_f;
     return x_f;
 }
@@ -1081,7 +1081,7 @@ inline std::string Cordic<T,FLT>::to_rstring( const T& _x ) const
     bool sign = x < 0;
     if ( sign ) x = -x;
     int32_t twidth = 8 * sizeof( T );
-    int32_t bwidth = int_w() + frac_w();
+    int32_t bwidth = impl->int_w + impl->frac_w;
     int32_t dwidth = FLT(bwidth) / std::ceil( std::log2( 10 ) );
     char s[1024];
     cassert( (dwidth+2) < int32_t(sizeof(s)), "to_rstring: need to make s buffer bigger" );
@@ -1127,11 +1127,11 @@ inline std::string Cordic<T,FLT>::to_bstring( const T& _x ) const
 {
     // binary representation
     T x = _x;
-    uint32_t width = 1 + int_w() + frac_w();
+    uint32_t width = 1 + impl->int_w + impl->frac_w;
     std::string bs = "";
     for( uint32_t i = 0; i < width; i++ )
     {
-        if ( i == (int_w()+frac_w()) || i == frac_w() ) bs = " " + bs;
+        if ( i == (impl->int_w+impl->frac_w) || i == impl->frac_w ) bs = " " + bs;
         const char * b = (x & 1) ? "1" : "0";
         bs = b + bs;
         x >>= 1;
@@ -1142,11 +1142,11 @@ inline std::string Cordic<T,FLT>::to_bstring( const T& _x ) const
 template< typename T, typename FLT >
 inline T Cordic<T,FLT>::make_fixed( bool sign, T i, T f )
 {
-    cassert( i >= 0 && i <= maxint()              , "make_fixed integer part must be in range 0 .. maxint()" );
-    cassert( f >= 0 && f <= ((T(1) << frac_w())-1), "make_fixed fractional part must be in range 0 .. (1 << frac_w)-1" );
+    cassert( i >= 0 && i <= impl->maxint              , "make_fixed integer part must be in range 0 .. impl->maxint" );
+    cassert( f >= 0 && f <= ((T(1) << impl->frac_w)-1), "make_fixed fractional part must be in range 0 .. (1 << frac_w)-1" );
 
-    return (T(sign) << (int_w() + frac_w())) |
-           (T(i)    << frac_w())             |
+    return (T(sign) << (impl->int_w + impl->frac_w)) |
+           (T(i)    << impl->frac_w)             |
            (T(f)    << 0);
 }
 
@@ -1162,7 +1162,7 @@ void Cordic<T,FLT>::circular_rotation( const T& x0, const T& y0, const T& z0, T&
     //      -1  <= y0 <= 1
     //      |z0| <= 0.7854...
     //-----------------------------------------------------
-    const T ONE = one();
+    const T ONE = impl->one;
     const T ANGLE_MAX = circular_angle_max();
     if ( debug ) std::cout << "circular_rotation begin: x0,y0,z0=[ " << to_flt(x0) << ", " << to_flt(y0) << ", " << to_flt(z0) << "]\n";
     cassert( x0 >= -ONE       && x0 <= ONE,       "circular_rotation x0 must be in the range -1 .. 1" );
@@ -1184,7 +1184,7 @@ void Cordic<T,FLT>::circular_rotation( const T& x0, const T& y0, const T& z0, T&
         T xi;
         T yi;
         T zi;
-        if ( debug ) printf( "circular_rotation: i=%d xyz=[%.30f,%.30f,%.30f] test=%d\n", i, to_flt(x), to_flt(y), to_flt(z), int(z >= zero()) );
+        if ( debug ) printf( "circular_rotation: i=%d xyz=[%.30f,%.30f,%.30f] test=%d\n", i, to_flt(x), to_flt(y), to_flt(z), int(z >= impl->zero) );
         if ( z >= T(0) ) {
             xi = x - (y >> i);
             yi = y + (x >> i);
@@ -1210,9 +1210,9 @@ void Cordic<T,FLT>::circular_vectoring( const T& x0, const T& y0, const T& z0, T
     //      -PI <= z0 <= PI
     //      |atan(y0/x0)| <= 0.7854...
     //-----------------------------------------------------
-    const T ONE = one();
+    const T ONE = impl->one;
     const T THREE = 3*ONE;
-    const T PI  = pi();
+    const T PI  = impl->pi;
     const T ANGLE_MAX = circular_angle_max();
     if ( debug ) std::cout << "circular_vectoring begin: x0,y0,z0=[ " << to_flt(x0) << ", " << to_flt(y0) << ", " << to_flt(z0) << "]\n";
     cassert( x0 >= -THREE && x0 <= THREE, "circular_vectoring x0 must be in the range -3 .. 3" );
@@ -1236,7 +1236,7 @@ void Cordic<T,FLT>::circular_vectoring( const T& x0, const T& y0, const T& z0, T
         T xi;
         T yi;
         T zi;
-        if ( debug ) printf( "circular_vectoring: i=%d xyz=[%.30f,%.30f,%.30f] test=%d\n", i, to_flt(x), to_flt(y), to_flt(z), int((x < zero()) != (y < zero())) );
+        if ( debug ) printf( "circular_vectoring: i=%d xyz=[%.30f,%.30f,%.30f] test=%d\n", i, to_flt(x), to_flt(y), to_flt(z), int((x < impl->zero) != (y < impl->zero)) );
         if ( y < T(0) ) {
             xi = x - (y >> i);
             yi = y + (x >> i);
@@ -1260,7 +1260,7 @@ void Cordic<T,FLT>::circular_vectoring_xy( const T& x0, const T& y0, T& x, T& y 
     //      -3  <= x0 <= 3
     //      -1  <= y0 <= 1
     //-----------------------------------------------------
-    const T ONE = one();
+    const T ONE = impl->one;
     const T THREE = 3*ONE;
     if ( debug ) std::cout << "circular_vectoring_xy begin: x0,y0=[ " << to_flt(x0) << ", " << to_flt(y0) << "\n";
     cassert( x0 >= -THREE && x0 <= THREE, "circular_vectoring_xy x0 must be in the range -3 .. 3" );
@@ -1278,7 +1278,7 @@ void Cordic<T,FLT>::circular_vectoring_xy( const T& x0, const T& y0, T& x, T& y 
     {
         T xi;
         T yi;
-        if ( debug ) printf( "circular_vectoring_xy: i=%d xy=[%.30f,%.30f] test=%d\n", i, to_flt(x), to_flt(y), int(y < zero()) );
+        if ( debug ) printf( "circular_vectoring_xy: i=%d xy=[%.30f,%.30f] test=%d\n", i, to_flt(x), to_flt(y), int(y < impl->zero) );
         if ( y < T(0) ) {
             xi = x - (y >> i);
             yi = y + (x >> i);
@@ -1300,7 +1300,7 @@ void Cordic<T,FLT>::hyperbolic_rotation( const T& x0, const T& y0, const T& z0, 
     //      -1  <= y0 <= 1
     //      |z0| <= 1.1182...
     //-----------------------------------------------------
-    const T TWO = one() << 1;
+    const T TWO = impl->one << 1;
     const T ANGLE_MAX = hyperbolic_angle_max();
     if ( debug ) std::cout << "hyperbolic_rotation begin: x0,y0,z0=[ " << to_flt(x0) << ", " << to_flt(y0) << ", " << to_flt(z0) << "]\n";
     cassert( x0 >= -TWO       && x0 <= TWO,       "hyperbolic_rotation x0 must be in the range -2 .. 2" );
@@ -1323,7 +1323,7 @@ void Cordic<T,FLT>::hyperbolic_rotation( const T& x0, const T& y0, const T& z0, 
         T xi;
         T yi;
         T zi;
-        if ( debug ) printf( "hyperbolic_rotation: i=%d xyz=[%.30f,%.30f,%.30f] test=%d\n", i, to_flt(x), to_flt(y), to_flt(z), int(z >= zero()) );
+        if ( debug ) printf( "hyperbolic_rotation: i=%d xyz=[%.30f,%.30f,%.30f] test=%d\n", i, to_flt(x), to_flt(y), to_flt(z), int(z >= impl->zero) );
         if ( z >= T(0) ) {
             xi = x + (y >> i);
             yi = y + (x >> i);
@@ -1355,8 +1355,8 @@ void Cordic<T,FLT>::hyperbolic_vectoring( const T& x0, const T& y0, const T& z0,
     //      -PI <= z0 <= PI
     //      |atanh(y0/x0)| <= 1.1182...
     //-----------------------------------------------------
-    const T TWO = one() << 1;
-    const T PI  = pi();
+    const T TWO = impl->one << 1;
+    const T PI  = impl->pi;
     const T ANGLE_MAX = hyperbolic_angle_max();
     if ( debug ) std::cout << "hyperbolic_vectoring begin: x0,y0,z0=[ " << to_flt(x0) << ", " << to_flt(y0) << ", " << to_flt(z0) << "]\n";
     cassert( x0 >= -TWO && x0 <= TWO, "hyperbolic_vectoring x0 must be in the range -2 .. 2" );
@@ -1382,7 +1382,7 @@ void Cordic<T,FLT>::hyperbolic_vectoring( const T& x0, const T& y0, const T& z0,
         T yi;
         T zi;
         if ( debug ) printf( "hyperbolic_vectoring: i=%d xyz=[%.30f,%.30f,%.30f] test=%d\n", i, 
-                             to_flt(x), to_flt(y), to_flt(z), int((x < zero()) != (y < zero())) );
+                             to_flt(x), to_flt(y), to_flt(z), int((x < impl->zero) != (y < impl->zero)) );
         if ( y < T(0) ) {
             xi = x + (y >> i);
             yi = y + (x >> i);
@@ -1412,8 +1412,8 @@ void Cordic<T,FLT>::hyperbolic_vectoring_xy( const T& x0, const T& y0, T& x, T& 
     //      -2  <= x0 <= 2
     //      -2  <= y0 <= 2
     //-----------------------------------------------------
-    const T TWO = one() << 1;
-    const T PI  = pi();
+    const T TWO = impl->one << 1;
+    const T PI  = impl->pi;
     if ( debug ) std::cout << "hyperbolic_vectoring_xy begin: x0,y0=[ " << to_flt(x0) << ", " << to_flt(y0) << "\n";
     cassert( x0 >= -TWO && x0 <= TWO, "hyperbolic_vectoring_xy x0 must be in the range -2 .. 2" );
     cassert( y0 >= -TWO && y0 <= TWO, "hyperbolic_vectoring_xy y0 must be in the range -2 .. 2" );
@@ -1431,7 +1431,7 @@ void Cordic<T,FLT>::hyperbolic_vectoring_xy( const T& x0, const T& y0, T& x, T& 
     {
         T xi;
         T yi;
-        if ( debug ) printf( "hyperbolic_vectoring_xy: i=%d xy=[%.30f,%.30f] test=%d\n", i, to_flt(x), to_flt(y), int(y < zero()) );
+        if ( debug ) printf( "hyperbolic_vectoring_xy: i=%d xy=[%.30f,%.30f] test=%d\n", i, to_flt(x), to_flt(y), int(y < impl->zero) );
         if ( y < T(0) ) {
             xi = x + (y >> i);
             yi = y + (x >> i);
@@ -1459,7 +1459,7 @@ void Cordic<T,FLT>::linear_rotation( const T& x0, const T& y0, const T& z0, T& x
     //      -2    <= y0 <= 2
     //      |z0|  <= 1
     //-----------------------------------------------------
-    const T ONE = one();
+    const T ONE = impl->one;
     const T TWO = ONE << 1;
     if ( debug ) std::cout << "linear_rotation begin: x0,y0,z0=[ " << to_flt(x0) << ", " << to_flt(y0) << ", " << to_flt(z0) << "]\n";
     cassert( x0 >= -TWO && x0 <= TWO, "linear_rotation x0 must be in the range -2 .. 2" );
@@ -1478,7 +1478,7 @@ void Cordic<T,FLT>::linear_rotation( const T& x0, const T& y0, const T& z0, T& x
     uint32_t n = impl->n;
     for( uint32_t i = 0; i <= n; i++ )
     {
-        if ( debug ) printf( "linear_rotation: i=%d xyz=[%.30f,%.30f,%.30f] test=%d\n", i, to_flt(x), to_flt(y), to_flt(z), int(z >= zero()) );
+        if ( debug ) printf( "linear_rotation: i=%d xyz=[%.30f,%.30f,%.30f] test=%d\n", i, to_flt(x), to_flt(y), to_flt(z), int(z >= impl->zero) );
         T yi;
         T zi;
         if ( z >= T(0) ) {
@@ -1502,7 +1502,7 @@ void Cordic<T,FLT>::linear_vectoring( const T& x0, const T& y0, const T& z0, T& 
     //      -2      <= y0 <= 2
     //      |y0/x0| <= 1
     //-----------------------------------------------------
-    const T ONE = one();
+    const T ONE = impl->one;
     const T TWO = ONE << 1;
     if ( debug ) std::cout << "linear_vectoring begin: x0,y0,z0=[ " << to_flt(x0) << ", " << to_flt(y0) << ", " << to_flt(z0) << "]\n";
     cassert( x0 >= -TWO && x0 <= TWO, "linear_vectoring x0 must be in the range -2 .. 2, got " + to_string(x0) );
@@ -1523,7 +1523,7 @@ void Cordic<T,FLT>::linear_vectoring( const T& x0, const T& y0, const T& z0, T& 
     for( uint32_t i = 0; i <= n; i++ )
     {
         if ( debug ) printf( "linear_vectoring: i=%d xyz=[%.30f,%.30f,%.30f] test=%d\n", 
-                             i, to_flt(x), to_flt(y), to_flt(z), int(y < zero()) );
+                             i, to_flt(x), to_flt(y), to_flt(z), int(y < impl->zero) );
         T yi;
         T zi;
         if ( y < T(0) ) {
@@ -1546,7 +1546,7 @@ void Cordic<T,FLT>::linear_vectoring_xy( const T& x0, const T& y0, T& x, T& y ) 
     //      -2      <= x0 <= 2
     //      -2      <= y0 <= 2
     //-----------------------------------------------------
-    const T TWO = one() << 1;
+    const T TWO = impl->one << 1;
     if ( debug ) std::cout << "linear_vectoring_xy begin: x0,y0=[ " << to_flt(x0) << ", " << to_flt(y0) << "\n";
     cassert( x0 >= -TWO && x0 <= TWO, "linear_vectoring_xy x0 must be in the range -2 .. 2" );
     cassert( y0 >= -TWO && y0 <= TWO, "linear_vectoring_xy y0 must be in the range -2 .. 2" );
@@ -1561,7 +1561,7 @@ void Cordic<T,FLT>::linear_vectoring_xy( const T& x0, const T& y0, T& x, T& y ) 
     uint32_t n = impl->n;
     for( uint32_t i = 0; i <= n; i++ )
     {
-        if ( debug ) printf( "linear_vectoring_xy: i=%d xy=[%.30f,%.30f] test=%d\n", i, to_flt(x), to_flt(y), int(y < zero()) );
+        if ( debug ) printf( "linear_vectoring_xy: i=%d xy=[%.30f,%.30f] test=%d\n", i, to_flt(x), to_flt(y), int(y < impl->zero) );
         T yi;
         if ( y < T(0) ) {
             yi = y + (x >> i);
@@ -1655,7 +1655,7 @@ inline T Cordic<T,FLT>::abs( const T& x ) const
     T    x_abs  = x;
     bool x_sign = x_abs < T(0);
     if ( x_sign ) x_abs = -x;
-    T    sign_mask = x_abs >> (int_w() + frac_w());
+    T    sign_mask = x_abs >> (impl->int_w + impl->frac_w);
     cassert( (sign_mask == T(0) || sign_mask == T(-1)), "abs caused overflow" ); 
     return x_abs;
 }
@@ -1666,7 +1666,7 @@ inline T Cordic<T,FLT>::neg( const T& x ) const
     _log1( neg, x );
     bool x_sign = x < 0;
     T    x_neg  = -x;
-    T    sign_mask = x_neg >> (int_w() + frac_w());
+    T    sign_mask = x_neg >> (impl->int_w + impl->frac_w);
     cassert( (x == 0 || sign_mask == (x_sign ? T(0) : T(-1))), "neg caused overflow" ); 
     return x_neg;
 }
@@ -1675,13 +1675,13 @@ template< typename T, typename FLT >
 inline T Cordic<T,FLT>::floor( const T& x ) const
 {
     _log1( floor, x );
-    T frac_mask = (T(1) << frac_w()) - 1;
+    T frac_mask = (T(1) << impl->frac_w) - 1;
     if ( (x & frac_mask) == 0 ) {
         return x;
     } else if ( x > 0 ) {
         return x & ~frac_mask;
     } else {
-        return (x & ~frac_mask) - one();
+        return (x & ~frac_mask) - impl->one;
     }
 }
 
@@ -1689,11 +1689,11 @@ template< typename T, typename FLT >
 inline T Cordic<T,FLT>::ceil( const T& x ) const
 {
     _log1( ceil, x );
-    T frac_mask = (T(1) << frac_w()) - 1;
+    T frac_mask = (T(1) << impl->frac_w) - 1;
     if ( (x & frac_mask) == 0 ) {
         return x;
     } else if ( x > 0 ) {
-        return (x & ~frac_mask) + one();
+        return (x & ~frac_mask) + impl->one;
     } else {
         return x & ~frac_mask;
     }
@@ -1706,7 +1706,7 @@ inline T Cordic<T,FLT>::add( const T& x, const T& y ) const
     bool x_sign = x < T(0);
     bool y_sign = y < T(0);
     T    sum    = x + y;
-    T    sign_mask = sum >> (int_w() + frac_w());
+    T    sign_mask = sum >> (impl->int_w + impl->frac_w);
     cassert( sign_mask == T(0) || sign_mask == T(-1), "add caused overflow" );
     return sum;
 }
@@ -1718,7 +1718,7 @@ inline T Cordic<T,FLT>::sub( const T& x, const T& y ) const
     bool x_sign = x < T(0);
     bool y_sign = y < T(0);
     T    sum    = x - y;
-    T    sign_mask = sum >> (int_w() + frac_w());
+    T    sign_mask = sum >> (impl->int_w + impl->frac_w);
     cassert( sign_mask == 0 || sign_mask == T(-1), "sub caused overflow" );
     return sum;
 }
@@ -1737,7 +1737,7 @@ inline T Cordic<T,FLT>::mad( const T& _x, const T& _y, const T addend, bool do_r
     if ( do_reduce ) reduce_mul_args( x, y, x_lshift, y_lshift, sign );
 
     T xx, yy, zz;
-    linear_rotation( x, do_reduce ? zero() : addend, y, xx, yy, zz );
+    linear_rotation( x, do_reduce ? impl->zero : addend, y, xx, yy, zz );
     if ( do_reduce ) {
         yy = lshift( yy, x_lshift + y_lshift );
         yy += addend;
@@ -1766,13 +1766,13 @@ inline T Cordic<T,FLT>::fma( const T& x, const T& y, const T& addend ) const
 template< typename T, typename FLT >
 inline T Cordic<T,FLT>::mul( const T& x, const T& y ) const
 {
-    return mad( x, y, zero() );
+    return mad( x, y, impl->zero );
 }
 
 template< typename T, typename FLT >
 inline T Cordic<T,FLT>::mul( const T& x, const T& y, bool do_reduce ) const
 {
-    return mad( x, y, zero(), do_reduce );
+    return mad( x, y, impl->zero, do_reduce );
 }
 
 template< typename T, typename FLT >
@@ -1785,9 +1785,9 @@ T Cordic<T,FLT>::lshift( const T& x, int ls ) const
         // For now, crap out if we overflow.
         // At some point, we'll have options to saturate or set a flag in the container.
         //-----------------------------------------------------
-        int32_t ls_max = int_w();
-        uint32_t i = x >> frac_w();
-        cassert( i <= maxint(), "lshift x integer part should be <= maxint()"  );
+        int32_t ls_max = impl->int_w;
+        uint32_t i = x >> impl->frac_w;
+        cassert( i <= impl->maxint, "lshift x integer part should be <= impl->maxint"  );
         while( i != 0 ) 
         {
             ls_max--;
@@ -1826,7 +1826,7 @@ T Cordic<T,FLT>::dad( const T& _y, const T& _x, const T addend, bool do_reduce )
     if ( do_reduce ) reduce_div_args( y, x, y_lshift, x_lshift, sign );
 
     T xx, yy, zz;
-    linear_vectoring( x, y, do_reduce ? zero() : addend, xx, yy, zz );
+    linear_vectoring( x, y, do_reduce ? impl->zero : addend, xx, yy, zz );
     if ( do_reduce ) {
         zz = lshift( zz, y_lshift-x_lshift );
         zz += addend;
@@ -1849,20 +1849,20 @@ inline T Cordic<T,FLT>::dad( const T& _y, const T& _x, const T addend ) const
 template< typename T, typename FLT >
 inline T Cordic<T,FLT>::div( const T& y, const T& x ) const
 {
-    return dad( y, x, zero() );
+    return dad( y, x, impl->zero );
 }
 
 template< typename T, typename FLT >
 inline T Cordic<T,FLT>::div( const T& y, const T& x, bool do_reduce ) const
 {
-    return dad( y, x, zero(), do_reduce );
+    return dad( y, x, impl->zero, do_reduce );
 }
 
 template< typename T, typename FLT >
 inline T Cordic<T,FLT>::one_over( const T& x ) const
 {
     _log1( one_over, x );
-    return div( one(), x );
+    return div( impl->one, x );
 }
 
 template< typename T, typename FLT >
@@ -1885,7 +1885,7 @@ T Cordic<T,FLT>::sqrt( const T& _x ) const
     if ( impl->do_reduce ) reduce_sqrt_arg( x, ls );
 
     T xx, yy;
-    hyperbolic_vectoring_xy( x+one(), x-one(), xx, yy );  // gain*sqrt((s+1)^2 - (s-1)^2)
+    hyperbolic_vectoring_xy( x+impl->one, x-impl->one, xx, yy );  // gain*sqrt((s+1)^2 - (s-1)^2)
     xx = mul( xx, hyperbolic_vectoring_one_over_gain(), false );   // sucks that we have to do this
     if ( impl->do_reduce ) xx = lshift( xx, ls );                  // log2(p)/2 - 1
 
@@ -1901,7 +1901,7 @@ T Cordic<T,FLT>::one_over_sqrt( const T& x ) const
     cassert( x != 0, "one_over_sqrt x must not be 0" );
 
     // There might be a better way, but exp(-log(x)/2) is probably not it
-    return div( one(), sqrt( x ) );
+    return div( impl->one, sqrt( x ) );
 }
 
 template< typename T, typename FLT >
@@ -1940,7 +1940,7 @@ template< typename T, typename FLT >
 inline T Cordic<T,FLT>::pow( const T& b, const T& x ) const
 { 
     _log2( pow, b, x );
-    if ( b == zero() ) return zero();
+    if ( b == impl->zero ) return impl->zero;
     cassert( b >= 0, "pow base b must be non-negative" );
     return exp( mul( x, log( b, true ) ) );
 }
@@ -1976,7 +1976,7 @@ inline T Cordic<T,FLT>::log( const T& _x, bool do_reduce ) const
     cassert( x > 0, "log: x must be positive" );
     T addend;
     if ( do_reduce ) reduce_log_arg( x, addend );
-    T dv = div( x-one(), x+one(), false );
+    T dv = div( x-impl->one, x+impl->one, false );
     T lg = atanh( dv ) << 1;
     if ( do_reduce ) lg += addend;
     if ( debug ) std::cout << "log: x_orig=" << to_flt(_x) << " reduced_x=" << to_flt(x) << " log=" << to_flt(lg) << "\n";
@@ -2080,7 +2080,7 @@ void Cordic<T,FLT>::sin_cos( const T& _x, T& si, T& co, bool do_reduce, bool nee
     }
 
     T zz;
-    circular_rotation( r, zero(), x, co, si, zz );
+    circular_rotation( r, impl->zero, x, co, si, zz );
     if ( do_reduce ) {
         //-----------------------------------------------------
         // If did_minus_pi_div_4 is true, then we need to perform this
@@ -2126,23 +2126,23 @@ template< typename T, typename FLT >
 inline T Cordic<T,FLT>::asin( const T& x ) const
 { 
     _log1( asin, x );
-    cassert( x >= -one() && x <= one(), "asin x must be between -1 and 1" );
-    return atan2( x, normh( one(), x ) );
+    cassert( x >= -impl->one && x <= impl->one, "asin x must be between -1 and 1" );
+    return atan2( x, normh( impl->one, x ) );
 }
 
 template< typename T, typename FLT >
 inline T Cordic<T,FLT>::acos( const T& x ) const
 { 
     _log1( acos, x );
-    cassert( x >= -one() && x <= one(), "acos x must be between -1 and 1" );
-    return atan2( normh( one(), x ), x, true );
+    cassert( x >= -impl->one && x <= impl->one, "acos x must be between -1 and 1" );
+    return atan2( normh( impl->one, x ), x, true );
 }
 
 template< typename T, typename FLT >
 inline T Cordic<T,FLT>::atan( const T& x ) const
 { 
-    cassert( x >= -one() && x <= one(), "atan x must be between -1 and 1" );
-    return atan2( x, one(), impl->do_reduce, true );
+    cassert( x >= -impl->one && x <= impl->one, "atan x must be between -1 and 1" );
+    return atan2( x, impl->one, impl->do_reduce, true );
 }
 
 template< typename T, typename FLT >
@@ -2186,22 +2186,22 @@ T Cordic<T,FLT>::atan2( const T& _y, const T& _x, bool do_reduce, bool x_is_one,
         if ( is_pi ) {
             if ( debug ) std::cout << "atan2 end: y=" << to_flt(_y) << " x=" << to_flt(_x) << " do_reduce=" << do_reduce << 
                                       " x_is_one=" << x_is_one << 
-                                      " zz=PI" << " r=" << ((r != nullptr) ? to_flt(*r) : to_flt(zero())) << "\n";
-            return pi();
+                                      " zz=PI" << " r=" << ((r != nullptr) ? to_flt(*r) : to_flt(impl->zero)) << "\n";
+            return impl->pi;
         }
 
         const T norm_plus_x = norm( x, y, true ) + x;
         if ( debug ) std::cout << "atan2 cordic begin: y=y=" << to_flt(y) << " x=norm_plus_x=" << to_flt(norm_plus_x) << " swapped=" << swapped << "\n";
-        circular_vectoring( norm_plus_x, y, zero(), xx, yy, zz );
+        circular_vectoring( norm_plus_x, y, impl->zero, xx, yy, zz );
         zz <<= 1;
-        if ( swapped ) zz = pi_div_2() - zz;
+        if ( swapped ) zz = impl->pi_div_2 - zz;
         if ( y_sign ) zz = -zz;
         if ( debug ) std::cout << "atan2 cordic end: zz=" << to_flt(zz) << "\n";
     } else {
-        circular_vectoring( x, y, zero(), xx, yy, zz );
+        circular_vectoring( x, y, impl->zero, xx, yy, zz );
     }
     if ( debug ) std::cout << "atan2 end: y=" << to_flt(_y) << " x=" << to_flt(_x) << " do_reduce=" << do_reduce << " x_is_one=" << x_is_one << 
-                              " zz=" << to_flt(zz) << " r=" << ((r != nullptr) ? to_flt(*r) : to_flt(zero())) << "\n";
+                              " zz=" << to_flt(zz) << " r=" << ((r != nullptr) ? to_flt(*r) : to_flt(impl->zero)) << "\n";
     return zz;
 }
 
@@ -2331,7 +2331,7 @@ void Cordic<T,FLT>::sinh_cosh( const T& _x, T& sih, T& coh, bool do_reduce, bool
     T sinh_f;
     T cosh_f;
     T zz;
-    hyperbolic_rotation( r, zero(), x, cosh_f, sinh_f, zz );
+    hyperbolic_rotation( r, impl->zero, x, cosh_f, sinh_f, zz );
     if ( do_reduce ) {
         if ( need_sih ) {
             sih = mul( sinh_f, cosh_i, true ) + mul( cosh_f, sinh_i, true );
@@ -2359,21 +2359,21 @@ template< typename T, typename FLT >
 T Cordic<T,FLT>::asinh( const T& x ) const
 { 
     _log1( asinh, x );
-    return log( x + norm( x, one() ) );
+    return log( x + norm( x, impl->one ) );
 }
 
 template< typename T, typename FLT >
 inline T Cordic<T,FLT>::acosh( const T& x ) const
 { 
     _log1( acosh, x );
-    cassert( x >= one(), "acosh x must be >= 1" );
-    return log( x + normh( x, one() ) );
+    cassert( x >= impl->one, "acosh x must be >= 1" );
+    return log( x + normh( x, impl->one ) );
 }
 
 template< typename T, typename FLT >
 inline T Cordic<T,FLT>::atanh( const T& x ) const
 { 
-    return atanh2( x, one(), impl->do_reduce, true );
+    return atanh2( x, impl->one, impl->do_reduce, true );
 }
 
 template< typename T, typename FLT >
@@ -2411,7 +2411,7 @@ T Cordic<T,FLT>::atanh2( const T& _y, const T& _x, bool do_reduce, bool x_is_one
     cassert( lshift == 0, "atanh2: abs(y/x) must be between 0 and 1" );
 
     T xx, yy, zz;
-    hyperbolic_vectoring( x, y, zero(), xx, yy, zz );
+    hyperbolic_vectoring( x, y, impl->zero, xx, yy, zz );
     if ( sign ) zz = -zz;
     return zz;
 }
@@ -2423,7 +2423,7 @@ void Cordic<T,FLT>::reduce_arg( T& x, int32_t& x_lshift, bool& sign, bool shift_
     sign = x < 0;
     if ( sign ) x = -x;
     x_lshift = 0;
-    T other = for_sqrt ? half() : one();
+    T other = for_sqrt ? impl->half : impl->one;
     while( x > other ) 
     {
         x_lshift++;
@@ -2509,16 +2509,16 @@ inline void Cordic<T,FLT>::reduce_exp_arg( FLT b, T& x, T& factor ) const
     //     so we can multiply it by log(b) before converting to type T and
     //     then multiplying by exp(f) in the caller.
     //-----------------------------------------------------
-    const T TWO = one() << 1;
-    const T MININT = -maxint() - 1;
+    const T TWO = impl->one << 1;
+    const T MININT = -impl->maxint - 1;
     T x_orig = x;
     if ( debug ) std::cout << "reduce_exp_arg: b=" << b << " x_orig=" << to_flt(x_orig) << "\n";
     const FLT * factors_f = impl->reduce_exp_factor;
-    T   i         = x >> frac_w();  // can be + or -
+    T   i         = x >> impl->frac_w;  // can be + or -
     T   index     = -MININT + i;
     FLT factor_f  = std::log(b) * factors_f[index];   // could build per-b factors_f[] LUT with multiply already done
     factor        = to_t( factor_f );
-    x            -= i << frac_w();
+    x            -= i << impl->frac_w;
     if ( debug ) std::cout << "reduce_exp_arg: b=" << b << " x_orig=" << to_flt(x_orig) << 
                               " i=" << to_rstring(i) << " index=" << to_rstring(index) << " log(b)*exp(i)=" << to_flt(factor) << 
                               " f=x_reduced=" << to_flt(x) << "\n"; 
@@ -2539,7 +2539,7 @@ inline void Cordic<T,FLT>::reduce_log_arg( T& x, T& addend ) const
     bool x_sign;
     reduce_arg( x, x_lshift, x_sign, true, true, true );
     const T * addends = impl->reduce_log_addend;
-    addend = addends[frac_w()+x_lshift];
+    addend = addends[impl->frac_w+x_lshift];
     if ( debug ) std::cout << "reduce_log_arg: x_orig=" << to_flt(x_orig) << " x_reduced=" << to_flt(x) << " addend=" << to_flt(addend) << "\n"; 
 }
 
@@ -2618,9 +2618,9 @@ inline void Cordic<T,FLT>::reduce_sin_cos_arg( T& a, uint32_t& quad, bool& sign,
     const T a_orig = a;
     sign = a < 0;
     if ( sign ) a = -a;
-    const T m = mul( a, four_div_pi() );
-    const T i = m >> frac_w();
-    const T s = i * pi_div_4();
+    const T m = mul( a, impl->four_div_pi );
+    const T i = m >> impl->frac_w;
+    const T s = i * impl->pi_div_4;
     a        -= s;
     quad      = (i >> 1) & 3;
     did_minus_pi_div_4 = i & 1;
@@ -2650,9 +2650,9 @@ inline void Cordic<T,FLT>::reduce_sinh_cosh_arg( T& x, T& sinh_i, T& cosh_i, boo
     sign = x < 0;
     if ( sign ) x = -x;
 
-    const T MASK = (T(1) << (int_w()+2)) - T(1);  // include 0.25 bit of fraction
-    T i = (x >> (frac_w()-2)) & MASK;
-    x   = x & ((T(1) << (frac_w()-2))-T(1));
+    const T MASK = (T(1) << (impl->int_w+2)) - T(1);  // include 0.25 bit of fraction
+    T i = (x >> (impl->frac_w-2)) & MASK;
+    x   = x & ((T(1) << (impl->frac_w-2))-T(1));
     const T *    sinh_i_vals   = impl->reduce_sinh_cosh_sinh_i;
     const T *    cosh_i_vals   = impl->reduce_sinh_cosh_cosh_i;
     const bool * sinh_i_oflows = impl->reduce_sinh_cosh_sinh_i_oflow;
