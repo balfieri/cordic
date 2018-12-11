@@ -430,6 +430,7 @@ public:
     {
         make_constant,
         use_constant,
+        to_flt,
         assign,
 
         isgreater,
@@ -768,6 +769,7 @@ std::string Cordic<T,FLT>::op_to_str( uint16_t op )
     {
         _ocase( make_constant )
         _ocase( use_constant )
+        _ocase( to_flt )
         _ocase( assign )
 
         _ocase( isgreater )
@@ -1067,6 +1069,7 @@ inline FLT Cordic<T,FLT>::to_flt( const T& _x ) const
     if ( is_neg ) x = -x;
     FLT x_f = FLT( x ) / FLT( impl->one );
     if ( is_neg ) x_f = -x_f;
+    _log2f( to_flt, _x, x_f );
     return x_f;
 }
 
