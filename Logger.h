@@ -143,7 +143,7 @@ template< typename T, typename FLT >
 inline void Logger<T,FLT>::destructed( const T * v, const void * cordic )
 {
     if ( out_text ) {
-        *out << "constructed( " << v << ", " << cordic << " )\n";
+        *out << "destructed( " << v << ", " << cordic << " )\n";
     }
 }
 
