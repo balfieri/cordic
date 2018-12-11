@@ -57,7 +57,7 @@ public:
     // Explicit Conversions
     //-----------------------------------------------------
     T       to_t( FLT x ) const;                // FLT to T encoded value
-    FLT     to_flt( const T& x ) const;         // T encoded value to FLT
+    FLT     to_flt( const T& x, bool can_log=false ) const; // T encoded value to FLT
     std::string to_string( const T& x ) const;  // T to std::string in decimal floating-point format
     std::string to_rstring( const T& _x ) const;// T to std::string in raw decimal integer format 
     std::string to_bstring( const T& x ) const; // T to std::string in binary format, like "1 001 101101011010"
@@ -1062,14 +1062,14 @@ inline T Cordic<T,FLT>::to_t( FLT _x ) const
 }
 
 template< typename T, typename FLT >
-inline FLT Cordic<T,FLT>::to_flt( const T& _x ) const
+inline FLT Cordic<T,FLT>::to_flt( const T& _x, bool can_log ) const
 {
     T x = _x;
     bool is_neg = x < 0;
     if ( is_neg ) x = -x;
     FLT x_f = FLT( x ) / FLT( impl->one );
     if ( is_neg ) x_f = -x_f;
-    _log2f( to_flt, _x, x_f );
+    if ( can_log ) _log2f( to_flt, _x, x_f );
     return x_f;
 }
 

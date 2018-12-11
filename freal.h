@@ -578,7 +578,7 @@ inline freal<T,FLT> freal<T,FLT>::make_raw( const Cordic<T,FLT> * cordic, const 
 //-----------------------------------------------------
 template< typename T, typename FLT >              
 FLT    freal<T,FLT>::to_flt( void ) const                                                               
-{ return c()->to_flt( v );              }
+{ return c()->to_flt( v, true );        }
 
 template< typename T, typename FLT >              
 std::string freal<T,FLT>::to_string( void ) const                                                               
