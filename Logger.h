@@ -103,7 +103,7 @@ template< typename T, typename FLT >
 inline void Logger<T,FLT>::cordic_constructed( const void * cordic, uint32_t int_w, uint32_t frac_w, uint32_t n )
 {
     if ( out_text ) {
-        *out << "cordic_constructed( " << cordic << ", " << int_w << ", " << frac_w << ", " << n << " );\n";
+        *out << "cordic_constructed( " << cordic << ", " << int_w << ", " << frac_w << ", " << n << " )\n";
     }
 }
 
@@ -111,7 +111,7 @@ template< typename T, typename FLT >
 inline void Logger<T,FLT>::cordic_destructed(  const void * cordic )
 {
     if ( out_text ) {
-        *out << "cordic_destructed( " << cordic << " );\n";
+        *out << "cordic_destructed( " << cordic << " )\n";
     }
 }
 
@@ -119,7 +119,7 @@ template< typename T, typename FLT >
 inline void Logger<T,FLT>::enter( const char * name )
 {
     if ( out_text ) {
-        *out << "enter( " << name << "\n";
+        *out << "enter( " << name << " )\n";
     }
 }
 
@@ -127,7 +127,7 @@ template< typename T, typename FLT >
 inline void Logger<T,FLT>::leave( const char * name )
 {
     if ( out_text ) {
-        *out << "leave( " << name << "\n";
+        *out << "leave( " << name << " )\n";
     }
 }
 
@@ -135,7 +135,7 @@ template< typename T, typename FLT >
 inline void Logger<T,FLT>::constructed( const T * v, const void * cordic )
 {
     if ( out_text ) {
-        *out << "constructed( " << v << ", "  << cordic << " );\n";
+        *out << "constructed( " << v << ", "  << cordic << " )\n";
     }
 }
 
@@ -143,7 +143,7 @@ template< typename T, typename FLT >
 inline void Logger<T,FLT>::destructed( const T * v, const void * cordic )
 {
     if ( out_text ) {
-        *out << "constructed( " << v << ", " << cordic << " );\n";
+        *out << "constructed( " << v << ", " << cordic << " )\n";
     }
 }
 
@@ -151,7 +151,7 @@ template< typename T, typename FLT >
 inline void Logger<T,FLT>::op1( uint16_t op, const T * opnd1 )
 {
     if ( out_text ) {
-        *out << "op1( " << op_to_str( op ) << ", " << opnd1 << " );\n";
+        *out << "op1( " << op_to_str( op ) << ", " << opnd1 << " )\n";
     }
 }
 
@@ -159,7 +159,7 @@ template< typename T, typename FLT >
 inline void Logger<T,FLT>::op2( uint16_t op, const T * opnd1, const T * opnd2 )
 {
     if ( out_text ) {
-        *out << "op2( " << op_to_str( op ) << ", " << opnd1 << ", " << opnd2 << " );\n";
+        *out << "op2( " << op_to_str( op ) << ", " << opnd1 << ", " << opnd2 << " )\n";
     }
 }
 
@@ -167,7 +167,7 @@ template< typename T, typename FLT >
 inline void Logger<T,FLT>::op2( uint16_t op, const T * opnd1, int opnd2 )
 {
     if ( out_text ) {
-        *out << "op2( " << op_to_str( op ) << ", " << opnd1 << ", " << opnd2 << " );\n";
+        *out << "op2( " << op_to_str( op ) << ", " << opnd1 << ", " << opnd2 << " )\n";
     }
 }
 
@@ -175,7 +175,7 @@ template< typename T, typename FLT >
 inline void Logger<T,FLT>::op2( uint16_t op, const T * opnd1, FLT opnd2 )
 {
     if ( out_text ) {
-        *out << "op2( " << op_to_str( op ) << ", " << opnd1 << ", " << opnd2 << " );\n";
+        *out << "op2( " << op_to_str( op ) << ", " << opnd1 << ", " << opnd2 << " )\n";
     }
 }
 
@@ -183,7 +183,7 @@ template< typename T, typename FLT >
 inline void Logger<T,FLT>::op3( uint16_t op, const T * opnd1, const T * opnd2, const T * opnd3 )
 {
     if ( out_text ) {
-        *out << "op3( " << op_to_str( op ) << ", " << opnd1 << ", " << opnd2 << ", " << opnd3 << " );\n";
+        *out << "op3( " << op_to_str( op ) << ", " << opnd1 << ", " << opnd2 << ", " << opnd3 << " )\n";
     }
 }
 
@@ -191,7 +191,7 @@ template< typename T, typename FLT >
 inline void Logger<T,FLT>::op4( uint16_t op, const T * opnd1, const T * opnd2, const T * opnd3, const T * opnd4 )
 {
     if ( out_text ) {
-        *out << "op2( " << op_to_str( op ) << ", " << opnd1 << ", " << opnd2 << ", " << opnd3 << ", " << opnd4 << " );\n";
+        *out << "op2( " << op_to_str( op ) << ", " << opnd1 << ", " << opnd2 << ", " << opnd3 << ", " << opnd4 << " )\n";
     }
 }
 
