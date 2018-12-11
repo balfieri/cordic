@@ -422,8 +422,9 @@ public:
     // NOTE: Logging is done globally, not just for one Cordic.  
     //       Thus the static methods here.
     //-----------------------------------------------------
-    static void logger_set( Logger<T,FLT> * logger );  // null means use the default logger
-    static std::string op_to_str( uint16_t op );       // supply this to Logger constructor
+    static void            logger_set( Logger<T,FLT> * logger );  // null means use the default logger
+    static Logger<T,FLT> * logger_get( void );                    // returns current logger
+    static std::string     op_to_str( uint16_t op );              // supply this to Logger constructor
 
     enum class OP
     {
@@ -744,6 +745,12 @@ template< typename T, typename FLT >
 void Cordic<T,FLT>::logger_set( Logger<T,FLT> * _logger )
 {
     logger = _logger;
+}    
+
+template< typename T, typename FLT >
+Logger<T,FLT> * Cordic<T,FLT>::logger_get( void )
+{
+    return logger;
 }    
 
 template< typename T, typename FLT >
