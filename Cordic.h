@@ -170,6 +170,9 @@ public:
     //                                                          factor m*d=p*s so that p is a power-of-2 and s is within -1 .. 1
     //                                                          2*sqrt(m*d) = 2*sqrt(p) * sqrt(s) = sqrt(p) * sqrt((s+1)^2 - (s-1)^2)
     //                                                          if log2(p) is even and >= 2, then sqrt(p) = 2^(log2(p)/2) = some integer
+    // sqrt(1+x) - 1    = x / (sqrt(1+x)+1)
+    // 1-sqrt(1-x)      = x / (sqrt(1-x)+1)
+    // 1-(1-x)^2        = x * (2-x)
     //
     // pow(b,x)         = exp(log(b) * x)
     // exp(x)           = sinh(x) + cosh(x)
@@ -177,31 +180,45 @@ public:
     // exp(x+y)         = exp(x) * exp(y)
     // exp(ix)          = cos(x) + i*sin(x)                     Euler's Formula, i = sqrt(-1)
     // exp(i*PI) + 1    = 0                                     Euler's Identity
+    // exp(x)-1         = tanh(x/2)*(exp(x)+1)                  expm1(x)
+    // exp(x)-1         = u = exp(x); (u == 1) ? x : ((u-1) == -1) ? -1 : (u-1)*x/log(u)
+    //
     // log(x)           = 2*atanh2(x-1, x+1)              
     // log(x)           = atanh2((x^2 - 1, x^2 + 1) 
     // log(x*y)         = log(x) + log(y)
     // log(x/4)         = atanh2(x-0.25, x+0.25) 
     // log(x/y)         = log(x) - log(y)
     // log(x/y)         = 2*atanh2(x-y, x+y)  
+    // log(1+x)         = 2*atanh(x/(x+2))
     //
     // sin(-x)          = -sin(x)
     // sin(x+y)         = sin(x)*cos(y) + cos(x)*sin(y)
     // sin(x+PI/4)      = sqrt(2)/2 * (sin(x) + cos(x))
     // sin(x)           = Im(e^(ix)) = (e^(ix) + e^(-ix)) / 2
     // sin(ix)          = i*sinh(x)
+    // sin(x)/x         = (1 + x*x*(1/6)) == 1) ? 1 : sin(x)/x
+    //
     // cos(x+y)         = cos(x)*sin(y) - sin(x)*cos(y)
     // cos(x+PI/4)      = sqrt(2)/2 * (cos(x) - sin(x))
     // cos(-x)          = cos(x)
     // cos(x)           = Re(e^(ix)) = (e^(ix) - e^(-ix)) / 2i
     // cos(ix)          = cosh(x)
+    // 1-cos(x)         = 2*sin(x/2)^2
+    // (1-cos(x))/x     = (1 + x*x) == 1) ? 0.5*x : cosf1(x)/x
+    //
     // tan(-x)          = -tan(x)
     // tan(x+y)         = (tan(x) + tan(y)) / (1 - tan(x)*tan(y))
     //
     // asin(-x)         = -asin(x)
     // asin(x)          = atan2(x, sqrt(1 - x^2))
+    //
     // acos(-x)         = acos(-x)
     // acos(x)          = atan2(sqrt(1 - x^2), x)
     // acos(x+y)        = PI/2 - asin(x+y)
+    // acos(1-x)        = 2*asin(x/2)
+    // acos(dot(u, v))  = 2*atan2( |u-v|, |u+v| )
+    // acos(dot(u, v))  = (dot(u,v) < 0) ? (PI - 2*asin(|-v-u|/2)) : 2*asin(|v-u|/2)
+    //
     // atan(x)          = atan2(x, 1)                           this is true only when second argument is > 0 (see below)
     // atan(-x)         = -atan(x)
     // atan(1/x)        = PI/2 - atan(x)                        if x > 0
@@ -211,6 +228,7 @@ public:
     // atan2(y,x)       = 2*atan((sqrt(x^2 + y^2) - x) / y)     if x <= 0 && y != 0
     // atan2(y,x)       = PI                                    if x <  0 && y == 0
     // atan2(y,x)       = undefined                             if x == 0 && y == 0
+    //
     // PI               = 4*atan(1)                             but low 2 bits will end up as 0 for a fixed-point number
     // PI               = acos(-1)                              but that just uses atan
     // PI               = pi()                                  function in this class to return a precomputed high-precision version
@@ -218,22 +236,33 @@ public:
     // sinh(-x)         = -sinh(x)
     // sinh(x)          = (e^x - e^-x)/2
     // sinh(x+y)        = sinh(x)*cosh(y) + cosh(x)*sinh(y)
+    // sinh(x)          = expm1(x) * (exp1(x)+2)/(expm1(x)+1) / 2
+    //
     // cosh(-x)         = cosh(x)
     // cosh(x)          = (e^x + e^-x)/2
     // cosh(x+y)        = cosh(x)*cosh(y) + sinh(x)*sinh(y)
+    //
     // tanh(-x)         = -tanh(x)
     // tanh(x)          = (e^x - e^-x) / (e^x + e^-x)
+    // tanh(x)          = expm1(2*x) / (expm1(2*x) + 2)
     //
     // asinh(-x)        = -asinh(x)
     // asinh(x)         = log(x + sqrt(x^2 + 1))
     // asinh(x)         = atanh(x / sqrt(1 + x^2))
+    // asinh(x)         = log1p(x * (1 + x/(sqrt(x^2 + 1)+1))
+    //
     // acosh(-x)        = [illegal, x must be >= 1]
     // acosh(x)         = log(x + sqrt(x^2 - 1))
     // acosh(x)         = abs( asinh(sqrt(x^2 - 1)) )
+    //
     // atanh(-x)        = -atanh(x)
     // atanh(x)         = log((1+x)/(1-x))/2 = log(1+x)/2 - log(1-x)/2    note: x must be between -1 and 1
     // atanh(x)         = asinh(x / sqrt(1 - x^2)) 
     // atanh(x)         = acosh(1 / sqrt(1 - x^2))  (+/-)
+    // atanh(x)         = log1p(2*x/(1-x)) / 2
+    //
+    // slerp(v0,v1,t)   = sin((1-t)*Ang)/sin(Ang)*v0 + sin(t*Ang)/sin(Ang)*v1           (Ang = angle between v0 and v1
+    //                    [see other equations when Ang ~= 0 or Ang ~= 180]
     //-----------------------------------------------------
 
     //-----------------------------------------------------

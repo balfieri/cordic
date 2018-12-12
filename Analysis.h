@@ -143,7 +143,8 @@ Analysis<T,FLT>::Analysis( std::string file_name )
     {
         strcpy( cs, line.c_ptr() );
         char * c = cs;
-        switch( _parse_kind( c ) )
+        const Kind kind = _parse_kind( c );
+        switch( kind )
         {
             case Kind::cordic_constructed:
             {
@@ -226,15 +227,17 @@ Analysis<T,FLT>::Analysis( std::string file_name )
             }
 
             case Kind::op1:
-            {
-                uint64_t opnd1 = _parse_addr( c );
-                break;
-            }
-
             case Kind::op2:
+            case Kind::op3:
+            case Kind::op4:
             {
-                uint64_t opnd1 = _parse_addr( c );
-                uint64_t opnd2 = _parse_addr( c );
+                std::string name = _parse_string( c );
+                uint32_t opnd_cnt = kind - Kind::op1;
+                uint64_t opnd[4];
+                for( uint32_t i = 0; i < opnd_cnt; i++ )
+                {
+                    opnd[i] = _parse_addr( c );
+                }
                 break;
             }
 
@@ -249,23 +252,6 @@ Analysis<T,FLT>::Analysis( std::string file_name )
             {
                 uint64_t opnd1 = _parse_addr( c );
                 FLT      opnd2 = _parse_flt( c );
-                break;
-            }
-
-            case Kind::op3:
-            {
-                uint64_t opnd1 = _parse_addr( c );
-                uint64_t opnd2 = _parse_addr( c );
-                uint64_t opnd3 = _parse_addr( c );
-                break;
-            }
-
-            case Kind::op4:
-            {
-                uint64_t opnd1 = _parse_addr( c );
-                uint64_t opnd2 = _parse_addr( c );
-                uint64_t opnd3 = _parse_addr( c );
-                uint64_t opnd4 = _parse_addr( c );
                 break;
             }
 
