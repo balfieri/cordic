@@ -31,6 +31,8 @@
 #include <string>
 #include <cmath>
 #include <iostream>
+#include <vector>
+#include <map>
 
 #include "Cordic.h"
 
@@ -57,6 +59,7 @@ private:
 
     struct CordicInfo
     {
+        size_t   cordic_i;
         bool     is_alive;
         uint32_t int_w;
         uint32_t frac_w;
@@ -75,11 +78,13 @@ private:
         FLT     max;
     };
 
-    std::map<std::string, Cordic::OP>   ops;
-    std::map<std::string, FuncInfo>     funcs;
-    std::vector<FrameInfo>              stack;
-    std::map<uint64_t, CordicInfo>      cordics;
-    std::map<uint64_t, ValInfo>         vals;
+    using OP = typename Cordic<T,FLT>::OP;
+
+    std::map<std::string, OP>                  ops;
+    std::map<std::string, FuncInfo>            funcs;
+    std::vector<FrameInfo>                     stack;
+    std::map<uint64_t, CordicInfo>             cordics;
+    std::map<uint64_t, ValInfo>                vals;
 };
 
 //-----------------------------------------------------
@@ -125,8 +130,38 @@ static inline void _die( std::string msg )
 }
 
 template< typename T, typename FLT >
+static inline std::string _parse_string( char *& c )
+{
+    (void)c;
+    return "";
+}
+
+template< typename T, typename FLT >
 static inline Kind _parse_kind( char *& c )
 {
+    (void)c;
+    return Kind(0);
+}
+
+template< typename T, typename FLT >
+static inline uint64_t _parse_addr( char *& c )
+{
+    (void)c;
+    return 0;
+}
+
+template< typename T, typename FLT >
+static inline T _parse_int( char *& c )
+{
+    (void)c;
+    return 0;
+}
+
+template< typename T, typename FLT >
+static inline FLT _parse_flt( char *& c )
+{
+    (void)c;
+    return 0;
 }
 
 template< typename T, typename FLT >
@@ -141,7 +176,7 @@ Analysis<T,FLT>::Analysis( std::string file_name )
     for( uint32_t o = 0; o < Cordic<T,FLT>::OP_cnt; o++ )
     {
         std::string name = Cordic<T,FLT>::op_to_str( o );
-        ops[name] = o;
+        ops[name] = OP(o);
     }
 
     // assume parsing text at this point
@@ -149,19 +184,19 @@ Analysis<T,FLT>::Analysis( std::string file_name )
     char cs[1024];
     while( std::getline( *in, line ) )
     {
-        strcpy( cs, line.c_ptr() );
+        strcpy( cs, line.c_str() );
         char * c = cs;
-        const Kind kind = _parse_kind( c );
+        const Kind kind = _parse_kind<T,FLT>( c );
         switch( kind )
         {
             case Kind::cordic_constructed:
             {
                 CordicInfo info;
-                uint64_t cordic = _parse_addr( c );
+                uint64_t cordic = _parse_addr<T,FLT>( c );
                 info.is_alive   = true;
-                info.int_w      = _parse_int( c );
-                info.frac_w     = _parse_int( c );
-                info.n          = _parse_int( c );
+                info.int_w      = _parse_int<T,FLT>( c );
+                info.frac_w     = _parse_int<T,FLT>( c );
+                info.n          = _parse_int<T,FLT>( c );
                 auto it = cordics.find( cordic );
                 cassert( it == cordics.end() || !it->second.is_alive, "Cordic reconstructed before previous was destructed" );
                 cordics[cordic] = info;
@@ -170,7 +205,7 @@ Analysis<T,FLT>::Analysis( std::string file_name )
 
             case Kind::cordic_destructed:
             {
-                uint64_t cordic = _parse_addr( c );
+                uint64_t cordic = _parse_addr<T,FLT>( c );
                 auto it = cordics.find( cordic );
                 cassert( it != cordics.end() && it->second.is_alive, "Cordic destructed before being constructed" );
                 it->second.is_alive = false;
@@ -179,7 +214,7 @@ Analysis<T,FLT>::Analysis( std::string file_name )
 
             case Kind::enter:
             {
-                std::string name = _parse_string( c );
+                std::string name = _parse_string<T,FLT>( c );
                 auto it = funcs.find( name );
                 if ( it == funcs.end() ) {
                     FuncInfo info;
@@ -195,7 +230,7 @@ Analysis<T,FLT>::Analysis( std::string file_name )
 
             case Kind::leave:
             {
-                std::string name = _parse_string( c );
+                std::string name = _parse_string<T,FLT>( c );
                 auto it = funcs.find( name );
                 cassert( it != funcs.end(), "leave should have found function " + name );
                 cassert( stack.size() > 0, "trying to leave routine " + name + " when stack is already empty" );
@@ -211,8 +246,8 @@ Analysis<T,FLT>::Analysis( std::string file_name )
                 info.is_alive = true;
                 info.is_assigned = false;
                 info.is_constant = false;
-                uint64_t val     = _parse_addr( c );
-                uint64_t cordic  = _parse_addr( c );
+                uint64_t val     = _parse_addr<T,FLT>( c );
+                uint64_t cordic  = _parse_addr<T,FLT>( c );
                 if ( cordic != 0 ) {
                     auto cit = cordics.find( val );
                     cassert( cit != cordics.end() && cit->second.is_alive, "val constructed using unknown cordic" );
@@ -227,7 +262,7 @@ Analysis<T,FLT>::Analysis( std::string file_name )
 
             case Kind::destructed:
             {
-                uint64_t val = _parse_addr( c );
+                uint64_t val = _parse_addr<T,FLT>( c );
                 auto it = vals.find( val );
                 cassert( it != vals.end() && it->second.is_alive, "val destructed before being constructed" );
                 it->second.is_alive = false;
@@ -239,16 +274,16 @@ Analysis<T,FLT>::Analysis( std::string file_name )
             case Kind::op3:
             case Kind::op4:
             {
-                std::string name = _parse_string( c );
-                Cordic<T,FLT>::OP op = ops[name];
-                uint32_t opnd_cnt = kind - Kind::op1;
+                std::string name = _parse_string<T,FLT>( c );
+                OP op = ops[name];
+                uint32_t opnd_cnt = uint32_t(kind) - uint32_t(Kind::op1);
                 uint64_t opnd[4];
                 for( uint32_t i = 0; i < opnd_cnt; i++ )
                 {
-                    opnd[i] = _parse_addr( c );
+                    opnd[i] = _parse_addr<T,FLT>( c );
                     auto it = vals.find( opnd[i] );
                     cassert( it != vals.end() && it->second.is_alive, name + " opnd[i] does not exist" );
-                    if ( i == 0 && op == Cordic<T,FLT>::OP::assign ) {
+                    if ( i == 0 && op == OP::assign ) {
                         it->second.is_assigned = true;
                     } else {
                         cassert( it->second.is_assigned, name + " opnd[i] used when not previously assigned" );
@@ -259,21 +294,27 @@ Analysis<T,FLT>::Analysis( std::string file_name )
 
             case Kind::op2i:
             {
-                uint64_t opnd1 = _parse_addr( c );
-                T        opnd2 = _parse_int( c );
+                std::string name = _parse_string<T,FLT>( c );
+                OP op = ops[name];
+                cassert( op == OP::lshift || op == OP::rshift, "op2i allowed only for shifts" );
+                uint64_t opnd1 = _parse_addr<T,FLT>( c );
+                T        opnd2 = _parse_int<T,FLT>( c );
                 break;
             }
 
             case Kind::op2f:
             {
-                uint64_t opnd1 = _parse_addr( c );
-                FLT      opnd2 = _parse_flt( c );
+                std::string name = _parse_string<T,FLT>( c );
+                OP op = ops[name];
+                cassert( op == OP::make_constant, "op2f allowed only for make_constant" );
+                uint64_t opnd1 = _parse_addr<T,FLT>( c );
+                FLT      opnd2 = _parse_flt<T,FLT>( c );
                 break;
             }
 
             default:
             {
-                die( "unexpected kind" );
+                _die<T,FLT>( "unexpected kind" );
                 break;
             }
         }
