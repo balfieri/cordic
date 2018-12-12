@@ -163,7 +163,7 @@ inline std::string Analysis<T,FLT>::parse_name( char *& c )
     for( ;; )
     {
         char ch = *c;
-        if ( ch == ':' || (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || (ch >= '0' && ch <= '9') ) {
+        if ( ch == ':' || ch == '_' || (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || (ch >= '0' && ch <= '9') ) {
             name += ch;
             c++;
         } else {
@@ -252,6 +252,7 @@ Analysis<T,FLT>::Analysis( std::string file_name )
     char cs[1024];
     while( std::getline( *in, line ) )
     {
+        if ( debug ) std::cout << line << "\n";
         strcpy( cs, line.c_str() );
         char * c = cs;
         const KIND kind = parse_kind( c );

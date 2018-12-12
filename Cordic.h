@@ -27,6 +27,12 @@
 
 #include "Logger.h"
 
+#ifdef DEBUG_LEVEL
+static constexpr uint32_t debug = DEBUG_LEVEL;
+#else
+static constexpr uint32_t debug = 0;
+#endif
+
 #define cassert(expr, msg) if ( !(expr) ) \
                 { std::cout << "ERROR: assertion failure: " << (msg) << " at " << __FILE__ << ":" << __LINE__ << "\n"; exit( 1 ); }
 
@@ -533,12 +539,6 @@ private:
 
     static Logger<T,FLT> * logger;
 };
-
-#ifdef DEBUG_LEVEL
-static constexpr uint32_t debug = DEBUG_LEVEL;
-#else
-static constexpr uint32_t debug = 0;
-#endif
 
 //-----------------------------------------------------
 //-----------------------------------------------------
