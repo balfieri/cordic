@@ -78,13 +78,39 @@ private:
         FLT     max;
     };
 
+    enum class KIND
+    {
+        cordic_constructed,
+        cordic_destructed,
+        enter,
+        leave,
+        constructed,
+        destructed,
+        op1, 
+        op2, 
+        op2i, 
+        op2f, 
+        op3, 
+        op4, 
+    };
+
+    static constexpr uint32_t KIND_cnt = 12;
+
     using OP = typename Cordic<T,FLT>::OP;
 
+    std::map<std::string, KIND>                kinds;
     std::map<std::string, OP>                  ops;
     std::map<std::string, FuncInfo>            funcs;
     std::vector<FrameInfo>                     stack;
     std::map<uint64_t, CordicInfo>             cordics;
     std::map<uint64_t, ValInfo>                vals;
+
+    static void         _skip_junk( char *& c );
+    static std::string  parse_name( char *& c );
+    static KIND         parse_kind( char *& c );
+    static uint64_t     parse_addr( char *& c );
+    static T            parse_int( char *& c );
+    static FLT          parse_flt( char *& c );
 };
 
 //-----------------------------------------------------
@@ -106,23 +132,6 @@ private:
 //-----------------------------------------------------
 //-----------------------------------------------------
 //-----------------------------------------------------
-enum class Kind
-{
-    cordic_constructed,
-    cordic_destructed,
-    enter,
-    leave,
-    constructed,
-    destructed,
-    op1, 
-    op2, 
-    op2i, 
-    op2f, 
-    op3, 
-    op4, 
-};
-
-template< typename T, typename FLT >
 static inline void _die( std::string msg )
 {
     std::cout << "ERROR: " << msg << "\n";
@@ -130,38 +139,83 @@ static inline void _die( std::string msg )
 }
 
 template< typename T, typename FLT >
-static inline std::string _parse_string( char *& c )
+inline void Analysis<T,FLT>::_skip_junk( char *& c )
 {
-    (void)c;
-    return "";
+    // skip spaces, '(' and ','
+    for( ;; )
+    {
+        char ch = *c;
+        if ( ch == '\0' ) return;
+        if ( ch == ' ' || ch == ',' || ch == '(' ) {
+            c++;
+        } else {
+            return;
+        }
+    }
 }
 
 template< typename T, typename FLT >
-static inline Kind _parse_kind( char *& c )
+inline std::string Analysis<T,FLT>::parse_name( char *& c )
 {
-    (void)c;
-    return Kind(0);
+    // read string of letters, "::" and numbers
+    _skip_junk( c );
+    std::string name = "";
+    for( ;; )
+    {
+        char ch = *c;
+        if ( ch == ':' || (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || (ch >= '0' && ch <= '9') ) {
+            name += ch;
+            c++;
+        } else {
+            break;
+        }
+    }
+
+    cassert( name.size() > 0, "could not parse a name" );
+    return name;
 }
 
 template< typename T, typename FLT >
-static inline uint64_t _parse_addr( char *& c )
+inline typename Analysis<T,FLT>::KIND Analysis<T,FLT>::parse_kind( char *& c )
 {
-    (void)c;
-    return 0;
+    std::string name = parse_name( c );
+
+    if ( name == "cordic_constructed" ) return KIND::cordic_constructed;
+    if ( name == "cordic_destructed" )  return KIND::cordic_destructed;
+    if ( name == "enter" )              return KIND::enter;
+    if ( name == "leave" )              return KIND::leave;
+    if ( name == "constructed" )        return KIND::constructed;
+    if ( name == "destructed" )         return KIND::destructed;
+    if ( name == "op1" )                return KIND::op1;
+    if ( name == "op2" )                return KIND::op2;
+    if ( name == "op2i" )               return KIND::op2i;
+    if ( name == "op2f" )               return KIND::op2f;
+    if ( name == "op3" )                return KIND::op3;
+    if ( name == "op4" )                return KIND::op4;
+    _die( "unknown kind: " + name );
+    return KIND(-1);
 }
 
 template< typename T, typename FLT >
-static inline T _parse_int( char *& c )
+inline uint64_t Analysis<T,FLT>::parse_addr( char *& c )
 {
-    (void)c;
-    return 0;
+    std::string addr_s = parse_name( c );
+    char * end;
+    return std::strtoull( addr_s.c_str(), &end, 16 );
 }
 
 template< typename T, typename FLT >
-static inline FLT _parse_flt( char *& c )
+inline T Analysis<T,FLT>::parse_int( char *& c )
 {
-    (void)c;
-    return 0;
+    std::string int_s = parse_name( c );
+    return std::atoi( int_s.c_str() );
+}
+
+template< typename T, typename FLT >
+inline FLT Analysis<T,FLT>::parse_flt( char *& c )
+{
+    std::string flt_s = parse_name( c );
+    return std::atof( flt_s.c_str() );
 }
 
 template< typename T, typename FLT >
@@ -179,6 +233,20 @@ Analysis<T,FLT>::Analysis( std::string file_name )
         ops[name] = OP(o);
     }
 
+    // set up kinds map
+    kinds["cordic_constructed"] = KIND::cordic_constructed;
+    kinds["cordic_destructed"]  = KIND::cordic_destructed;
+    kinds["enter"]              = KIND::enter;
+    kinds["leave"]              = KIND::leave;
+    kinds["constructed"]        = KIND::constructed;
+    kinds["destructed"]         = KIND::destructed;
+    kinds["op1"]                = KIND::op1;
+    kinds["op2"]                = KIND::op2;
+    kinds["op2i"]               = KIND::op2i;
+    kinds["op2f"]               = KIND::op2f;
+    kinds["op3"]                = KIND::op3;
+    kinds["op4"]                = KIND::op4;
+
     // assume parsing text at this point
     std::string line;
     char cs[1024];
@@ -186,35 +254,35 @@ Analysis<T,FLT>::Analysis( std::string file_name )
     {
         strcpy( cs, line.c_str() );
         char * c = cs;
-        const Kind kind = _parse_kind<T,FLT>( c );
+        const KIND kind = parse_kind( c );
         switch( kind )
         {
-            case Kind::cordic_constructed:
+            case KIND::cordic_constructed:
             {
                 CordicInfo info;
-                uint64_t cordic = _parse_addr<T,FLT>( c );
+                uint64_t cordic = parse_addr( c );
                 info.is_alive   = true;
-                info.int_w      = _parse_int<T,FLT>( c );
-                info.frac_w     = _parse_int<T,FLT>( c );
-                info.n          = _parse_int<T,FLT>( c );
+                info.int_w      = parse_int( c );
+                info.frac_w     = parse_int( c );
+                info.n          = parse_int( c );
                 auto it = cordics.find( cordic );
                 cassert( it == cordics.end() || !it->second.is_alive, "Cordic reconstructed before previous was destructed" );
                 cordics[cordic] = info;
                 break;
             }
 
-            case Kind::cordic_destructed:
+            case KIND::cordic_destructed:
             {
-                uint64_t cordic = _parse_addr<T,FLT>( c );
+                uint64_t cordic = parse_addr( c );
                 auto it = cordics.find( cordic );
                 cassert( it != cordics.end() && it->second.is_alive, "Cordic destructed before being constructed" );
                 it->second.is_alive = false;
                 break;
             }
 
-            case Kind::enter:
+            case KIND::enter:
             {
-                std::string name = _parse_string<T,FLT>( c );
+                std::string name = parse_name( c );
                 auto it = funcs.find( name );
                 if ( it == funcs.end() ) {
                     FuncInfo info;
@@ -228,9 +296,9 @@ Analysis<T,FLT>::Analysis( std::string file_name )
                 break;
             }
 
-            case Kind::leave:
+            case KIND::leave:
             {
-                std::string name = _parse_string<T,FLT>( c );
+                std::string name = parse_name( c );
                 auto it = funcs.find( name );
                 cassert( it != funcs.end(), "leave should have found function " + name );
                 cassert( stack.size() > 0, "trying to leave routine " + name + " when stack is already empty" );
@@ -240,14 +308,14 @@ Analysis<T,FLT>::Analysis( std::string file_name )
                 break;
             }
 
-            case Kind::constructed:
+            case KIND::constructed:
             {
                 ValInfo info;
                 info.is_alive = true;
                 info.is_assigned = false;
                 info.is_constant = false;
-                uint64_t val     = _parse_addr<T,FLT>( c );
-                uint64_t cordic  = _parse_addr<T,FLT>( c );
+                uint64_t val     = parse_addr( c );
+                uint64_t cordic  = parse_addr( c );
                 if ( cordic != 0 ) {
                     auto cit = cordics.find( val );
                     cassert( cit != cordics.end() && cit->second.is_alive, "val constructed using unknown cordic" );
@@ -260,27 +328,27 @@ Analysis<T,FLT>::Analysis( std::string file_name )
                 break;
             }
 
-            case Kind::destructed:
+            case KIND::destructed:
             {
-                uint64_t val = _parse_addr<T,FLT>( c );
+                uint64_t val = parse_addr( c );
                 auto it = vals.find( val );
                 cassert( it != vals.end() && it->second.is_alive, "val destructed before being constructed" );
                 it->second.is_alive = false;
                 break;
             }
 
-            case Kind::op1:
-            case Kind::op2:
-            case Kind::op3:
-            case Kind::op4:
+            case KIND::op1:
+            case KIND::op2:
+            case KIND::op3:
+            case KIND::op4:
             {
-                std::string name = _parse_string<T,FLT>( c );
+                std::string name = parse_name( c );
                 OP op = ops[name];
-                uint32_t opnd_cnt = uint32_t(kind) - uint32_t(Kind::op1);
+                uint32_t opnd_cnt = uint32_t(kind) - uint32_t(KIND::op1);
                 uint64_t opnd[4];
                 for( uint32_t i = 0; i < opnd_cnt; i++ )
                 {
-                    opnd[i] = _parse_addr<T,FLT>( c );
+                    opnd[i] = parse_addr( c );
                     auto it = vals.find( opnd[i] );
                     cassert( it != vals.end() && it->second.is_alive, name + " opnd[i] does not exist" );
                     if ( i == 0 && op == OP::assign ) {
@@ -292,29 +360,29 @@ Analysis<T,FLT>::Analysis( std::string file_name )
                 break;
             }
 
-            case Kind::op2i:
+            case KIND::op2i:
             {
-                std::string name = _parse_string<T,FLT>( c );
+                std::string name = parse_name( c );
                 OP op = ops[name];
                 cassert( op == OP::lshift || op == OP::rshift, "op2i allowed only for shifts" );
-                uint64_t opnd1 = _parse_addr<T,FLT>( c );
-                T        opnd2 = _parse_int<T,FLT>( c );
+                uint64_t opnd1 = parse_addr( c );
+                T        opnd2 = parse_int( c );
                 break;
             }
 
-            case Kind::op2f:
+            case KIND::op2f:
             {
-                std::string name = _parse_string<T,FLT>( c );
+                std::string name = parse_name( c );
                 OP op = ops[name];
                 cassert( op == OP::make_constant, "op2f allowed only for make_constant" );
-                uint64_t opnd1 = _parse_addr<T,FLT>( c );
-                FLT      opnd2 = _parse_flt<T,FLT>( c );
+                uint64_t opnd1 = parse_addr( c );
+                FLT      opnd2 = parse_flt( c );
                 break;
             }
 
             default:
             {
-                _die<T,FLT>( "unexpected kind" );
+                _die( "unexpected kind" );
                 break;
             }
         }
