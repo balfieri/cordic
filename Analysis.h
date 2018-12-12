@@ -250,6 +250,7 @@ Analysis<T,FLT>::Analysis( std::string file_name )
     // assume parsing text at this point
     std::string line;
     char cs[1024];
+    KIND prev_kind = KIND(-1);
     while( std::getline( *in, line ) )
     {
         if ( debug ) std::cout << line << "\n";
@@ -346,9 +347,11 @@ Analysis<T,FLT>::Analysis( std::string file_name )
                 std::string name = parse_name( c );
                 OP op = ops[name];
                 uint32_t opnd_cnt = uint32_t(kind) - uint32_t(KIND::op1);
+                cassert( prev_kind != KIND::make_constant || op == OP::assign, "make_constant must be followed immediately by op2 assign" );
                 uint64_t opnd[4];
                 for( uint32_t i = 0; i < opnd_cnt; i++ )
                 {
+                    // TODO: deal with make_constant
                     opnd[i] = parse_addr( c );
                     auto it = vals.find( opnd[i] );
                     cassert( it != vals.end() && it->second.is_alive, name + " opnd[i] does not exist" );
@@ -387,6 +390,8 @@ Analysis<T,FLT>::Analysis( std::string file_name )
                 break;
             }
         }
+        cassert( prev_kind != KIND::make_constant || kind == OP::op2, "make_constant was not followed by op2 assign" );
+        prev_kind = kind;
     }
 }
 
