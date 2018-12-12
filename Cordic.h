@@ -525,6 +525,8 @@ public:
         atanh2,
     };
 
+    static constexpr uint32_t OP_cnt = uint32_t(OP::atanh2) + 1;
+
 private:
     class Impl;
     Impl * impl;

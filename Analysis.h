@@ -75,10 +75,11 @@ private:
         FLT     max;
     };
 
-    std::map<std::string, FuncInfo> funcs;
-    std::vector<FrameInfo>          stack;
-    std::map<uint64_t, CordicInfo>  cordics;
-    std::map<uint64_t, ValInfo>     vals;
+    std::map<std::string, Cordic::OP>   ops;
+    std::map<std::string, FuncInfo>     funcs;
+    std::vector<FrameInfo>              stack;
+    std::map<uint64_t, CordicInfo>      cordics;
+    std::map<uint64_t, ValInfo>         vals;
 };
 
 //-----------------------------------------------------
@@ -134,6 +135,13 @@ Analysis<T,FLT>::Analysis( std::string file_name )
     in_text = file_name == "";
     if ( in_text ) {
         in = &std::cin;
+    }
+
+    // set up ops map
+    for( uint32_t o = 0; o < Cordic<T,FLT>::OP_cnt; o++ )
+    {
+        std::string name = Cordic<T,FLT>::op_to_str( o );
+        ops[name] = o;
     }
 
     // assume parsing text at this point
@@ -232,11 +240,19 @@ Analysis<T,FLT>::Analysis( std::string file_name )
             case Kind::op4:
             {
                 std::string name = _parse_string( c );
+                Cordic<T,FLT>::OP op = ops[name];
                 uint32_t opnd_cnt = kind - Kind::op1;
                 uint64_t opnd[4];
                 for( uint32_t i = 0; i < opnd_cnt; i++ )
                 {
                     opnd[i] = _parse_addr( c );
+                    auto it = vals.find( opnd[i] );
+                    cassert( it != vals.end() && it->second.is_alive, name + " opnd[i] does not exist" );
+                    if ( i == 0 && op == Cordic<T,FLT>::OP::assign ) {
+                        it->second.is_assigned = true;
+                    } else {
+                        cassert( it->second.is_assigned, name + " opnd[i] used when not previously assigned" );
+                    }
                 }
                 break;
             }
