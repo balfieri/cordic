@@ -842,6 +842,8 @@ std::string Cordic<T,FLT>::op_to_str( uint16_t op )
         _ocase( rsqrt )
 
         _ocase( exp )
+        _ocase( exp2 )
+        _ocase( exp10 )
         _ocase( pow )
         _ocase( powc )
         _ocase( log )
