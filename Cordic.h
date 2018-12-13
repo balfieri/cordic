@@ -648,6 +648,23 @@ Cordic<T,FLT>::Cordic( uint32_t int_w, uint32_t frac_w, bool do_reduce, uint32_t
     impl->maxint        = (T(1) << int_w) - 1;
     impl->one           = T(1) << frac_w;                       // required before calling to_t()
 
+    constructed( impl->maxval        );                         // to keep logging analysis happy
+    constructed( impl->minval        );
+    constructed( impl->zero          );
+    constructed( impl->one           );
+    constructed( impl->half          );
+    constructed( impl->quarter       );
+    constructed( impl->sqrt2         );
+    constructed( impl->sqrt2_div_2   );
+    constructed( impl->pi            );
+    constructed( impl->pi_div_2      );
+    constructed( impl->pi_div_4      );
+    constructed( impl->two_div_pi    );
+    constructed( impl->four_div_pi   );
+    constructed( impl->e             );
+    constructed( impl->log2          );
+    constructed( impl->log10         );
+
     assign( impl->maxval        , to_t( std::pow( 2.0, int_w ) - 1.0 ) );
     assign( impl->minval        , to_t( 1.0 / std::pow( 2.0, frac_w ) ) );
     assign( impl->zero          , to_t( 0.0 ) );
