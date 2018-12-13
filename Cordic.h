@@ -1127,14 +1127,16 @@ inline T Cordic<T,FLT>::hyperbolic_angle_max( void ) const
 template< typename T, typename FLT >
 inline T Cordic<T,FLT>::to_t( FLT _x, bool can_log ) const
 {
-    if ( debug ) std::cout << "to_t begin: x=" << _x << "\n";
     FLT x = _x;
     bool is_neg = x < 0.0;
     if ( is_neg ) x = -x;
     cassert( T(x) < (T(1) << impl->int_w), "to_t: integer part of |x| " + std::to_string(x) + " does not fit in int_w bits" ); 
     T x_t = x * FLT( impl->one ); // need to round
     if ( is_neg ) x_t = -x_t;
-    if ( can_log ) _log2f( make_constant, x_t, _x );
+    if ( can_log ) {
+        constructed( x_t );
+        _log2f( make_constant, x_t, _x );
+    }
     return x_t;
 }
 
