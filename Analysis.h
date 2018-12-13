@@ -330,7 +330,7 @@ Analysis<T,FLT>::Analysis( std::string file_name )
                 if ( vit == vals.end() ) {
                     vals[val] = info;
                 } else {
-                    cassert( !vit->second.is_alive, "val constructed before previous was desctructed" );
+                    //cassert( !vit->second.is_alive, "val constructed before previous was desctructed" );
                     vit->second = info;
                 }
                 break;
@@ -391,6 +391,7 @@ Analysis<T,FLT>::Analysis( std::string file_name )
                 constant_addr = parse_addr( c );   
                 auto it = vals.find( constant_addr );
                 cassert( it != vals.end() && it->second.is_alive, name + " constant container should have been constructed" );
+                it->second.is_assigned = true;
                 it->second.is_constant = true;
                 it->second.constant    = parse_flt( c );
                 break;
