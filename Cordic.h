@@ -62,7 +62,7 @@ public:
     //-----------------------------------------------------
     // Explicit Conversions
     //-----------------------------------------------------
-    T       to_t( FLT x ) const;                // FLT to T encoded value
+    T       to_t( FLT x, bool can_log=true ) const;         // FLT to T encoded value
     FLT     to_flt( const T& x, bool can_log=false ) const; // T encoded value to FLT
     std::string to_string( const T& x ) const;  // T to std::string in decimal floating-point format
     std::string to_rstring( const T& _x ) const;// T to std::string in raw decimal integer format 
@@ -741,6 +741,7 @@ Cordic<T,FLT>::Cordic( uint32_t int_w, uint32_t frac_w, bool do_reduce, uint32_t
 
     // construct LUT used by reduce_sinhcosh_arg();
     // use integer part plus 0.25 bit of fraction
+    // these need not be logged
     cassert( int_w <= 24, "too many cases to worry about" );
     uint32_t N = 1 << (2+int_w);
     uint32_t * quadrant     = new uint32_t[N];
@@ -757,10 +758,8 @@ Cordic<T,FLT>::Cordic( uint32_t int_w, uint32_t frac_w, bool do_reduce, uint32_t
     const FLT PI_DIV_2 = PI / 2.0;
     const FLT PI_DIV_4 = PI / 4.0;
     const T   MASK     = (T(1) << (int_w+T(1)))-T(1);  // include 0.5 bit of fraction
-          T   MAX      = (T(1) << (int_w+frac_w))-T(1);
+    const T   MAX      = (T(1) << (int_w+frac_w))-T(1);
     const FLT MAX_F    = to_flt( MAX );
-    if ( Cordic<T,FLT>::logger != nullptr ) Cordic<T,FLT>::logger->op2( uint16_t(Cordic<T,FLT>::OP::make_constant), &MAX, MAX_F );
-    assign( MAX, MAX );                                 // silliness for logging
     for( T i = 0; i <= MASK; i++ )
     {
         FLT i_f = FLT(i) / 4.0;
@@ -769,11 +768,10 @@ Cordic<T,FLT>::Cordic( uint32_t int_w, uint32_t frac_w, bool do_reduce, uint32_t
         FLT cosh_i_f    = std::cosh( i_f );
         sinh_i_oflow[i] = sinh_i_f > MAX_F;
         cosh_i_oflow[i] = cosh_i_f > MAX_F;
-        constructed( sinh_i[i] );
-        constructed( cosh_i[i] );
-        assign( sinh_i[i], sinh_i_oflow[i] ? MAX : to_t( std::sinh( i_f ) ) );
-        assign( cosh_i[i], cosh_i_oflow[i] ? MAX : to_t( std::cosh( i_f ) ) );
-        if ( debug ) std::cout << "reduce_sinhcosh_arg LUT: i_f=" << i_f << " sinh_i=" << to_flt(sinh_i[i]) << " cosh_i=" << to_flt(cosh_i[i]) << 
+        sinh_i[i] = sinh_i_oflow[i] ? MAX : to_t( std::sinh( i_f ), false );
+        cosh_i[i] = cosh_i_oflow[i] ? MAX : to_t( std::cosh( i_f ), false );
+        if ( debug ) std::cout << "reduce_sinhcosh_arg LUT: i=" << uint64_t(i) << " i_last=" << uint64_t(MASK) << " i_f=" << i_f << 
+                                  " sinh_i=" << to_flt(sinh_i[i]) << " cosh_i=" << to_flt(cosh_i[i]) << 
                                   " sinh_i_oflow=" << sinh_i_oflow[i] << " cosh_i_oflow=" << cosh_i_oflow[i] << "\n";
     }
 
@@ -796,8 +794,7 @@ Cordic<T,FLT>::Cordic( uint32_t int_w, uint32_t frac_w, bool do_reduce, uint32_t
     for( int32_t i = -frac_w; i <= int32_t(int_w); i++ )
     {
         double addend_f = std::log( std::pow( 2.0, double( i ) ) );
-        constructed( addend[frac_w+i] );
-        assign( addend[frac_w+i], to_t( addend_f ) );
+        addend[frac_w+i] = to_t( addend_f, false );
         if ( debug ) std::cout << "addend[]=0x" << std::hex << to_rstring(addend[frac_w+i]) << "\n" << std::dec;
         if ( debug ) std::cout << "reduce_log_arg LUT: addend[" << to_rstring(i) << "]=" << to_flt(addend[frac_w+i]) << 
                                   " addend_f=" << addend_f << "\n";
@@ -1128,7 +1125,7 @@ inline T Cordic<T,FLT>::hyperbolic_angle_max( void ) const
 // Conversion
 //-----------------------------------------------------
 template< typename T, typename FLT >
-inline T Cordic<T,FLT>::to_t( FLT _x ) const
+inline T Cordic<T,FLT>::to_t( FLT _x, bool can_log ) const
 {
     if ( debug ) std::cout << "to_t begin: x=" << _x << "\n";
     FLT x = _x;
@@ -1137,7 +1134,7 @@ inline T Cordic<T,FLT>::to_t( FLT _x ) const
     cassert( T(x) < (T(1) << impl->int_w), "to_t: integer part of |x| " + std::to_string(x) + " does not fit in int_w bits" ); 
     T x_t = x * FLT( impl->one ); // need to round
     if ( is_neg ) x_t = -x_t;
-    _log2f( make_constant, x_t, _x );
+    if ( can_log ) _log2f( make_constant, x_t, _x );
     return x_t;
 }
 
