@@ -702,6 +702,8 @@ Cordic<T,FLT>::Cordic( uint32_t int_w, uint32_t frac_w, bool do_reduce, uint32_t
 
     // calculate max |z0| angle allowed
     T xx, yy, zz;
+    constructed( impl->circular_angle_max );
+    constructed( impl->hyperbolic_angle_max );
     assign( impl->circular_angle_max, impl->one );     // to avoid triggering assert
     assign( impl->hyperbolic_angle_max, impl->zero );  // to disable assert
     circular_vectoring(   impl->one,     impl->one, impl->zero, xx, yy, impl->circular_angle_max );
@@ -716,6 +718,10 @@ Cordic<T,FLT>::Cordic( uint32_t int_w, uint32_t frac_w, bool do_reduce, uint32_t
     hyperbolic_vectoring( impl->one, impl->zero, impl->zero, impl->hyperbolic_vectoring_gain, yy, zz );
 
     // calculate 1/gain which are the multiplication factors
+    constructed( impl->circular_rotation_one_over_gain );
+    constructed( impl->circular_vectoring_one_over_gain );
+    constructed( impl->hyperbolic_rotation_one_over_gain );
+    constructed( impl->hyperbolic_vectoring_one_over_gain );
     assign( impl->circular_rotation_one_over_gain,    to_t( FLT(1) / to_flt(impl->circular_rotation_gain) ) );
     assign( impl->circular_vectoring_one_over_gain,   to_t( FLT(1) / to_flt(impl->circular_vectoring_gain) ) );
     assign( impl->hyperbolic_rotation_one_over_gain,  to_t( FLT(1) / to_flt(impl->hyperbolic_rotation_gain) ) );
@@ -758,6 +764,8 @@ Cordic<T,FLT>::Cordic( uint32_t int_w, uint32_t frac_w, bool do_reduce, uint32_t
         FLT cosh_i_f    = std::cosh( i_f );
         sinh_i_oflow[i] = sinh_i_f > MAX_F;
         cosh_i_oflow[i] = cosh_i_f > MAX_F;
+        constructed( sinh_i[i] );
+        constructed( cosh_i[i] );
         assign( sinh_i[i], sinh_i_oflow[i] ? MAX : to_t( std::sinh( i_f ) ) );
         assign( cosh_i[i], cosh_i_oflow[i] ? MAX : to_t( std::cosh( i_f ) ) );
         if ( debug ) std::cout << "reduce_sinhcosh_arg LUT: i_f=" << i_f << " sinh_i=" << to_flt(sinh_i[i]) << " cosh_i=" << to_flt(cosh_i[i]) << 
@@ -783,6 +791,7 @@ Cordic<T,FLT>::Cordic( uint32_t int_w, uint32_t frac_w, bool do_reduce, uint32_t
     for( int32_t i = -frac_w; i <= int32_t(int_w); i++ )
     {
         double addend_f = std::log( std::pow( 2.0, double( i ) ) );
+        constructed( addend[frac_w+i] );
         assign( addend[frac_w+i], to_t( addend_f ) );
         if ( debug ) std::cout << "addend[]=0x" << std::hex << to_rstring(addend[frac_w+i]) << "\n" << std::dec;
         if ( debug ) std::cout << "reduce_log_arg LUT: addend[" << to_rstring(i) << "]=" << to_flt(addend[frac_w+i]) << 
