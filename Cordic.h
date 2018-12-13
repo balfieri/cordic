@@ -710,8 +710,8 @@ Cordic<T,FLT>::Cordic( uint32_t int_w, uint32_t frac_w, bool do_reduce, uint32_t
     constructed( impl->hyperbolic_angle_max );
     assign( impl->circular_angle_max, impl->one );     // to avoid triggering assert
     assign( impl->hyperbolic_angle_max, impl->zero );  // to disable assert
-    circular_vectoring(   impl->one,     impl->one, impl->zero, xx, yy, impl->circular_angle_max );
-    hyperbolic_vectoring( to_t(0.5), impl->one, impl->zero, xx, yy, impl->hyperbolic_angle_max );
+    circular_vectoring(   impl->one,  impl->one, impl->zero, xx, yy, impl->circular_angle_max );
+    hyperbolic_vectoring( impl->half, impl->one, impl->zero, xx, yy, impl->hyperbolic_angle_max );
     if ( debug ) std::cout << "circular_angle_max="             << std::setw(30) << to_flt(impl->circular_angle_max) << "\n";
     if ( debug ) std::cout << "hyperbolic_angle_max="           << std::setw(30) << to_flt(impl->hyperbolic_angle_max) << "\n";
     
@@ -1249,7 +1249,7 @@ void Cordic<T,FLT>::circular_rotation( const T& x0, const T& y0, const T& z0, T&
     //      |z0| <= 0.7854...
     //-----------------------------------------------------
     const T ONE = impl->one;
-    const T ANGLE_MAX = circular_angle_max();
+    const T ANGLE_MAX = impl->circular_angle_max;
     if ( debug ) std::cout << "circular_rotation begin: x0,y0,z0=[ " << to_flt(x0) << ", " << to_flt(y0) << ", " << to_flt(z0) << "]\n";
     cassert( x0 >= -ONE       && x0 <= ONE,       "circular_rotation x0 must be in the range -1 .. 1" );
     cassert( y0 >= -ONE       && y0 <= ONE,       "circular_rotation y0 must be in the range -1 .. 1" );
@@ -1299,7 +1299,7 @@ void Cordic<T,FLT>::circular_vectoring( const T& x0, const T& y0, const T& z0, T
     const T ONE = impl->one;
     const T THREE = 3*ONE;
     const T PI  = impl->pi;
-    const T ANGLE_MAX = circular_angle_max();
+    const T ANGLE_MAX = impl->circular_angle_max;
     if ( debug ) std::cout << "circular_vectoring begin: x0,y0,z0=[ " << to_flt(x0) << ", " << to_flt(y0) << ", " << to_flt(z0) << "]\n";
     cassert( x0 >= -THREE && x0 <= THREE, "circular_vectoring x0 must be in the range -3 .. 3" );
     cassert( y0 >= -ONE   && y0 <= ONE  , "circular_vectoring y0 must be in the range -1 .. 1" );
@@ -1387,7 +1387,7 @@ void Cordic<T,FLT>::hyperbolic_rotation( const T& x0, const T& y0, const T& z0, 
     //      |z0| <= 1.1182...
     //-----------------------------------------------------
     const T TWO = impl->one << 1;
-    const T ANGLE_MAX = hyperbolic_angle_max();
+    const T ANGLE_MAX = impl->hyperbolic_angle_max;
     if ( debug ) std::cout << "hyperbolic_rotation begin: x0,y0,z0=[ " << to_flt(x0) << ", " << to_flt(y0) << ", " << to_flt(z0) << "]\n";
     cassert( x0 >= -TWO       && x0 <= TWO,       "hyperbolic_rotation x0 must be in the range -2 .. 2" );
     cassert( y0 >= -TWO       && y0 <= TWO,       "hyperbolic_rotation y0 must be in the range -2 .. 2" );
@@ -1443,7 +1443,7 @@ void Cordic<T,FLT>::hyperbolic_vectoring( const T& x0, const T& y0, const T& z0,
     //-----------------------------------------------------
     const T TWO = impl->one << 1;
     const T PI  = impl->pi;
-    const T ANGLE_MAX = hyperbolic_angle_max();
+    const T ANGLE_MAX = impl->hyperbolic_angle_max;
     if ( debug ) std::cout << "hyperbolic_vectoring begin: x0,y0,z0=[ " << to_flt(x0) << ", " << to_flt(y0) << ", " << to_flt(z0) << "]\n";
     cassert( x0 >= -TWO && x0 <= TWO, "hyperbolic_vectoring x0 must be in the range -2 .. 2" );
     cassert( y0 >= -TWO && y0 <= TWO, "hyperbolic_vectoring y0 must be in the range -2 .. 2" );
