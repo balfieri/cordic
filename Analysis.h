@@ -237,7 +237,7 @@ template< typename T, typename FLT > inline void Analysis<T,FLT>::val_stack_push
 }
 
 template< typename T, typename FLT >
-inline Analysis<T,FLT>::ValInfo Analysis<T,FLT>::val_stack_push( void )
+inline typename Analysis<T,FLT>::ValInfo Analysis<T,FLT>::val_stack_pop( void )
 {
     cassert( val_stack_cnt > 0, "can't pop an empty val_stack" );
     return val_stack[--val_stack_cnt];
@@ -392,11 +392,11 @@ Analysis<T,FLT>::Analysis( std::string file_name )
                 
                 // push result if not assign
                 if ( op != OP::assign ) {
-                    ValInfo info;
+                    ValInfo val;
                     val.is_alive    = true;
                     val.is_assigned = true;
                     val.is_constant = false;
-                    val_stack_push( info );
+                    val_stack_push( val );
                 }
                 break;
             }
@@ -438,19 +438,19 @@ Analysis<T,FLT>::Analysis( std::string file_name )
                     {
                         // pop result
                         it->second  = val_stack_pop();
-                        it->encoded = opnd1;
+                        it->second.encoded = opnd1;
                         break;
                     }
 
                     default:
                     {
                         // push result
-                        ValInfo info;
+                        ValInfo val;
                         val.is_alive    = true;
                         val.is_assigned = true;
                         val.is_constant = false;
                         val.encoded     = opnd1;
-                        val_stack_push( info );
+                        val_stack_push( val );
                         break;
                     }
                 }
@@ -467,11 +467,11 @@ Analysis<T,FLT>::Analysis( std::string file_name )
                 auto it = vals.find( opnd0 );
                 cassert( it != vals.end() && it->second.is_alive, name + " opnd[0] does not exist" );
                 cassert( it->second.is_assigned,                  name + " opnd[0] is used before being assigned" );
-                ValInfo info;
+                ValInfo val;
                 val.is_alive    = true;
                 val.is_assigned = true;
                 val.is_constant = false;
-                val_stack_push( info );
+                val_stack_push( val );
                 break;
             }
 
@@ -480,8 +480,6 @@ Analysis<T,FLT>::Analysis( std::string file_name )
                 continue;
             }
         }
-        cassert( prev_kind != KIND::op2f || kind == KIND::op2, "make_constant was not followed by op2 assign" );
-        prev_kind = kind;
     }
 }
 
