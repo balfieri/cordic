@@ -132,6 +132,10 @@ public:
     T    cbrt( const T& x ) const;                                        // x^(1/3)  (but x can be negative)
     T    rcbrt( const T& x ) const;                                       // 1/cbrt
 
+    T    fdim( const T& x, const T& y ) const;                            // (x >= y) ? (x-y) : 0
+    T    fmax( const T& x, const T& y ) const;                            // max(x, y)
+    T    fmin( const T& x, const T& y ) const;                            // min(x, y)
+
     T    exp( const T& x ) const;                                         // e^x
     T    expm1( const T& x ) const;                                       // e^x - 1
     T    exp2( const T& x ) const;                                        // 2^x
@@ -504,6 +508,9 @@ public:
         rsqrt,
         cbrt,
         rcbrt,
+        fdim,
+        fmax,
+        fmin,
 
         exp,
         expm1,
@@ -1974,6 +1981,27 @@ T Cordic<T,FLT>::rcbrt( const T& x ) const
 
     // There might be a better way, but exp(-log(x)/3) is probably not it
     return div( impl->one, cbrt( x ) );
+}
+
+template< typename T, typename FLT >
+T Cordic<T,FLT>::fdim( const T& x, const T& y ) const
+{ 
+    _log2( fdim, x, y );
+    return (x >= y) ? (x - y) : 0;
+}
+
+template< typename T, typename FLT >
+T Cordic<T,FLT>::fmax( const T& x, const T& y ) const
+{ 
+    _log2( fmax, x, y );
+    return (x >= y) ? x : y;
+}
+
+template< typename T, typename FLT >
+T Cordic<T,FLT>::fmin( const T& x, const T& y ) const
+{ 
+    _log2( fmin, x, y );
+    return (x < y) ? x : y;
 }
 
 template< typename T, typename FLT >

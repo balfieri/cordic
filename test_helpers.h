@@ -211,9 +211,7 @@ FLT  div( FLT x, FLT y ) { return x/y; }
 FLT  rcp( FLT x )        { return 1.0/x; }
 FLT  rsqrt( FLT x )      { return 1.0 / std::sqrt( x ); }
 FLT  rcbrt( FLT x )      { return 1.0 / std::cbrt( x ); }
-FLT  pow2( FLT x )       { return std::pow( 2.0, x ); }
 FLT  exp10( FLT x )      { return std::pow( 10.0, x ); }
-FLT  pow10( FLT x )      { return std::pow( 10.0, x ); }
 FLT  logb( FLT x, FLT y ){ return std::log( x ) / std::log( y ); }
 FLT  log2( FLT x )       { return std::log( x ) / std::log( 2.0 ); }
 FLT  log10( FLT x )      { return std::log( x ) / std::log( 10.0 ); }

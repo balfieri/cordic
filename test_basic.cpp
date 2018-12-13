@@ -131,6 +131,10 @@ int main( int argc, const char * argv[] )
             do_op1(  "cbrt(x)",          cbrt,    std::cbrt,      x   , do_reduce );
             do_op1(  "rcbrt(x)",         rcbrt,   rcbrt,          x+1.0, do_reduce );
         }
+        do_op2(  "fdim(x,y)",        fdim,    std::fdim,      x, y, do_reduce );
+        do_op2(  "fmax(x,y)",        fmax,    std::fmax,      x, y, do_reduce );
+        do_op2(  "fmin(x,y)",        fmin,    std::fmin,      x, y, do_reduce );
+
         do_op1(  "exp(x)",           exp,     std::exp,       x   , do_reduce );
         do_op1(  "expm1(x)",         expm1,   std::expm1,     x   , do_reduce );
         do_op1(  "exp2(x)",          exp2,    std::exp2,      x   , do_reduce );

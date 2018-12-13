@@ -181,6 +181,10 @@ public:
     freal  cbrt( void ) const;                                        
     freal  rcbrt( void ) const;                               
 
+    freal  fdim( const freal& b ) const;
+    freal  fmax( const freal& b ) const;
+    freal  fmin( const freal& b ) const;
+
     freal  exp( void ) const;                                         
     freal  expm1( void ) const;              // exp(x) - 1   (accurately)
     freal  exp2( void ) const;               // 2^x
@@ -361,6 +365,18 @@ static inline freal<T,FLT>  cbrt( const freal<T,FLT>& a )
 template< typename T=int64_t, typename FLT=double >              
 static inline freal<T,FLT>  rcbrt( const freal<T,FLT>& a )                                      
 { return a.rcbrt();                     }
+
+template< typename T=int64_t, typename FLT=double >              
+static inline freal<T,FLT>  fdim( const freal<T,FLT>& a, const freal<T,FLT>& b )                                      
+{ return a.fdim( b );                   }
+
+template< typename T=int64_t, typename FLT=double >              
+static inline freal<T,FLT>  fmax( const freal<T,FLT>& a, const freal<T,FLT>& b )                                      
+{ return a.fmax( b );                   }
+
+template< typename T=int64_t, typename FLT=double >              
+static inline freal<T,FLT>  fmin( const freal<T,FLT>& a, const freal<T,FLT>& b )                                      
+{ return a.fmin( b );                   }
 
 template< typename T=int64_t, typename FLT=double >              
 static inline freal<T,FLT>  exp( const freal<T,FLT>& a )                                                
@@ -994,6 +1010,18 @@ inline freal<T,FLT> freal<T,FLT>::cbrt( void ) const
 template< typename T, typename FLT >              
 inline freal<T,FLT> freal<T,FLT>::rcbrt( void ) const                                           
 { return( c(), make_raw( cordic, cordic->rcbrt( v ) ) ); }
+
+template< typename T, typename FLT >              
+inline freal<T,FLT> freal<T,FLT>::fdim( const freal<T,FLT>& b ) const                                                    
+{ return( c( b ), make_raw( cordic, cordic->fdim( v, b.v ) ) ); }
+
+template< typename T, typename FLT >              
+inline freal<T,FLT> freal<T,FLT>::fmax( const freal<T,FLT>& b ) const                                                    
+{ return( c( b ), make_raw( cordic, cordic->fmax( v, b.v ) ) ); }
+
+template< typename T, typename FLT >              
+inline freal<T,FLT> freal<T,FLT>::fmin( const freal<T,FLT>& b ) const                                                    
+{ return( c( b ), make_raw( cordic, cordic->fmin( v, b.v ) ) ); }
 
 template< typename T, typename FLT >              
 inline freal<T,FLT> freal<T,FLT>::exp( void ) const                                                     
