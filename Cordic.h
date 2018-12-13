@@ -770,7 +770,6 @@ Cordic<T,FLT>::Cordic( uint32_t int_w, uint32_t frac_w, bool do_reduce, uint32_t
     {
         double addend_f = std::log( std::pow( 2.0, double( i ) ) );
         addend[frac_w+i] = to_t( addend_f );
-        if ( debug ) std::cout << "addend[]=0x" << std::hex << to_rstring(addend[frac_w+i]) << "\n" << std::dec;
         if ( debug ) std::cout << "reduce_log_arg LUT: addend[" << to_rstring(i) << "]=" << to_flt(addend[frac_w+i]) << 
                                   " addend_f=" << addend_f << "\n";
     }

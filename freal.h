@@ -558,7 +558,7 @@ inline freal<T,FLT>::freal( const Cordic<T,FLT> * _cordic, FLT f )
     cassert( _cordic != nullptr, "freal(cordic, f) cordic argument must be non-null" );
     cordic = _cordic;
     cordic->constructed( v );
-    cordic->assign( v, cordic->to_t( f ) );
+    cordic->pop_value( v, cordic->to_t( f ) );
 }
 
 template< typename T, typename FLT >              
