@@ -102,6 +102,7 @@ public:
     void constructed( const T& x ) const;                                 // so we can log creation of x
     void destructed( const T& x ) const;                                  // so we can log destruction of x
     T&   assign( T& x, const T& y ) const;                                // x = y  (this exists so we can log assignments)
+    T&   pop_value( T& x, const T& y ) const;                             // x = y  (where y is top of stack for logging)
 
     bool isgreater( const T& x, const T& y ) const;                       // x > y
     bool isgreaterequal( const T& x, const T& y ) const;                  // x >= y
@@ -475,10 +476,10 @@ public:
 
     enum class OP
     {
-        make_constant,
-        use_constant,
+        push_constant,
         to_flt,
         assign,
+        pop_value,
 
         isgreater,
         isgreaterequal,
@@ -844,10 +845,10 @@ std::string Cordic<T,FLT>::op_to_str( uint16_t op )
     
     switch( OP( op ) )
     {
-        _ocase( make_constant )
-        _ocase( use_constant )
+        _ocase( push_constant )
         _ocase( to_flt )
         _ocase( assign )
+        _ocase( pop_value )
 
         _ocase( isgreater )
         _ocase( isgreaterequal )
@@ -916,6 +917,8 @@ std::string Cordic<T,FLT>::op_to_str( uint16_t op )
 
 #define _log1( op, opnd1 ) \
             if ( Cordic<T,FLT>::logger != nullptr ) Cordic<T,FLT>::logger->op1( uint16_t(Cordic<T,FLT>::OP::op), &opnd1 )
+#define _log1f( op, opnd1 ) \
+            if ( Cordic<T,FLT>::logger != nullptr ) Cordic<T,FLT>::logger->op1( uint16_t(Cordic<T,FLT>::OP::op), opnd1 )
 #define _log2( op, opnd1, opnd2 ) \
             if ( Cordic<T,FLT>::logger != nullptr ) Cordic<T,FLT>::logger->op2( uint16_t(Cordic<T,FLT>::OP::op), &opnd1, &opnd2 )
 #define _log2i( op, opnd1, opnd2 ) \
@@ -957,126 +960,126 @@ inline T Cordic<T,FLT>::maxint( void ) const
 template< typename T, typename FLT >
 inline T Cordic<T,FLT>::maxval( void ) const
 {
-    _log1( use_constant, impl->maxval );
+    _log1f( push_constant, to_flt(impl->maxval) );
     return impl->maxval;
 }
 
 template< typename T, typename FLT >
 inline T Cordic<T,FLT>::minval( void ) const
 {
-    _log1( use_constant, impl->minval );
+    _log1f( push_constant, to_flt(impl->minval) );
     return impl->minval;
 }
 
 template< typename T, typename FLT >
 inline T Cordic<T,FLT>::zero( void ) const
 {
-    _log1( use_constant, impl->zero );
+    _log1f( push_constant, to_flt(impl->zero) );
     return impl->zero;
 }
 
 template< typename T, typename FLT >
 inline T Cordic<T,FLT>::one( void ) const
 {
-    _log1( use_constant, impl->one ); 
+    _log1f( push_constant, to_flt(impl->one) ); 
     return impl->one;
 }
 
 template< typename T, typename FLT >
 inline T Cordic<T,FLT>::half( void ) const
 {
-    _log1( use_constant, impl->half ); 
+    _log1f( push_constant, to_flt(impl->half) ); 
     return impl->half;
 }
 
 template< typename T, typename FLT >
 inline T Cordic<T,FLT>::quarter( void ) const
 {
-    _log1( use_constant, impl->quarter ); 
+    _log1f( push_constant, to_flt(impl->quarter) ); 
     return impl->quarter;
 }
 
 template< typename T, typename FLT >
 inline T Cordic<T,FLT>::sqrt2( void ) const
 {
-    _log1( use_constant, impl->sqrt2 ); 
+    _log1f( push_constant, to_flt(impl->sqrt2) ); 
     return impl->sqrt2;
 }
 
 template< typename T, typename FLT >
 inline T Cordic<T,FLT>::sqrt2_div_2( void ) const
 {
-    _log1( use_constant, impl->sqrt2_div_2 ); 
+    _log1f( push_constant, to_flt(impl->sqrt2_div_2) ); 
     return impl->sqrt2_div_2;
 }
 
 template< typename T, typename FLT >
 inline T Cordic<T,FLT>::pi( void ) const
 {
-    _log1( use_constant, impl->pi ); 
+    _log1f( push_constant, to_flt(impl->pi) ); 
     return impl->pi;
 }
 
 template< typename T, typename FLT >
 inline T Cordic<T,FLT>::pi_div_2( void ) const
 {
-    _log1( use_constant, impl->pi_div_2 ); 
+    _log1f( push_constant, to_flt(impl->pi_div_2) ); 
     return impl->pi_div_2;
 }
 
 template< typename T, typename FLT >
 inline T Cordic<T,FLT>::pi_div_4( void ) const
 {
-    _log1( use_constant, impl->pi_div_4 ); 
+    _log1f( push_constant, to_flt(impl->pi_div_4) ); 
     return impl->pi_div_4;
 }
 
 template< typename T, typename FLT >
 inline T Cordic<T,FLT>::two_div_pi( void ) const
 {
-    _log1( use_constant, impl->two_div_pi ); 
+    _log1f( push_constant, to_flt(impl->two_div_pi) ); 
     return impl->two_div_pi;
 }
 
 template< typename T, typename FLT >
 inline T Cordic<T,FLT>::four_div_pi( void ) const
 {
-    _log1( use_constant, impl->four_div_pi ); 
+    _log1f( push_constant, to_flt(impl->four_div_pi) ); 
     return impl->four_div_pi;
 }
 
 template< typename T, typename FLT >
 inline T Cordic<T,FLT>::e( void ) const
 {
-    _log1( use_constant, impl->e ); 
+    _log1f( push_constant, to_flt(impl->e) ); 
     return impl->e;
 }
 
 template< typename T, typename FLT >
 inline T Cordic<T,FLT>::circular_rotation_gain( void ) const
 {
-    _log1( use_constant, impl->circular_rotation_gain ); 
+    _log1f( push_constant, to_flt(impl->circular_rotation_gain) ); 
     return impl->circular_rotation_gain;
 }
 
 template< typename T, typename FLT >
 inline T Cordic<T,FLT>::circular_vectoring_gain( void ) const
 {
-    _log1( use_constant, impl->circular_vectoring_gain ); 
+    _log1f( push_constant, to_flt(impl->circular_vectoring_gain) ); 
     return impl->circular_vectoring_gain;
 }
 
 template< typename T, typename FLT >
 inline T Cordic<T,FLT>::hyperbolic_rotation_gain( void ) const
 {
-    _log1( use_constant, impl->hyperbolic_rotation_gain ); 
+    _log1f( push_constant, to_flt(impl->hyperbolic_rotation_gain) ); 
     return impl->hyperbolic_rotation_gain;
 }
 
 template< typename T, typename FLT >
 inline T Cordic<T,FLT>::hyperbolic_vectoring_gain( void ) const
 {
-    _log1( use_constant, impl->hyperbolic_vectoring_gain ); 
+    _log1f( push_constant, to_flt(impl->hyperbolic_vectoring_gain) ); 
     return impl->hyperbolic_vectoring_gain;
 }
 
@@ -1089,35 +1092,35 @@ inline T Cordic<T,FLT>::circular_rotation_one_over_gain( void ) const
 template< typename T, typename FLT >
 inline T Cordic<T,FLT>::circular_vectoring_one_over_gain( void ) const
 {
-    _log1( use_constant, impl->circular_vectoring_one_over_gain ); 
+    _log1f( push_constant, to_flt(impl->circular_vectoring_one_over_gain) ); 
     return impl->circular_vectoring_one_over_gain;
 }
 
 template< typename T, typename FLT >
 inline T Cordic<T,FLT>::hyperbolic_rotation_one_over_gain( void ) const
 {
-    _log1( use_constant, impl->hyperbolic_rotation_one_over_gain ); 
+    _log1f( push_constant, to_flt(impl->hyperbolic_rotation_one_over_gain) ); 
     return impl->hyperbolic_rotation_one_over_gain;
 }
 
 template< typename T, typename FLT >
 inline T Cordic<T,FLT>::hyperbolic_vectoring_one_over_gain( void ) const
 {
-    _log1( use_constant, impl->hyperbolic_vectoring_one_over_gain ); 
+    _log1f( push_constant, to_flt(impl->hyperbolic_vectoring_one_over_gain) ); 
     return impl->hyperbolic_vectoring_one_over_gain;
 }
 
 template< typename T, typename FLT >
 inline T Cordic<T,FLT>::circular_angle_max( void ) const
 {
-    _log1( use_constant, impl->circular_angle_max ); 
+    _log1f( push_constant, to_flt(impl->circular_angle_max) ); 
     return impl->circular_angle_max;
 }
 
 template< typename T, typename FLT >
 inline T Cordic<T,FLT>::hyperbolic_angle_max( void ) const
 {
-    _log1( use_constant, impl->hyperbolic_angle_max ); 
+    _log1f( push_constant, to_flt(impl->hyperbolic_angle_max) ); 
     return impl->hyperbolic_angle_max;
 }
 
@@ -1133,10 +1136,7 @@ inline T Cordic<T,FLT>::to_t( FLT _x, bool can_log ) const
     cassert( T(x) < (T(1) << impl->int_w), "to_t: integer part of |x| " + std::to_string(x) + " does not fit in int_w bits" ); 
     T x_t = x * FLT( impl->one ); // need to round
     if ( is_neg ) x_t = -x_t;
-    if ( can_log ) {
-        constructed( x_t );
-        _log2f( make_constant, x_t, _x );
-    }
+    if ( can_log ) _log1f( push_constant, _x );
     return x_t;
 }
 
@@ -1674,6 +1674,14 @@ template< typename T, typename FLT >
 inline T&   Cordic<T,FLT>::assign( T& x, const T& y ) const
 {
     _log2( assign, x, y );
+    x = y;
+    return x;
+}
+
+template< typename T, typename FLT >
+inline T&   Cordic<T,FLT>::pop_value( T& x, const T& y ) const
+{
+    _log2( pop_value, x, y );
     x = y;
     return x;
 }

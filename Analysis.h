@@ -367,6 +367,7 @@ Analysis<T,FLT>::Analysis( std::string file_name )
                         cassert( it->second.is_assigned, name + " opnd[" + std::to_string(i) + "] used when not previously assigned" );
                         if ( i == 1 && op == OP::assign ) {
                             vals[opnd[0]] = it->second;
+                            if ( debug && it->second.is_constant ) std::cout << "    now constant=" << it->second.constant << "\n";
                         }
                     }
                 }

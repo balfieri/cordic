@@ -59,7 +59,6 @@ public:
 
     static freal make_fixed( uint32_t int_w, uint32_t frac_w, FLT init_f=FLT(0) );  // make a signed fixed-point    number 
     static freal make_float( uint32_t exp_w, uint32_t frac_w, FLT init_f=FLT(0) );  // make a signed floating-point number
-    static freal make_raw(   const Cordic<T,FLT> * cordic, const T& encoded );      // use encoded as the raw bits (dangerous)
     ~freal();
 
     //-----------------------------------------------------
@@ -234,6 +233,8 @@ private:
 
     const Cordic<T,FLT> *       cordic;         // defines the type and most operations
     T                           v;              // this value encoded in type T
+
+    static freal pop_value( const Cordic<T,FLT> * cordic, const T& encoded );   // pop value associated with last operation
 };
 
 // Well-Known std:xxx() Functions 
@@ -592,13 +593,13 @@ inline freal<T,FLT> freal<T,FLT>::make_float( uint32_t exp_w, uint32_t frac_w, F
 }
 
 template< typename T, typename FLT >              
-inline freal<T,FLT> freal<T,FLT>::make_raw( const Cordic<T,FLT> * cordic, const T& encoded )
+inline freal<T,FLT> freal<T,FLT>::pop_value( const Cordic<T,FLT> * cordic, const T& encoded )
 {
-    cassert( cordic != nullptr, "make_raw(cordic, encoded) called with null cordic" );
+    cassert( cordic != nullptr, "pop_value(cordic, encoded) called with null cordic" );
     freal r;
     r.cordic = cordic;
     cordic->constructed( r.v );
-    cordic->assign( r.v, encoded );
+    cordic->pop_value( r.v, encoded );
     return r;
 }
 
@@ -757,59 +758,59 @@ inline T            freal<T,FLT>::maxint( void )
 
 template< typename T, typename FLT >              
 inline freal<T,FLT> freal<T,FLT>::maxval( void ) 
-{ return( c(), make_raw( cordic, cordic->maxval() ) ); }
+{ return( c(), pop_value( cordic, cordic->maxval() ) ); }
 
 template< typename T, typename FLT >              
 inline freal<T,FLT> freal<T,FLT>::minval( void ) 
-{ return( c(), make_raw( cordic, cordic->minval() ) ); }
+{ return( c(), pop_value( cordic, cordic->minval() ) ); }
 
 template< typename T, typename FLT >              
 inline freal<T,FLT> freal<T,FLT>::zero( void ) 
-{ return( c(), make_raw( cordic, cordic->zero() ) ); }
+{ return( c(), pop_value( cordic, cordic->zero() ) ); }
 
 template< typename T, typename FLT >              
 inline freal<T,FLT> freal<T,FLT>::one( void ) 
-{ return( c(), make_raw( cordic, cordic->one() ) ); }
+{ return( c(), pop_value( cordic, cordic->one() ) ); }
 
 template< typename T, typename FLT >              
 inline freal<T,FLT> freal<T,FLT>::half( void ) 
-{ return( c(), make_raw( cordic, cordic->half() ) ); }
+{ return( c(), pop_value( cordic, cordic->half() ) ); }
 
 template< typename T, typename FLT >              
 inline freal<T,FLT> freal<T,FLT>::quarter( void ) 
-{ return( c(), make_raw( cordic, cordic->quarter() ) ); }
+{ return( c(), pop_value( cordic, cordic->quarter() ) ); }
 
 template< typename T, typename FLT >              
 inline freal<T,FLT> freal<T,FLT>::sqrt2( void ) 
-{ return( c(), make_raw( cordic, cordic->sqrt2() ) ); }
+{ return( c(), pop_value( cordic, cordic->sqrt2() ) ); }
 
 template< typename T, typename FLT >              
 inline freal<T,FLT> freal<T,FLT>::sqrt2_div_2( void ) 
-{ return( c(), make_raw( cordic, cordic->sqrt2_div_2() ) ); }
+{ return( c(), pop_value( cordic, cordic->sqrt2_div_2() ) ); }
 
 template< typename T, typename FLT >              
 inline freal<T,FLT> freal<T,FLT>::pi( void ) 
-{ return( c(), make_raw( cordic, cordic->pi() ) ); }
+{ return( c(), pop_value( cordic, cordic->pi() ) ); }
 
 template< typename T, typename FLT >              
 inline freal<T,FLT> freal<T,FLT>::pi_div_2( void ) 
-{ return( c(), make_raw( cordic, cordic->pi_div_2() ) ); }
+{ return( c(), pop_value( cordic, cordic->pi_div_2() ) ); }
 
 template< typename T, typename FLT >              
 inline freal<T,FLT> freal<T,FLT>::pi_div_4( void ) 
-{ return( c(), make_raw( cordic, cordic->pi_div_4() ) ); }
+{ return( c(), pop_value( cordic, cordic->pi_div_4() ) ); }
 
 template< typename T, typename FLT >              
 inline freal<T,FLT> freal<T,FLT>::two_div_pi( void ) 
-{ return( c(), make_raw( cordic, cordic->two_div_pi() ) ); }
+{ return( c(), pop_value( cordic, cordic->two_div_pi() ) ); }
 
 template< typename T, typename FLT >              
 inline freal<T,FLT> freal<T,FLT>::four_div_pi( void ) 
-{ return( c(), make_raw( cordic, cordic->four_div_pi() ) ); }
+{ return( c(), pop_value( cordic, cordic->four_div_pi() ) ); }
 
 template< typename T, typename FLT >              
 inline freal<T,FLT> freal<T,FLT>::e( void ) 
-{ return( c(), make_raw( cordic, cordic->e() ) ); }
+{ return( c(), pop_value( cordic, cordic->e() ) ); }
 
 //-----------------------------------------------------
 // Standard Operators 
@@ -947,168 +948,168 @@ inline bool freal<T,FLT>::isequal( const freal<T,FLT>& b ) const
 
 template< typename T, typename FLT >              
 inline freal<T,FLT>  freal<T,FLT>::abs( void ) const
-{ return( c(), make_raw( cordic, cordic->abs( v ) ) ); }
+{ return( c(), pop_value( cordic, cordic->abs( v ) ) ); }
 
 template< typename T, typename FLT >              
 inline freal<T,FLT>  freal<T,FLT>::neg( void ) const
-{ return( c(), make_raw( cordic, cordic->neg( v ) ) ); }
+{ return( c(), pop_value( cordic, cordic->neg( v ) ) ); }
 
 template< typename T, typename FLT >              
 inline freal<T,FLT>  freal<T,FLT>::floor( void ) const
-{ return( c(), make_raw( cordic, cordic->floor( v ) ) ); }
+{ return( c(), pop_value( cordic, cordic->floor( v ) ) ); }
 
 template< typename T, typename FLT >              
 inline freal<T,FLT>  freal<T,FLT>::ceil( void ) const
-{ return( c(), make_raw( cordic, cordic->ceil( v ) ) ); }
+{ return( c(), pop_value( cordic, cordic->ceil( v ) ) ); }
 
 template< typename T, typename FLT >              
 inline freal<T,FLT> freal<T,FLT>::add( const freal<T,FLT>& b ) const                                    
-{ return( c( b ), make_raw( cordic, cordic->add( v, b.v ) ) ); }
+{ return( c( b ), pop_value( cordic, cordic->add( v, b.v ) ) ); }
 
 template< typename T, typename FLT >              
 inline freal<T,FLT> freal<T,FLT>::sub( const freal<T,FLT>& b ) const                                    
-{ return( c( b ), make_raw( cordic, cordic->sub( v, b.v ) ) ); }
+{ return( c( b ), pop_value( cordic, cordic->sub( v, b.v ) ) ); }
 
 template< typename T, typename FLT >              
 inline freal<T,FLT> freal<T,FLT>::mad( const freal<T,FLT>& b, const freal<T,FLT>& c ) const             
-{ return( c( b, c ), make_raw( cordic, cordic->mad( v, b.v, c.v ) ) ); }
+{ return( c( b, c ), pop_value( cordic, cordic->mad( v, b.v, c.v ) ) ); }
 
 template< typename T, typename FLT >              
 inline freal<T,FLT> freal<T,FLT>::mul( const freal<T,FLT>& b ) const                                    
-{ return( c( b ), make_raw( cordic, cordic->mul( v, b.v ) ) ); }
+{ return( c( b ), pop_value( cordic, cordic->mul( v, b.v ) ) ); }
 
 template< typename T, typename FLT >              
 inline freal<T,FLT> freal<T,FLT>::sqr( void ) const                                                     
-{ return( c(), make_raw( cordic, cordic->sqr( v ) ) ); }
+{ return( c(), pop_value( cordic, cordic->sqr( v ) ) ); }
 
 template< typename T, typename FLT >              
 inline freal<T,FLT> freal<T,FLT>::dad( const freal<T,FLT>& b, const freal<T,FLT>& c ) const             
-{ return( c( b, c ), make_raw( cordic, cordic->dad( v, b.v, c.v ) ) ); }
+{ return( c( b, c ), pop_value( cordic, cordic->dad( v, b.v, c.v ) ) ); }
 
 template< typename T, typename FLT >              
 inline freal<T,FLT> freal<T,FLT>::div( const freal<T,FLT>& b ) const                                    
-{ return( c( b ), make_raw( cordic, cordic->div( v, b.v ) ) ); }
+{ return( c( b ), pop_value( cordic, cordic->div( v, b.v ) ) ); }
 
 template< typename T, typename FLT >              
 inline freal<T,FLT> freal<T,FLT>::rcp( void ) const                                                
-{ return( c(), make_raw( cordic, cordic->rcp( v ) ) ); }
+{ return( c(), pop_value( cordic, cordic->rcp( v ) ) ); }
 
 template< typename T, typename FLT >              
 inline freal<T,FLT> freal<T,FLT>::sqrt( void ) const                                                    
-{ return( c(), make_raw( cordic, cordic->sqrt( v ) ) ); }
+{ return( c(), pop_value( cordic, cordic->sqrt( v ) ) ); }
 
 template< typename T, typename FLT >              
 inline freal<T,FLT> freal<T,FLT>::rsqrt( void ) const                                           
-{ return( c(), make_raw( cordic, cordic->rsqrt( v ) ) ); }
+{ return( c(), pop_value( cordic, cordic->rsqrt( v ) ) ); }
 
 template< typename T, typename FLT >              
 inline freal<T,FLT> freal<T,FLT>::cbrt( void ) const                                                    
-{ return( c(), make_raw( cordic, cordic->cbrt( v ) ) ); }
+{ return( c(), pop_value( cordic, cordic->cbrt( v ) ) ); }
 
 template< typename T, typename FLT >              
 inline freal<T,FLT> freal<T,FLT>::rcbrt( void ) const                                           
-{ return( c(), make_raw( cordic, cordic->rcbrt( v ) ) ); }
+{ return( c(), pop_value( cordic, cordic->rcbrt( v ) ) ); }
 
 template< typename T, typename FLT >              
 inline freal<T,FLT> freal<T,FLT>::fdim( const freal<T,FLT>& b ) const                                                    
-{ return( c( b ), make_raw( cordic, cordic->fdim( v, b.v ) ) ); }
+{ return( c( b ), pop_value( cordic, cordic->fdim( v, b.v ) ) ); }
 
 template< typename T, typename FLT >              
 inline freal<T,FLT> freal<T,FLT>::fmax( const freal<T,FLT>& b ) const                                                    
-{ return( c( b ), make_raw( cordic, cordic->fmax( v, b.v ) ) ); }
+{ return( c( b ), pop_value( cordic, cordic->fmax( v, b.v ) ) ); }
 
 template< typename T, typename FLT >              
 inline freal<T,FLT> freal<T,FLT>::fmin( const freal<T,FLT>& b ) const                                                    
-{ return( c( b ), make_raw( cordic, cordic->fmin( v, b.v ) ) ); }
+{ return( c( b ), pop_value( cordic, cordic->fmin( v, b.v ) ) ); }
 
 template< typename T, typename FLT >              
 inline freal<T,FLT> freal<T,FLT>::exp( void ) const                                                     
-{ return( c(), make_raw( cordic, cordic->exp( v ) ) ); }
+{ return( c(), pop_value( cordic, cordic->exp( v ) ) ); }
 
 template< typename T, typename FLT >              
 inline freal<T,FLT> freal<T,FLT>::expm1( void ) const                                                     
-{ return( c(), make_raw( cordic, cordic->expm1( v ) ) ); }
+{ return( c(), pop_value( cordic, cordic->expm1( v ) ) ); }
 
 template< typename T, typename FLT >              
 inline freal<T,FLT> freal<T,FLT>::exp2( void ) const                                                     
-{ return( c(), make_raw( cordic, cordic->exp2( v ) ) ); }
+{ return( c(), pop_value( cordic, cordic->exp2( v ) ) ); }
 
 template< typename T, typename FLT >              
 inline freal<T,FLT> freal<T,FLT>::exp10( void ) const                                                     
-{ return( c(), make_raw( cordic, cordic->exp10( v ) ) ); }
+{ return( c(), pop_value( cordic, cordic->exp10( v ) ) ); }
 
 template< typename T, typename FLT >              
 inline freal<T,FLT> freal<T,FLT>::pow( const freal<T,FLT>& e ) const                                    
-{ return( c( e ), make_raw( cordic, cordic->pow( v, e.v ) ) ); }
+{ return( c( e ), pop_value( cordic, cordic->pow( v, e.v ) ) ); }
 
 template< typename T, typename FLT >              
 inline freal<T,FLT> freal<T,FLT>::powc( const FLT c ) const                                             
-{ return( c(), make_raw( cordic, cordic->powc( v, c ) ) ); }
+{ return( c(), pop_value( cordic, cordic->powc( v, c ) ) ); }
 
 template< typename T, typename FLT >              
 inline freal<T,FLT> freal<T,FLT>::log( void ) const                                                     
-{ return( c(), make_raw( cordic, cordic->log( v ) ) ); }
+{ return( c(), pop_value( cordic, cordic->log( v ) ) ); }
 
 template< typename T, typename FLT >             
 inline freal<T,FLT> freal<T,FLT>::logb( const freal<T,FLT>& b ) const                                   
-{ return( c( b ), make_raw( cordic, cordic->logb( v, b.v ) ) ); }
+{ return( c( b ), pop_value( cordic, cordic->logb( v, b.v ) ) ); }
 
 template< typename T, typename FLT >              
 inline freal<T,FLT> freal<T,FLT>::logc( const FLT c ) const                                             
-{ return( c(), make_raw( cordic, cordic->logb( v, c ) ) ); }
+{ return( c(), pop_value( cordic, cordic->logb( v, c ) ) ); }
 
 template< typename T, typename FLT >              
 inline freal<T,FLT> freal<T,FLT>::log2( void ) const                                                    
-{ return( c(), make_raw( cordic, cordic->log2( v ) ) ); }
+{ return( c(), pop_value( cordic, cordic->log2( v ) ) ); }
 
 template< typename T, typename FLT >              
 inline freal<T,FLT> freal<T,FLT>::log10( void ) const                                                   
-{ return( c(), make_raw( cordic, cordic->log10( v ) ) ); }
+{ return( c(), pop_value( cordic, cordic->log10( v ) ) ); }
 
 template< typename T, typename FLT >              
 inline freal<T,FLT> freal<T,FLT>::sin( void ) const                                                     
-{ return( c(), make_raw( cordic, cordic->sin( v ) ) ); }
+{ return( c(), pop_value( cordic, cordic->sin( v ) ) ); }
 
 template< typename T, typename FLT >              
 inline freal<T,FLT> freal<T,FLT>::cos( void ) const                                                     
-{ return( c(), make_raw( cordic, cordic->cos( v ) ) ); }
+{ return( c(), pop_value( cordic, cordic->cos( v ) ) ); }
 
 template< typename T, typename FLT >              
 inline void freal<T,FLT>::sincos( freal<T,FLT>& si, freal<T,FLT>& co ) const                           
 { 
     T si_t, co_t;
     c()->sincos( v, si_t, co_t );
-    si = make_raw( cordic, si_t );
-    co = make_raw( cordic, co_t );
+    si = pop_value( cordic, si_t );
+    co = pop_value( cordic, co_t );
 }
 
 template< typename T, typename FLT >              
 inline freal<T,FLT> freal<T,FLT>::tan( void ) const                                                     
-{ return( c(), make_raw( cordic, cordic->tan( v ) ) ); }
+{ return( c(), pop_value( cordic, cordic->tan( v ) ) ); }
 
 template< typename T, typename FLT >                                                     
 inline freal<T,FLT> freal<T,FLT>::asin( void ) const                                                    
-{ return( c(), make_raw( cordic, cordic->asin( v ) ) ); }
+{ return( c(), pop_value( cordic, cordic->asin( v ) ) ); }
 
 template< typename T, typename FLT >              
 inline freal<T,FLT> freal<T,FLT>::acos( void ) const                                                    
-{ return( c(), make_raw( cordic, cordic->acos( v ) ) ); }
+{ return( c(), pop_value( cordic, cordic->acos( v ) ) ); }
 
 template< typename T, typename FLT >                                     
 inline freal<T,FLT> freal<T,FLT>::atan( void ) const                                                    
-{ return( c(), make_raw( cordic, cordic->atan( v ) ) ); }
+{ return( c(), pop_value( cordic, cordic->atan( v ) ) ); }
 
 template< typename T, typename FLT >              
 inline freal<T,FLT> freal<T,FLT>::atan2( const freal<T,FLT>& b ) const                                  
-{ return( c( b ), make_raw( cordic, cordic->atan2( v, b.v ) ) ); }
+{ return( c( b ), pop_value( cordic, cordic->atan2( v, b.v ) ) ); }
 
 template< typename T, typename FLT >              
 inline void freal<T,FLT>::polar_to_rect( const freal<T,FLT>& angle, freal<T,FLT>& x, freal<T,FLT>& y ) const    
 { 
     T x_t, y_t;
     c( angle )->polar_to_rect( v, angle.v, x_t, y_t );
-    x = make_raw( cordic, x_t );
-    y = make_raw( cordic, y_t );
+    x = pop_value( cordic, x_t );
+    y = pop_value( cordic, y_t );
 }
 
 template< typename T, typename FLT >              
@@ -1116,57 +1117,57 @@ inline void freal<T,FLT>::rect_to_polar( const freal<T,FLT>& b,     freal<T,FLT>
 { 
     T r_t, a_t;
     c( b )->rect_to_polar( v, b.v, r_t, a_t );
-    r     = make_raw( cordic, r_t );
-    angle = make_raw( cordic, a_t );
+    r     = pop_value( cordic, r_t );
+    angle = pop_value( cordic, a_t );
 }
 
 template< typename T, typename FLT >              
 inline freal<T,FLT> freal<T,FLT>::norm(  const freal<T,FLT>& b ) const                                  
-{ return( c( b ), make_raw( cordic, cordic->norm( v, b.v ) ) ); }
+{ return( c( b ), pop_value( cordic, cordic->norm( v, b.v ) ) ); }
 
 template< typename T, typename FLT >              
 inline freal<T,FLT> freal<T,FLT>::hypot(  const freal<T,FLT>& b ) const                                  
-{ return( c( b ), make_raw( cordic, cordic->hypot( v, b.v ) ) ); }
+{ return( c( b ), pop_value( cordic, cordic->hypot( v, b.v ) ) ); }
 
 template< typename T, typename FLT >              
 inline freal<T,FLT> freal<T,FLT>::normh( const freal<T,FLT>& b ) const                                  
-{ return( c( b ), make_raw( cordic, cordic->normh( v, b.v ) ) ); }
+{ return( c( b ), pop_value( cordic, cordic->normh( v, b.v ) ) ); }
 
 template< typename T, typename FLT >              
 inline freal<T,FLT> freal<T,FLT>::sinh( void ) const                                                    
-{ return( c(), make_raw( cordic, cordic->sinh( v ) ) ); }
+{ return( c(), pop_value( cordic, cordic->sinh( v ) ) ); }
 
 template< typename T, typename FLT >              
 inline freal<T,FLT> freal<T,FLT>::cosh( void ) const                                                    
-{ return( c(), make_raw( cordic, cordic->cosh( v ) ) ); }
+{ return( c(), pop_value( cordic, cordic->cosh( v ) ) ); }
 
 template< typename T, typename FLT >              
 inline void freal<T,FLT>::sinhcosh( freal<T,FLT>& sih, freal<T,FLT>& coh ) const                       
 { 
     T sih_t, coh_t;
     c()->sinhcosh( v, sih_t, coh_t );
-    sih = make_raw( cordic, sih_t );
-    coh = make_raw( cordic, coh_t );
+    sih = pop_value( cordic, sih_t );
+    coh = pop_value( cordic, coh_t );
 }
 
 template< typename T, typename FLT >              
 inline freal<T,FLT> freal<T,FLT>::tanh( void ) const                                                    
-{ return( c(), make_raw( cordic, cordic->tanh( v ) ) ); }
+{ return( c(), pop_value( cordic, cordic->tanh( v ) ) ); }
 
 template< typename T, typename FLT >              
 inline freal<T,FLT> freal<T,FLT>::asinh( void ) const                                                   
-{ return( c(), make_raw( cordic, cordic->asinh( v ) ) ); }
+{ return( c(), pop_value( cordic, cordic->asinh( v ) ) ); }
 
 template< typename T, typename FLT >              
 inline freal<T,FLT> freal<T,FLT>::acosh( void ) const                                                   
-{ return( c(), make_raw( cordic, cordic->acosh( v ) ) ); }
+{ return( c(), pop_value( cordic, cordic->acosh( v ) ) ); }
 
 template< typename T, typename FLT >              
 inline freal<T,FLT> freal<T,FLT>::atanh( void ) const                                                   
-{ return( c(), make_raw( cordic, cordic->atanh( v ) ) ); }
+{ return( c(), pop_value( cordic, cordic->atanh( v ) ) ); }
 
 template< typename T, typename FLT >              
 inline freal<T,FLT> freal<T,FLT>::atanh2( const freal<T,FLT>& b ) const                                 
-{ return( c( b ), make_raw( cordic, cordic->atanh2( v, b.v ) ) ); }
+{ return( c( b ), pop_value( cordic, cordic->atanh2( v, b.v ) ) ); }
 
 #endif // _freal_h

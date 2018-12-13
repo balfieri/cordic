@@ -52,6 +52,8 @@ public:
     // log operations
     //
     virtual void op1( uint16_t op, const T * opnd1 );
+    virtual void op1( uint16_t op, int opnd1 );
+    virtual void op1( uint16_t op, FLT opnd1 );
     virtual void op2( uint16_t op, const T * opnd1, const T * opnd2 );
     virtual void op2( uint16_t op, const T * opnd1, int       opnd2 );
     virtual void op2( uint16_t op, const T * opnd1, FLT       opnd2 );
@@ -152,6 +154,22 @@ inline void Logger<T,FLT>::op1( uint16_t op, const T * opnd1 )
 {
     if ( out_text ) {
         *out << "op1( " << op_to_str( op ) << ", " << opnd1 << " )\n";
+    }
+}
+
+template< typename T, typename FLT >
+inline void Logger<T,FLT>::op1( uint16_t op, int opnd1 )
+{
+    if ( out_text ) {
+        *out << "op1i( " << op_to_str( op ) << ", " << opnd1 << " )\n";
+    }
+}
+
+template< typename T, typename FLT >
+inline void Logger<T,FLT>::op1( uint16_t op, FLT opnd1 )
+{
+    if ( out_text ) {
+        *out << "op1f( " << op_to_str( op ) << ", " << opnd1 << " )\n";
     }
 }
 
