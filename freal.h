@@ -178,6 +178,8 @@ public:
     freal  rcp( void ) const;                                    
     freal  sqrt( void ) const;                                        
     freal  rsqrt( void ) const;                               
+    freal  cbrt( void ) const;                                        
+    freal  rcbrt( void ) const;                               
 
     freal  exp( void ) const;                                         
     freal  expm1( void ) const;              // exp(x) - 1   (accurately)
@@ -344,7 +346,7 @@ static inline freal<T,FLT>  div( const freal<T,FLT>& a, const freal<T,FLT>& b )
 
 template< typename T=int64_t, typename FLT=double >              
 static inline freal<T,FLT>  rcp( const freal<T,FLT>& a )                                           
-{ return a.rcp();                  }
+{ return a.rcp();                       }
 
 template< typename T=int64_t, typename FLT=double >              
 static inline freal<T,FLT>  sqrt( const freal<T,FLT>& a )                                               
@@ -352,7 +354,15 @@ static inline freal<T,FLT>  sqrt( const freal<T,FLT>& a )
 
 template< typename T=int64_t, typename FLT=double >              
 static inline freal<T,FLT>  rsqrt( const freal<T,FLT>& a )                                      
-{ return a.rsqrt();             }
+{ return a.rsqrt();                     }
+
+template< typename T=int64_t, typename FLT=double >              
+static inline freal<T,FLT>  cbrt( const freal<T,FLT>& a )                                               
+{ return a.cbrt();                      }
+
+template< typename T=int64_t, typename FLT=double >              
+static inline freal<T,FLT>  rcbrt( const freal<T,FLT>& a )                                      
+{ return a.rcbrt();                     }
 
 template< typename T=int64_t, typename FLT=double >              
 static inline freal<T,FLT>  exp( const freal<T,FLT>& a )                                                
@@ -986,6 +996,14 @@ inline freal<T,FLT> freal<T,FLT>::sqrt( void ) const
 template< typename T, typename FLT >              
 inline freal<T,FLT> freal<T,FLT>::rsqrt( void ) const                                           
 { return( c(), make_raw( cordic, cordic->rsqrt( v ) ) ); }
+
+template< typename T, typename FLT >              
+inline freal<T,FLT> freal<T,FLT>::cbrt( void ) const                                                    
+{ return( c(), make_raw( cordic, cordic->cbrt( v ) ) ); }
+
+template< typename T, typename FLT >              
+inline freal<T,FLT> freal<T,FLT>::rcbrt( void ) const                                           
+{ return( c(), make_raw( cordic, cordic->rcbrt( v ) ) ); }
 
 template< typename T, typename FLT >              
 inline freal<T,FLT> freal<T,FLT>::exp( void ) const                                                     

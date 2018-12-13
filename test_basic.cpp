@@ -128,6 +128,8 @@ int main( int argc, const char * argv[] )
             do_op1(  "1/x",              rcp,     rcp,            x   , do_reduce );
             do_op1(  "sqrt(x)",          sqrt,    std::sqrt,      x   , do_reduce );
             do_op1(  "rsqrt(x)",         rsqrt,   rsqrt,          x+1.0, do_reduce );
+            do_op1(  "cbrt(x)",          cbrt,    std::cbrt,      x   , do_reduce );
+            do_op1(  "rcbrt(x)",         rcbrt,   rcbrt,          x+1.0, do_reduce );
         }
         do_op1(  "exp(x)",           exp,     std::exp,       x   , do_reduce );
         do_op1(  "expm1(x)",         expm1,   std::expm1,     x   , do_reduce );

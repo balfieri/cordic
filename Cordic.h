@@ -129,6 +129,8 @@ public:
     T    rcp( const T& x ) const;                                         // 1/x
     T    sqrt( const T& x ) const;                                        // normh( x+1, x-1 ) / 2
     T    rsqrt( const T& x ) const;                                       // 1/sqrt 
+    T    cbrt( const T& x ) const;                                        // x^(1/3)  (but x can be negative)
+    T    rcbrt( const T& x ) const;                                       // 1/cbrt
 
     T    exp( const T& x ) const;                                         // e^x
     T    expm1( const T& x ) const;                                       // e^x - 1
@@ -502,6 +504,8 @@ public:
         rcp,
         sqrt,
         rsqrt,
+        cbrt,
+        rcbrt,
 
         exp,
         expm1,
@@ -1951,6 +1955,29 @@ T Cordic<T,FLT>::rsqrt( const T& x ) const
 
     // There might be a better way, but exp(-log(x)/2) is probably not it
     return div( impl->one, sqrt( x ) );
+}
+
+template< typename T, typename FLT >
+inline T Cordic<T,FLT>::cbrt( const T& _x ) const
+{ 
+    _log1( cbrt, _x );
+    T x = _x;
+    bool sign = x < 0;
+    if ( sign ) x = -x;
+    const T THREE = (impl->one << 1) | impl->one;
+    T r = exp( div( log( x ), THREE ) );
+    if ( sign ) r = -r;
+    return r;
+}
+
+template< typename T, typename FLT >
+T Cordic<T,FLT>::rcbrt( const T& x ) const
+{ 
+    _log1( rcbrt, x );
+    if ( debug ) std::cout << "rcbrt begin: x_orig=" << to_flt(x) << " do_reduce=" << impl->do_reduce << "\n";
+
+    // There might be a better way, but exp(-log(x)/3) is probably not it
+    return div( impl->one, cbrt( x ) );
 }
 
 template< typename T, typename FLT >

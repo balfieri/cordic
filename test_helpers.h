@@ -210,6 +210,7 @@ FLT  dad( FLT x, FLT y, FLT w ) { return x/y + w; }
 FLT  div( FLT x, FLT y ) { return x/y; }
 FLT  rcp( FLT x )        { return 1.0/x; }
 FLT  rsqrt( FLT x )      { return 1.0 / std::sqrt( x ); }
+FLT  rcbrt( FLT x )      { return 1.0 / std::cbrt( x ); }
 FLT  pow2( FLT x )       { return std::pow( 2.0, x ); }
 FLT  exp10( FLT x )      { return std::pow( 10.0, x ); }
 FLT  pow10( FLT x )      { return std::pow( 10.0, x ); }
