@@ -688,16 +688,20 @@ Cordic<T,FLT>::Cordic( uint32_t int_w, uint32_t frac_w, bool do_reduce, uint32_t
 
     // compute atan/atanh table in high-resolution floating point
     //
+    FLT pow2 = 1.0;
     for( uint32_t i = 0; i <= n; i++ )
     {
-        assign( impl->linear_pow2[i], T(1) << (frac_w-i) );
-        FLT pow2                  = to_flt( impl->linear_pow2[i] );
+        constructed( impl->linear_pow2[i] );
+        constructed( impl->circular_atan[i] );
+        constructed( impl->hyperbolic_atanh[i] );
         FLT a                     = std::atan( pow2 );
         FLT ah                    = std::atanh( pow2 );
-        assign( impl->circular_atan[i], to_t( a ) );
+        assign( impl->linear_pow2[i],      to_t( pow2 ) );
+        assign( impl->circular_atan[i],    to_t( a ) );
         assign( impl->hyperbolic_atanh[i], (i == 0) ? to_t(-1) : to_t( ah ) );
 
         if ( debug ) printf( "i=%2d a=%30.27g ah=%30.27g y=%30.27g\n", i, double(a), double(ah), double(pow2) );
+        pow2 /= 2.0;
     }
 
     // calculate max |z0| angle allowed

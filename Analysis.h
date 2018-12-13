@@ -352,7 +352,6 @@ Analysis<T,FLT>::Analysis( std::string file_name )
                 std::string name = parse_name( c );
                 OP op = ops[name];
                 uint32_t opnd_cnt = uint32_t(kind) - uint32_t(KIND::op1) + 1;
-                if ( debug ) std::cout << "    op=" << Cordic<T,FLT>::op_to_str(uint16_t(op)) << " opnd_cnt=" << opnd_cnt << "\n";
                 cassert( prev_kind != KIND::op2f || (opnd_cnt == 2 && op == OP::assign), 
                          "make_constant must be followed immediately by op2 assign, got " + name );
                 uint64_t opnd[4];
@@ -396,7 +395,7 @@ Analysis<T,FLT>::Analysis( std::string file_name )
 
             default:
             {
-                _die( "unexpected kind" );
+                //_die( "unexpected kind" );
                 break;
             }
         }
