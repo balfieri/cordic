@@ -1653,7 +1653,7 @@ inline T&   Cordic<T,FLT>::assign( T& x, const T& y ) const
 template< typename T, typename FLT >
 inline T&   Cordic<T,FLT>::pop_value( T& x, const T& y ) const
 {
-    _log2( pop_value, x, y );
+    _log2i( pop_value, x, y );
     x = y;
     return x;
 }
@@ -1844,7 +1844,7 @@ inline T Cordic<T,FLT>::mul( const T& x, const T& y, bool do_reduce ) const
 template< typename T, typename FLT >
 T Cordic<T,FLT>::lshift( const T& x, int ls ) const
 {
-    _log2i( lshift, x, ls );
+    _log2i( lshift, x, T(ls) );
     cassert( x >= 0, "lshift x should be non-negative" );
     if ( ls > 0 ) {
         //-----------------------------------------------------

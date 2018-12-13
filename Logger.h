@@ -52,11 +52,11 @@ public:
     // log operations
     //
     virtual void op1( uint16_t op, const T * opnd1 );
-    virtual void op1( uint16_t op, int opnd1 );
-    virtual void op1( uint16_t op, FLT opnd1 );
+    virtual void op1( uint16_t op, const T&  opnd1 );
+    virtual void op1( uint16_t op, const FLT&opnd1 );
     virtual void op2( uint16_t op, const T * opnd1, const T * opnd2 );
-    virtual void op2( uint16_t op, const T * opnd1, int       opnd2 );
-    virtual void op2( uint16_t op, const T * opnd1, FLT       opnd2 );
+    virtual void op2( uint16_t op, const T * opnd1, const T&  opnd2 );
+    virtual void op2( uint16_t op, const T * opnd1, const FLT&opnd2 );
     virtual void op3( uint16_t op, const T * opnd1, const T * opnd2, const T * opnd3 );
     virtual void op4( uint16_t op, const T * opnd1, const T * opnd2, const T * opnd3, const T * opnd4 );
 
@@ -158,15 +158,15 @@ inline void Logger<T,FLT>::op1( uint16_t op, const T * opnd1 )
 }
 
 template< typename T, typename FLT >
-inline void Logger<T,FLT>::op1( uint16_t op, int opnd1 )
+inline void Logger<T,FLT>::op1( uint16_t op, const T& opnd1 )
 {
     if ( out_text ) {
-        *out << "op1i( " << op_to_str( op ) << ", " << opnd1 << " )\n";
+        *out << "op1i( " << op_to_str( op ) << ", 0x" << std::hex << int64_t(opnd1) << " )\n";
     }
 }
 
 template< typename T, typename FLT >
-inline void Logger<T,FLT>::op1( uint16_t op, FLT opnd1 )
+inline void Logger<T,FLT>::op1( uint16_t op, const FLT& opnd1 )
 {
     if ( out_text ) {
         *out << "op1f( " << op_to_str( op ) << ", " << opnd1 << " )\n";
@@ -177,20 +177,20 @@ template< typename T, typename FLT >
 inline void Logger<T,FLT>::op2( uint16_t op, const T * opnd1, const T * opnd2 )
 {
     if ( out_text ) {
-        *out << "op2( " << op_to_str( op ) << ", " << opnd1 << ", " << opnd2 << " )\n";
+        *out << "op2( " << op_to_str( op ) << ", " << opnd1 << ", 0x" << std::hex << opnd2 << " )\n";
     }
 }
 
 template< typename T, typename FLT >
-inline void Logger<T,FLT>::op2( uint16_t op, const T * opnd1, int opnd2 )
+inline void Logger<T,FLT>::op2( uint16_t op, const T * opnd1, const T& opnd2 )
 {
     if ( out_text ) {
-        *out << "op2i( " << op_to_str( op ) << ", " << opnd1 << ", " << opnd2 << " )\n";
+        *out << "op2i( " << op_to_str( op ) << ", " << opnd1 << ", 0x" << int64_t(opnd2) << " )\n";
     }
 }
 
 template< typename T, typename FLT >
-inline void Logger<T,FLT>::op2( uint16_t op, const T * opnd1, FLT opnd2 )
+inline void Logger<T,FLT>::op2( uint16_t op, const T * opnd1, const FLT& opnd2 )
 {
     if ( out_text ) {
         *out << "op2f( " << op_to_str( op ) << ", " << opnd1 << ", " << opnd2 << " )\n";

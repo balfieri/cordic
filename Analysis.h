@@ -72,6 +72,7 @@ private:
         bool    is_assigned;
         size_t  cordic_i;
         size_t  opnd_i[3];
+        T       encoded;
         bool    is_constant;
         FLT     constant;
         FLT     min;
@@ -87,6 +88,8 @@ private:
         constructed,
         destructed,
         op1, 
+        op1i, 
+        op1f, 
         op2, 
         op2i, 
         op2f, 
@@ -98,12 +101,19 @@ private:
 
     using OP = typename Cordic<T,FLT>::OP;
 
-    std::map<std::string, KIND>                kinds;
-    std::map<std::string, OP>                  ops;
-    std::map<std::string, FuncInfo>            funcs;
-    std::vector<FrameInfo>                     stack;
-    std::map<uint64_t, CordicInfo>             cordics;
-    std::map<uint64_t, ValInfo>                vals;
+    std::map<std::string, KIND>                 kinds;
+    std::map<std::string, OP>                   ops;
+    std::map<std::string, FuncInfo>             funcs;
+    std::vector<FrameInfo>                      stack;
+    std::map<uint64_t, CordicInfo>              cordics;
+    std::map<uint64_t, ValInfo>                 vals;
+
+    static constexpr uint32_t                   VAL_STACK_CNT_MAX = 2;
+    ValInfo                                     val_stack[VAL_STACK_CNT_MAX];
+    uint32_t                                    val_stack_cnt;
+
+    void                val_stack_push( const ValInfo& val );
+    ValInfo             val_stack_pop( void );
 
     static void         _skip_junk( char *& c );
     static std::string  parse_name( char *& c );
@@ -188,6 +198,8 @@ inline typename Analysis<T,FLT>::KIND Analysis<T,FLT>::parse_kind( char *& c )
     if ( name == "constructed" )        return KIND::constructed;
     if ( name == "destructed" )         return KIND::destructed;
     if ( name == "op1" )                return KIND::op1;
+    if ( name == "op1i" )               return KIND::op1i;
+    if ( name == "op1f" )               return KIND::op1f;
     if ( name == "op2" )                return KIND::op2;
     if ( name == "op2i" )               return KIND::op2i;
     if ( name == "op2f" )               return KIND::op2f;
@@ -250,8 +262,7 @@ Analysis<T,FLT>::Analysis( std::string file_name )
     // assume parsing text at this point
     std::string line;
     char cs[1024];
-    KIND     prev_kind = KIND(-1);
-    uint64_t constant_addr = 0;
+    val_stack_cnt = 0;
     while( std::getline( *in, line ) )
     {
         if ( debug ) std::cout << line << "\n";
@@ -353,10 +364,29 @@ Analysis<T,FLT>::Analysis( std::string file_name )
                 std::string name = parse_name( c );
                 OP op = ops[name];
                 uint32_t opnd_cnt = uint32_t(kind) - uint32_t(KIND::op1) + 1;
+                uint64_t opnd[4];
+                switch( op )
+                {
+                    case OP::pop_value:
+                    {
+                        cassert( kind == KIND::op2, "pop_value should have been op2" );
+                        auto val = val_stack_pop();
+                        opnd[i] = parse_addr( c );
+                    }
+
+                    case OP::assign:
+                    {
+                    }
+
+                    default: 
+                    {
+                        _die( "unknown op " + name ); 
+                        break;
+                    }
+                }
                 bool opnd1_is_constant = prev_kind == KIND::op2f;
                 cassert( !opnd1_is_constant || (opnd_cnt == 2 && op == OP::assign), 
                          "make_constant must be followed immediately by op2 assign, got " + name );
-                uint64_t opnd[4];
                 for( uint32_t i = 0; i < opnd_cnt; i++ )
                 {
                     opnd[i] = parse_addr( c );
@@ -371,6 +401,26 @@ Analysis<T,FLT>::Analysis( std::string file_name )
                         }
                     }
                 }
+                break;
+            }
+
+            case KIND::op1i:
+            {
+                std::string name = parse_name( c );
+                OP op = ops[name];
+                T  opnd1 = parse_int( c );
+                break;
+            }
+
+            case KIND::op1f:
+            {
+                std::string name = parse_name( c );
+                OP op = ops[name];
+                cassert( op == OP::push_constant, "op1f allowed only for make_constant" );
+                ValInfo val;
+                val.is_constant = true;
+                val.constant    = parse_flt( c );
+                val_stack_push( val );
                 break;
             }
 
