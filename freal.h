@@ -175,11 +175,14 @@ public:
     freal  sqr( void ) const;
     freal  dad( const freal& b, const freal& c ) const;      
     freal  div( const freal& b ) const;      // a/b
-    freal  one_over( void ) const;                                    
+    freal  rcp( void ) const;                                    
     freal  sqrt( void ) const;                                        
-    freal  one_over_sqrt( void ) const;                               
+    freal  rsqrt( void ) const;                               
 
     freal  exp( void ) const;                                         
+    freal  expm1( void ) const;              // exp(x) - 1   (accurately)
+    freal  exp2( void ) const;               // same as pow2()                          
+    freal  exp10( void ) const;              // same as pow10()                          
     freal  pow( const freal& e ) const;      // a^e
     freal  powc( const FLT c ) const;        // c^a
     freal  pow2( void ) const;               // 2^a
@@ -340,20 +343,32 @@ static inline freal<T,FLT>  div( const freal<T,FLT>& a, const freal<T,FLT>& b )
 { return a.div( b );                    }
 
 template< typename T=int64_t, typename FLT=double >              
-static inline freal<T,FLT>  one_over( const freal<T,FLT>& a )                                           
-{ return a.one_over();                  }
+static inline freal<T,FLT>  rcp( const freal<T,FLT>& a )                                           
+{ return a.rcp();                  }
 
 template< typename T=int64_t, typename FLT=double >              
 static inline freal<T,FLT>  sqrt( const freal<T,FLT>& a )                                               
 { return a.sqrt();                      }
 
 template< typename T=int64_t, typename FLT=double >              
-static inline freal<T,FLT>  one_over_sqrt( const freal<T,FLT>& a )                                      
-{ return a.one_over_sqrt();             }
+static inline freal<T,FLT>  rsqrt( const freal<T,FLT>& a )                                      
+{ return a.rsqrt();             }
 
 template< typename T=int64_t, typename FLT=double >              
 static inline freal<T,FLT>  exp( const freal<T,FLT>& a )                                                
 { return a.exp();                       }
+
+template< typename T=int64_t, typename FLT=double >              
+static inline freal<T,FLT>  expm1( const freal<T,FLT>& a )                                                
+{ return a.expm1();                     }
+
+template< typename T=int64_t, typename FLT=double >              
+static inline freal<T,FLT>  exp2( const freal<T,FLT>& a )                                                
+{ return a.exp2();                      }
+
+template< typename T=int64_t, typename FLT=double >              
+static inline freal<T,FLT>  exp10( const freal<T,FLT>& a )                                                
+{ return a.exp10();                     }
 
 template< typename T=int64_t, typename FLT=double >              
 static inline freal<T,FLT>  pow( const freal<T,FLT>& a, const freal<T,FLT>& e )                         
@@ -961,20 +976,32 @@ inline freal<T,FLT> freal<T,FLT>::div( const freal<T,FLT>& b ) const
 { return( c( b ), make_raw( cordic, cordic->div( v, b.v ) ) ); }
 
 template< typename T, typename FLT >              
-inline freal<T,FLT> freal<T,FLT>::one_over( void ) const                                                
-{ return( c(), make_raw( cordic, cordic->one_over( v ) ) ); }
+inline freal<T,FLT> freal<T,FLT>::rcp( void ) const                                                
+{ return( c(), make_raw( cordic, cordic->rcp( v ) ) ); }
 
 template< typename T, typename FLT >              
 inline freal<T,FLT> freal<T,FLT>::sqrt( void ) const                                                    
 { return( c(), make_raw( cordic, cordic->sqrt( v ) ) ); }
 
 template< typename T, typename FLT >              
-inline freal<T,FLT> freal<T,FLT>::one_over_sqrt( void ) const                                           
-{ return( c(), make_raw( cordic, cordic->one_over_sqrt( v ) ) ); }
+inline freal<T,FLT> freal<T,FLT>::rsqrt( void ) const                                           
+{ return( c(), make_raw( cordic, cordic->rsqrt( v ) ) ); }
 
 template< typename T, typename FLT >              
 inline freal<T,FLT> freal<T,FLT>::exp( void ) const                                                     
 { return( c(), make_raw( cordic, cordic->exp( v ) ) ); }
+
+template< typename T, typename FLT >              
+inline freal<T,FLT> freal<T,FLT>::expm1( void ) const                                                     
+{ return( c(), make_raw( cordic, cordic->expm1( v ) ) ); }
+
+template< typename T, typename FLT >              
+inline freal<T,FLT> freal<T,FLT>::exp2( void ) const                                                     
+{ return( c(), make_raw( cordic, cordic->exp2( v ) ) ); }
+
+template< typename T, typename FLT >              
+inline freal<T,FLT> freal<T,FLT>::exp10( void ) const                                                     
+{ return( c(), make_raw( cordic, cordic->exp10( v ) ) ); }
 
 template< typename T, typename FLT >              
 inline freal<T,FLT> freal<T,FLT>::pow( const freal<T,FLT>& e ) const                                    

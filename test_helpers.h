@@ -208,9 +208,10 @@ FLT  mad( FLT x, FLT y, FLT w ) { return x*y + w; }
 FLT  mul( FLT x, FLT y ) { return x*y; }
 FLT  dad( FLT x, FLT y, FLT w ) { return x/y + w; }
 FLT  div( FLT x, FLT y ) { return x/y; }
-FLT  one_over( FLT x )   { return 1.0/x; }
-FLT  one_over_sqrt( FLT x ) { return 1.0 / std::sqrt( x ); }
+FLT  rcp( FLT x )        { return 1.0/x; }
+FLT  rsqrt( FLT x )      { return 1.0 / std::sqrt( x ); }
 FLT  pow2( FLT x )       { return std::pow( 2.0, x ); }
+FLT  exp10( FLT x )      { return std::pow( 10.0, x ); }
 FLT  pow10( FLT x )      { return std::pow( 10.0, x ); }
 FLT  logb( FLT x, FLT y ){ return std::log( x ) / std::log( y ); }
 FLT  log2( FLT x )       { return std::log( x ) / std::log( 2.0 ); }

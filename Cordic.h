@@ -126,15 +126,18 @@ public:
     T    rshift( const T& x, int y ) const;                               // x >> y
     T    dad( const T& y, const T& x, const T addend = T(0) ) const;      // y/x + addend
     T    div( const T& y, const T& x ) const;                             // y/x
-    T    one_over( const T& x ) const;                                    // 1/x
+    T    rcp( const T& x ) const;                                         // 1/x
     T    sqrt( const T& x ) const;                                        // normh( x+1, x-1 ) / 2
-    T    one_over_sqrt( const T& x ) const;                               // 1/sqrt 
+    T    rsqrt( const T& x ) const;                                       // 1/sqrt 
 
     T    exp( const T& x ) const;                                         // e^x
-    T    pow( const T& b, const T& x ) const;                             // exp(x * log(b))              (3)
-    T    powc( const FLT& b, const T& x ) const;                          // exp(x * log(b))  b=const     (2)
-    T    pow2( const T& x ) const;                                        // exp(x * log(2))              (2)
-    T    pow10( const T& x ) const;                                       // exp(x * log(10))             (2)
+    T    expm1( const T& x ) const;                                       // e^x - 1
+    T    exp2( const T& x ) const;                                        // same as pow2(x)
+    T    exp10( const T& x ) const;                                       // same as pow10(x)
+    T    pow( const T& b, const T& x ) const;                             // b^x  = exp(x * log(b))              (3)
+    T    powc( const FLT& b, const T& x ) const;                          // b^x  = exp(x * log(b))  b=const     (2)
+    T    pow2( const T& x ) const;                                        // 2^x  = exp(x * log(2))              (2)
+    T    pow10( const T& x ) const;                                       // 10^x = exp(x * log(10))             (2)
     T    log( const T& x ) const;                                         // 2*atan2(x-1, x+1)    
     T    logb( const T& x, const T& b ) const;                            // log(x)/log(b)                (3)
     T    logc( const T& x, const FLT& b ) const;                          // log(x)/log(b)    b=const     (2)
@@ -496,11 +499,14 @@ public:
         rshift,
         dad,
         div,
-        one_over,
+        rcp,
         sqrt,
-        one_over_sqrt,
+        rsqrt,
 
         exp,
+        expm1,
+        exp2,
+        exp10,
         pow,
         powc,
         pow2,
@@ -831,9 +837,9 @@ std::string Cordic<T,FLT>::op_to_str( uint16_t op )
         _ocase( rshift )
         _ocase( dad )
         _ocase( div )
-        _ocase( one_over )
+        _ocase( rcp )
         _ocase( sqrt )
-        _ocase( one_over_sqrt )
+        _ocase( rsqrt )
 
         _ocase( exp )
         _ocase( pow )
@@ -1902,9 +1908,9 @@ inline T Cordic<T,FLT>::div( const T& y, const T& x, bool do_reduce ) const
 }
 
 template< typename T, typename FLT >
-inline T Cordic<T,FLT>::one_over( const T& x ) const
+inline T Cordic<T,FLT>::rcp( const T& x ) const
 {
-    _log1( one_over, x );
+    _log1( rcp, x );
     return div( impl->one, x );
 }
 
@@ -1937,11 +1943,11 @@ T Cordic<T,FLT>::sqrt( const T& _x ) const
 }
 
 template< typename T, typename FLT >
-T Cordic<T,FLT>::one_over_sqrt( const T& x ) const
+T Cordic<T,FLT>::rsqrt( const T& x ) const
 { 
-    _log1( one_over_sqrt, x );
-    if ( debug ) std::cout << "one_over_sqrt begin: x_orig=" << to_flt(x) << " do_reduce=" << impl->do_reduce << "\n";
-    cassert( x != 0, "one_over_sqrt x must not be 0" );
+    _log1( rsqrt, x );
+    if ( debug ) std::cout << "rsqrt begin: x_orig=" << to_flt(x) << " do_reduce=" << impl->do_reduce << "\n";
+    cassert( x != 0, "rsqrt x must not be 0" );
 
     // There might be a better way, but exp(-log(x)/2) is probably not it
     return div( impl->one, sqrt( x ) );
@@ -1977,6 +1983,24 @@ T Cordic<T,FLT>::exp( const T& _x ) const
     }
     if ( debug ) std::cout << "exp: x_orig=" << to_flt(_x) << " reduced_x=" << to_flt(x) << " exp=" << to_flt(xx) << "\n";
     return xx;
+}
+
+template< typename T, typename FLT >
+inline T Cordic<T,FLT>::expm1( const T& x ) const
+{ 
+    return exp( x ) - one();            // see identities for more accurate way to do this
+}
+
+template< typename T, typename FLT >
+inline T Cordic<T,FLT>::exp2( const T& x ) const
+{ 
+    return powc( 2.0, x );
+}
+
+template< typename T, typename FLT >
+inline T Cordic<T,FLT>::exp10( const T& x ) const
+{ 
+    return powc( 10.0, x );
 }
 
 template< typename T, typename FLT >

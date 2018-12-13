@@ -125,11 +125,14 @@ int main( int argc, const char * argv[] )
         if ( x > 0.0 ) {
             do_op3(  "y/x + w",          dad,     dad,            y, x, w, do_reduce );
             do_op2(  "y/x",              div,     div,            y, x, do_reduce );
-            do_op1(  "1/x",              one_over,one_over,       x   , do_reduce );
+            do_op1(  "1/x",              rcp,     rcp,            x   , do_reduce );
             do_op1(  "sqrt(x)",          sqrt,    std::sqrt,      x   , do_reduce );
-            do_op1(  "one_over_sqrt(x)", one_over_sqrt, one_over_sqrt, x+1.0, do_reduce );
+            do_op1(  "rsqrt(x)",         rsqrt,   rsqrt,          x+1.0, do_reduce );
         }
         do_op1(  "exp(x)",           exp,     std::exp,       x   , do_reduce );
+        do_op1(  "expm1(x)",         expm1,   std::expm1,     x   , do_reduce );
+        do_op1(  "exp2(x)",          exp2,    std::exp2,      x   , do_reduce );
+        do_op1(  "exp10(x)",         exp10,   exp10,          xs  , do_reduce );
         do_op2(  "pow(x,y)",         pow,     std::pow,       b, y, do_reduce );
         do_op1(  "pow2(x)",          pow2,    pow2,           x   , do_reduce );
         do_op1(  "pow10(x)",         pow10,   pow10,          xs  , true      );
