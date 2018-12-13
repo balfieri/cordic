@@ -230,6 +230,19 @@ inline FLT Analysis<T,FLT>::parse_flt( char *& c )
     return std::atof( flt_s.c_str() );
 }
 
+template< typename T, typename FLT > inline void Analysis<T,FLT>::val_stack_push( const ValInfo& info )
+{
+    cassert( val_stack_cnt < VAL_STACK_CNT_MAX, "depth of val_stack exceeded" );
+    val_stack[val_stack_cnt++] = info;
+}
+
+template< typename T, typename FLT >
+inline Analysis<T,FLT>::ValInfo Analysis<T,FLT>::val_stack_push( void )
+{
+    cassert( val_stack_cnt > 0, "can't pop an empty val_stack" );
+    return val_stack[--val_stack_cnt];
+}
+
 template< typename T, typename FLT >
 Analysis<T,FLT>::Analysis( std::string file_name )
 {
@@ -365,41 +378,25 @@ Analysis<T,FLT>::Analysis( std::string file_name )
                 OP op = ops[name];
                 uint32_t opnd_cnt = uint32_t(kind) - uint32_t(KIND::op1) + 1;
                 uint64_t opnd[4];
-                switch( op )
-                {
-                    case OP::pop_value:
-                    {
-                        cassert( kind == KIND::op2, "pop_value should have been op2" );
-                        auto val = val_stack_pop();
-                        opnd[i] = parse_addr( c );
-                    }
-
-                    case OP::assign:
-                    {
-                    }
-
-                    default: 
-                    {
-                        _die( "unknown op " + name ); 
-                        break;
-                    }
-                }
-                bool opnd1_is_constant = prev_kind == KIND::op2f;
-                cassert( !opnd1_is_constant || (opnd_cnt == 2 && op == OP::assign), 
-                         "make_constant must be followed immediately by op2 assign, got " + name );
                 for( uint32_t i = 0; i < opnd_cnt; i++ )
                 {
                     opnd[i] = parse_addr( c );
-
+                    auto it = vals.find( opnd[i] );
+                    cassert( it != vals.end() && it->second.is_alive, name + " opnd[" + std::to_string(i) + "] does not exist" );
                     if ( i != 0 || op != OP::assign ) {
-                        auto it = vals.find( opnd1_is_constant ? constant_addr : opnd[i] );
                         cassert( it != vals.end() && it->second.is_alive, name + " opnd[" + std::to_string(i) + "] does not exist" );
                         cassert( it->second.is_assigned, name + " opnd[" + std::to_string(i) + "] used when not previously assigned" );
-                        if ( i == 1 && op == OP::assign ) {
-                            vals[opnd[0]] = it->second;
-                            if ( debug && it->second.is_constant ) std::cout << "    now constant=" << it->second.constant << "\n";
-                        }
+                        if ( i == 1 && op == OP::assign ) vals[opnd[0]] = it->second;
                     }
+                }
+                
+                // push result if not assign
+                if ( op != OP::assign ) {
+                    ValInfo info;
+                    val.is_alive    = true;
+                    val.is_assigned = true;
+                    val.is_constant = false;
+                    val_stack_push( info );
                 }
                 break;
             }
@@ -407,17 +404,19 @@ Analysis<T,FLT>::Analysis( std::string file_name )
             case KIND::op1i:
             {
                 std::string name = parse_name( c );
-                OP op = ops[name];
-                T  opnd1 = parse_int( c );
+                _die( "should not have gotten op1i " + name );
                 break;
             }
 
             case KIND::op1f:
             {
+                // push constant
                 std::string name = parse_name( c );
                 OP op = ops[name];
                 cassert( op == OP::push_constant, "op1f allowed only for make_constant" );
                 ValInfo val;
+                val.is_alive    = true;
+                val.is_assigned = true;
                 val.is_constant = true;
                 val.constant    = parse_flt( c );
                 val_stack_push( val );
@@ -428,23 +427,51 @@ Analysis<T,FLT>::Analysis( std::string file_name )
             {
                 std::string name = parse_name( c );
                 OP op = ops[name];
-                cassert( op == OP::lshift || op == OP::rshift, "op2i allowed only for shifts" );
-                uint64_t opnd1 = parse_addr( c );
-                T        opnd2 = parse_int( c );
+                cassert( op == OP::lshift || op == OP::rshift || op == OP::pop_value, "op2i allowed only for shifts" );
+                uint64_t opnd0 = parse_addr( c );
+                T        opnd1 = parse_int( c );
+                auto it = vals.find( opnd0 );
+                cassert( it != vals.end() && it->second.is_alive, name + " opnd[0] does not exist" );
+                switch( op )
+                {
+                    case OP::pop_value:
+                    {
+                        // pop result
+                        it->second  = val_stack_pop();
+                        it->encoded = opnd1;
+                        break;
+                    }
+
+                    default:
+                    {
+                        // push result
+                        ValInfo info;
+                        val.is_alive    = true;
+                        val.is_assigned = true;
+                        val.is_constant = false;
+                        val.encoded     = opnd1;
+                        val_stack_push( info );
+                        break;
+                    }
+                }
                 break;
             }
 
             case KIND::op2f:
             {
+                // push result
                 std::string name = parse_name( c );
                 OP op = ops[name];
-                cassert( op == OP::make_constant, "op2f allowed only for make_constant" );
-                constant_addr = parse_addr( c );   
-                auto it = vals.find( constant_addr );
-                cassert( it != vals.end() && it->second.is_alive, name + " constant container should have been constructed" );
-                it->second.is_assigned = true;
-                it->second.is_constant = true;
-                it->second.constant    = parse_flt( c );
+                uint64_t opnd0 = parse_addr( c );   
+                FLT      opnd1 = parse_flt( c );   
+                auto it = vals.find( opnd0 );
+                cassert( it != vals.end() && it->second.is_alive, name + " opnd[0] does not exist" );
+                cassert( it->second.is_assigned,                  name + " opnd[0] is used before being assigned" );
+                ValInfo info;
+                val.is_alive    = true;
+                val.is_assigned = true;
+                val.is_constant = false;
+                val_stack_push( info );
                 break;
             }
 
