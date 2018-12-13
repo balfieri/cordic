@@ -134,12 +134,10 @@ public:
 
     T    exp( const T& x ) const;                                         // e^x
     T    expm1( const T& x ) const;                                       // e^x - 1
-    T    exp2( const T& x ) const;                                        // same as pow2(x)
-    T    exp10( const T& x ) const;                                       // same as pow10(x)
+    T    exp2( const T& x ) const;                                        // 2^x
+    T    exp10( const T& x ) const;                                       // 10^x
     T    pow( const T& b, const T& x ) const;                             // b^x  = exp(x * log(b))              (3)
     T    powc( const FLT& b, const T& x ) const;                          // b^x  = exp(x * log(b))  b=const     (2)
-    T    pow2( const T& x ) const;                                        // 2^x  = exp(x * log(2))              (2)
-    T    pow10( const T& x ) const;                                       // 10^x = exp(x * log(10))             (2)
     T    log( const T& x ) const;                                         // 2*atan2(x-1, x+1)    
     T    logb( const T& x, const T& b ) const;                            // log(x)/log(b)                (3)
     T    logc( const T& x, const FLT& b ) const;                          // log(x)/log(b)    b=const     (2)
@@ -513,8 +511,6 @@ public:
         exp10,
         pow,
         powc,
-        pow2,
-        pow10,
         log,
         logb,
         logc,
@@ -848,8 +844,6 @@ std::string Cordic<T,FLT>::op_to_str( uint16_t op )
         _ocase( exp )
         _ocase( pow )
         _ocase( powc )
-        _ocase( pow2 )
-        _ocase( pow10 )
         _ocase( log )
         _ocase( logb )
         _ocase( logc )
@@ -2048,18 +2042,6 @@ inline T Cordic<T,FLT>::powc( const FLT& b, const T& x ) const
     cassert( log_b_f >= 0.0, "powc log(b) must be non-negative" );
     const T   log_b   = to_t( log_b_f );
     return exp( mul( x, log_b ) );
-}
-
-template< typename T, typename FLT >
-inline T Cordic<T,FLT>::pow2( const T& x ) const
-{ 
-    return powc( 2.0, x );
-}
-
-template< typename T, typename FLT >
-inline T Cordic<T,FLT>::pow10( const T& x ) const
-{ 
-    return powc( 10.0, x );
 }
 
 template< typename T, typename FLT >

@@ -136,8 +136,6 @@ int main( int argc, const char * argv[] )
         do_op1(  "exp2(x)",          exp2,    std::exp2,      x   , do_reduce );
         do_op1(  "exp10(x)",         exp10,   exp10,          xs  , do_reduce );
         do_op2(  "pow(x,y)",         pow,     std::pow,       b, y, do_reduce );
-        do_op1(  "pow2(x)",          pow2,    pow2,           x   , do_reduce );
-        do_op1(  "pow10(x)",         pow10,   pow10,          xs  , true      );
         if ( x > 0.0 ) {
             do_op1(  "log(x)",       log,     std::log,       x   , true      );
             do_op2(  "logb(x,b)",    logb,    logb,           x, b, true      );
