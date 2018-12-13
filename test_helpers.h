@@ -217,8 +217,8 @@ FLT  pow10( FLT x )      { return std::pow( 10.0, x ); }
 FLT  logb( FLT x, FLT y ){ return std::log( x ) / std::log( y ); }
 FLT  log2( FLT x )       { return std::log( x ) / std::log( 2.0 ); }
 FLT  log10( FLT x )      { return std::log( x ) / std::log( 10.0 ); }
-void sin_cos( FLT x, FLT& si, FLT& co ) { si = std::sin( x ); co = std::cos( x ); }
-void sinh_cosh( FLT x, FLT& si, FLT& co ) { si = std::sinh( x ); co = std::cosh( x ); }
+void sincos( FLT x, FLT& si, FLT& co ) { si = std::sin( x ); co = std::cos( x ); }
+void sinhcosh( FLT x, FLT& si, FLT& co ) { si = std::sinh( x ); co = std::cosh( x ); }
 FLT  atanh2( FLT y, FLT x ){ return std::atanh( y/x); }
 FLT  norm( FLT x, FLT y ){ return std::sqrt( x*x + y*y ); }
 FLT  normh( FLT x, FLT y ){ return std::sqrt( x*x - y*y ); }

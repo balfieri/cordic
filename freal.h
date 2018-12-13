@@ -197,7 +197,7 @@ public:
 
     freal  sin( void ) const;
     freal  cos( void ) const;
-    void   sin_cos( freal& si, freal& co ) const;
+    void   sincos( freal& si, freal& co ) const;
     freal  tan( void ) const;                                         
     freal  asin( void ) const;                                        
     freal  acos( void ) const;                                        
@@ -212,7 +212,7 @@ public:
 
     freal  sinh( void ) const;
     freal  cosh( void ) const;
-    void   sinh_cosh( freal& sih, freal& coh ) const;
+    void   sinhcosh( freal& sih, freal& coh ) const;
     freal  tanh( void ) const;                                        
     freal  asinh( void ) const;                                       
     freal  acosh( void ) const;                                       
@@ -425,8 +425,8 @@ static inline freal<T,FLT>  cos( const freal<T,FLT>& a )
 { return a.cos();                       }
 
 template< typename T=int64_t, typename FLT=double >              
-static inline void   sin_cos( const freal<T,FLT>& a, freal<T,FLT>& si, freal<T,FLT>& co )               
-{ a.sin_cos( si, co );                  }
+static inline void   sincos( const freal<T,FLT>& a, freal<T,FLT>& si, freal<T,FLT>& co )               
+{ a.sincos( si, co );                  }
 
 template< typename T=int64_t, typename FLT=double >              
 static inline freal<T,FLT>  tan( const freal<T,FLT>& a )                                                
@@ -477,8 +477,8 @@ static inline freal<T,FLT>  cosh( const freal<T,FLT>& a )
 { return a.cosh();                      }
 
 template< typename T=int64_t, typename FLT=double >              
-static inline void   sinh_cosh( const freal<T,FLT>& a, freal<T,FLT>& sih, freal<T,FLT>& coh )           
-{ a.sinh_cosh( sih, coh );              }
+static inline void   sinhcosh( const freal<T,FLT>& a, freal<T,FLT>& sih, freal<T,FLT>& coh )           
+{ a.sinhcosh( sih, coh );              }
 
 template< typename T=int64_t, typename FLT=double >              
 static inline freal<T,FLT>  tanh( const freal<T,FLT>& a )                                               
@@ -1066,10 +1066,10 @@ inline freal<T,FLT> freal<T,FLT>::cos( void ) const
 { return( c(), make_raw( cordic, cordic->cos( v ) ) ); }
 
 template< typename T, typename FLT >              
-inline void freal<T,FLT>::sin_cos( freal<T,FLT>& si, freal<T,FLT>& co ) const                           
+inline void freal<T,FLT>::sincos( freal<T,FLT>& si, freal<T,FLT>& co ) const                           
 { 
     T si_t, co_t;
-    c()->sin_cos( v, si_t, co_t );
+    c()->sincos( v, si_t, co_t );
     si = make_raw( cordic, si_t );
     co = make_raw( cordic, co_t );
 }
@@ -1133,10 +1133,10 @@ inline freal<T,FLT> freal<T,FLT>::cosh( void ) const
 { return( c(), make_raw( cordic, cordic->cosh( v ) ) ); }
 
 template< typename T, typename FLT >              
-inline void freal<T,FLT>::sinh_cosh( freal<T,FLT>& sih, freal<T,FLT>& coh ) const                       
+inline void freal<T,FLT>::sinhcosh( freal<T,FLT>& sih, freal<T,FLT>& coh ) const                       
 { 
     T sih_t, coh_t;
-    c()->sinh_cosh( v, sih_t, coh_t );
+    c()->sinhcosh( v, sih_t, coh_t );
     sih = make_raw( cordic, sih_t );
     coh = make_raw( cordic, coh_t );
 }

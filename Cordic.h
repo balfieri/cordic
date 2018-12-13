@@ -148,14 +148,14 @@ public:
 
     T    sin( const T& x, const T * r=nullptr  ) const;                   // r*sin(x)                   (default r is 1)
     T    cos( const T& x, const T * r=nullptr ) const;                    // r*cos(x)                   (default r is 1)
-    void sin_cos( const T& x, T& si, T& co, const T * r=nullptr ) const;  // si=r*sin(x), co=r*cos(x)   (default r is 1)
+    void sincos( const T& x, T& si, T& co, const T * r=nullptr ) const;   // si=r*sin(x), co=r*cos(x)   (default r is 1)
     T    tan( const T& x ) const;                                         // sin(x) / cos(x)              (2)
     T    asin( const T& x ) const;                                        // atan2(x, sqrt(1 - x^2))      (2)
     T    acos( const T& x ) const;                                        // atan2(sqrt(1 - x^2), x)      (2)
     T    atan( const T& x ) const;                                        // atan(x)
     T    atan2( const T& y, const T& x ) const;                           // atan2(y, x)                  
 
-    void polar_to_rect( const T& r, const T& a, T& x, T& y ) const;       // sin_cos(a, x, y, &r)  
+    void polar_to_rect( const T& r, const T& a, T& x, T& y ) const;       // sincos(a, x, y, &r)  
     void rect_to_polar( const T& x, const T& y, T& r, T& a ) const;       // r=sqrt(x^2 + y^2), a=atan2(y, x)
     T    norm( const T& x, const T& y ) const;                            // sqrt(x^2 + y^2)
     T    hypot( const T& x, const T& y ) const;                           // norm(x, y);  (same thing)
@@ -163,7 +163,7 @@ public:
 
     T    sinh( const T& x, const T * r=nullptr ) const;                   // r*sinh(x), also r*(e^x - e^-x)/2  (default r is 1)
     T    cosh( const T& x, const T * r=nullptr ) const;                   // r*cosh(x), also r*(e^x + e^-x)/2  (default r is 1)
-    void sinh_cosh( const T& x, T& sih, T& coh, const T * r=nullptr ) const;// sih=r*sinh(x), coh=r*cosh(x)    (default r is 1)
+    void sinhcosh( const T& x, T& sih, T& coh, const T * r=nullptr ) const;// sih=r*sinh(x), coh=r*cosh(x)    (default r is 1)
     T    tanh( const T& x ) const;                                        // sinh(x) / cosh(x)            (2)
     T    asinh( const T& x ) const;                                       // log(x + sqrt(x^2 + 1))       (2)
     T    acosh( const T& x ) const;                                       // log(x + sqrt(x^2 - 1))       (2)
@@ -433,8 +433,8 @@ public:
     T    norm( const T& _x, const T& _y, bool do_reduce ) const;          
     T    atan2(  const T& y, const T& x, bool do_reduce, bool x_is_one=false, T * r=nullptr ) const; // same but override do_reduce 
     T    atanh2( const T& y, const T& x, bool do_reduce, bool x_is_one=false ) const; // same but override do_reduce
-    void sin_cos( const T& x, T& si, T& co, bool do_reduce, bool need_si=true, bool need_co=true, const T * r=nullptr ) const;
-    void sinh_cosh( const T& x, T& sih, T& coh, bool do_reduce, bool need_sih=true, bool need_coh=true, const T * r=nullptr ) const;
+    void sincos( const T& x, T& si, T& co, bool do_reduce, bool need_si=true, bool need_co=true, const T * r=nullptr ) const;
+    void sinhcosh( const T& x, T& sih, T& coh, bool do_reduce, bool need_sih=true, bool need_coh=true, const T * r=nullptr ) const;
 
     //-----------------------------------------------------
     // Argument Range Reduction Routines
@@ -454,8 +454,8 @@ public:
     void reduce_log_arg( T& x, T& addend ) const;                                            
     void reduce_atan2_args( T& y, T& x, bool& y_sign, bool& x_sign, bool& swapped, bool& is_pi ) const;     
     void reduce_norm_args( T& x, T& y, int32_t& lshift, bool& swapped ) const;
-    void reduce_sin_cos_arg( T& a, uint32_t& quadrant, bool& sign, bool& did_minus_pi_div_4 ) const;
-    void reduce_sinh_cosh_arg( T& x, T& sinh_i, T& cosh_i, bool& sign ) const;                  
+    void reduce_sincos_arg( T& a, uint32_t& quadrant, bool& sign, bool& did_minus_pi_div_4 ) const;
+    void reduce_sinhcosh_arg( T& x, T& sinh_i, T& cosh_i, bool& sign ) const;                  
 
     //-----------------------------------------------------
     // Logging Support
@@ -523,7 +523,7 @@ public:
 
         sin,
         cos,
-        sin_cos,
+        sincos,
         tan,
         asin,
         acos,
@@ -538,7 +538,7 @@ public:
 
         sinh,
         cosh,
-        sinh_cosh,
+        sinhcosh,
         tanh,
         asinh,
         acosh,
@@ -615,10 +615,10 @@ struct Cordic<T,FLT>::Impl
     T                           hyperbolic_angle_max;                   // hyperbolic vectoring |z0| max value
 
     T *                         linear_pow2;                            // linear 2^(-i) values
-    T *                         reduce_sinh_cosh_sinh_i;                // for each possible integer value, sinh(i)
-    T *                         reduce_sinh_cosh_cosh_i;                // for each possible integer value, cosh(i)
-    bool *                      reduce_sinh_cosh_sinh_i_oflow;          // boolean indicating if this index creates too big of a number
-    bool *                      reduce_sinh_cosh_cosh_i_oflow;          // boolean indicating if this index creates too big of a number
+    T *                         reduce_sinhcosh_sinh_i;                // for each possible integer value, sinh(i)
+    T *                         reduce_sinhcosh_cosh_i;                // for each possible integer value, cosh(i)
+    bool *                      reduce_sinhcosh_sinh_i_oflow;          // boolean indicating if this index creates too big of a number
+    bool *                      reduce_sinhcosh_cosh_i_oflow;          // boolean indicating if this index creates too big of a number
     FLT *                       reduce_exp_factor;                      // for each possible integer value, std::exp(i)
     T *                         reduce_log_addend;                      // for each possible lshift value, log( 1 << lshift )
 };
@@ -709,7 +709,7 @@ Cordic<T,FLT>::Cordic( uint32_t int_w, uint32_t frac_w, bool do_reduce, uint32_t
     if ( debug ) std::cout << "hyperbolic_rotation_one_over_gain="  << std::setw(30) << to_flt(impl->hyperbolic_rotation_one_over_gain) << "\n";
     if ( debug ) std::cout << "hyperbolic_vectoring_one_over_gain=" << std::setw(30) << to_flt(impl->hyperbolic_vectoring_one_over_gain) << "\n";
 
-    // construct LUT used by reduce_sinh_cosh_arg();
+    // construct LUT used by reduce_sinhcosh_arg();
     // use integer part plus 0.25 bit of fraction
     cassert( int_w <= 24, "too many cases to worry about" );
     uint32_t N = 1 << (2+int_w);
@@ -720,10 +720,10 @@ Cordic<T,FLT>::Cordic( uint32_t int_w, uint32_t frac_w, bool do_reduce, uint32_t
     T *        cosh_i       = new T[N];
     bool *     sinh_i_oflow = new bool[N];
     bool *     cosh_i_oflow = new bool[N];
-    impl->reduce_sinh_cosh_sinh_i       = sinh_i;
-    impl->reduce_sinh_cosh_cosh_i       = cosh_i;
-    impl->reduce_sinh_cosh_sinh_i_oflow = sinh_i_oflow;
-    impl->reduce_sinh_cosh_cosh_i_oflow = cosh_i_oflow;
+    impl->reduce_sinhcosh_sinh_i       = sinh_i;
+    impl->reduce_sinhcosh_cosh_i       = cosh_i;
+    impl->reduce_sinhcosh_sinh_i_oflow = sinh_i_oflow;
+    impl->reduce_sinhcosh_cosh_i_oflow = cosh_i_oflow;
     const FLT PI       = M_PI;
     const FLT PI_DIV_2 = PI / 2.0;
     const FLT PI_DIV_4 = PI / 4.0;
@@ -740,7 +740,7 @@ Cordic<T,FLT>::Cordic( uint32_t int_w, uint32_t frac_w, bool do_reduce, uint32_t
         cosh_i_oflow[i] = cosh_i_f > MAX_F;
         assign( sinh_i[i], sinh_i_oflow[i] ? MAX : to_t( std::sinh( i_f ) ) );
         assign( cosh_i[i], cosh_i_oflow[i] ? MAX : to_t( std::cosh( i_f ) ) );
-        if ( debug ) std::cout << "reduce_sinh_cosh_arg LUT: i_f=" << i_f << " sinh_i=" << to_flt(sinh_i[i]) << " cosh_i=" << to_flt(cosh_i[i]) << 
+        if ( debug ) std::cout << "reduce_sinhcosh_arg LUT: i_f=" << i_f << " sinh_i=" << to_flt(sinh_i[i]) << " cosh_i=" << to_flt(cosh_i[i]) << 
                                   " sinh_i_oflow=" << sinh_i_oflow[i] << " cosh_i_oflow=" << cosh_i_oflow[i] << "\n";
     }
 
@@ -778,10 +778,10 @@ Cordic<T,FLT>::~Cordic( void )
     delete impl->circular_atan;
     delete impl->hyperbolic_atanh;
     delete impl->linear_pow2;
-    delete impl->reduce_sinh_cosh_sinh_i;
-    delete impl->reduce_sinh_cosh_cosh_i;
-    delete impl->reduce_sinh_cosh_sinh_i_oflow;
-    delete impl->reduce_sinh_cosh_cosh_i_oflow;
+    delete impl->reduce_sinhcosh_sinh_i;
+    delete impl->reduce_sinhcosh_cosh_i;
+    delete impl->reduce_sinhcosh_sinh_i_oflow;
+    delete impl->reduce_sinhcosh_cosh_i_oflow;
     delete impl->reduce_exp_factor;
     delete impl->reduce_log_addend;
     delete impl;
@@ -858,7 +858,7 @@ std::string Cordic<T,FLT>::op_to_str( uint16_t op )
 
         _ocase( sin )
         _ocase( cos )
-        _ocase( sin_cos )
+        _ocase( sincos )
         _ocase( tan )
         _ocase( asin )
         _ocase( acos )
@@ -873,7 +873,7 @@ std::string Cordic<T,FLT>::op_to_str( uint16_t op )
 
         _ocase( sinh )
         _ocase( cosh )
-        _ocase( sinh_cosh )
+        _ocase( sinhcosh )
         _ocase( tanh )
         _ocase( asinh )
         _ocase( acosh )
@@ -2123,7 +2123,7 @@ inline T Cordic<T,FLT>::sin( const T& x, const T * r ) const
 { 
     T si;
     T co;
-    sin_cos( x, si, co, impl->do_reduce, true, false, r );
+    sincos( x, si, co, impl->do_reduce, true, false, r );
     return si;
 }
 
@@ -2132,23 +2132,23 @@ inline T Cordic<T,FLT>::cos( const T& x, const T * r ) const
 { 
     T si;
     T co;
-    sin_cos( x, si, co, impl->do_reduce, false, true, r );
+    sincos( x, si, co, impl->do_reduce, false, true, r );
     return co;
 }
 
 template< typename T, typename FLT >
-inline void Cordic<T,FLT>::sin_cos( const T& x, T& si, T& co, const T * r ) const             
+inline void Cordic<T,FLT>::sincos( const T& x, T& si, T& co, const T * r ) const             
 {
-    sin_cos( x, si, co, impl->do_reduce, true, true, r );
+    sincos( x, si, co, impl->do_reduce, true, true, r );
 }
 
 template< typename T, typename FLT >
-void Cordic<T,FLT>::sin_cos( const T& _x, T& si, T& co, bool do_reduce, bool need_si, bool need_co, const T * _r ) const             
+void Cordic<T,FLT>::sincos( const T& _x, T& si, T& co, bool do_reduce, bool need_si, bool need_co, const T * _r ) const             
 { 
     if ( _r != nullptr ) {
-        _log4( sin_cos, _x, si, co, *_r );
+        _log4( sincos, _x, si, co, *_r );
     } else {
-        _log3( sin_cos, _x, si, co );
+        _log3( sincos, _x, si, co );
     }
     T x = _x;
     uint32_t quadrant;
@@ -2156,12 +2156,12 @@ void Cordic<T,FLT>::sin_cos( const T& _x, T& si, T& co, bool do_reduce, bool nee
     bool did_minus_pi_div_4;
     if ( do_reduce ) {
         //-----------------------------------------------------
-        // reduce_sin_cos_arg() will get x in the range 0 .. PI/2 and tell us the quadrant.
+        // reduce_sincos_arg() will get x in the range 0 .. PI/2 and tell us the quadrant.
         // It will then check if x is still > PI/4 and, if so, subtract PI/4 and
         // set did_minus_pi_div_4.  If did_minus_pi_div_4 is true, then we need
         // to do some adjustments below after the cordic routine completes.
         //-----------------------------------------------------
-        reduce_sin_cos_arg( x, quadrant, x_sign, did_minus_pi_div_4 );
+        reduce_sincos_arg( x, quadrant, x_sign, did_minus_pi_div_4 );
     }
 
     T r = circular_rotation_one_over_gain();
@@ -2212,7 +2212,7 @@ inline T Cordic<T,FLT>::tan( const T& x ) const
 { 
     _log1( tan, x );
     T si, co;
-    sin_cos( x, si, co );
+    sincos( x, si, co );
     return div( si, co );
 }
 
@@ -2304,7 +2304,7 @@ inline void Cordic<T,FLT>::polar_to_rect( const T& r, const T& a, T& x, T& y ) c
 {
     _log4( polar_to_rect, r, a, x, y );
     if ( debug ) std::cout << "polar_to_rect begin: r=" << to_flt(r) << " a=" << to_flt(a) << " do_reduce=" << impl->do_reduce << "\n";
-    sin_cos( a, y, x, true, true, true, &r );
+    sincos( a, y, x, true, true, true, &r );
 }
 
 template< typename T, typename FLT >
@@ -2366,7 +2366,7 @@ inline T Cordic<T,FLT>::sinh( const T& x, const T * r ) const
 { 
     T sih;
     T coh;
-    sinh_cosh( x, sih, coh, impl->do_reduce, true, false, r );
+    sinhcosh( x, sih, coh, impl->do_reduce, true, false, r );
     return sih;
 }
 
@@ -2375,23 +2375,23 @@ inline T Cordic<T,FLT>::cosh( const T& x, const T * r ) const
 { 
     T sih;
     T coh;
-    sinh_cosh( x, sih, coh, impl->do_reduce, false, true, r );
+    sinhcosh( x, sih, coh, impl->do_reduce, false, true, r );
     return coh;
 }
 
 template< typename T, typename FLT >
-inline void Cordic<T,FLT>::sinh_cosh( const T& x, T& sih, T& coh, const T * r ) const
+inline void Cordic<T,FLT>::sinhcosh( const T& x, T& sih, T& coh, const T * r ) const
 { 
-    sinh_cosh( x, sih, coh, impl->do_reduce, true, true, r );
+    sinhcosh( x, sih, coh, impl->do_reduce, true, true, r );
 }
 
 template< typename T, typename FLT >
-void Cordic<T,FLT>::sinh_cosh( const T& _x, T& sih, T& coh, bool do_reduce, bool need_sih, bool need_coh, const T * _r ) const
+void Cordic<T,FLT>::sinhcosh( const T& _x, T& sih, T& coh, bool do_reduce, bool need_sih, bool need_coh, const T * _r ) const
 { 
     if ( _r != nullptr ) {
-        _log4( sinh_cosh, _x, sih, coh, *_r );
+        _log4( sinhcosh, _x, sih, coh, *_r );
     } else {
-        _log3( sinh_cosh, _x, sih, coh );
+        _log3( sinhcosh, _x, sih, coh );
     }
 
     //-----------------------------------------------------
@@ -2411,7 +2411,7 @@ void Cordic<T,FLT>::sinh_cosh( const T& _x, T& sih, T& coh, bool do_reduce, bool
     T sinh_i; 
     T cosh_i;
     bool sign;
-    if ( do_reduce ) reduce_sinh_cosh_arg( x, sinh_i, cosh_i, sign );  
+    if ( do_reduce ) reduce_sinhcosh_arg( x, sinh_i, cosh_i, sign );  
 
     T r = hyperbolic_rotation_one_over_gain();
     int32_t r_lshift;
@@ -2445,7 +2445,7 @@ T Cordic<T,FLT>::tanh( const T& x ) const
 { 
     _log1( tanh, x );
     T sih, coh;
-    sinh_cosh( x, sih, coh );
+    sinhcosh( x, sih, coh );
     return div( sih, coh );
 }
 
@@ -2702,7 +2702,7 @@ inline void Cordic<T,FLT>::reduce_norm_args( T& x, T& y, int32_t& lshift, bool& 
 }
 
 template< typename T, typename FLT >
-inline void Cordic<T,FLT>::reduce_sin_cos_arg( T& a, uint32_t& quad, bool& sign, bool& did_minus_pi_div_4 ) const
+inline void Cordic<T,FLT>::reduce_sincos_arg( T& a, uint32_t& quad, bool& sign, bool& did_minus_pi_div_4 ) const
 {
     //-----------------------------------------------------
     // Compute a * 4/PI, then take integer part of that.
@@ -2718,14 +2718,14 @@ inline void Cordic<T,FLT>::reduce_sin_cos_arg( T& a, uint32_t& quad, bool& sign,
     a        -= s;
     quad      = (i >> 1) & 3;
     did_minus_pi_div_4 = i & 1;
-    if ( debug ) std::cout << "reduce_sin_cos_arg: a_orig=" << to_flt(a_orig) << " m=" << to_flt(m) << " i=" << to_rstring(i) << 
+    if ( debug ) std::cout << "reduce_sincos_arg: a_orig=" << to_flt(a_orig) << " m=" << to_flt(m) << " i=" << to_rstring(i) << 
                               " subtract=" << to_flt(s) << " a_reduced=" << to_flt(a) << 
                               " quadrant=" << quad << " did_minus_pi_div_4=" << did_minus_pi_div_4 << "\n"; 
 
 }
 
 template< typename T, typename FLT >
-inline void Cordic<T,FLT>::reduce_sinh_cosh_arg( T& x, T& sinh_i, T& cosh_i, bool& sign ) const
+inline void Cordic<T,FLT>::reduce_sinhcosh_arg( T& x, T& sinh_i, T& cosh_i, bool& sign ) const
 {
     //-----------------------------------------------------
     // Identities:
@@ -2747,15 +2747,15 @@ inline void Cordic<T,FLT>::reduce_sinh_cosh_arg( T& x, T& sinh_i, T& cosh_i, boo
     const T MASK = (T(1) << (impl->int_w+2)) - T(1);  // include 0.25 bit of fraction
     T i = (x >> (impl->frac_w-2)) & MASK;
     x   = x & ((T(1) << (impl->frac_w-2))-T(1));
-    const T *    sinh_i_vals   = impl->reduce_sinh_cosh_sinh_i;
-    const T *    cosh_i_vals   = impl->reduce_sinh_cosh_cosh_i;
-    const bool * sinh_i_oflows = impl->reduce_sinh_cosh_sinh_i_oflow;
-    const bool * cosh_i_oflows = impl->reduce_sinh_cosh_cosh_i_oflow;
-    cassert( !sinh_i_oflows[i], "reduce_sinh_cosh_arg x will cause an overflow for sinh" );
-    cassert( !cosh_i_oflows[i], "reduce_sinh_cosh_arg x will cause an overflow for cosh" );
+    const T *    sinh_i_vals   = impl->reduce_sinhcosh_sinh_i;
+    const T *    cosh_i_vals   = impl->reduce_sinhcosh_cosh_i;
+    const bool * sinh_i_oflows = impl->reduce_sinhcosh_sinh_i_oflow;
+    const bool * cosh_i_oflows = impl->reduce_sinhcosh_cosh_i_oflow;
+    cassert( !sinh_i_oflows[i], "reduce_sinhcosh_arg x will cause an overflow for sinh" );
+    cassert( !cosh_i_oflows[i], "reduce_sinhcosh_arg x will cause an overflow for cosh" );
     sinh_i = sinh_i_vals[i];
     cosh_i = cosh_i_vals[i];
-    if ( debug ) std::cout << "reduce_sinh_cosh_arg: x_orig=" << to_flt(x_orig) << " sinh_i[" << to_rstring(i) << 
+    if ( debug ) std::cout << "reduce_sinhcosh_arg: x_orig=" << to_flt(x_orig) << " sinh_i[" << to_rstring(i) << 
                               "]=" << to_flt(sinh_i) << " coshh_i[" << to_rstring(i) << "]=" << to_flt(cosh_i) << 
                               " x_reduced=" << to_flt(x) << "\n";
 }

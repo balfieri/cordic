@@ -146,7 +146,7 @@ int main( int argc, const char * argv[] )
         }
         do_op1(  "sin(x)",           sin,     std::sin,       x   , do_reduce );
         do_op1(  "cos(x)",           cos,     std::cos,       x   , do_reduce );
-        do_op12( "sin_cos(x)",       sin_cos, sin_cos,        x   , do_reduce );
+        do_op12( "sincos(x)",        sincos,  sincos,         x   , do_reduce );
         if ( std::cos(x) != 0.0 ) {
             do_op1(  "tan(x)",       tan,     std::tan,       x   , do_reduce );
         }
@@ -158,7 +158,7 @@ int main( int argc, const char * argv[] )
         do_op2(  "atan2(y,x)",       atan2,   std::atan2,     y, x, true      );
         do_op1(  "sinh(x)",          sinh,    std::sinh,      x   , do_reduce );
         do_op1(  "cosh(x)",          cosh,    std::cosh,      x   , do_reduce );
-        do_op12( "sinh_cosh(x)",     sinh_cosh,sinh_cosh,     x   , do_reduce );
+        do_op12( "sinhcosh(x)",      sinhcosh,sinhcosh,       x   , do_reduce );
         do_op1(  "tanh(x)",          tanh,    std::tanh,      x   , do_reduce );
         do_op1(  "asinh(x)",         asinh,   std::asinh,     x   , true      );
         if ( x >= 1.0 ) {
