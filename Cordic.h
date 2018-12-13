@@ -645,8 +645,8 @@ Cordic<T,FLT>::Cordic( uint32_t int_w, uint32_t frac_w, bool do_reduce, uint32_t
     impl->frac_w  = frac_w;
     impl->do_reduce = do_reduce;
     impl->n       = n;
-    impl->maxint        = (T(1) << int_w) - 1;
-    impl->one           = T(1) << frac_w;                       // required before calling to_t()
+    impl->maxint  = (T(1) << int_w) - 1;
+    impl->one     = T(1) << frac_w;                             // required before calling to_t()
 
     constructed( impl->maxval        );                         // to keep logging analysis happy
     constructed( impl->minval        );
@@ -691,11 +691,11 @@ Cordic<T,FLT>::Cordic( uint32_t int_w, uint32_t frac_w, bool do_reduce, uint32_t
     FLT pow2 = 1.0;
     for( uint32_t i = 0; i <= n; i++ )
     {
+        FLT a  = std::atan( pow2 );
+        FLT ah = std::atanh( pow2 );
         constructed( impl->linear_pow2[i] );
         constructed( impl->circular_atan[i] );
         constructed( impl->hyperbolic_atanh[i] );
-        FLT a                     = std::atan( pow2 );
-        FLT ah                    = std::atanh( pow2 );
         assign( impl->linear_pow2[i],      to_t( pow2 ) );
         assign( impl->circular_atan[i],    to_t( a ) );
         assign( impl->hyperbolic_atanh[i], (i == 0) ? to_t(-1) : to_t( ah ) );
@@ -953,7 +953,6 @@ inline uint32_t Cordic<T,FLT>::n( void ) const
 template< typename T, typename FLT >
 inline T Cordic<T,FLT>::maxint( void ) const
 {
-    _log1( use_constant, impl->maxint );
     return impl->maxint;
 }
 
@@ -1130,6 +1129,7 @@ inline T Cordic<T,FLT>::hyperbolic_angle_max( void ) const
 template< typename T, typename FLT >
 inline T Cordic<T,FLT>::to_t( FLT _x ) const
 {
+    if ( debug ) std::cout << "to_t begin: x=" << _x << "\n";
     FLT x = _x;
     bool is_neg = x < 0.0;
     if ( is_neg ) x = -x;

@@ -163,7 +163,8 @@ inline std::string Analysis<T,FLT>::parse_name( char *& c )
     for( ;; )
     {
         char ch = *c;
-        if ( ch == ':' || ch == '_' || (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || (ch >= '0' && ch <= '9') ) {
+        if ( ch == ':' || ch == '_' || ch == '-' || ch == '.' || 
+             (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || (ch >= '0' && ch <= '9') ) {
             name += ch;
             c++;
         } else {
@@ -192,7 +193,6 @@ inline typename Analysis<T,FLT>::KIND Analysis<T,FLT>::parse_kind( char *& c )
     if ( name == "op2f" )               return KIND::op2f;
     if ( name == "op3" )                return KIND::op3;
     if ( name == "op4" )                return KIND::op4;
-    _die( "unknown kind: " + name );
     return KIND(-1);
 }
 
@@ -395,8 +395,7 @@ Analysis<T,FLT>::Analysis( std::string file_name )
 
             default:
             {
-                //_die( "unexpected kind" );
-                break;
+                continue;
             }
         }
         cassert( prev_kind != KIND::op2f || kind == KIND::op2, "make_constant was not followed by op2 assign" );
