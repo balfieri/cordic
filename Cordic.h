@@ -743,7 +743,6 @@ Cordic<T,FLT>::Cordic( uint32_t int_w, uint32_t frac_w, bool do_reduce, uint32_t
     // use integer part plus 0.25 bit of fraction
     cassert( int_w <= 24, "too many cases to worry about" );
     uint32_t N = 1 << (2+int_w);
-    T *        addend       = new T[N];
     uint32_t * quadrant     = new uint32_t[N];
     bool *     odd_pi_div_4 = new bool[N];
     T *        sinh_i       = new T[N];
@@ -758,8 +757,10 @@ Cordic<T,FLT>::Cordic( uint32_t int_w, uint32_t frac_w, bool do_reduce, uint32_t
     const FLT PI_DIV_2 = PI / 2.0;
     const FLT PI_DIV_4 = PI / 4.0;
     const T   MASK     = (T(1) << (int_w+T(1)))-T(1);  // include 0.5 bit of fraction
-    const T   MAX      = (T(1) << (int_w+frac_w))-T(1);
+          T   MAX      = (T(1) << (int_w+frac_w))-T(1);
     const FLT MAX_F    = to_flt( MAX );
+    if ( Cordic<T,FLT>::logger != nullptr ) Cordic<T,FLT>::logger->op2( uint16_t(Cordic<T,FLT>::OP::make_constant), &MAX, MAX_F );
+    assign( MAX, MAX );                                 // silliness for logging
     for( T i = 0; i <= MASK; i++ )
     {
         FLT i_f = FLT(i) / 4.0;
@@ -790,7 +791,7 @@ Cordic<T,FLT>::Cordic( uint32_t int_w, uint32_t frac_w, bool do_reduce, uint32_t
     }
 
     // construct LUT used by reduce_log_arg()
-    addend = new T[frac_w+int_w];
+    T * addend = new T[frac_w+int_w];
     impl->reduce_log_addend = addend;
     for( int32_t i = -frac_w; i <= int32_t(int_w); i++ )
     {
