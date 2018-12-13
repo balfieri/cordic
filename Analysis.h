@@ -313,20 +313,25 @@ Analysis<T,FLT>::Analysis( std::string file_name )
             case KIND::constructed:
             {
                 ValInfo info;
-                info.is_alive = true;
+                info.is_alive    = true;
                 info.is_assigned = false;
                 info.is_constant = false;
                 uint64_t val     = parse_addr( c );
                 uint64_t cordic  = parse_addr( c );
                 if ( cordic != 0 ) {
-                    auto cit = cordics.find( val );
+                    auto cit = cordics.find( cordic );
                     cassert( cit != cordics.end() && cit->second.is_alive, "val constructed using unknown cordic" );
                     info.cordic_i = cit->second.cordic_i;
                 } else {
                     info.cordic_i = size_t(-1);
                 }
                 auto vit = vals.find( val );
-                cassert( vit == vals.end() || !vit->second.is_alive, "val constructed before previous was desctructed" );
+                if ( vit == vals.end() ) {
+                    vals[val] = info;
+                } else {
+                    cassert( !vit->second.is_alive, "val constructed before previous was desctructed" );
+                    vit->second = info;
+                }
                 break;
             }
 
