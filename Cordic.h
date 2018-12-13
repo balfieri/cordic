@@ -166,7 +166,7 @@ public:
     T    atanh2( const T& y, const T& x ) const;                          // atanh(y/x)
 
     //-----------------------------------------------------
-    // Interesting Identities (some are used in the implementation, most are not)
+    // Bob's Collection of Math Identities (some are used in the implementation, most are not)
     //
     // sqrt(x)          = sqrt((x+0.25)^2 - (x-0.25)^2)         allows use of hyperbolic_vectoring
     // sqrt(x)          = sqrt((x+1)^2 - (x-1)^2) / 2           ditto, but easier to make sure |atanh((x-1)/(x+1))| is small enough
@@ -185,7 +185,7 @@ public:
     // exp(-x)          = 1/exp(x)
     // exp(x+y)         = exp(x) * exp(y)
     // exp(ix)          = cos(x) + i*sin(x)                     Euler's Formula, i = sqrt(-1)
-    // exp(i*PI) + 1    = 0                                     Euler's Identity
+    // exp(i*pi) + 1    = 0                                     Euler's Identity
     // exp(x)-1         = tanh(x/2)*(exp(x)+1)                  expm1(x)
     // exp(x)-1         = u = exp(x); (u == 1) ? x : ((u-1) == -1) ? -1 : (u-1)*x/log(u)
     //
@@ -195,18 +195,23 @@ public:
     // log(x/4)         = atanh2(x-0.25, x+0.25) 
     // log(x/y)         = log(x) - log(y)
     // log(x/y)         = 2*atanh2(x-y, x+y)  
-    // log(1+x)         = 2*atanh(x/(x+2))
+    // log(1+x)         = 2*atanh(x/(x+2))                      log1p()
     //
     // sin(-x)          = -sin(x)
-    // sin(x+y)         = sin(x)*cos(y) + cos(x)*sin(y)
-    // sin(x+PI/4)      = sqrt(2)/2 * (sin(x) + cos(x))
+    // sin(x)           = sin(i*pi/2 + f)                       where i is an integer and |f| <= pi/4
+    // sin(x+y)         = sin(x)*cos(y) + cos(x)*sin(y)         
+    // sin(x+pi/4)      = sqrt(2)/2 * (sin(x) + cos(x))
+    // sin(i*pi/2 + f)  = +/-sin(f) or +/-cos(f)
+    // sin(x*pi)        = sin(2x * pi/2) = sin((i+f)*pi/2) = +/-sin(f*pi/2) or +/-cos(f*pi/2)
     // sin(x)           = Im(e^(ix)) = (e^(ix) + e^(-ix)) / 2
     // sin(ix)          = i*sinh(x)
     // sin(x)/x         = (1 + x*x*(1/6)) == 1) ? 1 : sin(x)/x
     //
-    // cos(x+y)         = cos(x)*sin(y) - sin(x)*cos(y)
-    // cos(x+PI/4)      = sqrt(2)/2 * (cos(x) - sin(x))
     // cos(-x)          = cos(x)
+    // cos(x+y)         = cos(x)*sin(y) - sin(x)*cos(y)
+    // cos(x+pi/4)      = sqrt(2)/2 * (cos(x) - sin(x))
+    // cos(i*pi/2 + f)  = +/-cos(f) or +/-sin(f)
+    // cos(x*pi)        = cos(2x * pi/2) = cos((i+f)*pi/2) = +/-cos(f*pi/2) or +/-sin(f*pi/2)
     // cos(x)           = Re(e^(ix)) = (e^(ix) - e^(-ix)) / 2i
     // cos(ix)          = cosh(x)
     // 1-cos(x)         = 2*sin(x/2)^2
@@ -220,24 +225,24 @@ public:
     //
     // acos(-x)         = acos(-x)
     // acos(x)          = atan2(sqrt(1 - x^2), x)
-    // acos(x+y)        = PI/2 - asin(x+y)
+    // acos(x+y)        = pi/2 - asin(x+y)
     // acos(1-x)        = 2*asin(x/2)
     // acos(dot(u, v))  = 2*atan2( |u-v|, |u+v| )
-    // acos(dot(u, v))  = (dot(u,v) < 0) ? (PI - 2*asin(|-v-u|/2)) : 2*asin(|v-u|/2)
+    // acos(dot(u, v))  = (dot(u,v) < 0) ? (pi - 2*asin(|-v-u|/2)) : 2*asin(|v-u|/2)
     //
     // atan(x)          = atan2(x, 1)                           this is true only when second argument is > 0 (see below)
     // atan(-x)         = -atan(x)
-    // atan(1/x)        = PI/2 - atan(x)                        if x > 0
+    // atan(1/x)        = pi/2 - atan(x)                        if x > 0
     // atan(x)          = asin(x / sqrt(1 + x^2))
     // atan(x)          = 2*atan(x / (1 + sqrt(1 + x^2)))
     // atan2(y,x)       = 2*atan(y / (sqrt(x^2 + y^2) + x))     if x >  0    (x < 0 can have inflated rounding errors, so...)
     // atan2(y,x)       = 2*atan((sqrt(x^2 + y^2) - x) / y)     if x <= 0 && y != 0
-    // atan2(y,x)       = PI                                    if x <  0 && y == 0
+    // atan2(y,x)       = pi                                    if x <  0 && y == 0
     // atan2(y,x)       = undefined                             if x == 0 && y == 0
     //
-    // PI               = 4*atan(1)                             but low 2 bits will end up as 0 for a fixed-point number
-    // PI               = acos(-1)                              but that just uses atan
-    // PI               = pi()                                  function in this class to return a precomputed high-precision version
+    // pi               = 4*atan(1)                             but low 2 bits will end up as 0 for a fixed-point number
+    // pi               = acos(-1)                              but that just uses atan
+    // pi               = pi()                                  function in this class to return a precomputed high-precision version
     //
     // sinh(-x)         = -sinh(x)
     // sinh(x)          = (e^x - e^-x)/2
