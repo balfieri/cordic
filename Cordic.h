@@ -62,7 +62,7 @@ public:
     //-----------------------------------------------------
     // Explicit Conversions
     //-----------------------------------------------------
-    T       to_t( FLT x ) const;                // FLT to T encoded value
+    T       to_t( FLT x, bool can_log=false ) const;        // FLT to T encoded value
     FLT     to_flt( const T& x, bool can_log=false ) const; // T encoded value to FLT
     std::string to_string( const T& x ) const;  // T to std::string in decimal floating-point format
     std::string to_rstring( const T& _x ) const;// T to std::string in raw decimal integer format 
@@ -1101,7 +1101,7 @@ inline T Cordic<T,FLT>::hyperbolic_angle_max( void ) const
 // Conversion
 //-----------------------------------------------------
 template< typename T, typename FLT >
-inline T Cordic<T,FLT>::to_t( FLT _x ) const
+inline T Cordic<T,FLT>::to_t( FLT _x, bool can_log ) const
 {
     FLT x = _x;
     bool is_neg = x < 0.0;
@@ -1109,6 +1109,7 @@ inline T Cordic<T,FLT>::to_t( FLT _x ) const
     cassert( T(x) < (T(1) << impl->int_w), "to_t: integer part of |x| " + std::to_string(x) + " does not fit in int_w bits" ); 
     T x_t = x * FLT( impl->one ); // need to round
     if ( is_neg ) x_t = -x_t;
+    if ( can_log ) _log1f( push_constant, _x );
     return x_t;
 }
 
