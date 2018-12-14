@@ -105,8 +105,20 @@ public:
     T&   assign( T& x, const T& y ) const;                                // x = y  (this exists so we can log assignments)
     T&   pop_value( T& x, const T& y ) const;                             // x = y  (where y is top of stack for logging)
 
+    bool signbit( const T& x ) const;                                     // x < 0
+    int  fpclassify( const T& x ) const;                                  // fixed-point: FP_ZERO or FP_SUBNORMAL
+    bool isfinite( const T& x ) const;                                    // fixed-point: true  (always)
+    bool isinf( const T& x ) const;                                       // fixed-point: false (always)
+    bool isnan( const T& x ) const;                                       // fixed-point: false (always)
+    bool isnormal( const T& x ) const;                                    // fixed-point: false (always)
+
     T    abs( const T& x ) const;                                         // |x|
     T    neg( const T& x ) const;                                         // -x
+    T    copysign( const T& x, const T& y ) const;                        // |x| with sign of y
+    T    nan( const char * x ) const;                                     // fixed-point: 0 
+    T    infinity( void ) const;                                          // fixed-point: maxval()
+    T    nextafter( const T& from, const T& to ) const;                   // (from == to) ?   to  :  (from +/- minval)
+    T    nexttoward( const T& from, long double to ) const;               // (from == to) ? T(to) : T(from +/- minval)
     T    floor( const T& x ) const;                                       // largest  integral value <= x
     T    ceil( const T& x ) const;                                        // smallest integral value >= x
 
