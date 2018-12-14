@@ -129,7 +129,7 @@ public:
     T    mul( const T& x, const T& y ) const;                             // x*y 
     T    lshift( const T& x, int y ) const;                               // x << y
     T    rshift( const T& x, int y ) const;                               // x >> y
-    T    dad( const T& y, const T& x, const T addend = T(0) ) const;      // y/x + addend
+    T    dad( const T& y, const T& x, const T& addend ) const;            // y/x + addend
     T    div( const T& y, const T& x ) const;                             // y/x
     T    rcp( const T& x ) const;                                         // 1/x
     T    sqrt( const T& x ) const;                                        // normh( x+1, x-1 ) / 2
@@ -442,9 +442,9 @@ public:
     // These version are used internally, but making them available publically.
     // In general, you should only call the earlier routines.
     //-----------------------------------------------------
-    T    mad( const T& x, const T& y, const T addend, bool do_reduce ) const; // same but override do_reduce
+    T    mad( const T& x, const T& y, const T& addend, bool do_reduce ) const; // same but override do_reduce
     T    mul( const T& x, const T& y, bool do_reduce ) const;             // same but override do_reduce
-    T    dad( const T& y, const T& x, const T addend, bool do_reduce ) const; // same but override do_reduce
+    T    dad( const T& y, const T& x, const T& addend, bool do_reduce ) const; // same but override do_reduce
     T    div( const T& y, const T& x, bool do_reduce ) const;             // same but override do_reduce
     T    log( const T& x, bool do_reduce ) const;                         // 2*atan2(x-1, x+1, do_reduce)    
     T    log1p( const T& x, bool do_reduce ) const;                       // 2*atan2(x, x+2, do_reduce)    
@@ -646,6 +646,122 @@ struct Cordic<T,FLT>::Impl
 };
 
 //-----------------------------------------------------
+// Logging
+//-----------------------------------------------------
+template< typename T, typename FLT >
+Logger<T,FLT> * Cordic<T,FLT>::logger = nullptr;
+
+template< typename T, typename FLT >
+void Cordic<T,FLT>::logger_set( Logger<T,FLT> * _logger )
+{
+    logger = _logger;
+}    
+
+template< typename T, typename FLT >
+Logger<T,FLT> * Cordic<T,FLT>::logger_get( void )
+{
+    return logger;
+}    
+
+template< typename T, typename FLT >
+std::string Cordic<T,FLT>::op_to_str( uint16_t op )
+{
+    #define _ocase( op ) case OP::op: return #op;
+    
+    switch( OP( op ) )
+    {
+        _ocase( push_constant )
+        _ocase( to_flt )
+        _ocase( assign )
+        _ocase( pop_value )
+
+        _ocase( abs )
+        _ocase( neg )
+        _ocase( floor )
+        _ocase( ceil )
+
+        _ocase( add )
+        _ocase( sub )
+        _ocase( mad )
+        _ocase( fma )
+        _ocase( mul )
+        _ocase( lshift )
+        _ocase( rshift )
+        _ocase( dad )
+        _ocase( div )
+        _ocase( rcp )
+        _ocase( sqrt )
+        _ocase( rsqrt )
+
+        _ocase( isgreater )
+        _ocase( isgreaterequal )
+        _ocase( isless )
+        _ocase( islessequal )
+        _ocase( islessgreater )
+        _ocase( isunordered )
+        _ocase( isunequal )
+        _ocase( isequal )
+
+        _ocase( exp )
+        _ocase( expm1 )
+        _ocase( expc )
+        _ocase( exp2 )
+        _ocase( exp10 )
+        _ocase( pow )
+        _ocase( log )
+        _ocase( log1p )
+        _ocase( logb )
+        _ocase( logc )
+        _ocase( log2 )
+        _ocase( log10 )
+
+        _ocase( sin )
+        _ocase( cos )
+        _ocase( sincos )
+        _ocase( tan )
+        _ocase( asin )
+        _ocase( acos )
+        _ocase( atan )
+        _ocase( atan2 )
+
+        _ocase( polar_to_rect )
+        _ocase( rect_to_polar )
+        _ocase( norm )
+        _ocase( hypot )
+        _ocase( normh )
+
+        _ocase( sinh )
+        _ocase( cosh )
+        _ocase( sinhcosh )
+        _ocase( tanh )
+        _ocase( asinh )
+        _ocase( acosh )
+        _ocase( atanh )
+        _ocase( atanh2 )
+        default: return "<unknown OP>";
+    }
+}
+
+#define _log1( op, opnd1 ) \
+            if ( Cordic<T,FLT>::logger != nullptr ) Cordic<T,FLT>::logger->op1( uint16_t(Cordic<T,FLT>::OP::op), &opnd1 )
+#define _log1f( op, opnd1 ) \
+            if ( Cordic<T,FLT>::logger != nullptr ) Cordic<T,FLT>::logger->op1( uint16_t(Cordic<T,FLT>::OP::op), opnd1 )
+#define _log2( op, opnd1, opnd2 ) \
+            if ( Cordic<T,FLT>::logger != nullptr ) Cordic<T,FLT>::logger->op2( uint16_t(Cordic<T,FLT>::OP::op), &opnd1, &opnd2 )
+#define _log2i( op, opnd1, opnd2 ) \
+            if ( Cordic<T,FLT>::logger != nullptr ) Cordic<T,FLT>::logger->op2( uint16_t(Cordic<T,FLT>::OP::op), &opnd1, opnd2 )
+#define _log2f( op, opnd1, opnd2 ) \
+            if ( Cordic<T,FLT>::logger != nullptr ) Cordic<T,FLT>::logger->op2( uint16_t(Cordic<T,FLT>::OP::op), &opnd1, opnd2 )
+#define _log3( op, opnd1, opnd2, opnd3 ) \
+            if ( Cordic<T,FLT>::logger != nullptr ) Cordic<T,FLT>::logger->op3( uint16_t(Cordic<T,FLT>::OP::op), &opnd1, &opnd2, &opnd3 )
+#define _log4( op, opnd1, opnd2, opnd3, opnd4 ) \
+            if ( Cordic<T,FLT>::logger != nullptr ) Cordic<T,FLT>::logger->op4( uint16_t(Cordic<T,FLT>::OP::op), &opnd1, &opnd2, &opnd3, &opnd4 )
+#define _logconst( c ) \
+            constructed( c ); \
+            _log1f( push_constant, to_flt(c) ); \
+            _log2i( pop_value, c, c );
+
+//-----------------------------------------------------
 // Constructor
 //-----------------------------------------------------
 template< typename T, typename FLT >
@@ -684,6 +800,8 @@ Cordic<T,FLT>::Cordic( uint32_t int_w, uint32_t frac_w, bool do_reduce, uint32_t
     impl->e             = to_t( std::exp( FLT(  1 ) ) );
     impl->log2          = to_t( std::log( FLT(  2 ) ) );
     impl->log10         = to_t( std::log( FLT( 10 ) ) );
+
+    _logconst( impl->zero );
 
     impl->circular_atan    = new T[n+1];
     impl->hyperbolic_atanh = new T[n+1];
@@ -811,118 +929,6 @@ Cordic<T,FLT>::~Cordic( void )
     delete impl;
     impl = nullptr;
 }
-
-//-----------------------------------------------------
-// Logging
-//-----------------------------------------------------
-template< typename T, typename FLT >
-Logger<T,FLT> * Cordic<T,FLT>::logger = nullptr;
-
-template< typename T, typename FLT >
-void Cordic<T,FLT>::logger_set( Logger<T,FLT> * _logger )
-{
-    logger = _logger;
-}    
-
-template< typename T, typename FLT >
-Logger<T,FLT> * Cordic<T,FLT>::logger_get( void )
-{
-    return logger;
-}    
-
-template< typename T, typename FLT >
-std::string Cordic<T,FLT>::op_to_str( uint16_t op )
-{
-    #define _ocase( op ) case OP::op: return #op;
-    
-    switch( OP( op ) )
-    {
-        _ocase( push_constant )
-        _ocase( to_flt )
-        _ocase( assign )
-        _ocase( pop_value )
-
-        _ocase( abs )
-        _ocase( neg )
-        _ocase( floor )
-        _ocase( ceil )
-
-        _ocase( add )
-        _ocase( sub )
-        _ocase( mad )
-        _ocase( fma )
-        _ocase( mul )
-        _ocase( lshift )
-        _ocase( rshift )
-        _ocase( dad )
-        _ocase( div )
-        _ocase( rcp )
-        _ocase( sqrt )
-        _ocase( rsqrt )
-
-        _ocase( isgreater )
-        _ocase( isgreaterequal )
-        _ocase( isless )
-        _ocase( islessequal )
-        _ocase( islessgreater )
-        _ocase( isunordered )
-        _ocase( isunequal )
-        _ocase( isequal )
-
-        _ocase( exp )
-        _ocase( expm1 )
-        _ocase( expc )
-        _ocase( exp2 )
-        _ocase( exp10 )
-        _ocase( pow )
-        _ocase( log )
-        _ocase( log1p )
-        _ocase( logb )
-        _ocase( logc )
-        _ocase( log2 )
-        _ocase( log10 )
-
-        _ocase( sin )
-        _ocase( cos )
-        _ocase( sincos )
-        _ocase( tan )
-        _ocase( asin )
-        _ocase( acos )
-        _ocase( atan )
-        _ocase( atan2 )
-
-        _ocase( polar_to_rect )
-        _ocase( rect_to_polar )
-        _ocase( norm )
-        _ocase( hypot )
-        _ocase( normh )
-
-        _ocase( sinh )
-        _ocase( cosh )
-        _ocase( sinhcosh )
-        _ocase( tanh )
-        _ocase( asinh )
-        _ocase( acosh )
-        _ocase( atanh )
-        _ocase( atanh2 )
-        default: return "<unknown OP>";
-    }
-}
-
-#define _log1( op, opnd1 ) \
-            if ( Cordic<T,FLT>::logger != nullptr ) Cordic<T,FLT>::logger->op1( uint16_t(Cordic<T,FLT>::OP::op), &opnd1 )
-#define _log1f( op, opnd1 ) \
-            if ( Cordic<T,FLT>::logger != nullptr ) Cordic<T,FLT>::logger->op1( uint16_t(Cordic<T,FLT>::OP::op), opnd1 )
-#define _log2( op, opnd1, opnd2 ) \
-            if ( Cordic<T,FLT>::logger != nullptr ) Cordic<T,FLT>::logger->op2( uint16_t(Cordic<T,FLT>::OP::op), &opnd1, &opnd2 )
-#define _log2i( op, opnd1, opnd2 ) \
-            if ( Cordic<T,FLT>::logger != nullptr ) Cordic<T,FLT>::logger->op2( uint16_t(Cordic<T,FLT>::OP::op), &opnd1, opnd2 )
-#define _log2f( op, opnd1, opnd2 ) \
-            if ( Cordic<T,FLT>::logger != nullptr ) Cordic<T,FLT>::logger->op2( uint16_t(Cordic<T,FLT>::OP::op), &opnd1, opnd2 )
-#define _log3( op, opnd1, opnd2, opnd3 ) \
-            if ( Cordic<T,FLT>::logger != nullptr ) Cordic<T,FLT>::logger->op3( uint16_t(Cordic<T,FLT>::OP::op), &opnd1, &opnd2, &opnd3 )
-#define _log4( op, opnd1, opnd2, opnd3, opnd4 ) \
-            if ( Cordic<T,FLT>::logger != nullptr ) Cordic<T,FLT>::logger->op4( uint16_t(Cordic<T,FLT>::OP::op), &opnd1, &opnd2, &opnd3, &opnd4 )
 
 //-----------------------------------------------------
 // Constants
@@ -1763,7 +1769,7 @@ inline T Cordic<T,FLT>::sub( const T& x, const T& y ) const
 }
 
 template< typename T, typename FLT >
-inline T Cordic<T,FLT>::mad( const T& _x, const T& _y, const T addend, bool do_reduce ) const
+inline T Cordic<T,FLT>::mad( const T& _x, const T& _y, const T& addend, bool do_reduce ) const
 {
     _log3( mad, _x, _y, addend );
     T x = _x;
@@ -1851,7 +1857,7 @@ inline T Cordic<T,FLT>::rshift( const T& x, int rs ) const
 }
 
 template< typename T, typename FLT >
-T Cordic<T,FLT>::dad( const T& _y, const T& _x, const T addend, bool do_reduce ) const
+T Cordic<T,FLT>::dad( const T& _y, const T& _x, const T& addend, bool do_reduce ) const
 {
     _log3( dad, _y, _x, addend );
     T x = _x;
@@ -1880,7 +1886,7 @@ T Cordic<T,FLT>::dad( const T& _y, const T& _x, const T addend, bool do_reduce )
 }
 
 template< typename T, typename FLT >
-inline T Cordic<T,FLT>::dad( const T& _y, const T& _x, const T addend ) const
+inline T Cordic<T,FLT>::dad( const T& _y, const T& _x, const T& addend ) const
 {
     return dad( _y, _x, addend, impl->do_reduce );
 }
