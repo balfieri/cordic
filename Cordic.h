@@ -1984,56 +1984,48 @@ T Cordic<T,FLT>::rcbrt( const T& x ) const
 template< typename T, typename FLT >
 inline bool Cordic<T,FLT>::isgreater( const T& x, const T& y ) const
 {
-    _log2( isgreater, x, y );
     return x > y;
 }
 
 template< typename T, typename FLT >
 inline bool Cordic<T,FLT>::isgreaterequal( const T& x, const T& y ) const
 {
-    _log2( isgreaterequal, x, y );
     return x >= y;
 }
 
 template< typename T, typename FLT >
 inline bool Cordic<T,FLT>::isless( const T& x, const T& y ) const
 {
-    _log2( isless, x, y );
     return x < y;
 }
 
 template< typename T, typename FLT >
 inline bool Cordic<T,FLT>::islessequal( const T& x, const T& y ) const
 {
-    _log2( islessequal, x, y );
     return x <= y;
 }
 
 template< typename T, typename FLT >
 inline bool Cordic<T,FLT>::islessgreater( const T& x, const T& y ) const
 {
-    _log2( islessgreater, x, y );
     return x < y || x > y;
 }
 
 template< typename T, typename FLT >
 inline bool Cordic<T,FLT>::isunordered( const T& x, const T& y ) const
 {
-    _log2( isunordered, x, y );
     return !(x == y || x != y);
 }
 
 template< typename T, typename FLT >
 inline bool Cordic<T,FLT>::isunequal( const T& x, const T& y ) const
 {
-    _log2( isunequal, x, y );
     return x != y;
 }
 
 template< typename T, typename FLT >
 inline bool Cordic<T,FLT>::isequal( const T& x, const T& y ) const
 {
-    _log2( isequal, x, y );
     return x == y;
 }
 
@@ -2455,7 +2447,7 @@ inline T Cordic<T,FLT>::norm( const T& _x, const T& _y, bool do_reduce, bool can
     T xx, yy, zz;
     circular_vectoring_xy( x, y, xx, yy );
     xx = mul( xx, impl->circular_vectoring_one_over_gain, true, false );
-    if ( do_reduce ) xx = lshift( xx, ls );
+    if ( do_reduce ) xx = lshift( xx, ls, false );
     if ( debug ) std::cout << "norm end: x=" << to_flt(x) << " y=" << to_flt(y) << " do_reduce=" << do_reduce << " xx=" << to_flt(xx) << "\n";
     return xx;
 }
