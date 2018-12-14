@@ -139,10 +139,10 @@ public:
 
     T    exp( const T& x ) const;                                         // e^x
     T    expm1( const T& x ) const;                                       // e^x - 1
+    T    expc( const FLT& b, const T& x ) const;                          // b^x  = exp(x * log(b))  b=const     (2)
     T    exp2( const T& x ) const;                                        // 2^x
     T    exp10( const T& x ) const;                                       // 10^x
     T    pow( const T& b, const T& x ) const;                             // b^x  = exp(x * log(b))              (3)
-    T    powc( const FLT& b, const T& x ) const;                          // b^x  = exp(x * log(b))  b=const     (2)
     T    log( const T& x ) const;                                         // 2*atan2(x-1, x+1)    
     T    logb( const T& x, const T& b ) const;                            // log(x)/log(b)                (3)
     T    logc( const T& x, const FLT& b ) const;                          // log(x)/log(b)    b=const     (2)
@@ -515,10 +515,10 @@ public:
 
         exp,
         expm1,
+        expc,
         exp2,
         exp10,
         pow,
-        powc,
         log,
         logb,
         logc,
@@ -851,10 +851,11 @@ std::string Cordic<T,FLT>::op_to_str( uint16_t op )
         _ocase( rsqrt )
 
         _ocase( exp )
+        _ocase( expm1 )
+        _ocase( expc )
         _ocase( exp2 )
         _ocase( exp10 )
         _ocase( pow )
-        _ocase( powc )
         _ocase( log )
         _ocase( logb )
         _ocase( logc )
@@ -2054,15 +2055,26 @@ inline T Cordic<T,FLT>::expm1( const T& x ) const
 }
 
 template< typename T, typename FLT >
+inline T Cordic<T,FLT>::expc( const FLT& b, const T& x ) const
+{ 
+    _log2f( expc, x, b );
+    cassert( b > 0, "expc b must be positive" );
+    const FLT log_b_f = std::log( b );
+    cassert( log_b_f >= 0.0, "expc log(b) must be non-negative" );
+    const T   log_b   = to_t( log_b_f );
+    return exp( mul( x, log_b ) );
+}
+
+template< typename T, typename FLT >
 inline T Cordic<T,FLT>::exp2( const T& x ) const
 { 
-    return powc( 2.0, x );
+    return expc( 2.0, x );
 }
 
 template< typename T, typename FLT >
 inline T Cordic<T,FLT>::exp10( const T& x ) const
 { 
-    return powc( 10.0, x );
+    return expc( 10.0, x );
 }
 
 template< typename T, typename FLT >
@@ -2072,17 +2084,6 @@ inline T Cordic<T,FLT>::pow( const T& b, const T& x ) const
     if ( b == impl->zero ) return impl->zero;
     cassert( b >= 0, "pow base b must be non-negative" );
     return exp( mul( x, log( b, true ) ) );
-}
-
-template< typename T, typename FLT >
-inline T Cordic<T,FLT>::powc( const FLT& b, const T& x ) const
-{ 
-    _log2f( powc, x, b );
-    cassert( b > 0, "powc b must be positive" );
-    const FLT log_b_f = std::log( b );
-    cassert( log_b_f >= 0.0, "powc log(b) must be non-negative" );
-    const T   log_b   = to_t( log_b_f );
-    return exp( mul( x, log_b ) );
 }
 
 template< typename T, typename FLT >

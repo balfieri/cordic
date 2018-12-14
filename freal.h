@@ -186,10 +186,10 @@ public:
 
     freal  exp( void ) const;                                         
     freal  expm1( void ) const;              // exp(x) - 1   (accurately)
+    freal  expc( const FLT c ) const;        // c^a
     freal  exp2( void ) const;               // 2^x
     freal  exp10( void ) const;              // 10^x
     freal  pow( const freal& e ) const;      // a^e
-    freal  powc( const FLT c ) const;        // c^a
     freal  log( void ) const;                                         
     freal  logb( const freal& b ) const;     // log-base-b(a)
     freal  logc( const FLT c ) const;        // log-base-c(a)                  
@@ -388,6 +388,10 @@ static inline freal<T,FLT>  expm1( const freal<T,FLT>& a )
 { return a.expm1();                     }
 
 template< typename T=int64_t, typename FLT=double >              
+static inline freal<T,FLT>  expc( const freal<T,FLT>& a, const FLT c )                                  
+{ return a.expc( c );                   }
+
+template< typename T=int64_t, typename FLT=double >              
 static inline freal<T,FLT>  exp2( const freal<T,FLT>& a )                                                
 { return a.exp2();                      }
 
@@ -398,10 +402,6 @@ static inline freal<T,FLT>  exp10( const freal<T,FLT>& a )
 template< typename T=int64_t, typename FLT=double >              
 static inline freal<T,FLT>  pow( const freal<T,FLT>& a, const freal<T,FLT>& e )                         
 { return a.pow( e );                    }
-
-template< typename T=int64_t, typename FLT=double >              
-static inline freal<T,FLT>  powc( const freal<T,FLT>& a, const FLT c )                                  
-{ return a.powc( c );                   }
 
 template< typename T=int64_t, typename FLT=double >              
 static inline freal<T,FLT>  log( const freal<T,FLT>& a )                                                
@@ -1031,6 +1031,10 @@ inline freal<T,FLT> freal<T,FLT>::expm1( void ) const
 { return( c(), pop_value( cordic, cordic->expm1( v ) ) ); }
 
 template< typename T, typename FLT >              
+inline freal<T,FLT> freal<T,FLT>::expc( const FLT c ) const                                             
+{ return( c(), pop_value( cordic, cordic->expc( v, c ) ) ); }
+
+template< typename T, typename FLT >              
 inline freal<T,FLT> freal<T,FLT>::exp2( void ) const                                                     
 { return( c(), pop_value( cordic, cordic->exp2( v ) ) ); }
 
@@ -1041,10 +1045,6 @@ inline freal<T,FLT> freal<T,FLT>::exp10( void ) const
 template< typename T, typename FLT >              
 inline freal<T,FLT> freal<T,FLT>::pow( const freal<T,FLT>& e ) const                                    
 { return( c( e ), pop_value( cordic, cordic->pow( v, e.v ) ) ); }
-
-template< typename T, typename FLT >              
-inline freal<T,FLT> freal<T,FLT>::powc( const FLT c ) const                                             
-{ return( c(), pop_value( cordic, cordic->powc( v, c ) ) ); }
 
 template< typename T, typename FLT >              
 inline freal<T,FLT> freal<T,FLT>::log( void ) const                                                     
