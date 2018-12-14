@@ -805,6 +805,7 @@ Cordic<T,FLT>::Cordic( uint32_t int_w, uint32_t frac_w, bool do_reduce, uint32_t
     impl->log10         = to_t( std::log( FLT( 10 ) ) );
 
     _logconst( impl->zero );
+    _logconst( impl->one  );
 
     impl->circular_atan    = new T[n+1];
     impl->hyperbolic_atanh = new T[n+1];
@@ -1909,7 +1910,6 @@ inline T Cordic<T,FLT>::div( const T& y, const T& x, bool do_reduce, bool can_lo
 template< typename T, typename FLT >
 inline T Cordic<T,FLT>::rcp( const T& x ) const
 {
-    _log1( rcp, x );
     return div( impl->one, x );
 }
 
@@ -2824,7 +2824,7 @@ inline void Cordic<T,FLT>::reduce_sincos_arg( T& a, uint32_t& quad, bool& sign, 
     const T a_orig = a;
     sign = a < 0;
     if ( sign ) a = -a;
-    const T m = mul( a, impl->four_div_pi );
+    const T m = mul( a, impl->four_div_pi, true, false );
     const T i = m >> impl->frac_w;
     const T s = i * impl->pi_div_4;
     a        -= s;
