@@ -105,15 +105,6 @@ public:
     T&   assign( T& x, const T& y ) const;                                // x = y  (this exists so we can log assignments)
     T&   pop_value( T& x, const T& y ) const;                             // x = y  (where y is top of stack for logging)
 
-    bool isgreater( const T& x, const T& y ) const;                       // x > y
-    bool isgreaterequal( const T& x, const T& y ) const;                  // x >= y
-    bool isless( const T& x, const T& y ) const;                          // x > y
-    bool islessequal( const T& x, const T& y ) const;                     // x >= y
-    bool islessgreater( const T& x, const T& y ) const;                   // x != y (but returns false if at least one is NaN)
-    bool isunordered( const T& x, const T& y ) const;                     // returns true if x is a NaN OR y is a NaN
-    bool isunequal( const T& x, const T& y ) const;                      // x != y (returns true if only one is NaN)
-    bool isequal( const T& x, const T& y ) const;                         // x == y (returns true if both are NaN)
-
     T    abs( const T& x ) const;                                         // |x|
     T    neg( const T& x ) const;                                         // -x
     T    floor( const T& x ) const;                                       // largest  integral value <= x
@@ -133,6 +124,15 @@ public:
     T    rsqrt( const T& x ) const;                                       // 1/sqrt 
     T    cbrt( const T& x ) const;                                        // x^(1/3)  (but x can be negative)
     T    rcbrt( const T& x ) const;                                       // 1/cbrt
+
+    bool isgreater( const T& x, const T& y ) const;                       // x > y
+    bool isgreaterequal( const T& x, const T& y ) const;                  // x >= y
+    bool isless( const T& x, const T& y ) const;                          // x > y
+    bool islessequal( const T& x, const T& y ) const;                     // x >= y
+    bool islessgreater( const T& x, const T& y ) const;                   // x != y (but returns false if at least one is NaN)
+    bool isunordered( const T& x, const T& y ) const;                     // returns true if x is a NaN OR y is a NaN
+    bool isunequal( const T& x, const T& y ) const;                       // x != y (returns true if only one is NaN)
+    bool isequal( const T& x, const T& y ) const;                         // x == y (returns true if both are NaN)
 
     T    fdim( const T& x, const T& y ) const;                            // (x >= y) ? (x-y) : 0
     T    fmax( const T& x, const T& y ) const;                            // max(x, y)
@@ -484,15 +484,6 @@ public:
         assign,
         pop_value,
 
-        isgreater,
-        isgreaterequal,
-        isless,
-        islessequal,
-        islessgreater,
-        isunordered,
-        isunequal,
-        isequal,
-
         abs,
         neg,
         floor,
@@ -512,6 +503,16 @@ public:
         rsqrt,
         cbrt,
         rcbrt,
+
+        isgreater,
+        isgreaterequal,
+        isless,
+        islessequal,
+        islessgreater,
+        isunordered,
+        isunequal,
+        isequal,
+
         fdim,
         fmax,
         fmin,
@@ -829,15 +830,6 @@ std::string Cordic<T,FLT>::op_to_str( uint16_t op )
         _ocase( assign )
         _ocase( pop_value )
 
-        _ocase( isgreater )
-        _ocase( isgreaterequal )
-        _ocase( isless )
-        _ocase( islessequal )
-        _ocase( islessgreater )
-        _ocase( isunordered )
-        _ocase( isunequal )
-        _ocase( isequal )
-
         _ocase( abs )
         _ocase( neg )
         _ocase( floor )
@@ -855,6 +847,15 @@ std::string Cordic<T,FLT>::op_to_str( uint16_t op )
         _ocase( rcp )
         _ocase( sqrt )
         _ocase( rsqrt )
+
+        _ocase( isgreater )
+        _ocase( isgreaterequal )
+        _ocase( isless )
+        _ocase( islessequal )
+        _ocase( islessgreater )
+        _ocase( isunordered )
+        _ocase( isunequal )
+        _ocase( isequal )
 
         _ocase( exp )
         _ocase( expm1 )
@@ -1675,62 +1676,6 @@ inline T&   Cordic<T,FLT>::pop_value( T& x, const T& y ) const
 }
 
 template< typename T, typename FLT >
-inline bool Cordic<T,FLT>::isgreater( const T& x, const T& y ) const
-{
-    _log2( isgreater, x, y );
-    return x > y;
-}
-
-template< typename T, typename FLT >
-inline bool Cordic<T,FLT>::isgreaterequal( const T& x, const T& y ) const
-{
-    _log2( isgreaterequal, x, y );
-    return x >= y;
-}
-
-template< typename T, typename FLT >
-inline bool Cordic<T,FLT>::isless( const T& x, const T& y ) const
-{
-    _log2( isless, x, y );
-    return x < y;
-}
-
-template< typename T, typename FLT >
-inline bool Cordic<T,FLT>::islessequal( const T& x, const T& y ) const
-{
-    _log2( islessequal, x, y );
-    return x <= y;
-}
-
-template< typename T, typename FLT >
-inline bool Cordic<T,FLT>::islessgreater( const T& x, const T& y ) const
-{
-    _log2( islessgreater, x, y );
-    return x < y || x > y;
-}
-
-template< typename T, typename FLT >
-inline bool Cordic<T,FLT>::isunordered( const T& x, const T& y ) const
-{
-    _log2( isunordered, x, y );
-    return !(x == y || x != y);
-}
-
-template< typename T, typename FLT >
-inline bool Cordic<T,FLT>::isunequal( const T& x, const T& y ) const
-{
-    _log2( isunequal, x, y );
-    return x != y;
-}
-
-template< typename T, typename FLT >
-inline bool Cordic<T,FLT>::isequal( const T& x, const T& y ) const
-{
-    _log2( isequal, x, y );
-    return x == y;
-}
-
-template< typename T, typename FLT >
 inline T Cordic<T,FLT>::abs( const T& x ) const
 {
     _log1( abs, x );
@@ -2007,6 +1952,62 @@ T Cordic<T,FLT>::rcbrt( const T& x ) const
 
     // There might be a better way, but exp(-log(x)/3) is probably not it
     return div( impl->one, cbrt( x ) );
+}
+
+template< typename T, typename FLT >
+inline bool Cordic<T,FLT>::isgreater( const T& x, const T& y ) const
+{
+    _log2( isgreater, x, y );
+    return x > y;
+}
+
+template< typename T, typename FLT >
+inline bool Cordic<T,FLT>::isgreaterequal( const T& x, const T& y ) const
+{
+    _log2( isgreaterequal, x, y );
+    return x >= y;
+}
+
+template< typename T, typename FLT >
+inline bool Cordic<T,FLT>::isless( const T& x, const T& y ) const
+{
+    _log2( isless, x, y );
+    return x < y;
+}
+
+template< typename T, typename FLT >
+inline bool Cordic<T,FLT>::islessequal( const T& x, const T& y ) const
+{
+    _log2( islessequal, x, y );
+    return x <= y;
+}
+
+template< typename T, typename FLT >
+inline bool Cordic<T,FLT>::islessgreater( const T& x, const T& y ) const
+{
+    _log2( islessgreater, x, y );
+    return x < y || x > y;
+}
+
+template< typename T, typename FLT >
+inline bool Cordic<T,FLT>::isunordered( const T& x, const T& y ) const
+{
+    _log2( isunordered, x, y );
+    return !(x == y || x != y);
+}
+
+template< typename T, typename FLT >
+inline bool Cordic<T,FLT>::isunequal( const T& x, const T& y ) const
+{
+    _log2( isunequal, x, y );
+    return x != y;
+}
+
+template< typename T, typename FLT >
+inline bool Cordic<T,FLT>::isequal( const T& x, const T& y ) const
+{
+    _log2( isequal, x, y );
+    return x == y;
 }
 
 template< typename T, typename FLT >
