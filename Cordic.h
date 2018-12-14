@@ -1934,7 +1934,7 @@ T Cordic<T,FLT>::sqrt( const T& _x, bool do_reduce, bool can_log ) const
 
     T xx, yy;
     hyperbolic_vectoring_xy( x+impl->one, x-impl->one, xx, yy );  // gain*sqrt((s+1)^2 - (s-1)^2)
-    xx = mul( xx, hyperbolic_vectoring_one_over_gain(), false, false );   // sucks that we have to do this
+    xx = mul( xx, impl->hyperbolic_vectoring_one_over_gain, false, false );   // sucks that we have to do this
     if ( do_reduce ) xx = lshift( xx, ls, false );                  // log2(p)/2 - 1
 
     if ( debug ) std::cout << "sqrt end: x_orig=" << to_flt(_x) << " x_reduced=s=" << to_flt(x) << " do_reduce=" << do_reduce << " xx=" << to_flt(xx) << "\n";
@@ -2080,7 +2080,7 @@ T Cordic<T,FLT>::exp( const T& _x, bool do_reduce, bool can_log ) const
     if ( impl->do_reduce ) reduce_exp_arg( M_E, x, factor );  // x=log(f) factor=log(e)*exp(i)
 
     T xx, yy, zz;
-    hyperbolic_rotation( hyperbolic_rotation_one_over_gain(), hyperbolic_rotation_one_over_gain(), x, xx, yy, zz );
+    hyperbolic_rotation( impl->hyperbolic_rotation_one_over_gain, impl->hyperbolic_rotation_one_over_gain, x, xx, yy, zz );
     if ( impl->do_reduce ) {
         if ( debug ) std::cout << "exp mid: b=" << M_E << " x_orig=" << to_flt(_x) << " f=reduced_x=" << to_flt(x) << 
                                   " exp(f)=" << to_flt(xx) << " log(b)*log(i)=" << to_flt(factor) << "\n";
@@ -2266,13 +2266,13 @@ void Cordic<T,FLT>::sincos( const T& _x, T& si, T& co, bool do_reduce, bool can_
         reduce_sincos_arg( x, quadrant, x_sign, did_minus_pi_div_4 );
     }
 
-    T r = circular_rotation_one_over_gain();
+    T r = impl->circular_rotation_one_over_gain;
     int32_t r_lshift;
     bool r_sign = false;
     if ( _r != nullptr ) {
         r = *_r;
         if ( do_reduce ) reduce_arg( r, r_lshift, r_sign );
-        r = mul( r, circular_rotation_one_over_gain(), true, false );  
+        r = mul( r, impl->circular_rotation_one_over_gain, true, false );  
     }
 
     T zz;
@@ -2444,7 +2444,7 @@ inline T Cordic<T,FLT>::norm( const T& _x, const T& _y, bool do_reduce, bool can
 
     T xx, yy, zz;
     circular_vectoring_xy( x, y, xx, yy );
-    xx = mul( xx, circular_vectoring_one_over_gain(), true, false );
+    xx = mul( xx, impl->circular_vectoring_one_over_gain, true, false );
     if ( do_reduce ) xx = lshift( xx, ls );
     if ( debug ) std::cout << "norm end: x=" << to_flt(x) << " y=" << to_flt(y) << " do_reduce=" << do_reduce << " xx=" << to_flt(xx) << "\n";
     return xx;
@@ -2525,13 +2525,13 @@ void Cordic<T,FLT>::sinhcosh( const T& _x, T& sih, T& coh, bool do_reduce, bool 
     bool sign;
     if ( do_reduce ) reduce_sinhcosh_arg( x, sinh_i, cosh_i, sign );  
 
-    T r = hyperbolic_rotation_one_over_gain();
+    T r = impl->hyperbolic_rotation_one_over_gain;
     int32_t r_lshift;
     bool r_sign = false;
     if ( _r != nullptr ) {
         r = *_r;
         if ( do_reduce ) reduce_arg( r, r_lshift, r_sign );
-        r = mul( r, hyperbolic_rotation_one_over_gain(), false, false );  // should not need to reduce (I think)
+        r = mul( r, impl->hyperbolic_rotation_one_over_gain, false, false );  // should not need to reduce (I think)
     }
 
     T sinh_f;
