@@ -102,6 +102,7 @@ public:
     T     maxint( void );                                       // largest positive integer (just integer part, does not include fraction)
     freal zero( void );                                         // 0.0
     freal one( void );                                          // 1.0
+    freal two( void );                                          // 2.0
     freal half( void );                                         // 0.5
     freal quarter( void );                                      // 0.25
     freal sqrt2( void );                                        // sqrt(2)
@@ -191,6 +192,7 @@ public:
     freal  exp10( void ) const;              // 10^x
     freal  pow( const freal& e ) const;      // a^e
     freal  log( void ) const;                                         
+    freal  log1p( void ) const;              // log(a+1)
     freal  logb( const freal& b ) const;     // log-base-b(a)
     freal  logc( const FLT c ) const;        // log-base-c(a)                  
     freal  log2( void ) const;                                        
@@ -406,6 +408,10 @@ static inline freal<T,FLT>  pow( const freal<T,FLT>& a, const freal<T,FLT>& e )
 template< typename T=int64_t, typename FLT=double >              
 static inline freal<T,FLT>  log( const freal<T,FLT>& a )                                                
 { return a.log();                       }
+
+template< typename T=int64_t, typename FLT=double >              
+static inline freal<T,FLT>  log1p( const freal<T,FLT>& a )                                                
+{ return a.log1p();                     }
 
 template< typename T=int64_t, typename FLT=double >              
 static inline freal<T,FLT>  logb( const freal<T,FLT>& a, const freal<T,FLT>& b )                        
@@ -773,6 +779,10 @@ inline freal<T,FLT> freal<T,FLT>::one( void )
 { return( c(), pop_value( cordic, cordic->one() ) ); }
 
 template< typename T, typename FLT >              
+inline freal<T,FLT> freal<T,FLT>::two( void ) 
+{ return( c(), pop_value( cordic, cordic->two() ) ); }
+
+template< typename T, typename FLT >              
 inline freal<T,FLT> freal<T,FLT>::half( void ) 
 { return( c(), pop_value( cordic, cordic->half() ) ); }
 
@@ -1049,6 +1059,10 @@ inline freal<T,FLT> freal<T,FLT>::pow( const freal<T,FLT>& e ) const
 template< typename T, typename FLT >              
 inline freal<T,FLT> freal<T,FLT>::log( void ) const                                                     
 { return( c(), pop_value( cordic, cordic->log( v ) ) ); }
+
+template< typename T, typename FLT >              
+inline freal<T,FLT> freal<T,FLT>::log1p( void ) const                                                     
+{ return( c(), pop_value( cordic, cordic->log1p( v ) ) ); }
 
 template< typename T, typename FLT >             
 inline freal<T,FLT> freal<T,FLT>::logb( const freal<T,FLT>& b ) const                                   

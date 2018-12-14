@@ -83,6 +83,7 @@ public:
     T maxint( void ) const;                             // largest positive integer (just integer part, does not include fraction)
     T zero( void ) const;                               // encoded 0.0
     T one( void ) const;                                // encoded 1.0
+    T two( void ) const;                                // encoded 2.0
     T half( void ) const;                               // encoded 0.5
     T quarter( void ) const;                            // encoded 0.25
     T sqrt2( void ) const;                              // encoded sqrt(2)
@@ -144,6 +145,7 @@ public:
     T    exp10( const T& x ) const;                                       // 10^x
     T    pow( const T& b, const T& x ) const;                             // b^x  = exp(x * log(b))              (3)
     T    log( const T& x ) const;                                         // 2*atan2(x-1, x+1)    
+    T    log1p( const T& x ) const;                                       // 2*atan2(x, x+2) = log(x+1)
     T    logb( const T& x, const T& b ) const;                            // log(x)/log(b)                (3)
     T    logc( const T& x, const FLT& b ) const;                          // log(x)/log(b)    b=const     (2)
     T    log2( const T& x ) const;                                        // log(x)/log(2)                (2)
@@ -203,7 +205,7 @@ public:
     // log(x/4)         = atanh2(x-0.25, x+0.25) 
     // log(x/y)         = log(x) - log(y)
     // log(x/y)         = 2*atanh2(x-y, x+y)  
-    // log(1+x)         = 2*atanh(x/(x+2))                      log1p()
+    // log(1+x)         = 2*atanh2(x, x+2)                      log1p()
     //
     // sin(-x)          = -sin(x)
     // sin(x)           = sin(i*pi/2 + f)                       where i is an integer and |f| <= pi/4
@@ -433,6 +435,7 @@ public:
     T    dad( const T& y, const T& x, const T addend, bool do_reduce ) const; // same but override do_reduce
     T    div( const T& y, const T& x, bool do_reduce ) const;             // same but override do_reduce
     T    log( const T& x, bool do_reduce ) const;                         // 2*atan2(x-1, x+1, do_reduce)    
+    T    log1p( const T& x, bool do_reduce ) const;                       // 2*atan2(x, x+2, do_reduce)    
     T    norm( const T& _x, const T& _y, bool do_reduce ) const;          
     T    atan2(  const T& y, const T& x, bool do_reduce, bool x_is_one=false, T * r=nullptr ) const; // same but override do_reduce 
     T    atanh2( const T& y, const T& x, bool do_reduce, bool x_is_one=false ) const; // same but override do_reduce
@@ -520,6 +523,7 @@ public:
         exp10,
         pow,
         log,
+        log1p,
         logb,
         logc,
         log2,
@@ -591,6 +595,7 @@ struct Cordic<T,FLT>::Impl
     T                           minval;
     T                           zero;
     T                           one;
+    T                           two;
     T                           half;
     T                           quarter;
     T                           sqrt2;
@@ -653,6 +658,7 @@ Cordic<T,FLT>::Cordic( uint32_t int_w, uint32_t frac_w, bool do_reduce, uint32_t
     impl->minval        = to_t( 1.0 / std::pow( 2.0, frac_w ) );
     impl->zero          = to_t( 0.0 );
     impl->one           = to_t( 1.0 );
+    impl->two           = to_t( 2.0 );
     impl->half          = to_t( 0.5 );
     impl->quarter       = to_t( 0.25 );
     impl->sqrt2         = to_t( std::sqrt( 2.0 ) );
@@ -857,6 +863,7 @@ std::string Cordic<T,FLT>::op_to_str( uint16_t op )
         _ocase( exp10 )
         _ocase( pow )
         _ocase( log )
+        _ocase( log1p )
         _ocase( logb )
         _ocase( logc )
         _ocase( log2 )
@@ -957,6 +964,13 @@ inline T Cordic<T,FLT>::one( void ) const
 {
     _log1f( push_constant, to_flt(impl->one) ); 
     return impl->one;
+}
+
+template< typename T, typename FLT >
+inline T Cordic<T,FLT>::two( void ) const
+{
+    _log1f( push_constant, to_flt(impl->two) ); 
+    return impl->two;
 }
 
 template< typename T, typename FLT >
@@ -1360,7 +1374,7 @@ void Cordic<T,FLT>::hyperbolic_rotation( const T& x0, const T& y0, const T& z0, 
     //      -1  <= y0 <= 1
     //      |z0| <= 1.1182...
     //-----------------------------------------------------
-    const T TWO = impl->one << 1;
+    const T TWO = impl->two;
     const T ANGLE_MAX = impl->hyperbolic_angle_max;
     if ( debug ) std::cout << "hyperbolic_rotation begin: x0,y0,z0=[ " << to_flt(x0) << ", " << to_flt(y0) << ", " << to_flt(z0) << "]\n";
     cassert( x0 >= -TWO       && x0 <= TWO,       "hyperbolic_rotation x0 must be in the range -2 .. 2" );
@@ -1415,7 +1429,7 @@ void Cordic<T,FLT>::hyperbolic_vectoring( const T& x0, const T& y0, const T& z0,
     //      -PI <= z0 <= PI
     //      |atanh(y0/x0)| <= 1.1182...
     //-----------------------------------------------------
-    const T TWO = impl->one << 1;
+    const T TWO = impl->two;
     const T PI  = impl->pi;
     const T ANGLE_MAX = impl->hyperbolic_angle_max;
     if ( debug ) std::cout << "hyperbolic_vectoring begin: x0,y0,z0=[ " << to_flt(x0) << ", " << to_flt(y0) << ", " << to_flt(z0) << "]\n";
@@ -1472,7 +1486,7 @@ void Cordic<T,FLT>::hyperbolic_vectoring_xy( const T& x0, const T& y0, T& x, T& 
     //      -2  <= x0 <= 2
     //      -2  <= y0 <= 2
     //-----------------------------------------------------
-    const T TWO = impl->one << 1;
+    const T TWO = impl->two;
     const T PI  = impl->pi;
     if ( debug ) std::cout << "hyperbolic_vectoring_xy begin: x0,y0=[ " << to_flt(x0) << ", " << to_flt(y0) << "\n";
     cassert( x0 >= -TWO && x0 <= TWO, "hyperbolic_vectoring_xy x0 must be in the range -2 .. 2" );
@@ -1520,7 +1534,7 @@ void Cordic<T,FLT>::linear_rotation( const T& x0, const T& y0, const T& z0, T& x
     //      |z0|  <= 1
     //-----------------------------------------------------
     const T ONE = impl->one;
-    const T TWO = ONE << 1;
+    const T TWO = impl->two;
     if ( debug ) std::cout << "linear_rotation begin: x0,y0,z0=[ " << to_flt(x0) << ", " << to_flt(y0) << ", " << to_flt(z0) << "]\n";
     cassert( x0 >= -TWO && x0 <= TWO, "linear_rotation x0 must be in the range -2 .. 2" );
     cassert( y0 >= -TWO && y0 <= TWO, "linear_rotation y0 must be in the range -2 .. 2" );
@@ -1563,7 +1577,7 @@ void Cordic<T,FLT>::linear_vectoring( const T& x0, const T& y0, const T& z0, T& 
     //      |y0/x0| <= 1
     //-----------------------------------------------------
     const T ONE = impl->one;
-    const T TWO = ONE << 1;
+    const T TWO = impl->two;
     if ( debug ) std::cout << "linear_vectoring begin: x0,y0,z0=[ " << to_flt(x0) << ", " << to_flt(y0) << ", " << to_flt(z0) << "]\n";
     cassert( x0 >= -TWO && x0 <= TWO, "linear_vectoring x0 must be in the range -2 .. 2, got " + to_string(x0) );
     cassert( y0 >= -TWO && y0 <= TWO, "linear_vectoring y0 must be in the range -2 .. 2, got " + to_string(y0) );
@@ -1606,7 +1620,7 @@ void Cordic<T,FLT>::linear_vectoring_xy( const T& x0, const T& y0, T& x, T& y ) 
     //      -2      <= x0 <= 2
     //      -2      <= y0 <= 2
     //-----------------------------------------------------
-    const T TWO = impl->one << 1;
+    const T TWO = impl->two;
     if ( debug ) std::cout << "linear_vectoring_xy begin: x0,y0=[ " << to_flt(x0) << ", " << to_flt(y0) << "\n";
     cassert( x0 >= -TWO && x0 <= TWO, "linear_vectoring_xy x0 must be in the range -2 .. 2" );
     cassert( y0 >= -TWO && y0 <= TWO, "linear_vectoring_xy y0 must be in the range -2 .. 2" );
@@ -1979,7 +1993,7 @@ inline T Cordic<T,FLT>::cbrt( const T& _x ) const
     T x = _x;
     bool sign = x < 0;
     if ( sign ) x = -x;
-    const T THREE = (impl->one << 1) | impl->one;
+    const T THREE = impl->two | impl->one;
     T r = exp( div( log( x ), THREE ) );
     if ( sign ) r = -r;
     return r;
@@ -2105,6 +2119,27 @@ template< typename T, typename FLT >
 inline T Cordic<T,FLT>::log( const T& _x ) const
 { 
     return log( _x, impl->do_reduce );
+}
+
+template< typename T, typename FLT >
+inline T Cordic<T,FLT>::log1p( const T& _x, bool do_reduce ) const
+{ 
+    _log1( log1p, _x );
+    T x = _x;
+    cassert( x > -one(), "log1p: x+1 must be positive" );
+    T addend;
+    if ( do_reduce ) reduce_log_arg( x, addend );
+    T dv = div( x, x+impl->two, true );
+    T lg1p = atanh( dv ) << 1;
+    if ( do_reduce ) lg1p += addend;
+    if ( debug ) std::cout << "log1p: x_orig=" << to_flt(_x) << " reduced_x=" << to_flt(x) << " log1p=" << to_flt(lg1p) << "\n";
+    return lg1p;
+}
+
+template< typename T, typename FLT >
+inline T Cordic<T,FLT>::log1p( const T& _x ) const
+{ 
+    return log1p( _x, impl->do_reduce );
 }
 
 template< typename T, typename FLT >
@@ -2627,7 +2662,7 @@ inline void Cordic<T,FLT>::reduce_exp_arg( FLT b, T& x, T& factor ) const
     //     so we can multiply it by log(b) before converting to type T and
     //     then multiplying by exp(f) in the caller.
     //-----------------------------------------------------
-    const T TWO = impl->one << 1;
+    const T TWO = impl->two;
     const T MININT = -impl->maxint - 1;
     T x_orig = x;
     if ( debug ) std::cout << "reduce_exp_arg: b=" << b << " x_orig=" << to_flt(x_orig) << "\n";
