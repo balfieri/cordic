@@ -2124,6 +2124,9 @@ inline T Cordic<T,FLT>::log( const T& _x ) const
 template< typename T, typename FLT >
 inline T Cordic<T,FLT>::log1p( const T& _x, bool do_reduce ) const
 { 
+    return log( _x + impl->one );   // for now
+
+    // this doesn't work yet, not sure why
     _log1( log1p, _x );
     T x = _x;
     cassert( x > -one(), "log1p: x+1 must be positive" );

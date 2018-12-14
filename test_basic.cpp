@@ -142,6 +142,7 @@ int main( int argc, const char * argv[] )
         do_op2(  "pow(x,y)",         pow,     std::pow,       b, y, do_reduce );
         if ( x > 0.0 ) {
             do_op1(  "log(x)",       log,     std::log,       x   , true      );
+            do_op1(  "log1p(x)",     log1p,   std::log1p,     x   , true      );
             do_op2(  "logb(x,b)",    logb,    logb,           x, b, true      );
             do_op1(  "log2(x)",      log2,    log2,           x   , true      );
             do_op1(  "log10(x)",     log10,   log10,          x   , true      );
