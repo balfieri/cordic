@@ -88,13 +88,13 @@ private:
         constructed,
         destructed,
         op1, 
-        op1i, 
-        op1f, 
         op2, 
-        op2i, 
-        op2f, 
         op3, 
         op4, 
+        op1i, 
+        op1f, 
+        op2i, 
+        op2f, 
     };
 
     static constexpr uint32_t KIND_cnt = 12;
@@ -381,9 +381,9 @@ Analysis<T,FLT>::Analysis( std::string file_name )
                 for( uint32_t i = 0; i < opnd_cnt; i++ )
                 {
                     opnd[i] = parse_addr( c );
-                    auto it = vals.find( opnd[i] );
-                    cassert( it != vals.end() && it->second.is_alive, name + " opnd[" + std::to_string(i) + "] does not exist" );
+                    if ( debug ) std::cout << "0x" << std::hex << opnd[i] << "\n";
                     if ( i != 0 || op != OP::assign ) {
+                        auto it = vals.find( opnd[i] );
                         cassert( it != vals.end() && it->second.is_alive, name + " opnd[" + std::to_string(i) + "] does not exist" );
                         cassert( it->second.is_assigned, name + " opnd[" + std::to_string(i) + "] used when not previously assigned" );
                         if ( i == 1 && op == OP::assign ) vals[opnd[0]] = it->second;
@@ -427,7 +427,7 @@ Analysis<T,FLT>::Analysis( std::string file_name )
             {
                 std::string name = parse_name( c );
                 OP op = ops[name];
-                cassert( op == OP::lshift || op == OP::rshift || op == OP::pop_value, "op2i allowed only for shifts" );
+                cassert( op == OP::lshift || op == OP::rshift || op == OP::pop_value, "op2i allowed only for lshift/rshift/pop_value" );
                 uint64_t opnd0 = parse_addr( c );
                 T        opnd1 = parse_int( c );
                 auto it = vals.find( opnd0 );
