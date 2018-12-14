@@ -234,12 +234,14 @@ template< typename T, typename FLT > inline void Analysis<T,FLT>::val_stack_push
 {
     cassert( val_stack_cnt < VAL_STACK_CNT_MAX, "depth of val_stack exceeded" );
     val_stack[val_stack_cnt++] = info;
+    if ( debug ) std::cout << "    new stack depth=" << val_stack_cnt << "\n";
 }
 
 template< typename T, typename FLT >
 inline typename Analysis<T,FLT>::ValInfo Analysis<T,FLT>::val_stack_pop( void )
 {
     cassert( val_stack_cnt > 0, "can't pop an empty val_stack" );
+    if ( debug ) std::cout << "    new stack depth=" << (val_stack_cnt-1) << "\n";
     return val_stack[--val_stack_cnt];
 }
 

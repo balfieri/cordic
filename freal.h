@@ -614,7 +614,7 @@ inline freal<T,FLT> freal<T,FLT>::pop_value( const Cordic<T,FLT> * cordic, const
 //-----------------------------------------------------
 template< typename T, typename FLT >              
 FLT    freal<T,FLT>::to_flt( void ) const                                                               
-{ return c()->to_flt( v, true );        }
+{ return c()->to_flt( v );              }
 
 template< typename T, typename FLT >              
 std::string freal<T,FLT>::to_string( void ) const                                                               
