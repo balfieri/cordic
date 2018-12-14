@@ -127,6 +127,7 @@ public:
     T    mad( const T& x, const T& y, const T& addend ) const;            // x*y + addend
     T    fma( const T& x, const T& y, const T& addend ) const;            // mad( x, y, addend )        (same thing)
     T    mul( const T& x, const T& y ) const;                             // x*y 
+    T    sqr( const T& x ) const;                                         // x*x
     T    lshift( const T& x, int y, bool can_log=true ) const;            // x << y
     T    rshift( const T& x, int y ) const;                               // x >> y
     T    dad( const T& y, const T& x, const T& addend ) const;            // y/x + addend
@@ -509,6 +510,7 @@ public:
         mad,
         fma,
         mul,
+        sqr,
         lshift,
         rshift,
         dad,
@@ -1822,6 +1824,12 @@ template< typename T, typename FLT >
 inline T Cordic<T,FLT>::mul( const T& x, const T& y, bool do_reduce, bool can_log ) const
 {
     return mad( x, y, impl->zero, do_reduce, can_log );
+}
+
+template< typename T, typename FLT >
+inline T Cordic<T,FLT>::sqr( const T& x ) const
+{
+    return mad( x, x, impl->zero );
 }
 
 template< typename T, typename FLT >
