@@ -1139,7 +1139,7 @@ template< typename T, typename FLT >
 inline void freal<T,FLT>::sincos( freal<T,FLT>& si, freal<T,FLT>& co, const freal<T,FLT>& r ) const                           
 { 
     T si_t, co_t;
-    c()->sincos( v, si_t, co_t, &r );
+    c()->sincos( v, si_t, co_t, &r.v );
     si = pop_value( cordic, si_t );
     co = pop_value( cordic, co_t );
 }
@@ -1223,7 +1223,7 @@ template< typename T, typename FLT >
 inline void freal<T,FLT>::sinhcosh( freal<T,FLT>& sih, freal<T,FLT>& coh, const freal<T,FLT>& r ) const                       
 { 
     T sih_t, coh_t;
-    c()->sinhcosh( v, sih_t, coh_t, &r );
+    c()->sinhcosh( v, sih_t, coh_t, &r.v );
     sih = pop_value( cordic, sih_t );
     coh = pop_value( cordic, coh_t );
 }
