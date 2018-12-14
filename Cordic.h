@@ -2221,18 +2221,28 @@ inline T Cordic<T,FLT>::log10( const T& x ) const
 template< typename T, typename FLT >
 inline T Cordic<T,FLT>::sin( const T& x, const T * r ) const
 { 
+    if ( r != nullptr ) {
+        _log2( sin, x, *r );
+    } else {
+        _log1( sin, x );
+    }
     T si;
     T co;
-    sincos( x, si, co, impl->do_reduce, true, true, false, r );
+    sincos( x, si, co, impl->do_reduce, false, true, false, r );
     return si;
 }
 
 template< typename T, typename FLT >
 inline T Cordic<T,FLT>::cos( const T& x, const T * r ) const
 { 
+    if ( r != nullptr ) {
+        _log2( cos, x, *r );
+    } else {
+        _log1( cos, x );
+    }
     T si;
     T co;
-    sincos( x, si, co, impl->do_reduce, true, false, true, r );
+    sincos( x, si, co, impl->do_reduce, false, false, true, r );
     return co;
 }
 
@@ -2474,15 +2484,25 @@ inline T Cordic<T,FLT>::normh( const T& x, const T& y ) const
 template< typename T, typename FLT >
 inline T Cordic<T,FLT>::sinh( const T& x, const T * r ) const
 { 
+    if ( r != nullptr ) {
+        _log2( sinh, x, *r );
+    } else {
+        _log1( sinh, x );
+    }
     T sih;
     T coh;
-    sinhcosh( x, sih, coh, impl->do_reduce, true, true, false, r );
+    sinhcosh( x, sih, coh, impl->do_reduce, false, true, false, r );
     return sih;
 }
 
 template< typename T, typename FLT >
 inline T Cordic<T,FLT>::cosh( const T& x, const T * r ) const
 { 
+    if ( r != nullptr ) {
+        _log2( cosh, x, *r );
+    } else {
+        _log1( cosh, x );
+    }
     T sih;
     T coh;
     sinhcosh( x, sih, coh, impl->do_reduce, true, false, true, r );
