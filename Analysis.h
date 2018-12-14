@@ -381,7 +381,6 @@ Analysis<T,FLT>::Analysis( std::string file_name )
                 for( uint32_t i = 0; i < opnd_cnt; i++ )
                 {
                     opnd[i] = parse_addr( c );
-                    if ( debug ) std::cout << "0x" << std::hex << opnd[i] << "\n";
                     if ( i != 0 || op != OP::assign ) {
                         auto it = vals.find( opnd[i] );
                         cassert( it != vals.end() && it->second.is_alive, name + " opnd[" + std::to_string(i) + "] does not exist" );
