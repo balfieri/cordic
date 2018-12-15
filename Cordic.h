@@ -1700,6 +1700,46 @@ inline T&   Cordic<T,FLT>::pop_value( T& x, const T& y ) const
 }
 
 template< typename T, typename FLT >
+inline bool Cordic<T,FLT>::signbit( const T& x ) const                                     
+{
+    return x < 0;
+}
+
+template< typename T, typename FLT >
+inline int Cordic<T,FLT>::fpclassify( const T& x ) const                                     
+{
+    return (x == 0) ? FP_ZERO : FP_SUBNORMAL;
+}
+
+template< typename T, typename FLT >
+inline bool Cordic<T,FLT>::isfinite( const T& x ) const                                     
+{
+    (void)x;
+    return true;
+}
+
+template< typename T, typename FLT >
+inline bool Cordic<T,FLT>::isinf( const T& x ) const                                     
+{
+    (void)x;
+    return false;
+}
+
+template< typename T, typename FLT >
+inline bool Cordic<T,FLT>::isnan( const T& x ) const                                     
+{
+    (void)x;
+    return false;
+}
+
+template< typename T, typename FLT >
+inline bool Cordic<T,FLT>::isnormal( const T& x ) const                                     
+{
+    (void)x;
+    return false;
+}
+
+template< typename T, typename FLT >
 inline T Cordic<T,FLT>::abs( const T& x ) const
 {
     _log1( abs, x );

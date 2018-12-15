@@ -18,7 +18,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 //
-// mpint.h - multi-precision signed integer class for C++ 
+// mpint.h - very limited multi-precision signed integer class for C++ 
 //
 // This class is a very simplisitic version of arbitrary precision integers, or "big integers".
 // It provides only a bare minimum set of operations needed by Cordic.h.
@@ -35,23 +35,28 @@
 #define _mpint_h
 
 #include <cmath>
+#include <iostream>
+#include <string>
 
 class mpint
 {
 public:
     static void implicit_int_w_set( uint32_t int_w );
     
-    mpint( int64_t init=0, uint32_t int_w=0 );
+    mpint( void );
+    mpint( int64_t i, uint32_t int_w=0 );
     ~mpint();
     
-    static mpint make_int( uint32_t int_w );
-
-    // bare minimum set of operators
+    // minimum set of operators needed by Cordic.h:
     mpint& operator =  ( const mpint& other );
+    mpint  operator -  () const;
     mpint  operator +  ( const mpint& other ) const;
     mpint  operator -  ( const mpint& other ) const;
     mpint  operator << ( int shift ) const;
     mpint  operator >> ( int shift ) const;
+
+    static mpint to_mpint( std::string );
+    std::string  to_string( void ) const;                
 
 private:
     static uint32_t     implicit_int_w;
@@ -59,18 +64,85 @@ private:
     uint32_t            word_cnt;
     union
     {
-        uint64_t   w0;
-        uint64_t * w;
+        uint64_t   w0;          // if fits in 64 bits
+        uint64_t * w;           // if doesn't fit in 64 bits
     } u;
 };
 
+// Well-Known std:xxx() Functions 
+//
+namespace std
+{
+
+template< typename T=int64_t, typename FLT=double >              
+static inline std::string to_string( const mpint& a ) 
+{ 
+    return a.to_string();
+}
+
+template< typename T=int64_t, typename FLT=double >              
+static inline std::istream& operator >> ( std::istream &in, mpint& a )
+{ 
+    std::string s = "";
+    // TODO: collect characters
+    a = mpint::to_mpint( s );
+    return in;
+}
+
+template< typename T=int64_t, typename FLT=double >              
+static inline std::ostream& operator << ( std::ostream &out, const mpint& a )
+{ 
+    out << a.to_string(); 
+    return out;     
+}
+
+}
+
+//-----------------------------------------------------
+//-----------------------------------------------------
+//-----------------------------------------------------
+//-----------------------------------------------------
+//-----------------------------------------------------
+//-----------------------------------------------------
+//-----------------------------------------------------
+//-----------------------------------------------------
+// 
+// IMPLEMENTATION  IMPLEMENTATION  IMPLEMENTATION
+//
+//-----------------------------------------------------
+//-----------------------------------------------------
+//-----------------------------------------------------
+//-----------------------------------------------------
+//-----------------------------------------------------
+//-----------------------------------------------------
+//-----------------------------------------------------
+//-----------------------------------------------------
+
+#define iassert(expr, msg) if ( !(expr) ) \
+                { std::cout << "ERROR: assertion failure: " << (msg) << " at " << __FILE__ << ":" << __LINE__ << "\n"; exit( 1 ); }
+
 uint32_t mpint::implicit_int_w = 64;
+
+inline void mpint::implicit_int_w_set( uint32_t int_w )
+{
+    implicit_int_w = int_w;
+}
+
+inline mpint::mpint( void )
+{
+    // mark it undefined
+    int_w    = 0;
+    word_cnt = 0;
+}
 
 inline mpint::mpint( int64_t init, uint32_t _int_w )
 {
-    int_w    = (_int_w == 0) ? implicit_int_w : _int_w;
-    word_cnt = int_w / 64;
-    if ( word_cnt > 1 ) {
+    int_w = (_int_w == 0) ? implicit_int_w : _int_w;
+    iassert( int_w > 0, "int_w must be > 0" );
+    word_cnt = (int_w + 63) / 64;
+    if ( word_cnt == 1 ) {
+        u.w0 = init;
+    } else {
         u.w = new uint64_t[word_cnt];
 
         uint64_t sign = init < 0;
@@ -81,8 +153,6 @@ inline mpint::mpint( int64_t init, uint32_t _int_w )
             u.w[i] = sign_mask;
         }
         u.w[word_cnt-1] = init;
-    } else {
-        u.w0 = init;
     }
 }
 
@@ -96,52 +166,68 @@ inline mpint::~mpint()
 
 inline mpint& mpint::operator = ( const mpint& other )
 {
-    if ( word_cnt == 1 ) {
-        u.w0 = other.u.w0;
-        return *this;
+    iassert( other.int_w > 0, "rhs int_w must be > 0" );
+    if ( int_w == 0 ) {
+        int_w    = other.int_w;
+        word_cnt = other.word_cnt;
+        if ( word_cnt > 1 ) u.w = new uint64_t[word_cnt];
     }
 
-    for( int32_t i = (word_cnt-1); i >= 0; i-- )
-    {
-        u.w[i] = other.u.w[i];
+    if ( word_cnt == 1 ) {
+        // need to truncate and sign-extend
+        u.w0 = other.u.w0;
+    } else {
+        // need to truncate and sign-extend
+        for( int32_t i = (word_cnt-1); i >= 0; i-- ) u.w[i] = other.u.w[i];
     }
+
     return *this;
+}
+
+inline mpint mpint::operator - () const
+{
+    // negate = 2's complement
+    iassert( int_w > 0, "trying to negate in undefined mpint" );
+    mpint r = *this;
+    if ( word_cnt == 1 ) {
+        r.u.w0 = ~u.w0 + 1;
+    } else {
+        int64_t cin = 1;
+        for( uint32_t i = 0; i < word_cnt; i++ )
+        {
+            r.u.w[i] = ~u.w[i] + cin;
+            cin = r.u.w[i] < u.w[i];
+        }
+    }
+    return r;
 }
 
 inline mpint mpint::operator + ( const mpint& other ) const
 {
     mpint r;
 
-    if ( word_cnt == 1 ) {
+    // pick larger of the two for result
+    r.int_w    = (int_w > other.int_w) ? int_w : other.int_w;
+    r.word_cnt = (int_w + 63) / 64;
+    if ( r.word_cnt > 1 ) r.u.w = new uint64_t[r.word_cnt];
+    
+    if ( r.word_cnt == 1 ) {
         r.u.w0 = u.w0 + other.u.w0;
-        return r;
-    }
-
-    uint64_t cin = 0;
-    for( int32_t i = (word_cnt-1); i >= 0; i-- )
-    {
-        r.u.w[i] = u.w[i] + other.u.w[i] + cin;
-        cin = r.u.w[i] < u.w[i];
+    } else {
+        uint64_t cin = 0;
+        for( uint32_t i = 0; i < word_cnt; i++ ) 
+        {
+            r.u.w[i] = u.w[i] + other.u.w[i] + cin;
+            cin = r.u.w[i] < u.w[i];
+        }
+        // TODO: fix any overflow
     }
     return r;
 }
 
 inline mpint mpint::operator - ( const mpint& other ) const
 {
-    mpint r;
-
-    if ( word_cnt == 1 ) {
-        r.u.w0 = u.w0 - other.u.w0;
-        return r;
-    }
-
-    uint64_t cin = 0;
-    for( int32_t i = (word_cnt-1); i >= 0; i-- )
-    {
-        r.u.w[i] = u.w[i] - other.u.w[i] - cin;
-        cin = u.w[i] < other.u.w[i];
-    }
-    return r;
+    return *this + -other;
 }
 
 inline mpint mpint::operator << ( int shift ) const
@@ -213,6 +299,40 @@ inline mpint mpint::operator >> ( int shift ) const
     }
 
     return r;
+}
+
+inline mpint mpint::to_mpint( std::string s )
+{
+    mpint r( 0 );
+
+    if ( r.word_cnt == 1 ) {
+        r.u.w0 = std::atoi( s.c_str() );
+    } else {
+        // TODO: there must be code somewhere to do this
+    }
+
+    return r;
+}
+
+inline std::string mpint::to_string( void ) const
+{
+    if ( word_cnt == 1 ) {
+        return std::to_string( int64_t(u.w0) );
+    } else {
+        // TODO: convert to decimal
+        std::string s = "";
+        uint32_t k = 0;
+        for( uint32_t i = 0; i < word_cnt; i++ )
+        {
+            for( uint32_t j = 0; j < 64 && k < int_w; j++, k++ )
+            {
+                char b = ((u.w[i] >> j) & 1) ? '1' : '0';
+                s = b + s;
+            }
+        }
+        s = "0b" + s;
+        return s;
+    }
 }
 
 #endif

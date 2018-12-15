@@ -151,6 +151,13 @@ public:
     //-----------------------------------------------------               
     freal& assign( const freal& b );
 
+    bool   signbit( void ) const;    
+    int    fpclassify( void ) const; 
+    bool   isfinite( void ) const;  
+    bool   isinf( void ) const;    
+    bool   isnan( void ) const;   
+    bool   isnormal( void ) const;
+
     freal  abs( void ) const;
     freal  neg( void ) const; 
     freal  floor( void ) const;
@@ -270,6 +277,30 @@ static inline std::ostream& operator << ( std::ostream &out, const freal<T,FLT>&
     out << a.to_string(); 
     return out;     
 }
+
+template< typename T=int64_t, typename FLT=double >              
+static inline bool signbit( const freal<T,FLT>& a )
+{ return a.signbit();                   }
+
+template< typename T=int64_t, typename FLT=double >              
+static inline int fpclassify( const freal<T,FLT>& a )
+{ return a.fpclassify();                }
+
+template< typename T=int64_t, typename FLT=double >              
+static inline bool isfinite( const freal<T,FLT>& a )
+{ return a.isfinite();                  }
+
+template< typename T=int64_t, typename FLT=double >              
+static inline bool isinf( const freal<T,FLT>& a )
+{ return a.isinf();                     }
+
+template< typename T=int64_t, typename FLT=double >              
+static inline bool isnan( const freal<T,FLT>& a )
+{ return a.isnan();                     }
+
+template< typename T=int64_t, typename FLT=double >              
+static inline bool isnormal( const freal<T,FLT>& a )
+{ return a.isnormal();                  }
 
 template< typename T=int64_t, typename FLT=double >              
 static inline std::string   to_string( const freal<T,FLT>& a )
@@ -953,6 +984,30 @@ inline freal<T,FLT>& freal<T,FLT>::assign( const freal<T,FLT>& b )
     cordic->assign( v, b.v ); 
     return *this;
 }
+
+template< typename T, typename FLT >              
+inline bool freal<T,FLT>::signbit( void ) const
+{ return( c(), cordic->signbit( v ) ); }
+
+template< typename T, typename FLT >              
+inline int freal<T,FLT>::fpclassify( void ) const
+{ return( c(), cordic->fpclassify( v ) ); }
+
+template< typename T, typename FLT >              
+inline bool freal<T,FLT>::isfinite( void ) const
+{ return( c(), cordic->isfinite( v ) ); }
+
+template< typename T, typename FLT >              
+inline bool freal<T,FLT>::isinf( void ) const
+{ return( c(), cordic->isinf( v ) ); }
+
+template< typename T, typename FLT >              
+inline bool freal<T,FLT>::isnan( void ) const
+{ return( c(), cordic->isnan( v ) ); }
+
+template< typename T, typename FLT >              
+inline bool freal<T,FLT>::isnormal( void ) const
+{ return( c(), cordic->isnormal( v ) ); }
 
 template< typename T, typename FLT >              
 inline freal<T,FLT>  freal<T,FLT>::abs( void ) const
