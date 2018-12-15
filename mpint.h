@@ -59,7 +59,7 @@ public:
     mpint  operator >> ( int shift ) const;
 
     static mpint to_mpint( std::string, bool allow_no_conversion=false, int base=10, size_t * pos=nullptr );  
-    std::string  to_string( int base=10 ) const;                
+    std::string  to_string( int base=10, int width=0 ) const;                
 
 private:
     static size_t     implicit_int_w;
@@ -85,9 +85,9 @@ static inline bool signbit( const mpint& a )
 }
 
 template< typename T=int64_t, typename FLT=double >              
-static inline std::string to_string( const mpint& a, int base=10 )
+static inline std::string to_string( const mpint& a, int base=10, int width=0 )
 { 
-    return a.to_string( base );
+    return a.to_string( base, width );
 }
 
 static inline mpint stoi( std::string str, size_t * pos=nullptr, int base=10 )
@@ -97,7 +97,7 @@ static inline mpint stoi( std::string str, size_t * pos=nullptr, int base=10 )
 
 static inline std::istream& operator >> ( std::istream &in, mpint& a )
 { 
-    int base = 10;              // TODO: need to query base and width
+    int base = 10;              // TODO: need to query base 
     std::string s = "";
     in >> std::ws;          // eat up whitespace
     for( bool is_first = true; ; is_first = false )
@@ -114,7 +114,8 @@ static inline std::istream& operator >> ( std::istream &in, mpint& a )
 static inline std::ostream& operator << ( std::ostream &out, const mpint& a )
 { 
     int base = 10;              // TODO: need to query base and width
-    out << a.to_string( base );       
+    int width = 0;
+    out << a.to_string( base, width );       
     return out;     
 }
 
@@ -243,7 +244,7 @@ inline mpint mpint::to_mpint( std::string s, bool allow_no_conversion, int base,
     return r;
 }
 
-inline std::string mpint::to_string( int base ) const
+inline std::string mpint::to_string( int base, int width ) const
 {
     iassert( int_w > 0, "to_string: this mpint is undefined" );
     iassert( base >= 0 && base <= 36, "base must be between 0 and 36" );
@@ -308,6 +309,10 @@ inline std::string mpint::to_string( int base ) const
                 if ( ch2 != '0' || j != cpow2_len ) pow2 = ch2 + pow2;
             }
         }
+    }
+    while( size_t(width) > s.length() )
+    {
+        s = " " + s;  // pad
     }
     return s;
 }
