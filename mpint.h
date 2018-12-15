@@ -57,7 +57,7 @@ public:
     mpint  operator << ( int shift ) const;
     mpint  operator >> ( int shift ) const;
 
-    static mpint to_mpint( std::string );
+    static mpint to_mpint( std::string, bool for_atoi=false );  // for_atoi will stop when illegal character
     std::string  to_string( void ) const;                
 
 private:
@@ -94,7 +94,7 @@ static inline std::istream& operator >> ( std::istream &in, mpint& a )
         in >> c; // consume it
         s += c;
     }
-    a = mpint::to_mpint( s );
+    a = mpint::to_mpint( s, true ); // quietly produce 0 for bad input
     return in;
 }
 
@@ -310,33 +310,38 @@ inline mpint mpint::operator >> ( int shift ) const
     return r;
 }
 
-inline mpint mpint::to_mpint( std::string s )
+inline mpint mpint::to_mpint( std::string s, bool for_atoi )
 {
+    //--------------------------------------------------------------
+    // if for_atoi, then don't crap out.
+    // Do this without doing any multiplies.
+    // When we have to multiply by 10 we simply do (r << 3) + (r << 1).
+    // Then add in the new digit.
+    //--------------------------------------------------------------
     mpint r( 0 );
+    bool is_neg = false;
+    bool got_digit = false;
+    for( size_t i = 0; i < s.length(); i++ )
+    {
+        char c = s[i];
+        if ( !is_neg && !got_digit && (c == ' ' || c == '\t' || c == '\n') ) continue; // skip whitespace
 
-    if ( r.word_cnt == 1 ) {
-        r.u.w0 = std::atoi( s.c_str() );
-    } else {
-        //--------------------------------------------------------------
-        // Do this without doing any multiplies.
-        // When we have to multiply by 10 we simply do (r << 3) + (r << 1).
-        // Then add in the new digit.
-        //--------------------------------------------------------------
-        bool is_neg = false;
-        for( size_t i = 0; i < s.length(); i++ )
-        {
-            char c = s[i];
-            if ( c == '-' ) {
-                iassert( i == 0, "to_mpint '-' is allowed only as first character" );
-                is_neg = true;
-            } else {
-                iassert( c >= '0' && c <= '9', "to_mpint illegal character in: "  + s + "\n" );
-                r = (r << 3) + (r << 1) + mpint( c - '0' );
+        if ( c == '-' ) {
+            if ( is_neg || got_digit ) {
+                iassert( for_atoi, "to_mpint '-' is not allowed after first sign or digit" );
+                break;
             }
+            is_neg = true;
+        } else if ( c >= '0' && c <= '9' ) {
+            r = (r << 3) + (r << 1) + mpint( c - '0' );
+            got_digit = true;
+        } else {
+            iassert( for_atoi, "to_mpint encounted illegal character in '" + s + "'" );
+            break;
         }
-        if ( is_neg ) r = -r;           // need to make r one bit larger for max negative integer case
     }
-
+    iassert( got_digit || for_atoi, "to_mpint did not find any digits in '" + s + "'" ); 
+    if ( is_neg ) r = -r;           // need to make r one bit larger for max negative integer case
     return r;
 }
 
