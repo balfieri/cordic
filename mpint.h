@@ -50,6 +50,7 @@ public:
     ~mpint();
     
     // minimum set of operators needed by Cordic.h:
+    bool   signbit     ( void ) const;
     mpint& operator =  ( const mpint& other );
     mpint  operator -  () const;
     mpint  operator +  ( const mpint& other ) const;
@@ -57,8 +58,8 @@ public:
     mpint  operator << ( int shift ) const;
     mpint  operator >> ( int shift ) const;
 
-    static mpint to_mpint( std::string, bool for_atoi=false );  // for_atoi will stop when illegal character
-    std::string  to_string( void ) const;                
+    static mpint to_mpint( std::string, bool allow_no_conversion=false, int base=10, std::size_t * pos=nullptr );  
+    std::string  to_string( int base=10 ) const;                
 
 private:
     static uint32_t     implicit_int_w;
@@ -76,19 +77,22 @@ private:
 namespace std
 {
 
-template< typename T=int64_t, typename FLT=double >              
-static inline std::string to_string( const mpint& a ) 
+static inline bool signbit( const mpint& a ) 
 { 
-    return a.to_string();
+    return a.signbit();
 }
 
 template< typename T=int64_t, typename FLT=double >              
-static inline mpint atoi( const char * str )
+static inline std::string to_string( const mpint& a, int base=10 )
 { 
-    return mpint::to_mpint( std::string( str ), true );
+    return a.to_string( base );
 }
 
-template< typename T=int64_t, typename FLT=double >              
+static inline mpint stoi( std::string str, size_t * pos=nullptr, int base=10 )
+{ 
+    return mpint::to_mpint( str, true, base, pos );
+}
+
 static inline std::istream& operator >> ( std::istream &in, mpint& a )
 { 
     std::string s = "";
@@ -104,10 +108,9 @@ static inline std::istream& operator >> ( std::istream &in, mpint& a )
     return in;
 }
 
-template< typename T=int64_t, typename FLT=double >              
 static inline std::ostream& operator << ( std::ostream &out, const mpint& a )
 { 
-    out << a.to_string(); 
+    out << a.to_string();       // should check for base
     return out;     
 }
 
@@ -179,26 +182,40 @@ inline mpint::~mpint()
     }
 }
 
-inline mpint mpint::to_mpint( std::string s, bool for_atoi )
+inline bool mpint::signbit( void ) const
 {
+    iassert( int_w > 0, "mpint is undefined" );
+    if ( word_cnt == 1 ) {
+        return (u.w0 >> (int_w-1)) & 1;
+    } else {
+        uint32_t b = (int_w-1) % word_cnt;
+        return (u.w[word_cnt-1] >> b) & 1;
+    }
+}
+
+inline mpint mpint::to_mpint( std::string s, bool allow_no_conversion, int base, std::size_t * pos )
+{
+    iassert( base == 10, "to_mpint() currently supports only base 10" );
+
     //--------------------------------------------------------------
     // Do this conversion without doing any multiplies.
-    // When we have to multiply by 10 we simply do (r << 3) + (r << 1).
-    // Then add in the new digit.
-    //
-    // if for_atoi==true, then don't crap out.
+    // When we have to multiply by 10 we simply do shifts and adds.
+    // Then add in the new digit. [This can be extended to other bases up
+    // to the allowed base of 36.]
     //--------------------------------------------------------------
     mpint r( 0 );
     bool is_neg = false;
     bool got_digit = false;
-    for( size_t i = 0; i < s.length(); i++ )
+    std::size_t len = s.length();
+    std::size_t i;
+    for( i = 0; i < len; i++ )
     {
         char c = s[i];
         if ( !is_neg && !got_digit && (c == ' ' || c == '\t' || c == '\n') ) continue; // skip whitespace
 
         if ( c == '-' ) {
             if ( is_neg || got_digit ) {
-                iassert( for_atoi, "to_mpint '-' is not allowed after first sign or digit" );
+                iassert( allow_no_conversion, "to_mpint '-' is not allowed after first sign or digit" );
                 break;
             }
             is_neg = true;
@@ -206,17 +223,19 @@ inline mpint mpint::to_mpint( std::string s, bool for_atoi )
             r = (r << 3) + (r << 1) + mpint( c - '0' );
             got_digit = true;
         } else {
-            iassert( for_atoi, "to_mpint encounted illegal character in '" + s + "'" );
             break;
         }
     }
-    iassert( got_digit || for_atoi, "to_mpint did not find any digits in '" + s + "'" ); 
+    iassert( got_digit || allow_no_conversion, "to_mpint did not find any digits in '" + s + "'" ); 
+    if ( pos != nullptr ) *pos = is_neg ? (i - 1) : i;
     if ( is_neg ) r = -r;           // need to make r one bit larger for max negative integer case
     return r;
 }
 
-inline std::string mpint::to_string( void ) const
+inline std::string mpint::to_string( int base ) const
 {
+    (void)base;
+
     //--------------------------------------------------------------
     // Represent a decimal integer as an array of decimal digits.
     //
@@ -225,6 +244,9 @@ inline std::string mpint::to_string( void ) const
     //
     // Add the two decimal integers.
     //--------------------------------------------------------------
+    bool is_neg = signbit();
+    mpint a = is_neg ? -*this : *this;
+
     std::string s = "";
     uint32_t k = 0;
     for( uint32_t i = 0; i < word_cnt; i++ )
