@@ -20,8 +20,10 @@
 //
 // mpint.h - very limited multi-precision signed integer class for C++ 
 //
-// This class is a very simplisitic version of arbitrary precision integers, or "big integers".
+// This class is a very simplisitic version of arbitrary precision integers, or "big integers."
 // It provides only a bare minimum set of operations needed by Cordic.h.
+// I didn't use an official class because I wanted to make sure Cordic wasn't
+// using any other integer math operations besides adding and shifting.
 //
 // Typical usage:
 //
@@ -29,7 +31,7 @@
 //     mpint::implicit_int_w_set( 128 );        // change default int_w to 128 bits (from 64)
 //     mpint i;                                 // will get allocated 128 bits and initialized to 0
 //     mpint j( 12 );                           // will get allocated 128 bits and initialized to 12
-//     mpint k( 10, 56 );                       // will get allocated 56  bits and initialized to 10
+//     mpint k( 12, 56 );                       // will get allocated 56  bits and initialized to 12
 //
 #ifndef _mpint_h
 #define _mpint_h
@@ -84,7 +86,14 @@ template< typename T=int64_t, typename FLT=double >
 static inline std::istream& operator >> ( std::istream &in, mpint& a )
 { 
     std::string s = "";
-    // TODO: collect characters
+    in >> std::ws;          // eat up whitespace
+    for( bool is_first = true; ; is_first = false )
+    {
+        int c = in.peek();
+        if ( (!is_first && c == '-') || (c < '0' && c > '9') ) break;
+        in >> c; // consume it
+        s += c;
+    }
     a = mpint::to_mpint( s );
     return in;
 }
@@ -308,7 +317,24 @@ inline mpint mpint::to_mpint( std::string s )
     if ( r.word_cnt == 1 ) {
         r.u.w0 = std::atoi( s.c_str() );
     } else {
-        // TODO: there must be code somewhere to do this
+        //--------------------------------------------------------------
+        // Do this without doing any multiplies.
+        // When we have to multiply by 10 we simply do (r << 3) + (r << 1).
+        // Then add in the new digit.
+        //--------------------------------------------------------------
+        bool is_neg = false;
+        for( size_t i = 0; i < s.length(); i++ )
+        {
+            char c = s[i];
+            if ( c == '-' ) {
+                iassert( i == 0, "to_mpint '-' is allowed only as first character" );
+                is_neg = true;
+            } else {
+                iassert( c >= '0' && c <= '9', "to_mpint illegal character in: "  + s + "\n" );
+                r = (r << 3) + (r << 1) + mpint( c - '0' );
+            }
+        }
+        if ( is_neg ) r = -r;           // need to make r one bit larger for max negative integer case
     }
 
     return r;
