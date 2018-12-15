@@ -267,8 +267,8 @@ inline std::string mpint::to_string( int base, int width ) const
         //
         // Maintain a power-of-2 as a character string in
         // the proper base.  The string starts off as "1" and 
-        // gets wider every time we multiply by 2 in our elementary school way,
-        // which is done by adding the power-of-2 to itself (no need to multiply).
+        // gets wider every time we multiply by 2 
+        // by adding the current power-of-2 to itself (no need to multiply).
         //
         // If mpint bit i is set, then we add the power of two into a similar
         // character string that starts out as 0.  We calculate
@@ -373,7 +373,23 @@ inline mpint mpint::operator + ( const mpint& other ) const
             r.u.w[i] = u.w[i] + other.u.w[i] + cin;
             cin = r.u.w[i] < u.w[i];
         }
-        // TODO: fix any overflow
+    }
+    
+    //-------------------------------------------------------
+    // If int_w is not an integral multiple of word_cnt, then
+    // we need to re-extend the new sign bit in the top word
+    // after summing the words.
+    //-------------------------------------------------------
+    size_t sign_pos = (r.int_w-1) % r.word_cnt;  // in the top word
+    if ( sign_pos != 63 ) {
+        bool       sign      = r.signbit();
+        uint64_t   sign_mask = 0xffffffffffffffff << sign_pos;
+        uint64_t * word_ptr = (word_cnt == 1) ? &r.u.w0 : &r.u.w[r.word_cnt-1];
+        if ( sign ) {
+            *word_ptr |= sign_mask;             // propagate 1
+        } else {
+            *word_ptr &= ~sign_mask;            // propagate 0
+        }
     }
     return r;
 }
