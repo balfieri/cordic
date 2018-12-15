@@ -432,16 +432,16 @@ inline mpint mpint::operator << ( int shift ) const
         return r;
     }
 
-    for( size_t tb = 0; tb < word_cnt*8; tb++ )
+    for( size_t tb = 0; tb < int_w; tb++ )
     {
-        size_t fb  = tb + shift;
-        size_t fw  = fb / 64;
-        size_t fwb = fb % 64;
-        bool   b   = (fb >= word_cnt*8) ? 0 : ((u.w[fw] >> (63-fwb)) & 1);
+        int64_t fb  = tb - shift;
+        int64_t fw  = fb / 64;
+        int64_t fwb = fb % 64;
+        bool    b   = (fb < 0) ? 0 : ((u.w[fw] >> fwb) & 1);
 
         size_t tw  = tb / 64;
         size_t twb = tb % 64;
-        r.u.w[tw] |= b << (63-twb);
+        r.u.w[tw] |= b << twb;
     }
 
     return r;
@@ -453,25 +453,22 @@ inline mpint mpint::operator >> ( int shift ) const
 
     if ( shift < 0 ) return *this << -shift;
     
-    uint64_t sign;
+    bool sign = signbit();
 
     mpint r( 0, int_w );
     if ( word_cnt == 1 ) {
         // easy
-        sign = u.w0 < 1;
         r.u.w0 = uint64_t( -sign ) << (64-shift);
         r.u.w0 |= u.w0 >> shift;
         return r;
     }
 
-    sign = (u.w[0] >> 63) & 1;
-
-    for( int32_t tb = word_cnt*8-1; tb >= 0; tb-- )
+    for( size_t tb = 0; tb < int_w; tb++ )
     {
-        size_t fb  = tb - shift;
+        size_t fb  = tb + shift;
         size_t fw  = fb / 64;
         size_t fwb = fb % 64;
-        bool   b   = (fb < 0) ? sign : ((u.w[fw] >> fwb) & 1);
+        bool   b   = (fb >= int_w) ? sign : ((u.w[fw] >> fwb) & 1);
 
         size_t tw  = tb / 64;
         size_t twb = tb % 64;
