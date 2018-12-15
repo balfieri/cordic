@@ -383,7 +383,11 @@ Analysis<T,FLT>::Analysis( std::string file_name )
                 for( uint32_t i = 0; i < opnd_cnt; i++ )
                 {
                     opnd[i] = parse_addr( c );
-                    if ( i != 0 || op != OP::assign ) {
+                    if ( !(i == 0 && op == OP::assign) &&
+                         !(i == 1 && op == OP::sincos) &&
+                         !(i == 2 && op == OP::sincos) &&
+                         !(i == 1 && op == OP::sinhcosh) &&
+                         !(i == 2 && op == OP::sinhcosh) ) {
                         auto it = vals.find( opnd[i] );
                         cassert( it != vals.end() && it->second.is_alive, name + " opnd[" + std::to_string(i) + "] does not exist" );
                         cassert( it->second.is_assigned, name + " opnd[" + std::to_string(i) + "] used when not previously assigned" );
@@ -392,13 +396,13 @@ Analysis<T,FLT>::Analysis( std::string file_name )
                 }
                 
                 // push result if not assign
-                if ( op != OP::assign ) {
-                    ValInfo val;
-                    val.is_alive    = true;
-                    val.is_assigned = true;
-                    val.is_constant = false;
-                    val_stack_push( val );
-                }
+                uint32_t cnt = (op == OP::sincos || op == OP::sinhcosh) ? 2 : 
+                               (op == OP::assign)                       ? 0 : 1;
+                ValInfo val;
+                val.is_alive    = true;
+                val.is_assigned = true;
+                val.is_constant = false;
+                for ( uint32_t i = 0; i < cnt; i++ ) val_stack_push( val );
                 break;
             }
 
