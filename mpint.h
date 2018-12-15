@@ -83,6 +83,12 @@ static inline std::string to_string( const mpint& a )
 }
 
 template< typename T=int64_t, typename FLT=double >              
+static inline mpint atoi( const char * str )
+{ 
+    return mpint::to_mpint( std::string( str ), true );
+}
+
+template< typename T=int64_t, typename FLT=double >              
 static inline std::istream& operator >> ( std::istream &in, mpint& a )
 { 
     std::string s = "";
