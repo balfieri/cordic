@@ -179,6 +179,66 @@ inline mpint::~mpint()
     }
 }
 
+inline mpint mpint::to_mpint( std::string s, bool for_atoi )
+{
+    //--------------------------------------------------------------
+    // Do this conversion without doing any multiplies.
+    // When we have to multiply by 10 we simply do (r << 3) + (r << 1).
+    // Then add in the new digit.
+    //
+    // if for_atoi==true, then don't crap out.
+    //--------------------------------------------------------------
+    mpint r( 0 );
+    bool is_neg = false;
+    bool got_digit = false;
+    for( size_t i = 0; i < s.length(); i++ )
+    {
+        char c = s[i];
+        if ( !is_neg && !got_digit && (c == ' ' || c == '\t' || c == '\n') ) continue; // skip whitespace
+
+        if ( c == '-' ) {
+            if ( is_neg || got_digit ) {
+                iassert( for_atoi, "to_mpint '-' is not allowed after first sign or digit" );
+                break;
+            }
+            is_neg = true;
+        } else if ( c >= '0' && c <= '9' ) {
+            r = (r << 3) + (r << 1) + mpint( c - '0' );
+            got_digit = true;
+        } else {
+            iassert( for_atoi, "to_mpint encounted illegal character in '" + s + "'" );
+            break;
+        }
+    }
+    iassert( got_digit || for_atoi, "to_mpint did not find any digits in '" + s + "'" ); 
+    if ( is_neg ) r = -r;           // need to make r one bit larger for max negative integer case
+    return r;
+}
+
+inline std::string mpint::to_string( void ) const
+{
+    //--------------------------------------------------------------
+    // Represent a decimal integer as an array of decimal digits.
+    //
+    // Go through each bit in this mpint from lsb to msb.
+    // Convert the power-of-2 to a decimal integer.
+    //
+    // Add the two decimal integers.
+    //--------------------------------------------------------------
+    std::string s = "";
+    uint32_t k = 0;
+    for( uint32_t i = 0; i < word_cnt; i++ )
+    {
+        for( uint32_t j = 0; j < 64 && k < int_w; j++, k++ )
+        {
+            char b = ((u.w[i] >> j) & 1) ? '1' : '0';
+            s = b + s;
+        }
+    }
+    s = "0b" + s;
+    return s;
+}
+
 inline mpint& mpint::operator = ( const mpint& other )
 {
     iassert( other.int_w > 0, "rhs int_w must be > 0" );
@@ -314,62 +374,6 @@ inline mpint mpint::operator >> ( int shift ) const
     }
 
     return r;
-}
-
-inline mpint mpint::to_mpint( std::string s, bool for_atoi )
-{
-    //--------------------------------------------------------------
-    // if for_atoi, then don't crap out.
-    // Do this without doing any multiplies.
-    // When we have to multiply by 10 we simply do (r << 3) + (r << 1).
-    // Then add in the new digit.
-    //--------------------------------------------------------------
-    mpint r( 0 );
-    bool is_neg = false;
-    bool got_digit = false;
-    for( size_t i = 0; i < s.length(); i++ )
-    {
-        char c = s[i];
-        if ( !is_neg && !got_digit && (c == ' ' || c == '\t' || c == '\n') ) continue; // skip whitespace
-
-        if ( c == '-' ) {
-            if ( is_neg || got_digit ) {
-                iassert( for_atoi, "to_mpint '-' is not allowed after first sign or digit" );
-                break;
-            }
-            is_neg = true;
-        } else if ( c >= '0' && c <= '9' ) {
-            r = (r << 3) + (r << 1) + mpint( c - '0' );
-            got_digit = true;
-        } else {
-            iassert( for_atoi, "to_mpint encounted illegal character in '" + s + "'" );
-            break;
-        }
-    }
-    iassert( got_digit || for_atoi, "to_mpint did not find any digits in '" + s + "'" ); 
-    if ( is_neg ) r = -r;           // need to make r one bit larger for max negative integer case
-    return r;
-}
-
-inline std::string mpint::to_string( void ) const
-{
-    if ( word_cnt == 1 ) {
-        return std::to_string( int64_t(u.w0) );
-    } else {
-        // TODO: convert to decimal
-        std::string s = "";
-        uint32_t k = 0;
-        for( uint32_t i = 0; i < word_cnt; i++ )
-        {
-            for( uint32_t j = 0; j < 64 && k < int_w; j++, k++ )
-            {
-                char b = ((u.w[i] >> j) & 1) ? '1' : '0';
-                s = b + s;
-            }
-        }
-        s = "0b" + s;
-        return s;
-    }
 }
 
 #endif
