@@ -105,6 +105,7 @@ public:
     T&   assign( T& x, const T& y ) const;                                // x = y  (this exists so we can log assignments)
     T&   pop_value( T& x, const T& y ) const;                             // x = y  (where y is top of stack for logging)
 
+    // queries
     bool signbit( const T& x ) const;                                     // x < 0
     int  fpclassify( const T& x ) const;                                  // fixed-point: FP_ZERO or FP_SUBNORMAL
     bool isfinite( const T& x ) const;                                    // fixed-point: true  (always)
@@ -122,6 +123,20 @@ public:
     T    floor( const T& x ) const;                                       // largest  integral value <= x
     T    ceil( const T& x ) const;                                        // smallest integral value >= x
 
+    // comparisons
+    bool isgreater( const T& x, const T& y ) const;                       // x > y
+    bool isgreaterequal( const T& x, const T& y ) const;                  // x >= y
+    bool isless( const T& x, const T& y ) const;                          // x > y
+    bool islessequal( const T& x, const T& y ) const;                     // x >= y
+    bool islessgreater( const T& x, const T& y ) const;                   // x != y (but returns false if at least one is NaN)
+    bool isunordered( const T& x, const T& y ) const;                     // returns true if x is a NaN OR y is a NaN
+    bool isunequal( const T& x, const T& y ) const;                       // x != y (returns true if only one is NaN)
+    bool isequal( const T& x, const T& y ) const;                         // x == y (returns true if both are NaN)
+    T    fdim( const T& x, const T& y ) const;                            // (x >= y) ? (x-y) : 0
+    T    fmax( const T& x, const T& y ) const;                            // max(x, y)
+    T    fmin( const T& x, const T& y ) const;                            // min(x, y)
+
+    // basic arithmetic
     T    add( const T& x, const T& y ) const;                             // x+y 
     T    sub( const T& x, const T& y ) const;                             // x-y 
     T    mad( const T& x, const T& y, const T& addend ) const;            // x*y + addend
@@ -133,23 +148,12 @@ public:
     T    dad( const T& y, const T& x, const T& addend ) const;            // y/x + addend
     T    div( const T& y, const T& x ) const;                             // y/x
     T    rcp( const T& x ) const;                                         // 1/x
+
+    // elementary functions
     T    sqrt( const T& x ) const;                                        // normh( x+1, x-1 ) / 2
     T    rsqrt( const T& x ) const;                                       // 1/sqrt 
     T    cbrt( const T& x ) const;                                        // x^(1/3)  (but x can be negative)
     T    rcbrt( const T& x ) const;                                       // 1/cbrt
-
-    bool isgreater( const T& x, const T& y ) const;                       // x > y
-    bool isgreaterequal( const T& x, const T& y ) const;                  // x >= y
-    bool isless( const T& x, const T& y ) const;                          // x > y
-    bool islessequal( const T& x, const T& y ) const;                     // x >= y
-    bool islessgreater( const T& x, const T& y ) const;                   // x != y (but returns false if at least one is NaN)
-    bool isunordered( const T& x, const T& y ) const;                     // returns true if x is a NaN OR y is a NaN
-    bool isunequal( const T& x, const T& y ) const;                       // x != y (returns true if only one is NaN)
-    bool isequal( const T& x, const T& y ) const;                         // x == y (returns true if both are NaN)
-
-    T    fdim( const T& x, const T& y ) const;                            // (x >= y) ? (x-y) : 0
-    T    fmax( const T& x, const T& y ) const;                            // max(x, y)
-    T    fmin( const T& x, const T& y ) const;                            // min(x, y)
 
     T    exp( const T& x ) const;                                         // e^x
     T    expm1( const T& x ) const;                                       // e^x - 1
@@ -187,6 +191,19 @@ public:
     T    acosh( const T& x ) const;                                       // log(x + sqrt(x^2 - 1))       (2)
     T    atanh( const T& x ) const;                                       // atanh(x)
     T    atanh2( const T& y, const T& x ) const;                          // atanh(y/x)
+
+    // random numbers
+    T    randseed( uint64_t seed );                                       // set 64-bit random seed 
+    T    uniform( void );                                                 // return uniform random in range [0.0, 1.0)  (1.0 excluded)
+    T    uniform( const T& min, const T& max );                           // return uniform random in range [min, max)  (max excluded)
+    T    gaussian( const T& mu, const T& std );                           // return gaussian random with mu and std
+    
+    // machine learning
+    T     tanh_backprop( const T& x, const T& x_backprop ) const;         // (1-x^2) * x_backprop
+    T     sigmoid( const T& x ) const;                                    // 1/(1 + exp(-x))
+    T     sigmoid_backprop( const T& x, const T& x_backprop ) const;      // x * (1-x) * x_backprop
+    T     relu( const T& x ) const;                                       // (x > 0) x : 0
+    T     relu_backprop( const T& x, const T& x_backprop ) const;         // (x > 0) x_backprop : 0
 
     //-----------------------------------------------------
     // Bob's Collection of Math Identities (some are used in the implementation, most are not)
