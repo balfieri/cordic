@@ -97,6 +97,7 @@ static inline mpint stoi( std::string str, size_t * pos=nullptr, int base=10 )
 
 static inline std::istream& operator >> ( std::istream &in, mpint& a )
 { 
+    int base = 10;              // TODO: need to query base and width
     std::string s = "";
     in >> std::ws;          // eat up whitespace
     for( bool is_first = true; ; is_first = false )
@@ -106,13 +107,14 @@ static inline std::istream& operator >> ( std::istream &in, mpint& a )
         in >> c; // consume it
         s += c;
     }
-    a = mpint::to_mpint( s, true ); // quietly produce 0 for bad input
+    a = mpint::to_mpint( s, true, base ); // quietly produce 0 for bad input
     return in;
 }
 
 static inline std::ostream& operator << ( std::ostream &out, const mpint& a )
 { 
-    out << a.to_string();       // should check for base
+    int base = 10;              // TODO: need to query base and width
+    out << a.to_string( base );       
     return out;     
 }
 
@@ -237,7 +239,7 @@ inline mpint mpint::to_mpint( std::string s, bool allow_no_conversion, int base,
     }
     iassert( got_digit || allow_no_conversion, "to_mpint did not find any digits in '" + s + "'" ); 
     if ( pos != nullptr ) *pos = is_neg ? (i - 1) : i;
-    if ( is_neg ) r = -r;           // need to make r one bit larger for max negative integer case
+    if ( is_neg ) r = -r;           // TODO: need to make r one bit larger for max negative integer case
     return r;
 }
 
@@ -320,10 +322,10 @@ inline mpint& mpint::operator = ( const mpint& other )
     }
 
     if ( word_cnt == 1 ) {
-        // need to truncate and sign-extend
+        // TODO: need to truncate and sign-extend
         u.w0 = other.u.w0;
     } else {
-        // need to truncate and sign-extend
+        // TODO: need to truncate and sign-extend
         for( int32_t i = (word_cnt-1); i >= 0; i-- ) u.w[i] = other.u.w[i];
     }
 
@@ -398,7 +400,7 @@ inline mpint mpint::operator << ( int shift ) const
         size_t fb  = tb + shift;
         size_t fw  = fb / 64;
         size_t fwb = fb % 64;
-        bool     b   = (fb >= word_cnt*8) ? 0 : ((u.w[fw] >> (63-fwb)) & 1);
+        bool   b   = (fb >= word_cnt*8) ? 0 : ((u.w[fw] >> (63-fwb)) & 1);
 
         size_t tw  = tb / 64;
         size_t twb = tb % 64;
