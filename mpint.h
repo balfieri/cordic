@@ -304,9 +304,10 @@ inline std::string mpint::to_string( int base, int width ) const
             bool     a_bit = a.bit( i );    // don't add pow2 to s if !a_bit
             for( size_t j = 0; j <= cpow2_len; j++ )
             {
-                size_t   k  = cpow2_len-1 - j;
-                uint32_t dc2 = (j >= cpow2_len) ? 0 : ((cpow2_c[k] <= '9') ? (cpow2_c[k] - '0') : (cpow2_c[k] - 'a'));
-                uint32_t dcs = (j >= cs_len)    ? 0 : ((cs_c[k]    <= '9') ? (cs_c[k]    - '0') : (cs_c[k]    - 'a'));
+                size_t   k2  = cpow2_len-1 - j;
+                size_t   ks  = cs_len-1 - j;
+                uint32_t dc2 = (j >= cpow2_len) ? 0 : ((cpow2_c[k2] <= '9') ? (cpow2_c[k2] - '0') : (cpow2_c[k2] - 'a'));
+                uint32_t dcs = (j >= cs_len)    ? 0 : ((cs_c[ks]    <= '9') ? (cs_c[ks]    - '0') : (cs_c[ks]    - 'a'));
                 uint32_t ds  = (a_bit ? dc2 : 0) + dcs + cins;  // will end up simply with no change in s if !a_bit
                 uint32_t d2  = dc2 + dc2 + cin2;                // must always update pow2
                 cins = ds / base;  
@@ -315,8 +316,8 @@ inline std::string mpint::to_string( int base, int width ) const
                 d2   = d2 % base;
                 char chs = (ds <= 9) ? ('0' + ds) : ('a' + ds);
                 char ch2 = (d2 <= 9) ? ('0' + d2) : ('a' + d2);
-                if ( chs != '0' || j != cpow2_len ) s    = chs + s;
-                if ( ch2 != '0' || j != cpow2_len ) pow2 = ch2 + pow2;
+                if ( chs != '0' || j < cs_len )       s = chs + s;
+                if ( ch2 != '0' || j < cpow2_len ) pow2 = ch2 + pow2;
             }
         }
     }
@@ -340,7 +341,10 @@ inline mpint& mpint::operator = ( const mpint& other )
     if ( word_cnt == 1 ) {
         u.w0 = other.u.w0;
     } else {
-        for( int32_t i = (word_cnt-1); i >= 0; i-- ) u.w[i] = other.u.w[i];
+        for( uint32_t i = 0; i < word_cnt; i++ )
+        {
+            u.w[i] = (i < other.word_cnt) ? other.u.w[i] : 0;
+        }
     }
 
     if ( int_w != other.int_w ) fixsign();
@@ -400,8 +404,10 @@ inline mpint mpint::operator + ( const mpint& other ) const
         uint64_t cin = 0;
         for( size_t i = 0; i < word_cnt; i++ ) 
         {
-            r.u.w[i] = u.w[i] + other.u.w[i] + cin;
-            cin = r.u.w[i] < u.w[i];
+            uint64_t wt = (i < word_cnt)       ? ((word_cnt > 1)       ? u.w[i]       : u.w0)       : 0;
+            uint64_t wo = (i < other.word_cnt) ? ((other.word_cnt > 1) ? other.u.w[i] : other.u.w0) : 0;
+            r.u.w[i] = wt + wo + cin;
+            cin = r.u.w[i] < wt;
         }
     }
     
@@ -420,15 +426,10 @@ inline mpint mpint::operator << ( int shift ) const
 
     if ( shift < 0 ) return *this >> -shift;
     
-    mpint r;
+    mpint r( 0, int_w );
     if ( word_cnt == 1 ) {
         r.u.w0 = u.w0 << shift;
         return r;
-    }
-
-    for( size_t i = 0; i < word_cnt; i++ )
-    {
-        r.u.w[i] = 0;
     }
 
     for( size_t tb = 0; tb < word_cnt*8; tb++ )
@@ -454,7 +455,7 @@ inline mpint mpint::operator >> ( int shift ) const
     
     uint64_t sign;
 
-    mpint r;
+    mpint r( 0, int_w );
     if ( word_cnt == 1 ) {
         // easy
         sign = u.w0 < 1;
@@ -464,11 +465,6 @@ inline mpint mpint::operator >> ( int shift ) const
     }
 
     sign = (u.w[0] >> 63) & 1;
-
-    for( size_t i = 0; i < word_cnt; i++ )
-    {
-        r.u.w[i] = 0;
-    }
 
     for( int32_t tb = word_cnt*8-1; tb >= 0; tb-- )
     {

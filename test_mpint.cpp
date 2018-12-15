@@ -46,5 +46,7 @@ int main( int argc, const char * argv[] )
     //---------------------------------------------------------------------------
     mpint x = 123456789;
     std::cout << "x should be 123456789: " << x << "\n";
+    x = mpint::to_mpint( "9223372036854775807" );
+    std::cout << "x should be 9223372036854775807 (max 64-bit signed int): " << x << "\n";
     return 0;
 }
