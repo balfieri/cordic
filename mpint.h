@@ -201,7 +201,7 @@ inline bool mpint::bit( size_t i ) const
     if ( word_cnt == 1 ) {
         return (u.w0 >> i) & 1;
     } else {
-        i = i % word_cnt;
+        i = i % 64;
         return (u.w[word_cnt-1] >> i) & 1;
     }
 }
@@ -376,7 +376,7 @@ inline void mpint::fixsign( void )
     // If int_w is not an integral multiple of word_cnt, then
     // we need to re-extend the new sign bit in the top word.
     //-------------------------------------------------------
-    size_t sign_pos = (int_w-1) % word_cnt;  // in the top word
+    size_t sign_pos = (int_w-1) % 64;  // in the top word
     if ( sign_pos != 63 ) {
         bool       sign      = signbit();
         uint64_t   sign_mask = 0xffffffffffffffff << sign_pos;
