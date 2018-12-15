@@ -43,10 +43,10 @@
 class mpint
 {
 public:
-    static void implicit_int_w_set( uint32_t int_w );
+    static void implicit_int_w_set( size_t int_w );
     
     mpint( void );
-    mpint( int64_t i, uint32_t int_w=0 );
+    mpint( int64_t i, size_t int_w=0 );
     ~mpint();
     
     // minimum set of operators needed by Cordic.h:
@@ -58,18 +58,20 @@ public:
     mpint  operator << ( int shift ) const;
     mpint  operator >> ( int shift ) const;
 
-    static mpint to_mpint( std::string, bool allow_no_conversion=false, int base=10, std::size_t * pos=nullptr );  
+    static mpint to_mpint( std::string, bool allow_no_conversion=false, int base=10, size_t * pos=nullptr );  
     std::string  to_string( int base=10 ) const;                
 
 private:
-    static uint32_t     implicit_int_w;
-    uint32_t            int_w;
-    uint32_t            word_cnt;
+    static size_t     implicit_int_w;
+    size_t            int_w;
+    size_t            word_cnt;
     union
     {
         uint64_t   w0;          // if fits in 64 bits
         uint64_t * w;           // if doesn't fit in 64 bits
     } u;
+
+    bool bit( size_t i ) const;       // returns bit i
 };
 
 // Well-Known std:xxx() Functions 
@@ -139,9 +141,9 @@ static inline std::ostream& operator << ( std::ostream &out, const mpint& a )
 #define iassert(expr, msg) if ( !(expr) ) \
                 { std::cout << "ERROR: assertion failure: " << (msg) << " at " << __FILE__ << ":" << __LINE__ << "\n"; exit( 1 ); }
 
-uint32_t mpint::implicit_int_w = 64;
+size_t mpint::implicit_int_w = 64;
 
-inline void mpint::implicit_int_w_set( uint32_t int_w )
+inline void mpint::implicit_int_w_set( size_t int_w )
 {
     implicit_int_w = int_w;
 }
@@ -153,7 +155,7 @@ inline mpint::mpint( void )
     word_cnt = 0;
 }
 
-inline mpint::mpint( int64_t init, uint32_t _int_w )
+inline mpint::mpint( int64_t init, size_t _int_w )
 {
     int_w = (_int_w == 0) ? implicit_int_w : _int_w;
     iassert( int_w > 0, "int_w must be > 0" );
@@ -166,7 +168,7 @@ inline mpint::mpint( int64_t init, uint32_t _int_w )
         uint64_t sign = init < 0;
         uint64_t sign_mask = uint64_t( -sign );
 
-        for( uint32_t i = 0; i < word_cnt-1; i++ )
+        for( size_t i = 0; i < word_cnt-1; i++ )
         {
             u.w[i] = sign_mask;
         }
@@ -182,18 +184,25 @@ inline mpint::~mpint()
     }
 }
 
-inline bool mpint::signbit( void ) const
+inline bool mpint::bit( size_t i ) const
 {
     iassert( int_w > 0, "mpint is undefined" );
+    iassert( i < int_w, "mpint bit i is out of range" );
+
     if ( word_cnt == 1 ) {
-        return (u.w0 >> (int_w-1)) & 1;
+        return (u.w0 >> i) & 1;
     } else {
-        uint32_t b = (int_w-1) % word_cnt;
-        return (u.w[word_cnt-1] >> b) & 1;
+        i = i % word_cnt;
+        return (u.w[word_cnt-1] >> i) & 1;
     }
 }
 
-inline mpint mpint::to_mpint( std::string s, bool allow_no_conversion, int base, std::size_t * pos )
+inline bool mpint::signbit( void ) const
+{
+    return bit( int_w-1 );
+}
+
+inline mpint mpint::to_mpint( std::string s, bool allow_no_conversion, int base, size_t * pos )
 {
     iassert( base == 10, "to_mpint() currently supports only base 10" );
 
@@ -206,8 +215,8 @@ inline mpint mpint::to_mpint( std::string s, bool allow_no_conversion, int base,
     mpint r( 0 );
     bool is_neg = false;
     bool got_digit = false;
-    std::size_t len = s.length();
-    std::size_t i;
+    size_t len = s.length();
+    size_t i;
     for( i = 0; i < len; i++ )
     {
         char c = s[i];
@@ -234,30 +243,70 @@ inline mpint mpint::to_mpint( std::string s, bool allow_no_conversion, int base,
 
 inline std::string mpint::to_string( int base ) const
 {
-    (void)base;
-
-    //--------------------------------------------------------------
-    // Represent a decimal integer as an array of decimal digits.
-    //
-    // Go through each bit in this mpint from lsb to msb.
-    // Convert the power-of-2 to a decimal integer.
-    //
-    // Add the two decimal integers.
-    //--------------------------------------------------------------
-    bool is_neg = signbit();
-    mpint a = is_neg ? -*this : *this;
-
-    std::string s = "";
-    uint32_t k = 0;
-    for( uint32_t i = 0; i < word_cnt; i++ )
-    {
-        for( uint32_t j = 0; j < 64 && k < int_w; j++, k++ )
+    iassert( int_w > 0, "to_string: this mpint is undefined" );
+    iassert( base >= 0 && base <= 36, "base must be between 0 and 36" );
+    if ( base == 0 ) base = 10;
+   
+    std::string s;
+    if ( base == 2 ) {
+        //--------------------------------------------------------------
+        // Fast path for base-2.
+        //--------------------------------------------------------------
+        s = "";
+        for( size_t i = 0; i < int_w; i++ )
         {
-            char b = ((u.w[i] >> j) & 1) ? '1' : '0';
-            s = b + s;
+            char b = bit( int_w-1 - i ) ? '1' : '0';
+            s += b;
+        }
+    } else {
+        //--------------------------------------------------------------
+        // General Path - like elementary school addition
+        //
+        // Maintain a power-of-2 as a character string in
+        // the proper base.  The string starts off as "1" and 
+        // gets wider every time we multiply by 2 in our elementary school way,
+        // which is done by adding the power-of-2 to itself (no need to multiply).
+        //
+        // If mpint bit i is set, then we add the power of two into a similar
+        // character string that starts out as 0.  We calculate
+        // the next power-of-2 at the same time using a similar add.
+        //--------------------------------------------------------------
+        bool is_neg = signbit();
+        mpint a = is_neg ? -*this : *this;
+        s = "0";
+        std::string pow2 = "1";
+        for( size_t i = 0; i < int_w; i++ )
+        {
+            std::string  cpow2     = pow2;  // current pow-of-2
+            const char * cpow2_c   = cpow2.c_str();
+            size_t       cpow2_len = cpow2.length();
+            std::string  cs        = s;     // current s
+            const char * cs_c      = cs.c_str();
+            size_t       cs_len    = s.length();
+
+            s = "";                         // gonna re-create these
+            pow2 = "";
+            uint32_t cins = 0;              // carry ins
+            uint32_t cin2 = 0;
+            bool     a_bit = a.bit( i );    // don't add pow2 to s if !a_bit
+            for( size_t j = 0; j <= cpow2_len; j++ )
+            {
+                size_t   k  = cpow2_len-1 - j;
+                uint32_t dc2 = (j >= cpow2_len) ? 0 : ((cpow2_c[k] <= '9') ? (cpow2_c[k] - '0') : (cpow2_c[k] - 'a'));
+                uint32_t dcs = (j >= cs_len)    ? 0 : ((cs_c[k]    <= '9') ? (cs_c[k]    - '0') : (cs_c[k]    - 'a'));
+                uint32_t ds  = (a_bit ? dc2 : 0) + dcs + cins;  // will end up simply with no change in s if !a_bit
+                uint32_t d2  = dc2 + dc2 + cin2;                // must always update pow2
+                cins = ds / base;  
+                ds   = ds % base;
+                cin2 = d2 / base;
+                d2   = d2 % base;
+                char chs = (ds <= 9) ? ('0' + ds) : ('a' + ds);
+                char ch2 = (d2 <= 9) ? ('0' + d2) : ('a' + d2);
+                if ( chs != '0' || j != cpow2_len ) s    = chs + s;
+                if ( ch2 != '0' || j != cpow2_len ) pow2 = ch2 + pow2;
+            }
         }
     }
-    s = "0b" + s;
     return s;
 }
 
@@ -290,7 +339,7 @@ inline mpint mpint::operator - () const
         r.u.w0 = ~u.w0 + 1;
     } else {
         int64_t cin = 1;
-        for( uint32_t i = 0; i < word_cnt; i++ )
+        for( size_t i = 0; i < word_cnt; i++ )
         {
             r.u.w[i] = ~u.w[i] + cin;
             cin = r.u.w[i] < u.w[i];
@@ -312,7 +361,7 @@ inline mpint mpint::operator + ( const mpint& other ) const
         r.u.w0 = u.w0 + other.u.w0;
     } else {
         uint64_t cin = 0;
-        for( uint32_t i = 0; i < word_cnt; i++ ) 
+        for( size_t i = 0; i < word_cnt; i++ ) 
         {
             r.u.w[i] = u.w[i] + other.u.w[i] + cin;
             cin = r.u.w[i] < u.w[i];
@@ -339,20 +388,20 @@ inline mpint mpint::operator << ( int shift ) const
         return r;
     }
 
-    for( uint32_t i = 0; i < word_cnt; i++ )
+    for( size_t i = 0; i < word_cnt; i++ )
     {
         r.u.w[i] = 0;
     }
 
-    for( uint32_t tb = 0; tb < word_cnt*8; tb++ )
+    for( size_t tb = 0; tb < word_cnt*8; tb++ )
     {
-        uint32_t fb  = tb + shift;
-        uint32_t fw  = fb / 64;
-        uint32_t fwb = fb % 64;
+        size_t fb  = tb + shift;
+        size_t fw  = fb / 64;
+        size_t fwb = fb % 64;
         bool     b   = (fb >= word_cnt*8) ? 0 : ((u.w[fw] >> (63-fwb)) & 1);
 
-        uint32_t tw  = tb / 64;
-        uint32_t twb = tb % 64;
+        size_t tw  = tb / 64;
+        size_t twb = tb % 64;
         r.u.w[tw] |= b << (63-twb);
     }
 
@@ -378,20 +427,20 @@ inline mpint mpint::operator >> ( int shift ) const
 
     sign = (u.w[0] >> 63) & 1;
 
-    for( uint32_t i = 0; i < word_cnt; i++ )
+    for( size_t i = 0; i < word_cnt; i++ )
     {
         r.u.w[i] = 0;
     }
 
     for( int32_t tb = word_cnt*8-1; tb >= 0; tb-- )
     {
-        uint32_t fb  = tb - shift;
-        uint32_t fw  = fb / 64;
-        uint32_t fwb = fb % 64;
-        bool     b   = (fb < 0) ? sign : ((u.w[fw] >> fwb) & 1);
+        size_t fb  = tb - shift;
+        size_t fw  = fb / 64;
+        size_t fwb = fb % 64;
+        bool   b   = (fb < 0) ? sign : ((u.w[fw] >> fwb) & 1);
 
-        uint32_t tw  = tb / 64;
-        uint32_t twb = tb % 64;
+        size_t tw  = tb / 64;
+        size_t twb = tb % 64;
         r.u.w[tw] |= b << twb;
     }
 
