@@ -71,7 +71,8 @@ private:
         uint64_t * w;           // if doesn't fit in 64 bits
     } u;
 
-    bool bit( size_t i ) const;       // returns bit i
+    bool bit( size_t i ) const;         // returns bit i
+    void fixsign( void );               // re-extend the sign after possible overflow
 };
 
 // Well-Known std:xxx() Functions 
@@ -97,7 +98,7 @@ static inline mpint stoi( std::string str, size_t * pos=nullptr, int base=10 )
 
 static inline std::istream& operator >> ( std::istream &in, mpint& a )
 { 
-    int base = 10;              // TODO: need to query base 
+    int base = 10;              // need to query base 
     std::string s = "";
     in >> std::ws;          // eat up whitespace
     for( bool is_first = true; ; is_first = false )
@@ -112,8 +113,8 @@ static inline std::istream& operator >> ( std::istream &in, mpint& a )
 }
 
 static inline std::ostream& operator << ( std::ostream &out, const mpint& a )
-{ 
-    int base = 10;              // TODO: need to query base and width
+{
+    int base = 10;              // need to query base and width
     int width = 0;
     out << a.to_string( base, width );       
     return out;     
@@ -215,7 +216,7 @@ inline mpint mpint::to_mpint( std::string s, bool allow_no_conversion, int base,
     // Then add in the new digit. [This can be extended to other bases up
     // to the allowed base of 36.]
     //--------------------------------------------------------------
-    mpint r( 0 );
+    mpint r( 0, implicit_int_w+1 );  // to hold the largest negative integer (as positive integer)
     bool is_neg = false;
     bool got_digit = false;
     size_t len = s.length();
@@ -233,6 +234,7 @@ inline mpint mpint::to_mpint( std::string s, bool allow_no_conversion, int base,
             is_neg = true;
         } else if ( c >= '0' && c <= '9' ) {
             r = (r << 3) + (r << 1) + mpint( c - '0' );
+            iassert( !r.signbit(), "to_mpint string does not fit: " + s );
             got_digit = true;
         } else {
             break;
@@ -240,8 +242,11 @@ inline mpint mpint::to_mpint( std::string s, bool allow_no_conversion, int base,
     }
     iassert( got_digit || allow_no_conversion, "to_mpint did not find any digits in '" + s + "'" ); 
     if ( pos != nullptr ) *pos = is_neg ? (i - 1) : i;
-    if ( is_neg ) r = -r;           // TODO: need to make r one bit larger for max negative integer case
-    return r;
+    mpint rr( 0 );
+    if ( is_neg ) r = -r;
+    rr = r;    // will cause it to truncate
+    iassert( rr.signbit() == r.signbit(), "to_mpint string does not fit: " + s );
+    return rr;
 }
 
 inline std::string mpint::to_string( int base, int width ) const
@@ -321,18 +326,19 @@ inline mpint& mpint::operator = ( const mpint& other )
 {
     iassert( other.int_w > 0, "rhs int_w must be > 0" );
     if ( int_w == 0 ) {
+        // inherit other's int_w
         int_w    = other.int_w;
         word_cnt = other.word_cnt;
         if ( word_cnt > 1 ) u.w = new uint64_t[word_cnt];
     }
 
     if ( word_cnt == 1 ) {
-        // TODO: need to truncate and sign-extend
         u.w0 = other.u.w0;
     } else {
-        // TODO: need to truncate and sign-extend
         for( int32_t i = (word_cnt-1); i >= 0; i-- ) u.w[i] = other.u.w[i];
     }
+
+    if ( int_w != other.int_w ) fixsign();
 
     return *this;
 }
@@ -355,6 +361,25 @@ inline mpint mpint::operator - () const
     return r;
 }
 
+inline void mpint::fixsign( void ) 
+{
+    //-------------------------------------------------------
+    // If int_w is not an integral multiple of word_cnt, then
+    // we need to re-extend the new sign bit in the top word.
+    //-------------------------------------------------------
+    size_t sign_pos = (int_w-1) % word_cnt;  // in the top word
+    if ( sign_pos != 63 ) {
+        bool       sign      = signbit();
+        uint64_t   sign_mask = 0xffffffffffffffff << sign_pos;
+        uint64_t * word_ptr = (word_cnt == 1) ? &u.w0 : &u.w[word_cnt-1];
+        if ( sign ) {
+            *word_ptr |= sign_mask;             // propagate 1
+        } else {
+            *word_ptr &= ~sign_mask;            // propagate 0
+        }
+    }
+}
+
 inline mpint mpint::operator + ( const mpint& other ) const
 {
     mpint r;
@@ -375,22 +400,7 @@ inline mpint mpint::operator + ( const mpint& other ) const
         }
     }
     
-    //-------------------------------------------------------
-    // If int_w is not an integral multiple of word_cnt, then
-    // we need to re-extend the new sign bit in the top word
-    // after summing the words.
-    //-------------------------------------------------------
-    size_t sign_pos = (r.int_w-1) % r.word_cnt;  // in the top word
-    if ( sign_pos != 63 ) {
-        bool       sign      = r.signbit();
-        uint64_t   sign_mask = 0xffffffffffffffff << sign_pos;
-        uint64_t * word_ptr = (word_cnt == 1) ? &r.u.w0 : &r.u.w[r.word_cnt-1];
-        if ( sign ) {
-            *word_ptr |= sign_mask;             // propagate 1
-        } else {
-            *word_ptr &= ~sign_mask;            // propagate 0
-        }
-    }
+    r.fixsign();  // after possible overflow corruption of sign bits
     return r;
 }
 
