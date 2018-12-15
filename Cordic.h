@@ -193,17 +193,17 @@ public:
     T    atanh2( const T& y, const T& x ) const;                          // atanh(y/x)
 
     // random numbers
-    T    randseed( uint64_t seed );                                       // set 64-bit random seed 
+    T    seedrand( uint64_t seed );                                       // set random seed 
     T    uniform( void );                                                 // return uniform random in range [0.0, 1.0)  (1.0 excluded)
     T    uniform( const T& min, const T& max );                           // return uniform random in range [min, max)  (max excluded)
     T    gaussian( const T& mu, const T& std );                           // return gaussian random with mu and std
     
     // machine learning
-    T     tanh_backprop( const T& x, const T& x_backprop ) const;         // (1-x^2) * x_backprop
-    T     sigmoid( const T& x ) const;                                    // 1/(1 + exp(-x))
-    T     sigmoid_backprop( const T& x, const T& x_backprop ) const;      // x * (1-x) * x_backprop
-    T     relu( const T& x ) const;                                       // (x > 0) x : 0
-    T     relu_backprop( const T& x, const T& x_backprop ) const;         // (x > 0) x_backprop : 0
+    T    tanh_backprop( const T& x, const T& x_backprop ) const;          // (1-x^2) * x_backprop
+    T    sigmoid( const T& x ) const;                                     // 1/(1 + exp(-x))
+    T    sigmoid_backprop( const T& x, const T& x_backprop ) const;       // x * (1-x) * x_backprop
+    T    relu( const T& x ) const;                                        // (x > 0) x : 0
+    T    relu_backprop( const T& x, const T& x_backprop ) const;          // (x > 0) x_backprop : 0
 
     //-----------------------------------------------------
     // Bob's Collection of Math Identities (some are used in the implementation, most are not)

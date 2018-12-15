@@ -46,7 +46,8 @@ public:
     static void implicit_int_w_set( size_t int_w );
     
     mpint( void );
-    mpint( int64_t i, size_t int_w=0 );
+    mpint( int64_t i );
+    mpint( int64_t i, size_t int_w );
     ~mpint();
     
     // minimum set of operators needed by Cordic.h:
@@ -161,7 +162,7 @@ inline mpint::mpint( void )
 
 inline mpint::mpint( int64_t init, size_t _int_w )
 {
-    int_w = (_int_w == 0) ? implicit_int_w : _int_w;
+    int_w = _int_w;
     iassert( int_w > 0, "int_w must be > 0" );
     word_cnt = (int_w + 63) / 64;
     if ( word_cnt == 1 ) {
@@ -178,6 +179,10 @@ inline mpint::mpint( int64_t init, size_t _int_w )
         }
         u.w[word_cnt-1] = init;
     }
+}
+
+inline mpint::mpint( int64_t init ) : mpint( init, implicit_int_w )
+{
 }
 
 inline mpint::~mpint()
