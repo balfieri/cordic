@@ -293,7 +293,7 @@ inline std::string mpint::to_string( int base, int width ) const
         for( size_t i = 0; i < int_w; i++ )
         {
             char b = bit( int_w-1 - i ) ? '1' : '0';
-            s += b;
+            s = b + s;
         }
     } else {
         //--------------------------------------------------------------
@@ -343,6 +343,7 @@ inline std::string mpint::to_string( int base, int width ) const
                 if ( chs != '0' || j < cs_len )       s = chs + s;
                 if ( ch2 != '0' || j < cpow2_len ) pow2 = ch2 + pow2;
             }
+            //std::cout << "a_bit=" << a_bit << " s=" << s << "\n";
         }
     }
     while( size_t(width) > s.length() )
