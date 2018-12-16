@@ -48,6 +48,9 @@ int main( int argc, const char * argv[] )
     std::cout << "x should be 123456789: " << x << "\n";
     x = mpint::to_mpint( "9223372036854775807" );
     std::cout << x.to_string( 2 ) << "\n";
-    std::cout << "x should be 9223372036854775807 (max 64-bit signed int): " << x << "\n";
+    std::cout << "x should be 9223372036854775807 (max positive 64-bit int): " << x << "\n";
+    x = mpint(1) << 63;
+    std::cout << x.to_string( 2 ) << "\n";
+    std::cout << "x should be 1 << 63 (max negative 64-bit int): " << x << "\n";
     return 0;
 }

@@ -53,8 +53,9 @@ public:
     
     // minimum set of operators needed by Cordic.h:
     bool   signbit     ( void ) const;
-    mpint& operator =  ( const mpint& b );
+    mpint  neg         ( void ) const;
     mpint  operator -  () const;
+    mpint& operator =  ( const mpint& b );
     mpint  operator +  ( const mpint& b ) const;
     mpint  operator -  ( const mpint& b ) const;
     mpint  operator << ( int shift ) const;
@@ -271,7 +272,7 @@ inline mpint mpint::to_mpint( std::string s, bool allow_no_conversion, int base,
     }
     iassert( got_digit || allow_no_conversion, "to_mpint did not find any digits in '" + s + "'" ); 
     if ( pos != nullptr ) *pos = is_neg ? (i - 1) : i;
-    if ( is_neg ) r = -r;
+    if ( is_neg ) r = r.neg();
     mpint rr( 0 );
     rr = r;    // will cause it to truncate
     iassert( rr.signbit() == r.signbit(), "to_mpint string does not fit: " + s );
@@ -309,10 +310,12 @@ inline std::string mpint::to_string( int base, int width ) const
         // the next power-of-2 at the same time using a similar add.
         //--------------------------------------------------------------
         bool is_neg = signbit();
-        mpint a = is_neg ? -*this : *this;
+        mpint a( 0, int_w+1 );  // extra bit to deal with most negative integer
+        a = *this;
+        if ( is_neg ) a = -a;
         s = "0";
         std::string pow2 = "1";
-        for( size_t i = 0; i < int_w; i++ )
+        for( size_t i = 0; i < (a.int_w-1); i++ )
         {
             std::string  cpow2     = pow2;  // current pow-of-2
             const char * cpow2_c   = cpow2.c_str();
@@ -340,11 +343,15 @@ inline std::string mpint::to_string( int base, int width ) const
                 d2   = d2 % base;
                 char chs = (ds <= 9) ? ('0' + ds) : ('a' + ds);
                 char ch2 = (d2 <= 9) ? ('0' + d2) : ('a' + d2);
-                if ( chs != '0' || j < cs_len )       s = chs + s;
-                if ( ch2 != '0' || j < cpow2_len ) pow2 = ch2 + pow2;
+                s    = chs + s;
+                pow2 = ch2 + pow2;
             }
-            //std::cout << "a_bit=" << a_bit << " s=" << s << "\n";
         }
+        while( s[0] == '0' ) 
+        {
+            s = s.substr( 1 );
+        }
+        if ( is_neg ) s = "-" + s;
     }
     while( size_t(width) > s.length() )
     {
@@ -366,9 +373,10 @@ inline mpint& mpint::operator = ( const mpint& b )
     if ( word_cnt == 1 ) {
         u.w0 = (b.word_cnt == 1) ? b.u.w0 : b.u.w[0];
     } else {
+        bool b_sign = b.signbit();
         for( size_t i = 0; i < word_cnt; i++ )
         {
-            u.w[i] = (i < b.word_cnt) ? b.u.w[i] : 0;
+            u.w[i] = (i < b.word_cnt) ? ((b.word_cnt == 1) ? b.u.w0 : b.u.w[i]) : (b_sign ? uint64_t(-1) : 0);
         }
     }
 
@@ -377,11 +385,11 @@ inline mpint& mpint::operator = ( const mpint& b )
     return *this;
 }
 
-inline mpint mpint::operator - () const
+inline mpint mpint::neg() const
 {
     // negate = 2's complement
     iassert( int_w > 0, "trying to negate in undefined mpint" );
-    mpint r = *this;
+    mpint r( 0, int_w );
     if ( word_cnt == 1 ) {
         r.u.w0 = ~u.w0 + 1;
     } else {
@@ -393,6 +401,11 @@ inline mpint mpint::operator - () const
         }
     }
     return r;
+}
+
+inline mpint mpint::operator -() const
+{
+    return neg();
 }
 
 inline void mpint::fixsign( void ) 
@@ -428,8 +441,6 @@ inline mpint mpint::operator + ( const mpint& b ) const
             uint64_t wt = (i < word_cnt)   ? ((word_cnt > 1)   ? u.w[i]   : u.w0)   : 0;
             uint64_t wo = (i < b.word_cnt) ? ((b.word_cnt > 1) ? b.u.w[i] : b.u.w0) : 0;
             r.u.w[i] = wt + wo + cin;
-            //std::cout << std::hex << "wt=" << wt << " wo=" << wo << " cin=" << cin << "\n";
-            //std::cout << std::hex << "r.u.w[" << i << "]=" << r.u.w[i] << "\n";
             cin = r.u.w[i] < wt;
         }
     }
@@ -440,7 +451,7 @@ inline mpint mpint::operator + ( const mpint& b ) const
 
 inline mpint mpint::operator - ( const mpint& b ) const
 {
-    return *this + -b;
+    return *this + b.neg();
 }
 
 inline mpint mpint::operator << ( int shift ) const
