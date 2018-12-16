@@ -397,7 +397,7 @@ inline mpint mpint::neg() const
         for( size_t i = 0; i < word_cnt; i++ )
         {
             r.u.w[i] = ~u.w[i] + cin;
-            cin = r.u.w[i] < u.w[i];
+            cin = u.w[i] == 0 && cin;
         }
     }
     return r;

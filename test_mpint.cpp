@@ -24,48 +24,73 @@
 
 int main( int argc, const char * argv[] )
 {
-    //---------------------------------------------------------------------------
-    // Process command-line arguments after applying defaults.
-    //---------------------------------------------------------------------------
-    int int_w = 64;                            
+    (void)argc;
+    (void)argv;
 
-    for( int i = 1; i < argc; i++ )
+    //---------------------------------------------------------------------------
+    // Some small numbers that fit in 64 bits.
+    //---------------------------------------------------------------------------
     {
-        if ( strcmp( argv[i], "-int_w" ) == 0 ) {
-            int_w = std::atoi( argv[++i] );
-        } else {
-            std::cout << "ERROR: unknown option " << argv[i] << "\n";
-            exit( 1 );
-        }
+        int int_w = 64;                            
+        mpint::implicit_int_w_set( int_w );
+        std::cout << "\nint_w=" << int_w << "\n";
+        mpint y0 = 123456789;
+        mpint y1 = 937183901;
+        std::cout << "y0 should be 123456789: " << y0 << "\n";
+        std::cout << "y1 should be 937183901: " << y1 << "\n";
+        mpint y = y0 + y1;
+        std::cout << "sum y="  << y << "\n";
+        std::cout << "subtract y1=" << y1 << "\n";
+        mpint z = y - y1;
+        std::cout << "should get y0=" << z << "\n";
+        iassert( z == y0, "y - y1 != y0" );
+
+        y0 = mpint::to_mpint( "9223372036854775807" );
+        std::cout << "y0 should be 9223372036854775807 (may positive 64-bit int): " << y0 << "\n";
+        y0 = mpint(1) << 63;
+        std::cout << "y0 should be 1 << 63 (may negative 64-bit int): " << y0 << "\n";
     }
-    mpint::implicit_int_w_set( int_w );
-    std::cout << "\nint_w=" << int_w << "\n";
-    
+
     //---------------------------------------------------------------------------
-    // Simple stuff.
+    // Use medium-sized numbers (> 64 bits).
     //---------------------------------------------------------------------------
-    mpint x = 123456789;
-    std::cout << "x should be 123456789: " << x << "\n";
-    x = mpint::to_mpint( "9223372036854775807" );
-    std::cout << "x should be 9223372036854775807 (max positive 64-bit int): " << x << "\n";
-    x = mpint(1) << 63;
-    std::cout << "x should be 1 << 63 (max negative 64-bit int): " << x << "\n";
+    {
+        int int_w = 256;
+        mpint::implicit_int_w_set( int_w );
+        std::cout << "\nint_w=" << int_w << "\n";
+        mpint y0 = mpint::to_mpint( "748310705147189301347207" );
+        mpint y1 = mpint::to_mpint( "07084217431764890316589383" );
+        std::cout << "         y0=" << y0 << "\n" << y0.to_string(2) << "\n";
+        std::cout << "         y1=" << y1 << "\n" << y1.to_string(2) << "\n";
+        mpint y  = y0 + y1;
+        std::cout << "          y="  << y  << "\n" << y.to_string(2) << "\n";
+        std::cout << "subtract y1=" << y1 << "\n";
+        y1 = -y1;
+        std::cout << "add    -y1=" << y1 << "\n" << y1.to_string(2) << "\n";
+        mpint y11 = -y1;
+        std::cout << "note:  --y1=" << y11 << "\n" << y11.to_string(2) << "\n";
+        mpint z = y + y1;
+        std::cout << "expect   y0=" << z << "\n" << z.to_string(2) << "\n";
+        iassert( z == y0, "y - y1 != y0" );
+    }
 
     //---------------------------------------------------------------------------
     // Use some really big numbers.
     //---------------------------------------------------------------------------
-    int_w = 1024;
-    mpint::implicit_int_w_set( int_w );
-    std::cout << "\nint_w=" << int_w << "\n";
-    mpint y0 = mpint::to_mpint( "7483107051471893013472076086841320964319066409318609463216094321" );
-    mpint y1 = mpint::to_mpint( "07084217431764890316589361985618902365849612894613098648906312098460983216" );
-    std::cout << "y0=" << y0 << "\n";
-    std::cout << "y1=" << y1 << "\n";
-    mpint y  = y0 + y1;
-    std::cout << "y="  << y << "\n";
-    std::cout << "subtract y1=" << y1 << "\n";
-    mpint z = y - y1;
-    std::cout << "should get y0=" << z << "\n";
-    iassert( z == y0, "y - y1 != y0" );
+    {
+        int int_w = 1024;
+        mpint::implicit_int_w_set( int_w );
+        std::cout << "\nint_w=" << int_w << "\n";
+        mpint y0 = mpint::to_mpint( "7483107051471893013472076086841320964319066409318609463216094321" );
+        mpint y1 = mpint::to_mpint( "07084217431764890316589361985618902365849612894613098648906312098460983216" );
+        std::cout << "y0=" << y0 << "\n";
+        std::cout << "y1=" << y1 << "\n";
+        mpint y  = y0 + y1;
+        std::cout << "y="  << y << "\n";
+        std::cout << "subtract y1=" << y1 << "\n";
+        mpint z = y - y1;
+        std::cout << "should get y0=" << z << "\n";
+        iassert( z == y0, "y - y1 != y0" );
+    }
     return 0;
 }
