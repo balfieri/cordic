@@ -52,5 +52,20 @@ int main( int argc, const char * argv[] )
     x = mpint(1) << 63;
     std::cout << x.to_string( 2 ) << "\n";
     std::cout << "x should be 1 << 63 (max negative 64-bit int): " << x << "\n";
+
+    //---------------------------------------------------------------------------
+    // Add some really big numbers.
+    //---------------------------------------------------------------------------
+    mpint::implicit_int_w_set( 1024 );
+    mpint y0 = mpint::to_mpint( "7483107051471893013472076086841320964319066409318609463216094321" );
+    mpint y1 = mpint::to_mpint( "07084217431764890316589361985618902365849612894613098648906312098460983216" );
+    std::cout << "y0=" << y0 << "\n";
+    std::cout << "y1=" << y1 << "\n";
+    mpint y  = y0 + y1;
+    std::cout << "y="  << y << "\n";
+    std::cout << "subtract y1=" << y1 << "\n";
+    mpint z = y - y1;
+    std::cout << "should get y0=" << z << "\n";
+    iassert( z == y0, "y - y1 != y0" );
     return 0;
 }
