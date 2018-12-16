@@ -166,6 +166,8 @@ inline mpint::mpint( void )
     // mark it undefined
     int_w    = 0;
     word_cnt = 0;
+    u.w      = nullptr;
+    std::cout << "construct " << this << " undefined\n";
 }
 
 inline mpint::mpint( int64_t init, size_t _int_w )
@@ -187,6 +189,7 @@ inline mpint::mpint( int64_t init, size_t _int_w )
         }
         u.w[word_cnt-1] = init;
     }
+    std::cout << "construct " << this << " word_cnt=" << word_cnt << "\n";
 }
 
 inline mpint::mpint( int64_t init ) : mpint( init, implicit_int_w )
@@ -195,6 +198,7 @@ inline mpint::mpint( int64_t init ) : mpint( init, implicit_int_w )
 
 inline mpint::~mpint()
 {
+    std::cout << "destruct  " << this << " word_cnt=" << word_cnt << "\n";
     if ( word_cnt > 1 ) {
         delete u.w;
         u.w = nullptr;
@@ -344,6 +348,7 @@ inline mpint& mpint::operator = ( const mpint& b )
         int_w    = b.int_w;
         word_cnt = b.word_cnt;
         if ( word_cnt > 1 ) u.w = new uint64_t[word_cnt];
+        std::cout << "resize    " << this << " for = word_cnt=" << word_cnt << "\n";
     }
 
     if ( word_cnt == 1 ) {
@@ -387,7 +392,7 @@ inline void mpint::fixsign( void )
     size_t sign_pos = (int_w-1) % 64;  // in the top word
     if ( sign_pos != 63 ) {
         bool       sign      = signbit();
-        uint64_t   sign_mask = 0xffffffffffffffff << sign_pos;
+        uint64_t   sign_mask = uint64_t(-1) << sign_pos;
         uint64_t * word_ptr = (word_cnt == 1) ? &u.w0 : &u.w[word_cnt-1];
         if ( sign ) {
             *word_ptr |= sign_mask;             // propagate 1
@@ -405,6 +410,7 @@ inline mpint mpint::operator + ( const mpint& b ) const
     r.int_w    = (int_w > b.int_w) ? int_w : b.int_w;
     r.word_cnt = (int_w + 63) / 64;
     if ( r.word_cnt > 1 ) r.u.w = new uint64_t[r.word_cnt];
+    std::cout << "resize    " << this << " for + word_cnt=" << word_cnt << "\n";
     
     if ( r.word_cnt == 1 ) {
         r.u.w0 = u.w0 + b.u.w0;
