@@ -1,5 +1,6 @@
 .DS_Store
 test_basic
+test_mpint
 analyze
 *.exe
 *.o
