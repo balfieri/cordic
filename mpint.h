@@ -23,7 +23,7 @@
 // This class is a very simplisitic version of arbitrary precision integers, or "big integers."
 // It provides only a bare minimum set of operations needed by Cordic.h.
 // I didn't use an official class because I wanted to make sure Cordic wasn't
-// using any other integer math operations besides adding and shifting.
+// using any b integer math operations besides adding and shifting.
 //
 // Typical usage:
 //
@@ -52,12 +52,19 @@ public:
     
     // minimum set of operators needed by Cordic.h:
     bool   signbit     ( void ) const;
-    mpint& operator =  ( const mpint& other );
+    mpint& operator =  ( const mpint& b );
     mpint  operator -  () const;
-    mpint  operator +  ( const mpint& other ) const;
-    mpint  operator -  ( const mpint& other ) const;
+    mpint  operator +  ( const mpint& b ) const;
+    mpint  operator -  ( const mpint& b ) const;
     mpint  operator << ( int shift ) const;
     mpint  operator >> ( int shift ) const;
+
+    bool   operator >  ( const mpint& b ) const;
+    bool   operator >= ( const mpint& b ) const;
+    bool   operator <  ( const mpint& b ) const;
+    bool   operator <= ( const mpint& b ) const;
+    bool   operator != ( const mpint& b ) const;
+    bool   operator == ( const mpint& b ) const;
 
     static mpint to_mpint( std::string, bool allow_no_conversion=false, int base=10, size_t * pos=nullptr );  
     std::string  to_string( int base=10, int width=0 ) const;                
@@ -74,6 +81,7 @@ private:
 
     bool bit( size_t i ) const;         // returns bit i
     void fixsign( void );               // re-extend the sign after possible overflow
+    int  compare( const mpint& b ) const; // -1 is <, 0 is ==, 1 is >
 };
 
 // Well-Known std:xxx() Functions 
@@ -218,7 +226,7 @@ inline mpint mpint::to_mpint( std::string s, bool allow_no_conversion, int base,
     //--------------------------------------------------------------
     // Do this conversion without doing any multiplies.
     // When we have to multiply by 10 we simply do shifts and adds.
-    // Then add in the new digit. [This can be extended to other bases up
+    // Then add in the new digit. [This can be extended to b bases up
     // to the allowed base of 36.]
     //--------------------------------------------------------------
     mpint r( 0, implicit_int_w+1 );  // to hold the largest negative integer (as positive integer)
@@ -328,26 +336,26 @@ inline std::string mpint::to_string( int base, int width ) const
     return s;
 }
 
-inline mpint& mpint::operator = ( const mpint& other )
+inline mpint& mpint::operator = ( const mpint& b )
 {
-    iassert( other.int_w > 0, "rhs int_w must be > 0" );
+    iassert( b.int_w > 0, "rhs int_w must be > 0" );
     if ( int_w == 0 ) {
-        // inherit other's int_w
-        int_w    = other.int_w;
-        word_cnt = other.word_cnt;
+        // inherit b's int_w
+        int_w    = b.int_w;
+        word_cnt = b.word_cnt;
         if ( word_cnt > 1 ) u.w = new uint64_t[word_cnt];
     }
 
     if ( word_cnt == 1 ) {
-        u.w0 = other.u.w0;
+        u.w0 = b.u.w0;
     } else {
         for( uint32_t i = 0; i < word_cnt; i++ )
         {
-            u.w[i] = (i < other.word_cnt) ? other.u.w[i] : 0;
+            u.w[i] = (i < b.word_cnt) ? b.u.w[i] : 0;
         }
     }
 
-    if ( int_w != other.int_w ) fixsign();
+    if ( int_w != b.int_w ) fixsign();
 
     return *this;
 }
@@ -389,23 +397,23 @@ inline void mpint::fixsign( void )
     }
 }
 
-inline mpint mpint::operator + ( const mpint& other ) const
+inline mpint mpint::operator + ( const mpint& b ) const
 {
     mpint r;
 
     // pick larger of the two for result
-    r.int_w    = (int_w > other.int_w) ? int_w : other.int_w;
+    r.int_w    = (int_w > b.int_w) ? int_w : b.int_w;
     r.word_cnt = (int_w + 63) / 64;
     if ( r.word_cnt > 1 ) r.u.w = new uint64_t[r.word_cnt];
     
     if ( r.word_cnt == 1 ) {
-        r.u.w0 = u.w0 + other.u.w0;
+        r.u.w0 = u.w0 + b.u.w0;
     } else {
         uint64_t cin = 0;
         for( size_t i = 0; i < word_cnt; i++ ) 
         {
             uint64_t wt = (i < word_cnt)       ? ((word_cnt > 1)       ? u.w[i]       : u.w0)       : 0;
-            uint64_t wo = (i < other.word_cnt) ? ((other.word_cnt > 1) ? other.u.w[i] : other.u.w0) : 0;
+            uint64_t wo = (i < b.word_cnt) ? ((b.word_cnt > 1) ? b.u.w[i] : b.u.w0) : 0;
             r.u.w[i] = wt + wo + cin;
             cin = r.u.w[i] < wt;
         }
@@ -415,9 +423,9 @@ inline mpint mpint::operator + ( const mpint& other ) const
     return r;
 }
 
-inline mpint mpint::operator - ( const mpint& other ) const
+inline mpint mpint::operator - ( const mpint& b ) const
 {
-    return *this + -other;
+    return *this + -b;
 }
 
 inline mpint mpint::operator << ( int shift ) const
@@ -476,6 +484,60 @@ inline mpint mpint::operator >> ( int shift ) const
     }
 
     return r;
+}
+
+int mpint::compare( const mpint& b ) const
+{
+    int a_sign = signbit()   ? -1 : 1;
+    int b_sign = b.signbit() ? -1 : 1;
+    if ( a_sign != b_sign ) {
+        // easy case
+        return a_sign;
+    }
+
+    // need to start looking at words
+    // be careful about different numbers of words
+    size_t cnt = (word_cnt > b.word_cnt) ? word_cnt : b.word_cnt;
+    for( size_t i = 0; i < cnt; i++ )
+    {
+        size_t   k = cnt-i;
+        uint64_t wa = (k < word_cnt)   ? ((word_cnt   == 1) ?   u.w0 :   u.w[k]) : (a_sign ? uint64_t(-1) : 0);
+        uint64_t wb = (k < b.word_cnt) ? ((b.word_cnt == 1) ? b.u.w0 : b.u.w[k]) : (b_sign ? uint64_t(-1) : 0);
+        if ( wa != wb ) {
+            return (wa < wb) ? b_sign : a_sign;
+        }
+    }
+    return 0;  // equal
+}
+
+bool mpint::operator >  ( const mpint& b ) const
+{
+    return compare( b ) > 0;
+}
+
+bool mpint::operator >= ( const mpint& b ) const
+{
+    return compare( b ) >= 0;
+}
+
+bool mpint::operator <  ( const mpint& b ) const
+{
+    return compare( b ) < 0;
+}
+
+bool mpint::operator <= ( const mpint& b ) const
+{
+    return compare( b ) <= 0;
+}
+
+bool mpint::operator != ( const mpint& b ) const
+{
+    return compare( b ) != 0;
+}
+
+bool mpint::operator == ( const mpint& b ) const
+{
+    return compare( b ) == 0;
 }
 
 #endif
