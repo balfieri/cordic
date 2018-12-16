@@ -292,7 +292,7 @@ inline std::string mpint::to_string( int base, int width ) const
         s = "";
         for( size_t i = 0; i < int_w; i++ )
         {
-            char b = bit( int_w-1 - i ) ? '1' : '0';
+            char b = bit( i ) ? '1' : '0';
             s = b + s;
         }
     } else {
@@ -364,9 +364,9 @@ inline mpint& mpint::operator = ( const mpint& b )
     }
 
     if ( word_cnt == 1 ) {
-        u.w0 = b.u.w0;
+        u.w0 = (b.word_cnt == 1) ? b.u.w0 : b.u.w[0];
     } else {
-        for( uint32_t i = 0; i < word_cnt; i++ )
+        for( size_t i = 0; i < word_cnt; i++ )
         {
             u.w[i] = (i < b.word_cnt) ? b.u.w[i] : 0;
         }
