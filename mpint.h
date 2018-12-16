@@ -173,7 +173,7 @@ inline mpint::mpint( void )
     int_w    = 0;
     word_cnt = 0;
     u.w      = nullptr;
-    std::cout << "construct " << this << " undefined\n";
+    //std::cout << "construct " << this << " undefined\n";
 }
 
 inline mpint::mpint( int64_t init, size_t _int_w )
@@ -189,13 +189,13 @@ inline mpint::mpint( int64_t init, size_t _int_w )
         uint64_t sign = init < 0;
         uint64_t sign_mask = uint64_t( -sign );
 
-        for( size_t i = 0; i < word_cnt-1; i++ )
+        u.w[0] = init;
+        for( size_t i = 1; i < word_cnt; i++ )
         {
             u.w[i] = sign_mask;
         }
-        u.w[word_cnt-1] = init;
     }
-    std::cout << "construct " << this << " word_cnt=" << word_cnt << "\n";
+    //std::cout << "construct " << this << " word_cnt=" << word_cnt << "\n";
 }
 
 inline mpint::mpint( int64_t init ) : mpint( init, implicit_int_w )
@@ -209,7 +209,7 @@ inline mpint::mpint( const mpint& b ) : mpint()
 
 inline mpint::~mpint()
 {
-    std::cout << "destruct  " << this << " word_cnt=" << word_cnt << "\n";
+    //std::cout << "destruct  " << this << " word_cnt=" << word_cnt << "\n";
     if ( word_cnt > 1 ) {
         delete u.w;
         u.w = nullptr;
@@ -261,29 +261,21 @@ inline mpint mpint::to_mpint( std::string s, bool allow_no_conversion, int base,
             }
             is_neg = true;
         } else if ( c >= '0' && c <= '9' ) {
-            std::cout << "before r1\n";
             mpint r1 = r << 3;
-            std::cout << "before r2\n";
             mpint r2 = r << 1;
-            std::cout << "before r3\n";
             mpint r3( c - '0' );
-            std::cout << "before sum\n";
             r = r1 + r2 + r3;
-            std::cout << "after sum\n";
             iassert( !r.signbit(), "to_mpint string does not fit: " + s );
-            std::cout << "after signbit\n";
             got_digit = true;
         } else {
             break;
         }
     }
-    std::cout << "before rr\n";
     iassert( got_digit || allow_no_conversion, "to_mpint did not find any digits in '" + s + "'" ); 
     if ( pos != nullptr ) *pos = is_neg ? (i - 1) : i;
     if ( is_neg ) r = -r;
     mpint rr( 0 );
     rr = r;    // will cause it to truncate
-    std::cout << "after rr\n";
     iassert( rr.signbit() == r.signbit(), "to_mpint string does not fit: " + s );
     return rr;
 }
@@ -364,14 +356,13 @@ inline std::string mpint::to_string( int base, int width ) const
 
 inline mpint& mpint::operator = ( const mpint& b )
 {
-    std::cout << "assign " << this << " = " << &b << "\n";
+    //std::cout << "assign " << this << " = " << &b << "\n";
     iassert( b.int_w > 0, "rhs int_w must be > 0" );
     if ( int_w == 0 ) {
         // inherit b's int_w
         int_w    = b.int_w;
         word_cnt = b.word_cnt;
         if ( word_cnt > 1 ) u.w = new uint64_t[word_cnt];
-        std::cout << "resize    " << this << " for = word_cnt=" << word_cnt << "\n";
     }
 
     if ( word_cnt == 1 ) {
@@ -429,7 +420,6 @@ inline mpint mpint::operator + ( const mpint& b ) const
 {
     // pick larger of the two for result
     mpint r( 0, (int_w > b.int_w) ? int_w : b.int_w );
-    std::cout << "resize    " << this << " for + word_cnt=" << word_cnt << "\n";
     
     if ( r.word_cnt == 1 ) {
         r.u.w0 = u.w0 + b.u.w0;
