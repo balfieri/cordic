@@ -48,6 +48,7 @@ public:
     mpint( void );
     mpint( int64_t i );
     mpint( int64_t i, size_t int_w );
+    mpint( const mpint& b );
     ~mpint();
     
     // minimum set of operators needed by Cordic.h:
@@ -201,6 +202,11 @@ inline mpint::mpint( int64_t init ) : mpint( init, implicit_int_w )
 {
 }
 
+inline mpint::mpint( const mpint& b ) : mpint() 
+{
+    *this = b;
+}
+
 inline mpint::~mpint()
 {
     std::cout << "destruct  " << this << " word_cnt=" << word_cnt << "\n";
@@ -255,23 +261,29 @@ inline mpint mpint::to_mpint( std::string s, bool allow_no_conversion, int base,
             }
             is_neg = true;
         } else if ( c >= '0' && c <= '9' ) {
-            std::cout << "before sum\n";
+            std::cout << "before r1\n";
             mpint r1 = r << 3;
+            std::cout << "before r2\n";
             mpint r2 = r << 1;
+            std::cout << "before r3\n";
             mpint r3( c - '0' );
+            std::cout << "before sum\n";
             r = r1 + r2 + r3;
             std::cout << "after sum\n";
             iassert( !r.signbit(), "to_mpint string does not fit: " + s );
+            std::cout << "after signbit\n";
             got_digit = true;
         } else {
             break;
         }
     }
+    std::cout << "before rr\n";
     iassert( got_digit || allow_no_conversion, "to_mpint did not find any digits in '" + s + "'" ); 
     if ( pos != nullptr ) *pos = is_neg ? (i - 1) : i;
-    mpint rr( 0 );
     if ( is_neg ) r = -r;
+    mpint rr( 0 );
     rr = r;    // will cause it to truncate
+    std::cout << "after rr\n";
     iassert( rr.signbit() == r.signbit(), "to_mpint string does not fit: " + s );
     return rr;
 }
@@ -352,6 +364,7 @@ inline std::string mpint::to_string( int base, int width ) const
 
 inline mpint& mpint::operator = ( const mpint& b )
 {
+    std::cout << "assign " << this << " = " << &b << "\n";
     iassert( b.int_w > 0, "rhs int_w must be > 0" );
     if ( int_w == 0 ) {
         // inherit b's int_w
@@ -414,12 +427,8 @@ inline void mpint::fixsign( void )
 
 inline mpint mpint::operator + ( const mpint& b ) const
 {
-    mpint r;
-
     // pick larger of the two for result
-    r.int_w    = (int_w > b.int_w) ? int_w : b.int_w;
-    r.word_cnt = (int_w + 63) / 64;
-    if ( r.word_cnt > 1 ) r.u.w = new uint64_t[r.word_cnt];
+    mpint r( 0, (int_w > b.int_w) ? int_w : b.int_w );
     std::cout << "resize    " << this << " for + word_cnt=" << word_cnt << "\n";
     
     if ( r.word_cnt == 1 ) {
