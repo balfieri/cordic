@@ -251,7 +251,8 @@ inline mpint mpint::to_mpint( std::string s, bool allow_no_conversion, int base,
     size_t i;
     for( i = 0; i < len; i++ )
     {
-        char c = s[i];
+        char c = s[len-1-i];
+        std::cout << "c=" << c << "\n";
         if ( !is_neg && !got_digit && (c == ' ' || c == '\t' || c == '\n') ) continue; // skip whitespace
 
         if ( c == '-' ) {
@@ -261,10 +262,15 @@ inline mpint mpint::to_mpint( std::string s, bool allow_no_conversion, int base,
             }
             is_neg = true;
         } else if ( c >= '0' && c <= '9' ) {
+            std::cout << "r=" << r << "\n";
             mpint r1 = r << 3;
             mpint r2 = r << 1;
             mpint r3( c - '0' );
             r = r1 + r2 + r3;
+            std::cout << "r=" << r << "\n";
+            std::cout << "r1=" << r1 << "\n";
+            std::cout << "r2=" << r2 << "\n";
+            std::cout << "r3=" << r3 << "\n";
             iassert( !r.signbit(), "to_mpint string does not fit: " + s );
             got_digit = true;
         } else {
@@ -427,9 +433,11 @@ inline mpint mpint::operator + ( const mpint& b ) const
         uint64_t cin = 0;
         for( size_t i = 0; i < word_cnt; i++ ) 
         {
-            uint64_t wt = (i < word_cnt)       ? ((word_cnt > 1)       ? u.w[i]       : u.w0)       : 0;
+            uint64_t wt = (i < word_cnt)   ? ((word_cnt > 1)   ? u.w[i]   : u.w0)   : 0;
             uint64_t wo = (i < b.word_cnt) ? ((b.word_cnt > 1) ? b.u.w[i] : b.u.w0) : 0;
             r.u.w[i] = wt + wo + cin;
+            std::cout << "w[i]=" << r.u.w[i] << ": wt=" << wt << " + wo=" << wo << " + cin=" << cin << "\n";
+            std::cout << r.to_string( 2 ) << "\n";
             cin = r.u.w[i] < wt;
         }
     }
