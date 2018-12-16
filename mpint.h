@@ -173,7 +173,6 @@ inline mpint::mpint( void )
     int_w    = 0;
     word_cnt = 0;
     u.w      = nullptr;
-    //std::cout << "construct " << this << " undefined\n";
 }
 
 inline mpint::mpint( int64_t init, size_t _int_w )
@@ -195,7 +194,6 @@ inline mpint::mpint( int64_t init, size_t _int_w )
             u.w[i] = sign_mask;
         }
     }
-    //std::cout << "construct " << this << " word_cnt=" << word_cnt << "\n";
 }
 
 inline mpint::mpint( int64_t init ) : mpint( init, implicit_int_w )
@@ -209,7 +207,6 @@ inline mpint::mpint( const mpint& b ) : mpint()
 
 inline mpint::~mpint()
 {
-    //std::cout << "destruct  " << this << " word_cnt=" << word_cnt << "\n";
     if ( word_cnt > 1 ) {
         delete u.w;
         u.w = nullptr;
@@ -251,8 +248,7 @@ inline mpint mpint::to_mpint( std::string s, bool allow_no_conversion, int base,
     size_t i;
     for( i = 0; i < len; i++ )
     {
-        char c = s[len-1-i];
-        std::cout << "c=" << c << "\n";
+        char c = s[i];
         if ( !is_neg && !got_digit && (c == ' ' || c == '\t' || c == '\n') ) continue; // skip whitespace
 
         if ( c == '-' ) {
@@ -262,15 +258,10 @@ inline mpint mpint::to_mpint( std::string s, bool allow_no_conversion, int base,
             }
             is_neg = true;
         } else if ( c >= '0' && c <= '9' ) {
-            std::cout << "r=" << r << "\n";
             mpint r1 = r << 3;
             mpint r2 = r << 1;
             mpint r3( c - '0' );
             r = r1 + r2 + r3;
-            std::cout << "r=" << r << "\n";
-            std::cout << "r1=" << r1 << "\n";
-            std::cout << "r2=" << r2 << "\n";
-            std::cout << "r3=" << r3 << "\n";
             iassert( !r.signbit(), "to_mpint string does not fit: " + s );
             got_digit = true;
         } else {
@@ -362,7 +353,6 @@ inline std::string mpint::to_string( int base, int width ) const
 
 inline mpint& mpint::operator = ( const mpint& b )
 {
-    //std::cout << "assign " << this << " = " << &b << "\n";
     iassert( b.int_w > 0, "rhs int_w must be > 0" );
     if ( int_w == 0 ) {
         // inherit b's int_w
@@ -431,13 +421,13 @@ inline mpint mpint::operator + ( const mpint& b ) const
         r.u.w0 = u.w0 + b.u.w0;
     } else {
         uint64_t cin = 0;
-        for( size_t i = 0; i < word_cnt; i++ ) 
+        for( size_t i = 0; i < r.word_cnt; i++ ) 
         {
             uint64_t wt = (i < word_cnt)   ? ((word_cnt > 1)   ? u.w[i]   : u.w0)   : 0;
             uint64_t wo = (i < b.word_cnt) ? ((b.word_cnt > 1) ? b.u.w[i] : b.u.w0) : 0;
             r.u.w[i] = wt + wo + cin;
-            std::cout << "w[i]=" << r.u.w[i] << ": wt=" << wt << " + wo=" << wo << " + cin=" << cin << "\n";
-            std::cout << r.to_string( 2 ) << "\n";
+            //std::cout << std::hex << "wt=" << wt << " wo=" << wo << " cin=" << cin << "\n";
+            //std::cout << std::hex << "r.u.w[" << i << "]=" << r.u.w[i] << "\n";
             cin = r.u.w[i] < wt;
         }
     }
@@ -465,13 +455,13 @@ inline mpint mpint::operator << ( int shift ) const
 
     for( size_t tb = 0; tb < int_w; tb++ )
     {
-        int64_t fb  = tb - shift;
-        int64_t fw  = fb / 64;
-        int64_t fwb = fb % 64;
-        bool    b   = (fb < 0) ? 0 : ((u.w[fw] >> fwb) & 1);
+        int64_t  fb  = int64_t(tb) - shift;
+        int64_t  fw  = fb / 64;
+        int64_t  fwb = fb % 64;
+        uint64_t b   = (fb < 0) ? 0 : ((u.w[fw] >> fwb) & 1);
 
-        size_t tw  = tb / 64;
-        size_t twb = tb % 64;
+        size_t   tw  = tb / 64;
+        size_t   twb = tb % 64;
         r.u.w[tw] |= b << twb;
     }
 
@@ -496,13 +486,13 @@ inline mpint mpint::operator >> ( int shift ) const
 
     for( size_t tb = 0; tb < int_w; tb++ )
     {
-        size_t fb  = tb + shift;
-        size_t fw  = fb / 64;
-        size_t fwb = fb % 64;
-        bool   b   = (fb >= int_w) ? sign : ((u.w[fw] >> fwb) & 1);
+        size_t   fb  = tb + shift;
+        size_t   fw  = fb / 64;
+        size_t   fwb = fb % 64;
+        uint64_t b   = (fb >= int_w) ? sign : ((u.w[fw] >> fwb) & 1);
 
-        size_t tw  = tb / 64;
-        size_t twb = tb % 64;
+        size_t   tw  = tb / 64;
+        size_t   twb = tb % 64;
         r.u.w[tw] |= b << twb;
     }
 

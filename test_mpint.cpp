@@ -27,7 +27,7 @@ int main( int argc, const char * argv[] )
     //---------------------------------------------------------------------------
     // Process command-line arguments after applying defaults.
     //---------------------------------------------------------------------------
-    int int_w = 63;                            
+    int int_w = 64;                            
 
     for( int i = 1; i < argc; i++ )
     {
@@ -46,7 +46,7 @@ int main( int argc, const char * argv[] )
     //---------------------------------------------------------------------------
     mpint x = 123456789;
     std::cout << "x should be 123456789: " << x << "\n";
-    x = mpint::to_mpint( "1125899906842623" );
-    std::cout << "x should be 1125899906842623 (max 63-bit signed int): " << x << "\n";
+    x = mpint::to_mpint( "9223372036854775807" );
+    std::cout << "x should be 9223372036854775807 (max 64-bit signed int): " << x << "\n";
     return 0;
 }
