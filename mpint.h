@@ -221,8 +221,9 @@ inline bool mpint::bit( size_t i ) const
     if ( word_cnt == 1 ) {
         return (u.w0 >> i) & 1;
     } else {
-        i = i % 64;
-        return (u.w[word_cnt-1] >> i) & 1;
+        size_t w = i / 64;
+        size_t b = i % 64;
+        return (u.w[w] >> b) & 1;
     }
 }
 
