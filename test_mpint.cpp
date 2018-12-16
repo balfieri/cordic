@@ -39,7 +39,7 @@ int main( int argc, const char * argv[] )
         }
     }
     mpint::implicit_int_w_set( int_w );
-    std::cout << "int_w=" << int_w << "\n";
+    std::cout << "\nint_w=" << int_w << "\n";
     
     //---------------------------------------------------------------------------
     // Simple stuff.
@@ -47,16 +47,16 @@ int main( int argc, const char * argv[] )
     mpint x = 123456789;
     std::cout << "x should be 123456789: " << x << "\n";
     x = mpint::to_mpint( "9223372036854775807" );
-    std::cout << x.to_string( 2 ) << "\n";
     std::cout << "x should be 9223372036854775807 (max positive 64-bit int): " << x << "\n";
     x = mpint(1) << 63;
-    std::cout << x.to_string( 2 ) << "\n";
     std::cout << "x should be 1 << 63 (max negative 64-bit int): " << x << "\n";
 
     //---------------------------------------------------------------------------
-    // Add some really big numbers.
+    // Use some really big numbers.
     //---------------------------------------------------------------------------
-    mpint::implicit_int_w_set( 1024 );
+    int_w = 1024;
+    mpint::implicit_int_w_set( int_w );
+    std::cout << "\nint_w=" << int_w << "\n";
     mpint y0 = mpint::to_mpint( "7483107051471893013472076086841320964319066409318609463216094321" );
     mpint y1 = mpint::to_mpint( "07084217431764890316589361985618902365849612894613098648906312098460983216" );
     std::cout << "y0=" << y0 << "\n";
