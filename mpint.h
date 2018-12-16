@@ -66,6 +66,11 @@ public:
     bool   operator != ( const mpint& b ) const;
     bool   operator == ( const mpint& b ) const;
 
+    mpint& operator +=  ( const mpint& b );
+    mpint& operator -=  ( const mpint& b );
+    mpint& operator <<= ( int shift );
+    mpint& operator >>= ( int shift );
+
     static mpint to_mpint( std::string, bool allow_no_conversion=false, int base=10, size_t * pos=nullptr );  
     std::string  to_string( int base=10, int width=0 ) const;                
 
@@ -250,7 +255,12 @@ inline mpint mpint::to_mpint( std::string s, bool allow_no_conversion, int base,
             }
             is_neg = true;
         } else if ( c >= '0' && c <= '9' ) {
-            r = (r << 3) + (r << 1) + mpint( c - '0' );
+            std::cout << "before sum\n";
+            mpint r1 = r << 3;
+            mpint r2 = r << 1;
+            mpint r3( c - '0' );
+            r = r1 + r2 + r3;
+            std::cout << "after sum\n";
             iassert( !r.signbit(), "to_mpint string does not fit: " + s );
             got_digit = true;
         } else {
@@ -490,6 +500,30 @@ inline mpint mpint::operator >> ( int shift ) const
     }
 
     return r;
+}
+
+inline mpint& mpint::operator +=  ( const mpint& b ) 
+{ 
+    *this = *this + b;      
+    return *this;
+}
+
+inline mpint& mpint::operator -=  ( const mpint& b ) 
+{ 
+    *this = *this - b;      
+    return *this;
+}
+
+inline mpint& mpint::operator <<= ( int shift )      
+{ 
+    *this = *this << shift; 
+    return *this;
+}
+
+inline mpint& mpint::operator >>= ( int shift )      
+{ 
+    *this = *this >> shift; 
+    return *this;
 }
 
 int mpint::compare( const mpint& b ) const
