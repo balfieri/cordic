@@ -46,16 +46,16 @@ int main( int argc, const char * argv[] )
         iassert( z == y0, "y - y1 != y0" );
 
         y0 = mpint::to_mpint( "9223372036854775807" );
-        std::cout << "y0 should be 9223372036854775807 (may positive 64-bit int): " << y0 << "\n";
+        std::cout << "y0 should be 9223372036854775807 (most positive 64-bit signed int): " << y0 << "\n";
         y0 = mpint(1) << 63;
-        std::cout << "y0 should be 1 << 63 (may negative 64-bit int): " << y0 << "\n";
+        std::cout << "y0 should be 1 << 63 (most negative 64-bit int): " << y0 << "\n";
     }
 
     //---------------------------------------------------------------------------
     // Use medium-sized numbers (> 64 bits).
     //---------------------------------------------------------------------------
     {
-        int int_w = 256;
+        int int_w = 128;
         mpint::implicit_int_w_set( int_w );
         std::cout << "\nint_w=" << int_w << "\n";
         mpint y0 = mpint::to_mpint( "748310705147189301347207" );
