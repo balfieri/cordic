@@ -56,7 +56,7 @@ public:
     Cordic( uint32_t int_w,                     // fixed-point integer width
             uint32_t frac_w,                    // fixed-point fraction width
             bool     do_reduce=true,            // whether to do range reduction by default
-            uint32_t n=0 );                     // number of iterations used for CORDIC proper (0 == default == frac_w)
+            uint32_t n=0 );                     // number of iterations       used for CORDIC proper (0 == default == frac_w)
           //uint32_t gn=0 );                    // TODO: number of guard bits used for CORDIC proper (0 == default == log2(n))
     ~Cordic();
 
@@ -78,10 +78,11 @@ public:
     uint32_t int_w( void ) const;                       // int_w  from above
     uint32_t frac_w( void ) const;                      // frac_w from above
     uint32_t n( void ) const;                           // n      from above
+  //uint32_t gn( void ) const;                          // gn     from above
+    T maxint( void ) const;                             // largest positive integer (just integer part, does not include fractional bits)
 
-    T maxval( void ) const;                             // maximum positive encoded value 
-    T minval( void ) const;                             // minimum positive encoded value
-    T maxint( void ) const;                             // largest positive integer (just integer part, does not include fraction)
+    T maxval( void ) const;                             // encoded maximum positive value 
+    T minval( void ) const;                             // encoded minimum positive value
     T zero( void ) const;                               // encoded 0.0
     T one( void ) const;                                // encoded 1.0
     T two( void ) const;                                // encoded 2.0
