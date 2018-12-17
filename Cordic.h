@@ -57,6 +57,7 @@ public:
             uint32_t frac_w,                    // fixed-point fraction width
             bool     do_reduce=true,            // whether to do range reduction by default
             uint32_t n=0 );                     // number of iterations used for CORDIC proper (0 == default == frac_w)
+          //uint32_t gn=0 );                    // TODO: number of guard bits used for CORDIC proper (0 == default == log2(n))
     ~Cordic();
 
     //-----------------------------------------------------
