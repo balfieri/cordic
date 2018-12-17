@@ -47,17 +47,18 @@ public:
     //-----------------------------------------------------
     // Constructor
     //
-    // int_w  = fixed-point integer width
-    // frac_w = fixed-point fraction width
-    // 1+int_w+frac_w must fit in T
+    // int_w   = fixed-point integer width
+    // frac_w  = fixed-point fraction width
+    // guard_w = fixed-point guard bits width (default is calculated as log2(frac_w)
+    // 1+int_w+frac_w+guard_w must fit in T
     //
-    // So the most significant bit is the sign, followed by int_w bits of integer, followed by frac_w bits of fraction.
+    // So the most significant bit is the sign, followed by int_w bits of integer, followed by frac_w+guard_w bits of fraction.
     //-----------------------------------------------------
     Cordic( uint32_t int_w,                     // fixed-point integer width
             uint32_t frac_w,                    // fixed-point fraction width
             bool     do_reduce=true,            // whether to do range reduction by default
-            uint32_t n=0 );                     // number of iterations       used for CORDIC proper (0 == default == frac_w)
-          //uint32_t gn=0 );                    // TODO: number of guard bits used for CORDIC proper (0 == default == log2(n))
+            uint32_t guard_w=-1,                // number of guard bits used for CORDIC proper (-1 == default == log2(frac_w))
+            uint32_t n=-1 );                    // number of iterations used for CORDIC proper (-1 == default == frac_w)
     ~Cordic();
 
     //-----------------------------------------------------
@@ -75,10 +76,11 @@ public:
     //-----------------------------------------------------
     // Constants 
     //-----------------------------------------------------
-    uint32_t int_w( void ) const;                       // int_w  from above
-    uint32_t frac_w( void ) const;                      // frac_w from above
-    uint32_t n( void ) const;                           // n      from above
-  //uint32_t gn( void ) const;                          // gn     from above
+    uint32_t int_w( void ) const;                       // int_w   from above
+    uint32_t frac_w( void ) const;                      // frac_w  from above
+    uint32_t guard_w( void ) const;                     // guard_w from above
+    uint32_t w( void ) const;                           // 1 + int_w + frac_w + guard_w (i.e., overall width)
+    uint32_t n( void ) const;                           // n       from above
     T maxint( void ) const;                             // largest positive integer (just integer part, does not include fractional bits)
 
     T maxval( void ) const;                             // encoded maximum positive value 
@@ -633,6 +635,8 @@ struct Cordic<T,FLT>::Impl
 {
     uint32_t                    int_w;
     uint32_t                    frac_w;
+    uint32_t                    guard_w;
+    uint32_t                    w;
     bool                        do_reduce;
     uint32_t                    n;
 
@@ -798,19 +802,22 @@ std::string Cordic<T,FLT>::op_to_str( uint16_t op )
 // Constructor
 //-----------------------------------------------------
 template< typename T, typename FLT >
-Cordic<T,FLT>::Cordic( uint32_t int_w, uint32_t frac_w, bool do_reduce, uint32_t n )
+Cordic<T,FLT>::Cordic( uint32_t int_w, uint32_t frac_w, bool do_reduce, uint32_t guard_w, uint32_t n )
 {
-    if ( n == 0 ) n = frac_w;
-    if ( logger != nullptr ) logger->cordic_constructed( this, int_w, frac_w, n );
+    if ( n == uint32_t(-1) ) n = frac_w;
+    if ( guard_w == uint32_t(-1) ) guard_w = 0; // _log2( frac_w );
+    if ( logger != nullptr ) logger->cordic_constructed( this, int_w, frac_w, guard_w, n );
 
-    cassert( (1+int_w+frac_w) <= (sizeof( T ) * 8), "1+int_w+frac_w does not fit in T container" );
-    cassert( int_w  != 0, "int_w must be > 0 currently" );
-    cassert( frac_w != 0, "frac_w must be > 0 currently" );
+    cassert( (1+int_w+frac_w+guard_w) <= (sizeof( T ) * 8), "1 + int_w + frac_w + guard_w does not fit in T container" );
+    cassert( int_w   != 0, "int_w must be > 0 currently" );
+    cassert( frac_w  != 0, "frac_w must be > 0 currently" );
 
     impl = new Impl;
 
     impl->int_w   = int_w;
     impl->frac_w  = frac_w;
+    impl->guard_w = guard_w;
+    impl->w       = 1 + int_w + frac_w + guard_w;
     impl->do_reduce = do_reduce;
     impl->n       = n;
     impl->maxint  = (T(1) << int_w) - 1;
@@ -904,7 +911,7 @@ Cordic<T,FLT>::Cordic( uint32_t int_w, uint32_t frac_w, bool do_reduce, uint32_t
     const FLT PI_DIV_2 = PI / 2.0;
     const FLT PI_DIV_4 = PI / 4.0;
     const T   MASK     = (T(1) << (int_w+T(1)))-T(1);  // include 0.5 bit of fraction
-    const T   MAX      = (T(1) << (int_w+frac_w))-T(1);
+    const T   MAX      = (T(1) << (impl->w-1))-T(1);
     const FLT MAX_F    = to_flt( MAX );
     for( T i = 0; i <= MASK; i++ )
     {
@@ -935,13 +942,13 @@ Cordic<T,FLT>::Cordic( uint32_t int_w, uint32_t frac_w, bool do_reduce, uint32_t
     }
 
     // construct LUT used by reduce_log_arg()
-    T * addend = new T[frac_w+int_w];
+    T * addend = new T[impl->w - 1];
     impl->reduce_log_addend = addend;
-    for( int32_t i = -frac_w; i <= int32_t(int_w); i++ )
+    for( int32_t i = -(frac_w+guard_w); i <= int32_t(int_w); i++ )
     {
         double addend_f = std::log( std::pow( 2.0, double( i ) ) );
-        addend[frac_w+i] = to_t( addend_f );
-        if ( debug ) std::cout << "reduce_log_arg LUT: addend[" << to_rstring(i) << "]=" << to_flt(addend[frac_w+i]) << 
+        addend[frac_w+guard_w+i] = to_t( addend_f );
+        if ( debug ) std::cout << "reduce_log_arg LUT: addend[" << to_rstring(i) << "]=" << to_flt(addend[frac_w+guard_w+i]) << 
                                   " addend_f=" << addend_f << "\n";
     }
 }
@@ -977,6 +984,18 @@ template< typename T, typename FLT >
 inline uint32_t Cordic<T,FLT>::frac_w( void ) const
 {
     return impl->frac_w;
+}
+
+template< typename T, typename FLT >
+inline uint32_t Cordic<T,FLT>::guard_w( void ) const
+{
+    return impl->guard_w;
+}
+
+template< typename T, typename FLT >
+inline uint32_t Cordic<T,FLT>::w( void ) const
+{
+    return impl->w;
 }
 
 template< typename T, typename FLT >
@@ -1208,7 +1227,7 @@ inline std::string Cordic<T,FLT>::to_rstring( const T& _x ) const
     bool sign = x < 0;
     if ( sign ) x = -x;
     int32_t twidth = 8 * sizeof( T );
-    int32_t bwidth = impl->int_w + impl->frac_w;
+    int32_t bwidth = impl->w - 1;
     int32_t dwidth = FLT(bwidth) / std::ceil( std::log2( 10 ) );
     char s[1024];
     cassert( (dwidth+2) < int32_t(sizeof(s)), "to_rstring: need to make s buffer bigger" );
@@ -1254,11 +1273,10 @@ inline std::string Cordic<T,FLT>::to_bstring( const T& _x ) const
 {
     // binary representation
     T x = _x;
-    uint32_t width = 1 + impl->int_w + impl->frac_w;
     std::string bs = "";
-    for( uint32_t i = 0; i < width; i++ )
+    for( uint32_t i = 0; i < impl->w; i++ )
     {
-        if ( i == (impl->int_w+impl->frac_w) || i == impl->frac_w ) bs = " " + bs;
+        if ( i == (impl->w - 1) || i == impl->frac_w || i == impl->guard_w ) bs = " " + bs;
         const char * b = (x & 1) ? "1" : "0";
         bs = b + bs;
         x >>= 1;
@@ -1270,10 +1288,11 @@ template< typename T, typename FLT >
 inline T Cordic<T,FLT>::make_fixed( bool sign, T i, T f )
 {
     cassert( i >= 0 && i <= impl->maxint              , "make_fixed integer part must be in range 0 .. impl->maxint" );
-    cassert( f >= 0 && f <= ((T(1) << impl->frac_w)-1), "make_fixed fractional part must be in range 0 .. (1 << frac_w)-1" );
+    cassert( f >= 0 && f <= ((T(1) << impl->frac_w+impl->guard_w)-1), 
+                                                        "make_fixed fractional part must be in range 0 .. (1 << (frac_w+guard_w))-1" );
 
-    return (T(sign) << (impl->int_w + impl->frac_w)) |
-           (T(i)    << impl->frac_w)             |
+    return (T(sign) << (impl->w - 1))                  |
+           (T(i)    << (impl->frac_w + impl->guard_w)) |
            (T(f)    << 0);
 }
 
@@ -1774,7 +1793,7 @@ inline T Cordic<T,FLT>::abs( const T& x ) const
     T    x_abs  = x;
     bool x_sign = x_abs < T(0);
     if ( x_sign ) x_abs = -x;
-    T    sign_mask = x_abs >> (impl->int_w + impl->frac_w);
+    T    sign_mask = x_abs >> (impl->w - 1);
     cassert( (sign_mask == T(0) || sign_mask == T(-1)), "abs caused overflow" ); 
     return x_abs;
 }
@@ -1785,7 +1804,7 @@ inline T Cordic<T,FLT>::neg( const T& x ) const
     _log1( neg, x );
     bool x_sign = x < 0;
     T    x_neg  = -x;
-    T    sign_mask = x_neg >> (impl->int_w + impl->frac_w);
+    T    sign_mask = x_neg >> (impl->w - 1);
     cassert( (x == 0 || sign_mask == (x_sign ? T(0) : T(-1))), "neg caused overflow" ); 
     return x_neg;
 }
@@ -1794,7 +1813,7 @@ template< typename T, typename FLT >
 inline T Cordic<T,FLT>::floor( const T& x ) const
 {
     _log1( floor, x );
-    T frac_mask = (T(1) << impl->frac_w) - 1;
+    T frac_mask = (T(1) << (impl->frac_w + impl->guard_w)) - 1;
     if ( (x & frac_mask) == 0 ) {
         return x;
     } else if ( x > 0 ) {
@@ -1808,7 +1827,7 @@ template< typename T, typename FLT >
 inline T Cordic<T,FLT>::ceil( const T& x ) const
 {
     _log1( ceil, x );
-    T frac_mask = (T(1) << impl->frac_w) - 1;
+    T frac_mask = (T(1) << (impl->frac_w+impl->guard_w)) - 1;
     if ( (x & frac_mask) == 0 ) {
         return x;
     } else if ( x > 0 ) {
@@ -1825,7 +1844,7 @@ inline T Cordic<T,FLT>::add( const T& x, const T& y ) const
     bool x_sign = x < T(0);
     bool y_sign = y < T(0);
     T    sum    = x + y;
-    T    sign_mask = sum >> (impl->int_w + impl->frac_w);
+    T    sign_mask = sum >> (impl->w - 1);
     cassert( sign_mask == T(0) || sign_mask == T(-1), "add caused overflow" );
     return sum;
 }
@@ -1837,7 +1856,7 @@ inline T Cordic<T,FLT>::sub( const T& x, const T& y ) const
     bool x_sign = x < T(0);
     bool y_sign = y < T(0);
     T    sum    = x - y;
-    T    sign_mask = sum >> (impl->int_w + impl->frac_w);
+    T    sign_mask = sum >> (impl->w - 1);
     cassert( sign_mask == 0 || sign_mask == T(-1), "sub caused overflow" );
     return sum;
 }
@@ -1911,7 +1930,7 @@ T Cordic<T,FLT>::lshift( const T& x, int ls, bool can_log ) const
         // At some point, we'll have options to saturate or set a flag in the container.
         //-----------------------------------------------------
         int32_t ls_max = impl->int_w;
-        uint32_t i = x >> impl->frac_w;
+        uint32_t i = x >> (impl->frac_w + impl->guard_w);
         cassert( i <= impl->maxint, "lshift x integer part should be <= impl->maxint"  );
         while( i != 0 ) 
         {
@@ -2808,11 +2827,11 @@ inline void Cordic<T,FLT>::reduce_exp_arg( FLT b, T& x, T& factor ) const
     T x_orig = x;
     if ( debug ) std::cout << "reduce_exp_arg: b=" << b << " x_orig=" << to_flt(x_orig) << "\n";
     const FLT * factors_f = impl->reduce_exp_factor;
-    T   i         = x >> impl->frac_w;  // can be + or -
+    T   i         = x >> (impl->frac_w + impl->guard_w);  // can be + or -
     T   index     = -MININT + i;
     FLT factor_f  = std::log(b) * factors_f[index];   // could build per-b factors_f[] LUT with multiply already done
     factor        = to_t( factor_f );
-    x            -= i << impl->frac_w;
+    x            -= i << (impl->frac_w + impl->guard_w);
     if ( debug ) std::cout << "reduce_exp_arg: b=" << b << " x_orig=" << to_flt(x_orig) << 
                               " i=" << to_rstring(i) << " index=" << to_rstring(index) << " log(b)*exp(i)=" << to_flt(factor) << 
                               " f=x_reduced=" << to_flt(x) << "\n"; 
@@ -2833,7 +2852,7 @@ inline void Cordic<T,FLT>::reduce_log_arg( T& x, T& addend ) const
     bool x_sign;
     reduce_arg( x, x_lshift, x_sign, true, true, true );
     const T * addends = impl->reduce_log_addend;
-    addend = addends[impl->frac_w+x_lshift];
+    addend = addends[impl->frac_w+impl->guard_w+x_lshift];
     if ( debug ) std::cout << "reduce_log_arg: x_orig=" << to_flt(x_orig) << " x_reduced=" << to_flt(x) << " addend=" << to_flt(addend) << "\n"; 
 }
 
@@ -2913,8 +2932,8 @@ inline void Cordic<T,FLT>::reduce_sincos_arg( T& a, uint32_t& quad, bool& sign, 
     sign = a < 0;
     if ( sign ) a = -a;
     const T m = mul( a, impl->four_div_pi, true, false );
-    const T i = m >> impl->frac_w;
-    const T s = i * impl->pi_div_4;
+    const T i = m >> (impl->frac_w + impl->guard_w);
+    const T s = i *  impl->pi_div_4;
     a        -= s;
     quad      = (i >> 1) & 3;
     did_minus_pi_div_4 = i & 1;
@@ -2945,8 +2964,8 @@ inline void Cordic<T,FLT>::reduce_sinhcosh_arg( T& x, T& sinh_i, T& cosh_i, bool
     if ( sign ) x = -x;
 
     const T MASK = (T(1) << (impl->int_w+2)) - T(1);  // include 0.25 bit of fraction
-    T i = (x >> (impl->frac_w-2)) & MASK;
-    x   = x & ((T(1) << (impl->frac_w-2))-T(1));
+    T i = (x >> (impl->frac_w+impl->guard_w-2)) & MASK;
+    x   = x & ((T(1) << (impl->frac_w+impl->guard_w-2))-T(1));
     const T *    sinh_i_vals   = impl->reduce_sinhcosh_sinh_i;
     const T *    cosh_i_vals   = impl->reduce_sinhcosh_cosh_i;
     const bool * sinh_i_oflows = impl->reduce_sinhcosh_sinh_i_oflow;

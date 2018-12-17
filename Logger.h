@@ -38,7 +38,7 @@ public:
     ~Logger();
 
     // log construction/destruction of Cordic objects
-    virtual void cordic_constructed( const void * cordic, uint32_t int_w, uint32_t frac_w, uint32_t n );
+    virtual void cordic_constructed( const void * cordic, uint32_t int_w, uint32_t frac_w, uint32_t guard_w, uint32_t n );
     virtual void cordic_destructed(  const void * cordic );
 
     // log enter/leave routine
@@ -102,10 +102,10 @@ Logger<T,FLT>::~Logger()
 }
 
 template< typename T, typename FLT >
-inline void Logger<T,FLT>::cordic_constructed( const void * cordic, uint32_t int_w, uint32_t frac_w, uint32_t n )
+inline void Logger<T,FLT>::cordic_constructed( const void * cordic, uint32_t int_w, uint32_t frac_w, uint32_t guard_w, uint32_t n )
 {
     if ( out_text ) {
-        *out << "cordic_constructed( " << cordic << ", " << int_w << ", " << frac_w << ", " << n << " )\n";
+        *out << "cordic_constructed( " << cordic << ", " << int_w << ", " << frac_w << ", " << guard_w << ", " << n << " )\n";
     }
 }
 

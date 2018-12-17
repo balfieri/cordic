@@ -69,6 +69,7 @@ private:
         bool     is_alive;
         uint32_t int_w;
         uint32_t frac_w;
+        uint32_t guard_w;
         uint32_t n;
     };
 
@@ -336,6 +337,7 @@ Analysis<T,FLT>::Analysis( std::string file_name )
                 info.is_alive   = true;
                 info.int_w      = parse_int( c );
                 info.frac_w     = parse_int( c );
+                info.guard_w    = parse_int( c );
                 info.n          = parse_int( c );
                 auto it = cordics.find( cordic );
                 cassert( it == cordics.end() || !it->second.is_alive, "Cordic reconstructed before previous was destructed" );
