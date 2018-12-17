@@ -441,7 +441,7 @@ inline mpint mpint::operator + ( const mpint& b ) const
             uint64_t wt = (i < word_cnt)   ? ((word_cnt > 1)   ? u.w[i]   : u.w0)   : 0;
             uint64_t wo = (i < b.word_cnt) ? ((b.word_cnt > 1) ? b.u.w[i] : b.u.w0) : 0;
             r.u.w[i] = wt + wo + cin;
-            cin = r.u.w[i] < wt;
+            cin = r.u.w[i] < wt || r.u.w[i] < wo;
         }
     }
     

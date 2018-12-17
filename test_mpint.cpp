@@ -60,17 +60,13 @@ int main( int argc, const char * argv[] )
         std::cout << "\nint_w=" << int_w << "\n";
         mpint y0 = mpint::to_mpint( "748310705147189301347207" );
         mpint y1 = mpint::to_mpint( "07084217431764890316589383" );
-        std::cout << "         y0=" << y0 << "\n" << y0.to_string(2) << "\n";
-        std::cout << "         y1=" << y1 << "\n" << y1.to_string(2) << "\n";
+        std::cout << "y0=" << y0 << "\n";
+        std::cout << "y1=" << y1 << "\n";
         mpint y  = y0 + y1;
-        std::cout << "          y="  << y  << "\n" << y.to_string(2) << "\n";
+        std::cout << "y="  << y  << "\n";
         std::cout << "subtract y1=" << y1 << "\n";
-        y1 = -y1;
-        std::cout << "add    -y1=" << y1 << "\n" << y1.to_string(2) << "\n";
-        mpint y11 = -y1;
-        std::cout << "note:  --y1=" << y11 << "\n" << y11.to_string(2) << "\n";
-        mpint z = y + y1;
-        std::cout << "expect   y0=" << z << "\n" << z.to_string(2) << "\n";
+        mpint z = y - y1;
+        std::cout << "should get y0=" << z << "\n";
         iassert( z == y0, "y - y1 != y0" );
     }
 
@@ -92,5 +88,6 @@ int main( int argc, const char * argv[] )
         std::cout << "should get y0=" << z << "\n";
         iassert( z == y0, "y - y1 != y0" );
     }
+    std::cout << "\nPASS\n";
     return 0;
 }
