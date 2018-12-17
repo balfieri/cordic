@@ -1,1 +1,11 @@
-doit.test 0 test_basic
+#!/usr/bin/perl -w
+#
+sub cmd($) 
+{ 
+    my $cmd = shift; 
+    system( $cmd ) == 0 or die "ERROR: command failed: $cmd\n";
+}
+
+cmd( "doit.test 0 test_basic" );
+cmd( "doit.test 0 test_mpint" );
+print "\nALL PASSED\n";

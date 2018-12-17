@@ -88,6 +88,6 @@ int main( int argc, const char * argv[] )
         std::cout << "should get y0=" << z << "\n";
         iassert( z == y0, "y - y1 != y0" );
     }
-    std::cout << "\nPASS\n";
+    std::cout << "\nPASSED\n";
     return 0;
 }

@@ -184,5 +184,6 @@ int main( int argc, const char * argv[] )
     delete cordicr;
     delete cordicnr;
 
+    std::cout << "PASSED\n";
     return 0;
 }
