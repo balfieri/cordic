@@ -47,14 +47,18 @@ private:
     std::istream *      in;
     bool                in_text;
 
+    using OP                         = typename Cordic<T,FLT>::OP;
+    static constexpr uint64_t OP_cnt = Cordic<T,FLT>::OP_cnt;
+
     struct FuncInfo
     {
-        size_t   func_i;
+        uint64_t call_cnt;                              // number of enters for this function
+        uint64_t op_cnt[OP_cnt];                        // total op counts from all calls
     };
 
     struct FrameInfo
     {
-        size_t   func_i;
+        std::string func_name;                          
     };
 
     struct CordicInfo
@@ -99,18 +103,24 @@ private:
 
     static constexpr uint32_t KIND_cnt = 12;
 
-    using OP = typename Cordic<T,FLT>::OP;
-
     std::map<std::string, KIND>                 kinds;
     std::map<std::string, OP>                   ops;
     std::map<std::string, FuncInfo>             funcs;
-    std::vector<FrameInfo>                      stack;
     std::map<uint64_t, CordicInfo>              cordics;
     std::map<uint64_t, ValInfo>                 vals;
+
+    static constexpr uint32_t                   STACK_CNT_MAX = 1024;
+    FrameInfo                                   stack[STACK_CNT_MAX];   // func call stack
+    uint32_t                                    stack_cnt;              // func call stack depth
 
     static constexpr uint32_t                   VAL_STACK_CNT_MAX = 2;
     ValInfo                                     val_stack[VAL_STACK_CNT_MAX];
     uint32_t                                    val_stack_cnt;
+
+    void                stack_push( const FrameInfo& info );
+    FrameInfo&          stack_top( void );
+    void                stack_pop( void );
+    void                inc_op_cnt( OP op );
 
     void                val_stack_push( const ValInfo& val );
     ValInfo             val_stack_pop( void );
@@ -230,7 +240,35 @@ inline FLT Analysis<T,FLT>::parse_flt( char *& c )
     return std::atof( flt_s.c_str() );
 }
 
-template< typename T, typename FLT > inline void Analysis<T,FLT>::val_stack_push( const ValInfo& info )
+template< typename T, typename FLT > inline void Analysis<T,FLT>::stack_push( const FrameInfo& info )
+{
+    cassert( stack_cnt < STACK_CNT_MAX, "depth of call stack exceeded" );
+    stack[stack_cnt++] = info;
+}
+
+template< typename T, typename FLT >
+inline typename Analysis<T,FLT>::FrameInfo& Analysis<T,FLT>::stack_top( void )
+{
+    cassert( stack_cnt > 0, "can't get top of an empty call stack" );
+    return stack[stack_cnt-1];
+}
+
+template< typename T, typename FLT >
+inline void Analysis<T,FLT>::stack_pop( void )
+{
+    cassert( stack_cnt > 0, "can't pop an empty call stack" );
+    stack_cnt--;
+}
+
+template< typename T, typename FLT >
+inline void Analysis<T,FLT>::inc_op_cnt( OP op )
+{
+    FrameInfo& frame = stack_top();
+    funcs[frame.func_name].op_cnt[uint32_t(op)]++;
+}
+
+template< typename T, typename FLT > 
+inline void Analysis<T,FLT>::val_stack_push( const ValInfo& info )
 {
     cassert( val_stack_cnt < VAL_STACK_CNT_MAX, "depth of val_stack exceeded" );
     val_stack[val_stack_cnt++] = info;
@@ -277,6 +315,7 @@ Analysis<T,FLT>::Analysis( std::string file_name )
     // assume parsing text at this point
     std::string line;
     char cs[1024];
+    stack_cnt = 0;
     val_stack_cnt = 0;
     while( std::getline( *in, line ) )
     {
@@ -315,13 +354,12 @@ Analysis<T,FLT>::Analysis( std::string file_name )
                 auto it = funcs.find( name );
                 if ( it == funcs.end() ) {
                     FuncInfo info;
-                    info.func_i = funcs.size();
                     funcs[name] = info;
                     it = funcs.find( name );
                 } 
                 FrameInfo frame;
-                frame.func_i = it->second.func_i;
-                stack.push_back( frame );
+                frame.func_name = name;
+                stack_push( frame );
                 break;
             }
 
@@ -330,10 +368,9 @@ Analysis<T,FLT>::Analysis( std::string file_name )
                 std::string name = parse_name( c );
                 auto it = funcs.find( name );
                 cassert( it != funcs.end(), "leave should have found function " + name );
-                cassert( stack.size() > 0, "trying to leave routine " + name + " when stack is already empty" );
-                FrameInfo& frame = stack[stack.size()-1];
-                cassert( frame.func_i == it->second.func_i, "trying to leave a routine that's not at the top of the stack" );
-                stack.pop_back();
+                FrameInfo& frame = stack_top();
+                cassert( frame.func_name == name, "trying to leave a routine that's not at the top of the stack" );
+                stack_pop();
                 break;
             }
 
@@ -378,6 +415,7 @@ Analysis<T,FLT>::Analysis( std::string file_name )
             {
                 std::string name = parse_name( c );
                 OP op = ops[name];
+                inc_op_cnt( op );
                 uint32_t opnd_cnt = uint32_t(kind) - uint32_t(KIND::op1) + 1;
                 uint64_t opnd[4];
                 for( uint32_t i = 0; i < opnd_cnt; i++ )
@@ -412,6 +450,9 @@ Analysis<T,FLT>::Analysis( std::string file_name )
             case KIND::op1i:
             {
                 std::string name = parse_name( c );
+                OP op = ops[name];
+                inc_op_cnt( op );
+                uint32_t opnd_cnt = uint32_t(kind) - uint32_t(KIND::op1) + 1;
                 _die( "should not have gotten op1i " + name );
                 break;
             }
@@ -421,6 +462,7 @@ Analysis<T,FLT>::Analysis( std::string file_name )
                 // push constant
                 std::string name = parse_name( c );
                 OP op = ops[name];
+                inc_op_cnt( op );
                 cassert( op == OP::push_constant, "op1f allowed only for make_constant" );
                 ValInfo val;
                 val.is_alive    = true;
@@ -435,6 +477,7 @@ Analysis<T,FLT>::Analysis( std::string file_name )
             {
                 std::string name = parse_name( c );
                 OP op = ops[name];
+                inc_op_cnt( op );
                 cassert( op == OP::lshift || op == OP::rshift || op == OP::pop_value, "op2i allowed only for lshift/rshift/pop_value" );
                 uint64_t opnd0 = parse_addr( c );
                 T        opnd1 = parse_int( c );
@@ -470,6 +513,7 @@ Analysis<T,FLT>::Analysis( std::string file_name )
                 // push result
                 std::string name = parse_name( c );
                 OP op = ops[name];
+                inc_op_cnt( op );
                 uint64_t opnd0 = parse_addr( c );   
                 FLT      opnd1 = parse_flt( c );   
                 auto it = vals.find( opnd0 );
