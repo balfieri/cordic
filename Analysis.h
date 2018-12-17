@@ -43,6 +43,8 @@ public:
     Analysis( std::string file_name = "" );     // "" means use stdin
     ~Analysis();
 
+    void print_stats( void ) const;
+
 private:
     std::istream *      in;
     bool                in_text;
@@ -264,7 +266,9 @@ template< typename T, typename FLT >
 inline void Analysis<T,FLT>::inc_op_cnt( OP op )
 {
     FrameInfo& frame = stack_top();
-    funcs[frame.func_name].op_cnt[uint32_t(op)]++;
+    //std::cout << "incr " << frame.func_name << " " << Cordic<T,FLT>::op_to_str( uint16_t(op) ) << "\n";
+    FuncInfo& func = funcs[frame.func_name];
+    func.op_cnt[uint32_t(op)]++;
 }
 
 template< typename T, typename FLT > 
@@ -356,7 +360,13 @@ Analysis<T,FLT>::Analysis( std::string file_name )
                     FuncInfo info;
                     funcs[name] = info;
                     it = funcs.find( name );
+                    it->second.call_cnt = 0;
+                    for( uint32_t i = 0; i < OP_cnt; i++ )
+                    {
+                        it->second.op_cnt[i] = 0;
+                    }
                 } 
+                it->second.call_cnt++;
                 FrameInfo frame;
                 frame.func_name = name;
                 stack_push( frame );
@@ -538,6 +548,28 @@ Analysis<T,FLT>::Analysis( std::string file_name )
 template< typename T, typename FLT >
 Analysis<T,FLT>::~Analysis()
 {
+}
+
+template< typename T, typename FLT >
+void Analysis<T,FLT>::print_stats( void ) const
+{
+    //--------------------------------------------------------
+    // Print only the non-zero counts.
+    //--------------------------------------------------------
+    for( auto it = funcs.begin(); it != funcs.end(); it++ )
+    {
+        const FuncInfo& func = it->second;
+        printf( "\n%-44s: %6lld calls\n", it->first.c_str(), it->second.call_cnt );
+        for( uint32_t i = 0; i < OP_cnt; i++ )
+        {
+            uint64_t cnt = func.op_cnt[i];
+            if ( cnt != 0 ) {
+                double   avg   = double(cnt) / double(it->second.call_cnt);
+                uint64_t avg_i = avg + 0.5;
+                printf( "    %-40s: %6lld /call %6lld total\n", Cordic<T,FLT>::op_to_str( i ).c_str(), avg_i, cnt );
+            }
+        }
+    }
 }
 
 #endif

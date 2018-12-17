@@ -32,4 +32,5 @@ int main( int argc, const char * argv[] )
     (void)argc;
     (void)argv;
     auto a = new Analysis<T,FLT>();
+    a->print_stats();
 }
