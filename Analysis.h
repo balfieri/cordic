@@ -559,16 +559,16 @@ void Analysis<T,FLT>::print_stats( void ) const
     for( auto it = funcs.begin(); it != funcs.end(); it++ )
     {
         const FuncInfo& func = it->second;
-        printf( "\n%-44s: %6lld calls\n", it->first.c_str(), it->second.call_cnt );
+        printf( "\n%-44s: %8lld calls\n", it->first.c_str(), it->second.call_cnt );
         for( uint32_t i = 0; i < OP_cnt; i++ )
         {
             OP op = OP(i);
-            if ( op == OP::push_constant || op == OP::assign || op == OP::pop_value ) continue;
+            if ( op == OP::push_constant || op == OP::assign || op == OP::pop_value ) continue; // consume no hardware
 
             uint64_t cnt = func.op_cnt[i];
             if ( cnt != 0 ) {
                 double avg = double(cnt) / double(it->second.call_cnt);
-                printf( "    %-40s: %6.1f/call %6lld total\n", Cordic<T,FLT>::op_to_str( i ).c_str(), avg, cnt );
+                printf( "    %-40s: %8.1f/call %8lld total\n", Cordic<T,FLT>::op_to_str( i ).c_str(), avg, cnt );
             }
         }
     }
