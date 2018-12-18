@@ -1,0 +1,130 @@
+
+"main", 1
+
+"init", 1
+"neg", 768, 768
+"add", 1280, 1280
+"fma", 2301, 2301
+"fda", 769, 769
+"sqrt", 256, 256
+
+"uniform", 6261
+
+"make_new_scene", 1
+"neg", 2, 2
+"add", 4, 4
+"sub", 18, 18
+"fma", 41, 41
+"fda", 8, 8
+"sqrt", 2, 2
+"tan", 1, 1
+
+"render_thread", 1
+
+"render_thread_pixel", 1024
+"add", 7, 7168
+"fda", 7, 7168
+
+"camera::get_ray", 1024
+"add", 12, 12288
+"sub", 6, 6144
+"fma", 14, 14336
+
+"concentric_point_on_unit_disk", 1338
+"sub", 2.51121, 3360
+"fma", 5, 6690
+"fda", 1, 1338
+"sincos", 1, 1338
+
+"color", 1340
+"neg", 0.210448, 282
+"add", 4.12687, 5530
+"sub", 0.36791, 493
+"fma", 1.86418, 2498
+"fda", 0.578358, 775
+"sqrt", 0.0701493, 94
+
+"sphere::hit", 5736
+"neg", 0.275279, 1579
+"add", 6.34379, 36388
+"sub", 5.94892, 34123
+"fma", 12.7979, 73409
+"fda", 0.770049, 4417
+"sqrt", 0.275279, 1579
+
+"get_sphere_uv", 684
+"neg", 1, 684
+"add", 2, 1368
+"sub", 1, 684
+"fda", 2, 1368
+"asin", 1, 684
+"atan2", 1, 684
+
+"lambertian_sphere::scatter", 108
+"add", 3, 324
+
+"random_on_unit_sphere", 108
+"sub", 1, 108
+"fma", 2, 216
+"sincos", 1, 108
+"hypoth", 1, 108
+
+"sphere::sample", 211
+"add", 2, 422
+"fma", 3, 633
+
+"sample_solid_angle_of_sphere", 211
+"add", 4, 844
+"sub", 7, 1477
+"fma", 7, 1477
+"fda", 5, 1055
+"sqrt", 2, 422
+"hypoth", 1, 211
+
+"cone", 211
+"add", 6, 1266
+"sub", 4, 844
+"fma", 13, 2743
+
+"branchlessONB", 419
+"neg", 3, 1257
+"add", 3, 1257
+"fma", 9, 3771
+"fda", 1, 419
+
+"hit_sphere", 211
+"neg", 1, 211
+"add", 9, 1899
+"sub", 10, 2110
+"fma", 17, 3587
+"fda", 4, 844
+"sqrt", 1, 211
+
+"lambertian::scatter", 103
+
+"lambertian_direction", 103
+"add", 6, 618
+"sub", 2, 206
+"fma", 11, 1133
+
+"lambertian::brdf", 47
+"fma", 3, 141
+
+"lambertian_sphere::brdf", 47
+"fma", 3, 141
+
+"lambertian_polar::scatter", 105
+
+"lambertian_direction_polar", 105
+"add", 6, 630
+"sub", 2, 210
+"fma", 11, 1155
+
+"polar_point_on_unit_disk", 105
+"fma", 1, 105
+"sqrt", 1, 105
+"sincos", 1, 105
+
+"image::write", 1
+"fma", 3072, 3072
+"pow", 3072, 3072

@@ -20,7 +20,7 @@ system( "rm -f ${prog}.o ${prog} Cordic.o" );
 system( "g++ -g -o ${prog}.o ${CFLAGS} -c ${prog}.cpp" ) == 0 or die "ERROR: compile failed\n";
 system( "g++ -g -o ${prog} ${prog}.o -lm" ) == 0 or die "ERROR: link failed\n";
 my $zcat = (`uname` =~ /Darwin/) ? "gzcat": "zcat";
-my $cmd = "${zcat} ${log} | ./${prog} ${other_args}";
+my $cmd = "${zcat} ${log} | ./${prog} ${logbase} ${other_args}";
 print "$cmd\n";
 if ( system( $cmd ) != 0 ) {
     die "ERROR: run failed\n";

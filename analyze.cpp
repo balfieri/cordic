@@ -29,8 +29,11 @@ using FLT = double;
 
 int main( int argc, const char * argv[] )
 {
-    (void)argc;
-    (void)argv;
-    auto a = new Analysis<T,FLT>();
+    if ( argc != 2 ) {
+        std::cout << "usage: analyze <base_name>\n";
+        exit( 1 );
+    }
+    std::string base_name = argv[1];
+    auto a = new Analysis<T,FLT>( base_name );
     a->print_stats();
 }

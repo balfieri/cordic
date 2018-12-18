@@ -31,6 +31,7 @@
 #include <string>
 #include <cmath>
 #include <iostream>
+#include <fstream>
 #include <vector>
 #include <map>
 
@@ -40,12 +41,14 @@ template< typename T=int64_t, typename FLT=double >
 class Analysis
 {
 public:
-    Analysis( std::string file_name = "" );     // "" means use stdin
+    Analysis( std::string base_name = "log" );     
     ~Analysis();
 
     void print_stats( void ) const;
 
 private:
+    std::string         base_name;
+
     std::istream *      in;
     bool                in_text;
 
@@ -290,9 +293,11 @@ inline typename Analysis<T,FLT>::ValInfo Analysis<T,FLT>::val_stack_pop( void )
 }
 
 template< typename T, typename FLT >
-Analysis<T,FLT>::Analysis( std::string file_name )
+Analysis<T,FLT>::Analysis( std::string _base_name )
 {
-    in_text = file_name == "";
+    base_name = _base_name;
+
+    in_text = true;  // for now
     if ( in_text ) {
         in = &std::cin;
     }
@@ -560,11 +565,13 @@ void Analysis<T,FLT>::print_stats( void ) const
     //--------------------------------------------------------
     // Print only the non-zero counts.
     //--------------------------------------------------------
+    std::ofstream out( base_name + ".csv", std::ofstream::out );
     for( auto nit = func_names.begin(); nit != func_names.end(); nit++ )
     {
         auto it = funcs.find( *nit );
         const FuncInfo& func = it->second;
         printf( "\n%-44s: %8lld calls\n", it->first.c_str(), it->second.call_cnt );
+        out << "\n\"" << it->first + "\", " << it->second.call_cnt << "\n";
         for( uint32_t i = 0; i < OP_cnt; i++ )
         {
             OP op = OP(i);
@@ -574,9 +581,12 @@ void Analysis<T,FLT>::print_stats( void ) const
             if ( cnt != 0 ) {
                 double avg = double(cnt) / double(it->second.call_cnt);
                 printf( "    %-40s: %8.1f/call %8lld total\n", Cordic<T,FLT>::op_to_str( i ).c_str(), avg, cnt );
+                out << "\"" << Cordic<T,FLT>::op_to_str( i ) << "\", " << avg << ", " << cnt << "\n";
             }
         }
     }
+    out.close();
+    std::cout << "\nWrote same stats to " + base_name + ".csv\n";
 }
 
 #endif
