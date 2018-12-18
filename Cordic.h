@@ -113,7 +113,7 @@ public:
     bool isfinite( const T& x ) const;                                    // fixed-point: true  (always)
     bool isinf( const T& x ) const;                                       // fixed-point: false (always)
     bool isnan( const T& x ) const;                                       // fixed-point: false (always)
-    bool isnormal( const T& x ) const;                                    // fixed-point: false (always)
+    bool ishypotal( const T& x ) const;                                    // fixed-point: false (always)
 
     // rounding
     T    nextafter( const T& from, const T& to ) const;                   // (from == to) ?      to  :     (from +/- minval toward to)
@@ -160,7 +160,7 @@ public:
     T    fmin( const T& x, const T& y ) const;                            // min(x, y)
 
     // elementary functions
-    T    sqrt( const T& x ) const;                                        // normh( x+1, x-1 ) / 2
+    T    sqrt( const T& x ) const;                                        // hypoth( x+1, x-1 ) / 2
     T    rsqrt( const T& x ) const;                                       // 1/sqrt 
     T    cbrt( const T& x ) const;                                        // x^(1/3)  (but x can be negative)
     T    rcbrt( const T& x ) const;                                       // 1/cbrt
@@ -189,9 +189,8 @@ public:
 
     void polar_to_rect( const T& r, const T& a, T& x, T& y ) const;       // sincos(a, x, y, &r)  
     void rect_to_polar( const T& x, const T& y, T& r, T& a ) const;       // r=sqrt(x^2 + y^2), a=atan2(y, x)
-    T    norm( const T& x, const T& y ) const;                            // sqrt(x^2 + y^2)
-    T    hypot( const T& x, const T& y ) const;                           // norm(x, y);  (same thing)
-    T    normh( const T& x, const T& y ) const;                           // sqrt(x^2 - y^2)
+    T    hypot( const T& x, const T& y ) const;                           // sqrt(x^2 + y^2)  (Euclidean hypot)
+    T    hypoth( const T& x, const T& y ) const;                          // sqrt(x^2 - y^2)  (hyperbolic hypot)
 
     T    sinh( const T& x, const T * r=nullptr ) const;                   // r*sinh(x), also r*(e^x - e^-x)/2  (default r is 1)
     T    cosh( const T& x, const T * r=nullptr ) const;                   // r*cosh(x), also r*(e^x + e^-x)/2  (default r is 1)
@@ -487,8 +486,8 @@ public:
     T    exp( const T& x, bool do_reduce, bool can_log ) const;                              
     T    log( const T& x, bool do_reduce, bool can_log ) const;                             
     T    log1p( const T& x, bool do_reduce, bool can_log ) const;                          
-    T    norm( const T& x, const T& y, bool do_reduce, bool can_log ) const;          
-    T    normh( const T& x, const T& y, bool do_reduce, bool can_log ) const;          
+    T    hypot( const T& x, const T& y, bool do_reduce, bool can_log ) const;          
+    T    hypoth( const T& x, const T& y, bool do_reduce, bool can_log ) const;          
     T    atan2(  const T& y, const T& x, bool do_reduce, bool can_log, bool x_is_one, T * r ) const; 
     T    atanh2( const T& y, const T& x, bool do_reduce, bool can_log, bool x_is_one ) const; // same but override do_reduce
     void sincos( const T& x, T& si, T& co, bool do_reduce, bool can_log, bool need_si, bool need_co, const T * r ) const;
@@ -511,7 +510,7 @@ public:
     void reduce_exp_arg( FLT b, T& x, T& factor ) const;
     void reduce_log_arg( T& x, T& addend ) const;                                            
     void reduce_atan2_args( T& y, T& x, bool& y_sign, bool& x_sign, bool& swapped, bool& is_pi ) const;     
-    void reduce_norm_args( T& x, T& y, int32_t& lshift, bool& swapped ) const;
+    void reduce_hypot_args( T& x, T& y, int32_t& lshift, bool& swapped ) const;
     void reduce_sincos_arg( T& a, uint32_t& quadrant, bool& sign, bool& did_minus_pi_div_4 ) const;
     void reduce_sinhcosh_arg( T& x, T& sinh_i, T& cosh_i, bool& sign ) const;                  
 
@@ -598,9 +597,8 @@ public:
 
         polar_to_rect,
         rect_to_polar,
-        norm,
         hypot,
-        normh,
+        hypoth,
 
         sinh,
         cosh,
@@ -772,9 +770,8 @@ std::string Cordic<T,FLT>::op_to_str( uint16_t op )
 
         _ocase( polar_to_rect )
         _ocase( rect_to_polar )
-        _ocase( norm )
         _ocase( hypot )
-        _ocase( normh )
+        _ocase( hypoth )
 
         _ocase( sinh )
         _ocase( cosh )
@@ -1789,7 +1786,7 @@ inline bool Cordic<T,FLT>::isnan( const T& x ) const
 }
 
 template< typename T, typename FLT >
-inline bool Cordic<T,FLT>::isnormal( const T& x ) const                                     
+inline bool Cordic<T,FLT>::ishypotal( const T& x ) const                                     
 {
     (void)x;
     return false;
@@ -2423,7 +2420,7 @@ inline T Cordic<T,FLT>::asin( const T& x ) const
 { 
     _log_1( asin, x );
     cassert( x >= -impl->one && x <= impl->one, "asin x must be between -1 and 1" );
-    T nh = normh( impl->one, x, impl->do_reduce, false );
+    T nh = hypoth( impl->one, x, impl->do_reduce, false );
     return atan2( x, nh, impl->do_reduce, false, false, nullptr );
 }
 
@@ -2432,7 +2429,7 @@ inline T Cordic<T,FLT>::acos( const T& x ) const
 { 
     _log_1( acos, x );
     cassert( x >= -impl->one && x <= impl->one, "acos x must be between -1 and 1" );
-    T nh = normh( impl->one, x, impl->do_reduce, false );
+    T nh = hypoth( impl->one, x, impl->do_reduce, false );
     return atan2( nh, x, true, false, false, nullptr );
 }
 
@@ -2466,15 +2463,15 @@ T Cordic<T,FLT>::atan2( const T& _y, const T& _x, bool do_reduce, bool can_log, 
     // Strategy:
     //     Use reduce_atan2_args() to reduce y and x and get y_sign and x_sign.
     //     Return PI if we're done.
-    //     Do 2*atan( y / (norm(x, y) + x) )    if x > 0
-    //     Do 2*atan( (norm(x, y) + x) / y )    if x <= 0
+    //     Do 2*atan( y / (hypot(x, y) + x) )    if x > 0
+    //     Do 2*atan( (hypot(x, y) + x) / y )    if x <= 0
     //     When using atan2 for the latter, if the numerator is larger than
     //     the denominator, then use PI/2 - atan(x/y)
     //-----------------------------------------------------
     if ( debug ) std::cout << "atan2 begin: y=" << to_flt(y) << " x=" << to_flt(x) << " do_reduce=" << do_reduce << " x_is_one=" << x_is_one << "\n";
     cassert( (x != 0 || y != 0), "atan2: x or y needs to be non-zero for result to be defined" );
     T xx, yy, zz;
-    if ( r != nullptr ) *r = norm( _x, _y, do_reduce, false );  // optimize this later with below norm() of reduced x,y
+    if ( r != nullptr ) *r = hypot( _x, _y, do_reduce, false );  // optimize this later with below hypot() of reduced x,y
     if ( do_reduce ) {
         bool y_sign;
         bool x_sign;
@@ -2488,9 +2485,9 @@ T Cordic<T,FLT>::atan2( const T& _y, const T& _x, bool do_reduce, bool can_log, 
             return impl->pi;
         }
 
-        const T norm_plus_x = norm( x, y, true, false ) + x;
-        if ( debug ) std::cout << "atan2 cordic begin: y=y=" << to_flt(y) << " x=norm_plus_x=" << to_flt(norm_plus_x) << " swapped=" << swapped << "\n";
-        circular_vectoring( norm_plus_x, y, impl->zero, xx, yy, zz );
+        const T hypot_plus_x = hypot( x, y, true, false ) + x;
+        if ( debug ) std::cout << "atan2 cordic begin: y=y=" << to_flt(y) << " x=hypot_plus_x=" << to_flt(hypot_plus_x) << " swapped=" << swapped << "\n";
+        circular_vectoring( hypot_plus_x, y, impl->zero, xx, yy, zz );
         zz <<= 1;
         if ( swapped ) zz = impl->pi_div_2 - zz;
         if ( y_sign ) zz = -zz;
@@ -2520,38 +2517,32 @@ inline void Cordic<T,FLT>::rect_to_polar( const T& x, const T& y, T& r, T& a ) c
 }
 
 template< typename T, typename FLT >
-inline T Cordic<T,FLT>::norm( const T& x, const T& y ) const
+inline T Cordic<T,FLT>::hypot( const T& _x, const T& _y, bool do_reduce, bool can_log ) const
 {
-    return norm( x, y, impl->do_reduce, true );
-}
-
-template< typename T, typename FLT >
-inline T Cordic<T,FLT>::hypot( const T& x, const T& y ) const
-{
-    return norm( x, y, impl->do_reduce, true );
-}
-
-template< typename T, typename FLT >
-inline T Cordic<T,FLT>::norm( const T& _x, const T& _y, bool do_reduce, bool can_log ) const
-{
-    if ( can_log ) _log_2( norm, _x, _y );
+    if ( can_log ) _log_2( hypot, _x, _y );
     T x = _x;
     T y = _y;
-    if ( debug ) std::cout << "norm begin: x=" << to_flt(x) << " y=" << to_flt(y) << " do_reduce=" << do_reduce << "\n";
+    if ( debug ) std::cout << "hypot begin: x=" << to_flt(x) << " y=" << to_flt(y) << " do_reduce=" << do_reduce << "\n";
     int32_t ls;
     bool    swapped;  // unused
-    if ( do_reduce ) reduce_norm_args( x, y, ls, swapped );
+    if ( do_reduce ) reduce_hypot_args( x, y, ls, swapped );
 
     T xx, yy, zz;
     circular_vectoring_xy( x, y, xx, yy );
     xx = mul( xx, impl->circular_vectoring_one_over_gain, true, false );
     if ( do_reduce ) xx = lshift( xx, ls, false );
-    if ( debug ) std::cout << "norm end: x=" << to_flt(x) << " y=" << to_flt(y) << " do_reduce=" << do_reduce << " xx=" << to_flt(xx) << "\n";
+    if ( debug ) std::cout << "hypot end: x=" << to_flt(x) << " y=" << to_flt(y) << " do_reduce=" << do_reduce << " xx=" << to_flt(xx) << "\n";
     return xx;
 }
 
 template< typename T, typename FLT >
-inline T Cordic<T,FLT>::normh( const T& x, const T& y, bool do_reduce, bool can_log ) const
+inline T Cordic<T,FLT>::hypot( const T& x, const T& y ) const
+{
+    return hypot( x, y, impl->do_reduce, true );
+}
+
+template< typename T, typename FLT >
+inline T Cordic<T,FLT>::hypoth( const T& x, const T& y, bool do_reduce, bool can_log ) const
 {
     //-----------------------------------------------------
     // Identities:
@@ -2559,16 +2550,16 @@ inline T Cordic<T,FLT>::normh( const T& x, const T& y, bool do_reduce, bool can_
     // Strategy:
     //     Try this easy way, though I suspect there will be issues.
     //-----------------------------------------------------
-    if ( can_log ) _log_2( normh, x, y );
-    if ( debug ) std::cout << "normh begin: x=" << to_flt(x) << " y=" << to_flt(y) << " do_reduce=" << impl->do_reduce << "\n";
-    cassert( x >= y, "normh x must be >= y" );
+    if ( can_log ) _log_2( hypoth, x, y );
+    if ( debug ) std::cout << "hypoth begin: x=" << to_flt(x) << " y=" << to_flt(y) << " do_reduce=" << impl->do_reduce << "\n";
+    cassert( x >= y, "hypoth x must be >= y" );
     return sqrt( mul( x+y, x-y, do_reduce, false ), do_reduce, false );
 }
 
 template< typename T, typename FLT >
-inline T Cordic<T,FLT>::normh( const T& x, const T& y ) const
+inline T Cordic<T,FLT>::hypoth( const T& x, const T& y ) const
 {
-    return normh( x, y, impl->do_reduce, true );
+    return hypoth( x, y, impl->do_reduce, true );
 }
 
 template< typename T, typename FLT >
@@ -2675,7 +2666,7 @@ template< typename T, typename FLT >
 T Cordic<T,FLT>::asinh( const T& x ) const
 { 
     _log_1( asinh, x );
-    return log( x + norm( x, impl->one, impl->do_reduce, false ), impl->do_reduce, false );
+    return log( x + hypot( x, impl->one, impl->do_reduce, false ), impl->do_reduce, false );
 }
 
 template< typename T, typename FLT >
@@ -2683,7 +2674,7 @@ inline T Cordic<T,FLT>::acosh( const T& x ) const
 { 
     _log_1( acosh, x );
     cassert( x >= impl->one, "acosh x must be >= 1" );
-    return log( x + normh( x, impl->one, impl->do_reduce, false ), impl->do_reduce, false );
+    return log( x + hypoth( x, impl->one, impl->do_reduce, false ), impl->do_reduce, false );
 }
 
 template< typename T, typename FLT >
@@ -2869,7 +2860,7 @@ inline void Cordic<T,FLT>::reduce_atan2_args( T& y, T& x, bool& y_sign, bool& x_
     //     atan2(y,x)       = 2*atan(y / (sqrt(x^2 + y^2) + x))     if x >  0    
     //     atan2(y,x)       = 2*atan((sqrt(x^2 + y^2) + |x|) / y)   if x <= 0 && y != 0
     // Strategy:
-    //     Use reduce_norm_arg().
+    //     Use reduce_hypot_arg().
     //-----------------------------------------------------
     const T y_orig = y;
     const T x_orig = x;
@@ -2884,7 +2875,7 @@ inline void Cordic<T,FLT>::reduce_atan2_args( T& y, T& x, bool& y_sign, bool& x_
     } else {
         is_pi = false;
         int32_t lshift;
-        reduce_norm_args( x, y, lshift, swapped );
+        reduce_hypot_args( x, y, lshift, swapped );
         if ( debug ) std::cout << "reduce_atan2_args: xy_orig=[" << to_flt(x_orig) << "," << to_flt(y_orig) << "]" << 
                                   " xy_reduced=[" << to_flt(x) << "," << to_flt(y) << "] y_sign=" << y_sign << " x_sign=" << x_sign << 
                                   " lshift=" << lshift << " swapped=" << swapped << "\n";
@@ -2893,7 +2884,7 @@ inline void Cordic<T,FLT>::reduce_atan2_args( T& y, T& x, bool& y_sign, bool& x_
 }
 
 template< typename T, typename FLT >
-inline void Cordic<T,FLT>::reduce_norm_args( T& x, T& y, int32_t& lshift, bool& swapped ) const
+inline void Cordic<T,FLT>::reduce_hypot_args( T& x, T& y, int32_t& lshift, bool& swapped ) const
 {
     //-----------------------------------------------------
     // Must shift both x and y by max( x_lshift, y_lshift ).
@@ -2919,7 +2910,7 @@ inline void Cordic<T,FLT>::reduce_norm_args( T& x, T& y, int32_t& lshift, bool& 
         x = y;
         y = tmp;
     }
-    if ( debug ) std::cout << "reduce_norm_args: xy_orig=[" << to_flt(x_orig) << "," << to_flt(y_orig) << "]" << 
+    if ( debug ) std::cout << "reduce_hypot_args: xy_orig=[" << to_flt(x_orig) << "," << to_flt(y_orig) << "]" << 
                                                " xy_reduced=[" << to_flt(x) << "," << to_flt(y) << "] lshift=" << lshift << " swapped=" << swapped << "\n"; 
 }
 

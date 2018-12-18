@@ -218,8 +218,8 @@ FLT  log10( FLT x )      { return std::log( x ) / std::log( 10.0 ); }
 void sincos( FLT x, FLT& si, FLT& co ) { si = std::sin( x ); co = std::cos( x ); }
 void sinhcosh( FLT x, FLT& si, FLT& co ) { si = std::sinh( x ); co = std::cosh( x ); }
 FLT  atanh2( FLT y, FLT x ){ return std::atanh( y/x); }
-FLT  norm( FLT x, FLT y ){ return std::sqrt( x*x + y*y ); }
-FLT  normh( FLT x, FLT y ){ return std::sqrt( x*x - y*y ); }
+FLT  hypot( FLT x, FLT y ){ return std::sqrt( x*x + y*y ); }
+FLT  hypoth( FLT x, FLT y ){ return std::sqrt( x*x - y*y ); }
 void rect_to_polar( FLT x, FLT y, FLT& r, FLT& a ) { r = std::sqrt( x*x + y*y ); a = atan2( y, x ); }
 void polar_to_rect( FLT r, FLT a, FLT& x, FLT& y ) { x = r*std::cos( a ); y = r*std::sin( a ); }
 

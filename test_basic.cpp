@@ -87,10 +87,10 @@ int main( int argc, const char * argv[] )
     // Put fixed bugs here so they get regressed.
     //---------------------------------------------------------------------------
     do_op2(  "7) pow",         pow,    std::pow,      0.004999995231628418, 0.45454543828964233, do_reduce );
-    do_op2(  "6) norm",        norm,   norm,          0.70710676908493042, 0.70710664987564087, do_reduce );
+    do_op2(  "6) hypot",       hypot,  hypot,         0.70710676908493042, 0.70710664987564087, do_reduce );
     do_op1(  "5) cos",         cos,    std::cos,      1.6214,           do_reduce );
     do_op1(  "4) sqrt",        sqrt,   std::sqrt,     3.8104,           do_reduce );
-    do_op2(  "3) normh",       normh,  normh,         0.8104, 0.6818,   do_reduce );          
+    do_op2(  "3) hypoth",      hypoth, hypoth,        0.8104, 0.6818,   do_reduce );          
     do_op2(  "2) mul",         mul,    mul,           1.45, 0.4782,     do_reduce );
     do_op1(  "1) log",         log,    std::log,      1.53,             do_reduce );
 
@@ -173,9 +173,9 @@ int main( int argc, const char * argv[] )
         if ( y/x >= -1.0 && y/x <= 1.0 ) {
             do_op2(  "atanh2(y,x)",  atanh2,  atanh2,         y, x, true      );
         }
-        do_op2(  "norm(x,y)",        norm,    norm,           y, x, do_reduce );
+        do_op2(  "hypot(x,y)",       hypot,   hypot,          y, x, do_reduce );
         if ( y >= x ) {
-            do_op2(  "normh(x,y)",   normh,   normh,          y, x, true      );
+            do_op2(  "hypoth(x,y)",  hypoth,  hypoth,         y, x, true      );
         }
         do_op22( "rect_to_polar(x,y)", rect_to_polar, rect_to_polar, x, y, do_reduce );
         do_op22( "polar_to_rect(x,y)", polar_to_rect, polar_to_rect, x, y, do_reduce );
