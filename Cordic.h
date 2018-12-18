@@ -302,6 +302,7 @@ public:
     // pi               = 4*atan(1)                             but low 2 bits will end up as 0 for a fixed-point number
     // pi               = acos(-1)                              but that just uses atan
     // pi               = pi()                                  function in this class to return a precomputed high-precision version
+    // -3*pi/4          = atan(-1,-1)
     //
     // sinh(-x)         = -sinh(x)
     // sinh(x)          = (e^x - e^-x)/2
