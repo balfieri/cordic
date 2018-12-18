@@ -93,6 +93,7 @@ public:
     T sqrt2( void ) const;                              // encoded sqrt(2)
     T sqrt2_div_2( void ) const;                        // encoded sqrt(2)/2
     T pi( void ) const;                                 // encoded PI
+    T tau( void ) const;                                // encoded 2*PI
     T pi_div_2( void ) const;                           // encoded PI/2
     T pi_div_4( void ) const;                           // encoded PI/4
     T two_div_pi( void ) const;                         // encoded 2/PI
@@ -659,6 +660,7 @@ struct Cordic<T,FLT>::Impl
     T                           sqrt2;
     T                           sqrt2_div_2;
     T                           pi;
+    T                           tau;
     T                           pi_div_2;
     T                           pi_div_4;
     T                           two_div_pi;
@@ -839,6 +841,7 @@ Cordic<T,FLT>::Cordic( uint32_t int_w, uint32_t frac_w, bool do_reduce, uint32_t
     impl->sqrt2         = to_t( std::sqrt( 2.0 ) );
     impl->sqrt2_div_2   = to_t( std::sqrt( 2.0 ) / FLT(2.0) );
     impl->pi            = to_t( std::acos( FLT(-1.0) ) );
+    impl->tau           = to_t( 2.0 * std::acos( FLT(-1.0) ) );
     impl->pi_div_2      = to_t( std::acos( FLT(-1.0) ) / FLT(2.0) );
     impl->pi_div_4      = to_t( std::acos( FLT(-1.0) ) / FLT(4.0) );
     impl->two_div_pi    = to_t( FLT(2.0) / std::acos( FLT(-1.0) ) );
@@ -1084,6 +1087,13 @@ inline T Cordic<T,FLT>::pi( void ) const
 {
     _log_1f( push_constant, to_flt(impl->pi) ); 
     return impl->pi;
+}
+
+template< typename T, typename FLT >
+inline T Cordic<T,FLT>::tau( void ) const
+{
+    _log_1f( push_constant, to_flt(impl->tau) ); 
+    return impl->tau;
 }
 
 template< typename T, typename FLT >

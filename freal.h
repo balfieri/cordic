@@ -108,6 +108,7 @@ public:
     freal sqrt2( void );                                        // sqrt(2)
     freal sqrt2_div_2( void );                                  // sqrt(2)/2
     freal pi( void );                                           // PI
+    freal tau( void );                                          // 2*PI
     freal pi_div_2( void );                                     // PI/2
     freal pi_div_4( void );                                     // PI/4
     freal two_div_pi( void );                                   // 2/PI
@@ -852,6 +853,10 @@ inline freal<T,FLT> freal<T,FLT>::sqrt2_div_2( void )
 template< typename T, typename FLT >              
 inline freal<T,FLT> freal<T,FLT>::pi( void ) 
 { return( c(), pop_value( cordic, cordic->pi() ) ); }
+
+template< typename T, typename FLT >              
+inline freal<T,FLT> freal<T,FLT>::tau( void ) 
+{ return( c(), pop_value( cordic, cordic->tau() ) ); }
 
 template< typename T, typename FLT >              
 inline freal<T,FLT> freal<T,FLT>::pi_div_2( void ) 
