@@ -172,8 +172,8 @@ public:
     T    exp10( const T& x ) const;                                       // 10^x
     T    pow( const T& b, const T& x ) const;                             // b^x  = exp(x * log(b))              (3)
     T    log( const T& x ) const;                                         // 2*atan2(x-1, x+1)    
+    T    log( const T& x, const T& b ) const;                             // log(x)/log(b)                (3)
     T    log1p( const T& x ) const;                                       // 2*atan2(x, x+2) = log(x+1)
-    T    logn( const T& x, const T& b ) const;                            // log(x)/log(b)                (3)
     T    logc( const T& x, const FLT& b ) const;                          // log(x)/log(b)    b=const     (2)
     T    log2( const T& x ) const;                                        // log(x)/log(2)                (2)
     T    log10( const T& x ) const;                                       // log(x)/log(10)               (2)
@@ -753,8 +753,8 @@ std::string Cordic<T,FLT>::op_to_str( uint16_t op )
         _ocase( exp10 )
         _ocase( pow )
         _ocase( log )
-        _ocase( log1p )
         _ocase( logn )
+        _ocase( log1p )
         _ocase( logc )
         _ocase( log2 )
         _ocase( log10 )
@@ -2269,10 +2269,10 @@ inline T Cordic<T,FLT>::log1p( const T& _x ) const
 }
 
 template< typename T, typename FLT >
-inline T Cordic<T,FLT>::logn( const T& x, const T& b ) const
+inline T Cordic<T,FLT>::log( const T& x, const T& b ) const
 { 
     _log_2( logn, x, b );
-    cassert( b > 0, "logn b must be positive" );
+    cassert( b > 0, "log b must be positive" );
     T lgx = log( x, impl->do_reduce, false );
     T lgb = log( b, impl->do_reduce, false );
     return div( lgx, lgb, true, false );
