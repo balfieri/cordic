@@ -4,10 +4,11 @@ use strict;
 use warnings;
 
 my $debug_level = shift @ARGV || 0;
-my $log         = shift @ARGV || "../simplert/bobbig.log.gz";
+my $logbase     = shift @ARGV || "spp16";
 my $prog        = shift @ARGV || "analyze";
 my $other_args  = join( " ", @ARGV );
 
+my $log = "../simplert/${logbase}.log.gz";
 my $opt = ($debug_level <= 0) ? "3" : "0";
 
 my $CFLAGS = "-std=c++17 -Wextra -Wstrict-aliasing -pedantic -Werror -Wcast-align -Wcast-qual -Wctor-dtor-privacy -Wdisabled-optimization -Wformat=2 -Winit-self -Wmissing-include-dirs -Wold-style-cast -Woverloaded-virtual -Wredundant-decls -Wshadow -Wsign-promo -Wstrict-overflow=5 -Wswitch-default -Wundef -O${opt} -g -DDEBUG_LEVEL=${debug_level}";
