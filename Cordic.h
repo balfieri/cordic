@@ -137,13 +137,12 @@ public:
     T    copysign( const T& x, const T& y ) const;                        // |x| with sign of y
     T    add( const T& x, const T& y ) const;                             // x+y 
     T    sub( const T& x, const T& y ) const;                             // x-y 
-    T    mad( const T& x, const T& y, const T& addend ) const;            // x*y + addend
-    T    fma( const T& x, const T& y, const T& addend ) const;            // mad( x, y, addend )        (same thing)
+    T    fma( const T& x, const T& y, const T& addend ) const;            // x*y + addend
     T    mul( const T& x, const T& y ) const;                             // x*y 
     T    sqr( const T& x ) const;                                         // x*x
     T    lshift( const T& x, int y, bool can_log=true ) const;            // x << y
     T    rshift( const T& x, int y ) const;                               // x >> y
-    T    dad( const T& y, const T& x, const T& addend ) const;            // y/x + addend
+    T    fda( const T& y, const T& x, const T& addend ) const;            // y/x + addend
     T    div( const T& y, const T& x ) const;                             // y/x
     T    rcp( const T& x ) const;                                         // 1/x
 
@@ -480,9 +479,9 @@ public:
     // These version are used internally, but making them available publically.
     // In general, you should only call the earlier routines.
     //-----------------------------------------------------
-    T    mad( const T& x, const T& y, const T& addend, bool do_reduce, bool can_log ) const;
+    T    fma( const T& x, const T& y, const T& addend, bool do_reduce, bool can_log ) const;
     T    mul( const T& x, const T& y, bool do_reduce, bool can_log ) const;                 
-    T    dad( const T& y, const T& x, const T& addend, bool do_reduce, bool can_log ) const; 
+    T    fda( const T& y, const T& x, const T& addend, bool do_reduce, bool can_log ) const; 
     T    div( const T& y, const T& x, bool do_reduce, bool can_log ) const;                  
     T    sqrt( const T& x, bool do_reduce, bool can_log ) const;                              
     T    exp( const T& x, bool do_reduce, bool can_log ) const;                              
@@ -549,13 +548,12 @@ public:
 
         add,
         sub,
-        mad,
         fma,
         mul,
         sqr,
         lshift,
         rshift,
-        dad,
+        fda,
         div,
         rcp,
         sqrt,
@@ -731,12 +729,11 @@ std::string Cordic<T,FLT>::op_to_str( uint16_t op )
 
         _ocase( add )
         _ocase( sub )
-        _ocase( mad )
         _ocase( fma )
         _ocase( mul )
         _ocase( lshift )
         _ocase( rshift )
-        _ocase( dad )
+        _ocase( fda )
         _ocase( div )
         _ocase( rcp )
         _ocase( sqrt )
@@ -1874,13 +1871,13 @@ inline T Cordic<T,FLT>::sub( const T& x, const T& y ) const
 }
 
 template< typename T, typename FLT >
-inline T Cordic<T,FLT>::mad( const T& _x, const T& _y, const T& addend, bool do_reduce, bool can_log ) const
+inline T Cordic<T,FLT>::fma( const T& _x, const T& _y, const T& addend, bool do_reduce, bool can_log ) const
 {
-    if ( can_log ) _log_3( mad, _x, _y, addend );
+    if ( can_log ) _log_3( fma, _x, _y, addend );
     T x = _x;
     T y = _y;
-    if ( debug ) std::cout << "mad begin: x_orig=" << to_flt(x) << " y_orig=" << to_flt(y) << " addend=" << to_flt(addend) << " do_reduce=" << do_reduce << "\n";
-    cassert( do_reduce || addend >= 0, "mad addend must be non-negative" );
+    if ( debug ) std::cout << "fma begin: x_orig=" << to_flt(x) << " y_orig=" << to_flt(y) << " addend=" << to_flt(addend) << " do_reduce=" << do_reduce << "\n";
+    cassert( do_reduce || addend >= 0, "fma addend must be non-negative" );
     int32_t x_lshift;
     int32_t y_lshift;
     bool    sign;
@@ -1893,7 +1890,7 @@ inline T Cordic<T,FLT>::mad( const T& _x, const T& _y, const T& addend, bool do_
         yy += addend;
         if ( sign ) yy = -yy;
     }
-    if ( debug ) std::cout << "mad end: x_orig=" << to_flt(_x) << " y_orig=" << to_flt(_y) << 
+    if ( debug ) std::cout << "fma end: x_orig=" << to_flt(_x) << " y_orig=" << to_flt(_y) << 
                               " addend=" << to_flt(addend) << " do_reduce=" << do_reduce << 
                               " x_reduced=" << to_flt(x) << " y_reduced=" << to_flt(y) << 
                               " yy=" << to_flt(yy) << " x_lshift=" << x_lshift << " y_lshift=" << y_lshift << 
@@ -1902,33 +1899,27 @@ inline T Cordic<T,FLT>::mad( const T& _x, const T& _y, const T& addend, bool do_
 }
 
 template< typename T, typename FLT >
-inline T Cordic<T,FLT>::mad( const T& x, const T& y, const T& addend ) const
-{
-    return mad( x, y, addend, impl->do_reduce, true );
-}
-
-template< typename T, typename FLT >
 inline T Cordic<T,FLT>::fma( const T& x, const T& y, const T& addend ) const
 {
-    return mad( x, y, addend );
+    return fma( x, y, addend, impl->do_reduce, true );
 }
 
 template< typename T, typename FLT >
 inline T Cordic<T,FLT>::mul( const T& x, const T& y ) const
 {
-    return mad( x, y, impl->zero );
+    return fma( x, y, impl->zero );
 }
 
 template< typename T, typename FLT >
 inline T Cordic<T,FLT>::mul( const T& x, const T& y, bool do_reduce, bool can_log ) const
 {
-    return mad( x, y, impl->zero, do_reduce, can_log );
+    return fma( x, y, impl->zero, do_reduce, can_log );
 }
 
 template< typename T, typename FLT >
 inline T Cordic<T,FLT>::sqr( const T& x ) const
 {
-    return mad( x, x, impl->zero );
+    return fma( x, x, impl->zero );
 }
 
 template< typename T, typename FLT >
@@ -1968,14 +1959,14 @@ inline T Cordic<T,FLT>::rshift( const T& x, int rs ) const
 }
 
 template< typename T, typename FLT >
-T Cordic<T,FLT>::dad( const T& _y, const T& _x, const T& addend, bool do_reduce, bool can_log ) const
+T Cordic<T,FLT>::fda( const T& _y, const T& _x, const T& addend, bool do_reduce, bool can_log ) const
 {
-    if ( can_log ) _log_3( dad, _y, _x, addend );
+    if ( can_log ) _log_3( fda, _y, _x, addend );
     T x = _x;
     T y = _y;
-    if ( debug ) std::cout << "dad begin: x_orig=" << to_flt(x) << " y_orig=" << to_flt(y) << " addend=" << to_flt(addend) << " do_reduce=" << do_reduce << "\n";
-    cassert( x != 0 , "dad x (denominator) must be non-zero" );
-    cassert( do_reduce || addend >= 0, "dad addend must be non-negative (need to fix this soon)" );
+    if ( debug ) std::cout << "fda begin: x_orig=" << to_flt(x) << " y_orig=" << to_flt(y) << " addend=" << to_flt(addend) << " do_reduce=" << do_reduce << "\n";
+    cassert( x != 0 , "fda x (denominator) must be non-zero" );
+    cassert( do_reduce || addend >= 0, "fda addend must be non-negative (need to fix this soon)" );
     int32_t x_lshift;
     int32_t y_lshift;
     bool    sign;
@@ -1988,7 +1979,7 @@ T Cordic<T,FLT>::dad( const T& _y, const T& _x, const T& addend, bool do_reduce,
         zz += addend;
         if ( sign ) zz = -zz;
     }
-    if ( debug ) std::cout << "dad end: x_orig=" << to_flt(_x) << " y_orig=" << to_flt(_y) << 
+    if ( debug ) std::cout << "fda end: x_orig=" << to_flt(_x) << " y_orig=" << to_flt(_y) << 
                               " addend=" << to_flt(addend) << " do_reduce=" << do_reduce <<
                               " x_reduced=" << to_flt(x) << " y_reduced=" << to_flt(y) << 
                               " zz=" << to_flt(zz) << " x_lshift=" << x_lshift << " y_lshift=" << y_lshift << 
@@ -1997,21 +1988,21 @@ T Cordic<T,FLT>::dad( const T& _y, const T& _x, const T& addend, bool do_reduce,
 }
 
 template< typename T, typename FLT >
-inline T Cordic<T,FLT>::dad( const T& _y, const T& _x, const T& addend ) const
+inline T Cordic<T,FLT>::fda( const T& _y, const T& _x, const T& addend ) const
 {
-    return dad( _y, _x, addend, impl->do_reduce, true );
+    return fda( _y, _x, addend, impl->do_reduce, true );
 }
 
 template< typename T, typename FLT >
 inline T Cordic<T,FLT>::div( const T& y, const T& x ) const
 {
-    return dad( y, x, impl->zero );
+    return fda( y, x, impl->zero );
 }
 
 template< typename T, typename FLT >
 inline T Cordic<T,FLT>::div( const T& y, const T& x, bool do_reduce, bool can_log ) const
 {
-    return dad( y, x, impl->zero, do_reduce, can_log );
+    return fda( y, x, impl->zero, do_reduce, can_log );
 }
 
 template< typename T, typename FLT >

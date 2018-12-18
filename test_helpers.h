@@ -204,9 +204,9 @@ static inline FLT tolerance( uint32_t frac_w, FLT expected, FLT tol, int32_t& to
 
 // FLT wrapper routines for those that are not in std::
 //
-FLT  mad( FLT x, FLT y, FLT w ) { return x*y + w; }
+FLT  fma( FLT x, FLT y, FLT w ) { return x*y + w; }
 FLT  mul( FLT x, FLT y ) { return x*y; }
-FLT  dad( FLT x, FLT y, FLT w ) { return x/y + w; }
+FLT  fda( FLT x, FLT y, FLT w ) { return x/y + w; }
 FLT  div( FLT x, FLT y ) { return x/y; }
 FLT  rcp( FLT x )        { return 1.0/x; }
 FLT  rsqrt( FLT x )      { return 1.0 / std::sqrt( x ); }

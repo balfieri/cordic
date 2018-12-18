@@ -120,10 +120,10 @@ int main( int argc, const char * argv[] )
         }
 
         //                          cordic   reference
-        do_op3(  "x*y + w",          mad,     mad,            x, y, w, do_reduce );
+        do_op3(  "x*y + w",          fma,     fma,            x, y, w, do_reduce );
         do_op2(  "x*y",              mul,     mul,            x, y, do_reduce );
         if ( x > 0.0 ) {
-            do_op3(  "y/x + w",          dad,     dad,            y, x, w, do_reduce );
+            do_op3(  "y/x + w",          fda,     fda,            y, x, w, do_reduce );
             do_op2(  "y/x",              div,     div,            y, x, do_reduce );
             do_op1(  "1/x",              rcp,     rcp,            x   , do_reduce );
             do_op1(  "sqrt(x)",          sqrt,    std::sqrt,      x   , do_reduce );

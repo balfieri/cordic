@@ -165,8 +165,7 @@ public:
 
     freal  add( const freal& b ) const; 
     freal  sub( const freal& b ) const; 
-    freal  mad( const freal& b, const freal& c ) const;             
-    freal  fma( const freal& b, const freal& c ) const;         // same as mad()
+    freal  fma( const freal& b, const freal& c ) const;             
     freal  mul( const freal& b ) const;                             
     freal  lshift( int b ) const;
     freal  rshift( int b ) const;
@@ -329,10 +328,6 @@ static inline freal<T,FLT>  add( const freal<T,FLT>& a, const freal<T,FLT>& b )
 template< typename T=int64_t, typename FLT=double >              
 static inline freal<T,FLT>  sub( const freal<T,FLT>& a, const freal<T,FLT>& b )                         
 { return a.sub( b );                    }
-
-template< typename T=int64_t, typename FLT=double >              
-static inline freal<T,FLT>  mad( const freal<T,FLT>& a, const freal<T,FLT>& b, const freal<T,FLT>& c )  
-{ return a.mad( b, c );                 }
 
 template< typename T=int64_t, typename FLT=double >              
 static inline freal<T,FLT>  fma( const freal<T,FLT>& a, const freal<T,FLT>& b, const freal<T,FLT>& c )  
@@ -1034,8 +1029,8 @@ inline freal<T,FLT> freal<T,FLT>::sub( const freal<T,FLT>& b ) const
 { return( c( b ), pop_value( cordic, cordic->sub( v, b.v ) ) ); }
 
 template< typename T, typename FLT >              
-inline freal<T,FLT> freal<T,FLT>::mad( const freal<T,FLT>& b, const freal<T,FLT>& c ) const             
-{ return( c( b, c ), pop_value( cordic, cordic->mad( v, b.v, c.v ) ) ); }
+inline freal<T,FLT> freal<T,FLT>::fma( const freal<T,FLT>& b, const freal<T,FLT>& c ) const             
+{ return( c( b, c ), pop_value( cordic, cordic->fma( v, b.v, c.v ) ) ); }
 
 template< typename T, typename FLT >              
 inline freal<T,FLT> freal<T,FLT>::mul( const freal<T,FLT>& b ) const                                    
