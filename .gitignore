@@ -5,6 +5,7 @@ analyze
 *.exe
 *.o
 *.out
+*.csv
 .*.swp
 *.gz
 *secret*

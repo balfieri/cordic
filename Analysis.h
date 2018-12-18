@@ -44,7 +44,7 @@ public:
     Analysis( std::string base_name = "log" );     
     ~Analysis();
 
-    void print_stats( const std::vector<std::string>& ignore_funcs=std::vector<std::string>() ) const;
+    void print_stats( double scale_factor=1.0, const std::vector<std::string>& ignore_funcs=std::vector<std::string>() ) const;
 
 private:
     std::string         base_name;
@@ -560,7 +560,7 @@ Analysis<T,FLT>::~Analysis()
 }
 
 template< typename T, typename FLT >
-void Analysis<T,FLT>::print_stats( const std::vector<std::string>& ignore_funcs ) const
+void Analysis<T,FLT>::print_stats( double scale_factor, const std::vector<std::string>& ignore_funcs ) const
 {
     //--------------------------------------------------------
     // Print only the non-zero counts from non-ignored functions.
@@ -592,8 +592,9 @@ void Analysis<T,FLT>::print_stats( const std::vector<std::string>& ignore_funcs 
             if ( cnt != 0 ) {
                 total_cnt[i] += cnt;
                 double avg = double(cnt) / double(it->second.call_cnt);
-                fprintf( out, "    %-40s: %8.1f/call %8lld total\n", Cordic<T,FLT>::op_to_str( i ).c_str(), avg, cnt );
-                csv << "\"" << Cordic<T,FLT>::op_to_str( i ) << "\", " << avg << ", " << cnt << "\n";
+                uint64_t scaled_cnt = double(cnt) * scale_factor + 0.5;
+                fprintf( out, "    %-40s: %8.1f/call   %10lld total   %10lld scaled_total\n", Cordic<T,FLT>::op_to_str( i ).c_str(), avg, cnt, scaled_cnt );
+                csv << "\"" << Cordic<T,FLT>::op_to_str( i ) << "\", " << avg << ", " << cnt << ", " << scaled_cnt << "\n";
             }
         }
     }
@@ -605,8 +606,10 @@ void Analysis<T,FLT>::print_stats( const std::vector<std::string>& ignore_funcs 
     for( uint32_t i = 0; i < OP_cnt; i++ )
     {
         if ( total_cnt[i] != 0 ) {
-            fprintf( out, "    %-40s:  %8lld\n", Cordic<T,FLT>::op_to_str( i ).c_str(), total_cnt[i] );
-            csv << "\"" << Cordic<T,FLT>::op_to_str( i ) << "\", " << total_cnt[i] << "\n";
+            uint64_t cnt = total_cnt[i];
+            uint64_t scaled_cnt = double(cnt) * scale_factor + 0.5;
+            fprintf( out, "    %-40s:  %10lld   %10lld\n", Cordic<T,FLT>::op_to_str( i ).c_str(), cnt, scaled_cnt );
+            csv << "\"" << Cordic<T,FLT>::op_to_str( i ) << "\", " << cnt << ", " << scaled_cnt << "\n";
         }
     }
     
