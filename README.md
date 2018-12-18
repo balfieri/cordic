@@ -30,8 +30,9 @@ this library is to create a small, yet complete, tutorial package.
 
 <p>
 The library assumes that values are stored as fixed-point with user-defined integer width (int_w) and fraction width (frac_w).  
-The fixed-point container type T must be a signed integer at least as wide as 1+int_w+frac_w. A fixed-point number stores
-the sign in the most-significant bit, followed by the int_w binary integer bits, followed by the frac_w binary fraction bits 
+The fixed-point container type T must be a signed integer at least as wide as 1+int_w+frac_w+log2(frac_w). The log2(frac_w) are
+the default number of guard bits (guard_w).  A fixed-point number stores
+the sign in the most-significant bit, followed by the int_w binary integer bits, followed by the frac_w+guard_w binary fraction bits 
 in the least-significant
 bits.  If T is larger than the required number of bits, the extra upper bits are assumed to contain replications of the sign bit
 (1=negative, 0=non-negative).  In other words, fixed-point values are stored in 2's-complement integer containers, so -A == ~A + 1.
@@ -162,6 +163,10 @@ and all the associated complex math functions will just work:
 typedef freal&lt;&gt; real;
 typedef complex&lt;real&gt; creal;
 </pre>
+
+<h1>Higher Dimensions</h1>
+
+See NOTES.txt for a discussion of extending CORDIC to higher dimensions.  The library does not yet support it.
 
 <h1>Installation</h1>
 
