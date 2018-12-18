@@ -17,7 +17,8 @@ hyperbolic rotation, and hyperbolic vectoring modes.
 2D Circular Rotation in Matrix Form
 -----------------------------------
 
-Input: m0 = angle of rotation about z axis
+Input: m0 = angle of clockwise rotation about z axis
+            (sorry, the papers all use clockwise, we can invert signs later)
 
 P = |  cos(m0)  sin(m0) |
     |                   |
@@ -57,7 +58,8 @@ P*V = (1/k)R*V
 4D Circular Rotation in Matrix Form (Quaternions)
 -------------------------------------------------
 
-Input: m0 = angle of rotation about [need to specify this]
+Input: m0 = angle of clockwise rotation about ??? 
+[need to figure out how to make this work for an arbitrary unit vector axis]
 
 P = |  cos(m0)  sin(m0)  sin(m0)  sin(m0) |
     |                                     |
