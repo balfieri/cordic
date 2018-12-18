@@ -388,7 +388,8 @@ Analysis<T,FLT>::Analysis( std::string _base_name )
                 auto it = funcs.find( name );
                 cassert( it != funcs.end(), "leave should have found function " + name );
                 FrameInfo& frame = stack_top();
-                cassert( frame.func_name == name, "trying to leave a routine that's not at the top of the stack" );
+                cassert( frame.func_name == name, "trying to leave a routine that's not at the top of the stack: entered " + 
+                                                  frame.func_name + " leaving " + name );
                 stack_pop();
                 break;
             }
