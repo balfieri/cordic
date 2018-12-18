@@ -98,16 +98,14 @@ public:
     T two_div_pi( void ) const;                         // encoded 2/PI
     T four_div_pi( void ) const;                        // encoded PI/4
     T e( void ) const;                                  // encoded natural exponent
+    T nan( const char * x ) const;                      // fixed-point: 0 
+    T infinity( void ) const;                           // fixed-point: maxval()
 
     //-----------------------------------------------------
     // Well-Known Math Functions Implemented Using CORDIC
     //
     // (2) means requires 2 applications of a CORDIC algorithm.              functionality
     //-----------------------------------------------------               ---------------------------
-    void constructed( const T& x ) const;                                 // so we can log creation of x
-    void destructed( const T& x ) const;                                  // so we can log destruction of x
-    T&   assign( T& x, const T& y ) const;                                // x = y  (this exists so we can log assignments)
-    T&   pop_value( T& x, const T& y ) const;                             // x = y  (where y is top of stack for logging)
 
     // queries
     bool signbit( const T& x ) const;                                     // x < 0
@@ -117,15 +115,37 @@ public:
     bool isnan( const T& x ) const;                                       // fixed-point: false (always)
     bool isnormal( const T& x ) const;                                    // fixed-point: false (always)
 
+    // rounding
+    T    nextafter( const T& from, const T& to ) const;                   // (from == to) ?      to  :     (from +/- minval toward to)
+    T    nexttoward( const T& from, long double to ) const;               // (from == to) ? to_t(to) : to_t(from +/- minval toward to)
+    T    floor( const T& x ) const;                                       // largest  integral value <= x
+    T    ceil( const T& x ) const;                                        // smallest integral value >= x
+    T    trunc( const T& x ) const;                                       // nearest  integral value toward 0
+    T    round( const T& x ) const;                                       // nearest  integral value; halfway cases away from 0 
+    T    lround( const T& x ) const;                                      // same as round() except returns just the integer part
+    T    rint( const T& x ) const;                                        // nearest  integral value according to rounding mode:
+                                                                          //    FE_DOWNWARD:    floor(x)
+                                                                          //    FE_UPWARD:      ceil(x)
+                                                                          //    FE_TOWWARDZERO: trunc(x)
+                                                                          //    FE_TONEAREST:   round(x)
+    T    lrint( const T& x ) const;                                       // same as rint() except returns just the integer part
+    T    nearbyint( const T& x ) const;                                   // same as rint() but never raises FE_INEXACT
+
+    // basic arithmetic
     T    abs( const T& x ) const;                                         // |x|
     T    neg( const T& x ) const;                                         // -x
     T    copysign( const T& x, const T& y ) const;                        // |x| with sign of y
-    T    nan( const char * x ) const;                                     // fixed-point: 0 
-    T    infinity( void ) const;                                          // fixed-point: maxval()
-    T    nextafter( const T& from, const T& to ) const;                   // (from == to) ?   to  :  (from +/- minval)
-    T    nexttoward( const T& from, long double to ) const;               // (from == to) ? T(to) : T(from +/- minval)
-    T    floor( const T& x ) const;                                       // largest  integral value <= x
-    T    ceil( const T& x ) const;                                        // smallest integral value >= x
+    T    add( const T& x, const T& y ) const;                             // x+y 
+    T    sub( const T& x, const T& y ) const;                             // x-y 
+    T    mad( const T& x, const T& y, const T& addend ) const;            // x*y + addend
+    T    fma( const T& x, const T& y, const T& addend ) const;            // mad( x, y, addend )        (same thing)
+    T    mul( const T& x, const T& y ) const;                             // x*y 
+    T    sqr( const T& x ) const;                                         // x*x
+    T    lshift( const T& x, int y, bool can_log=true ) const;            // x << y
+    T    rshift( const T& x, int y ) const;                               // x >> y
+    T    dad( const T& y, const T& x, const T& addend ) const;            // y/x + addend
+    T    div( const T& y, const T& x ) const;                             // y/x
+    T    rcp( const T& x ) const;                                         // 1/x
 
     // comparisons
     bool isgreater( const T& x, const T& y ) const;                       // x > y
@@ -139,19 +159,6 @@ public:
     T    fdim( const T& x, const T& y ) const;                            // (x >= y) ? (x-y) : 0
     T    fmax( const T& x, const T& y ) const;                            // max(x, y)
     T    fmin( const T& x, const T& y ) const;                            // min(x, y)
-
-    // basic arithmetic
-    T    add( const T& x, const T& y ) const;                             // x+y 
-    T    sub( const T& x, const T& y ) const;                             // x-y 
-    T    mad( const T& x, const T& y, const T& addend ) const;            // x*y + addend
-    T    fma( const T& x, const T& y, const T& addend ) const;            // mad( x, y, addend )        (same thing)
-    T    mul( const T& x, const T& y ) const;                             // x*y 
-    T    sqr( const T& x ) const;                                         // x*x
-    T    lshift( const T& x, int y, bool can_log=true ) const;            // x << y
-    T    rshift( const T& x, int y ) const;                               // x >> y
-    T    dad( const T& y, const T& x, const T& addend ) const;            // y/x + addend
-    T    div( const T& y, const T& x ) const;                             // y/x
-    T    rcp( const T& x ) const;                                         // 1/x
 
     // elementary functions
     T    sqrt( const T& x ) const;                                        // normh( x+1, x-1 ) / 2
@@ -522,6 +529,11 @@ public:
     static void            logger_set( Logger<T,FLT> * logger );  // null means use the default logger
     static Logger<T,FLT> * logger_get( void );                    // returns current logger
     static std::string     op_to_str( uint16_t op );              // supply this to Logger constructor
+
+    void constructed( const T& x ) const;                         // so we can log creation of x
+    void destructed( const T& x ) const;                          // so we can log destruction of x
+    T&   assign( T& x, const T& y ) const;                        // x = y  (this exists so we can log assignments)
+    T&   pop_value( T& x, const T& y ) const;                     // x = y  (where y is top of stack for logging)
 
     enum class OP
     {
