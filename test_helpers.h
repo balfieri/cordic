@@ -212,7 +212,7 @@ FLT  rcp( FLT x )        { return 1.0/x; }
 FLT  rsqrt( FLT x )      { return 1.0 / std::sqrt( x ); }
 FLT  rcbrt( FLT x )      { return 1.0 / std::cbrt( x ); }
 FLT  exp10( FLT x )      { return std::pow( 10.0, x ); }
-FLT  logb( FLT x, FLT y ){ return std::log( x ) / std::log( y ); }
+FLT  logn( FLT x, FLT y ){ return std::log( x ) / std::log( y ); }
 FLT  log2( FLT x )       { return std::log( x ) / std::log( 2.0 ); }
 FLT  log10( FLT x )      { return std::log( x ) / std::log( 10.0 ); }
 void sincos( FLT x, FLT& si, FLT& co ) { si = std::sin( x ); co = std::cos( x ); }

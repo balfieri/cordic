@@ -199,7 +199,7 @@ public:
     freal  pow( const freal& e ) const;      // a^e
     freal  log( void ) const;                                         
     freal  log1p( void ) const;              // log(a+1)
-    freal  logb( const freal& b ) const;     // log-base-b(a)
+    freal  logn( const freal& b ) const;     // log-base-b(a)
     freal  logc( const FLT c ) const;        // log-base-c(a)                  
     freal  log2( void ) const;                                        
     freal  log10( void ) const;                                       
@@ -445,8 +445,8 @@ static inline freal<T,FLT>  log1p( const freal<T,FLT>& a )
 { return a.log1p();                     }
 
 template< typename T=int64_t, typename FLT=double >              
-static inline freal<T,FLT>  logb( const freal<T,FLT>& a, const freal<T,FLT>& b )                        
-{ return a.logb( b );                   }
+static inline freal<T,FLT>  logn( const freal<T,FLT>& a, const freal<T,FLT>& b )                        
+{ return a.logn( b );                   }
 
 template< typename T=int64_t, typename FLT=double >              
 static inline freal<T,FLT>  logc( const freal<T,FLT>& a, const FLT c )                                  
@@ -1140,12 +1140,12 @@ inline freal<T,FLT> freal<T,FLT>::log1p( void ) const
 { return( c(), pop_value( cordic, cordic->log1p( v ) ) ); }
 
 template< typename T, typename FLT >             
-inline freal<T,FLT> freal<T,FLT>::logb( const freal<T,FLT>& b ) const                                   
-{ return( c( b ), pop_value( cordic, cordic->logb( v, b.v ) ) ); }
+inline freal<T,FLT> freal<T,FLT>::logn( const freal<T,FLT>& b ) const                                   
+{ return( c( b ), pop_value( cordic, cordic->logn( v, b.v ) ) ); }
 
 template< typename T, typename FLT >              
 inline freal<T,FLT> freal<T,FLT>::logc( const FLT c ) const                                             
-{ return( c(), pop_value( cordic, cordic->logb( v, c ) ) ); }
+{ return( c(), pop_value( cordic, cordic->logn( v, c ) ) ); }
 
 template< typename T, typename FLT >              
 inline freal<T,FLT> freal<T,FLT>::log2( void ) const                                                    
