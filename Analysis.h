@@ -573,6 +573,9 @@ void Analysis<T,FLT>::print_stats( const std::vector<std::string>& ignore_funcs 
     std::string out_name = base_name + ".out";
     FILE * out = fopen( out_name.c_str(), "w" );
     std::ofstream csv( base_name + ".csv", std::ofstream::out );
+    uint64_t total_cnt[OP_cnt];
+    for( uint32_t i = 0; i < OP_cnt; i++ ) total_cnt[i] = 0;
+
     for( auto nit = func_names.begin(); nit != func_names.end(); nit++ )
     {
         if ( func_ignored.find( *nit ) != func_ignored.end() ) continue;
@@ -587,12 +590,26 @@ void Analysis<T,FLT>::print_stats( const std::vector<std::string>& ignore_funcs 
 
             uint64_t cnt = func.op_cnt[i];
             if ( cnt != 0 ) {
+                total_cnt[i] += cnt;
                 double avg = double(cnt) / double(it->second.call_cnt);
                 fprintf( out, "    %-40s: %8.1f/call %8lld total\n", Cordic<T,FLT>::op_to_str( i ).c_str(), avg, cnt );
                 csv << "\"" << Cordic<T,FLT>::op_to_str( i ) << "\", " << avg << ", " << cnt << "\n";
             }
         }
     }
+
+    //--------------------------------------------------------
+    // And the totals.
+    //--------------------------------------------------------
+    fprintf( out, "\n\nTotals:\n" );
+    for( uint32_t i = 0; i < OP_cnt; i++ )
+    {
+        if ( total_cnt[i] != 0 ) {
+            fprintf( out, "    %-40s:  %8lld\n", Cordic<T,FLT>::op_to_str( i ).c_str(), total_cnt[i] );
+            csv << "\"" << Cordic<T,FLT>::op_to_str( i ) << "\", " << total_cnt[i] << "\n";
+        }
+    }
+    
     fclose( out );
     csv.close();
     std::cout << "\nWrote stats to " + base_name + ".{out,csv}\n";
