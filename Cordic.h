@@ -113,7 +113,7 @@ public:
     bool isfinite( const T& x ) const;                                    // fixed-point: true  (always)
     bool isinf( const T& x ) const;                                       // fixed-point: false (always)
     bool isnan( const T& x ) const;                                       // fixed-point: false (always)
-    bool ishypotal( const T& x ) const;                                    // fixed-point: false (always)
+    bool isnormal( const T& x ) const;                                    // fixed-point: false (always)
 
     // rounding
     T    nextafter( const T& from, const T& to ) const;                   // (from == to) ?      to  :     (from +/- minval toward to)
@@ -1786,7 +1786,7 @@ inline bool Cordic<T,FLT>::isnan( const T& x ) const
 }
 
 template< typename T, typename FLT >
-inline bool Cordic<T,FLT>::ishypotal( const T& x ) const                                     
+inline bool Cordic<T,FLT>::isnormal( const T& x ) const                                     
 {
     (void)x;
     return false;

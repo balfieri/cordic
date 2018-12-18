@@ -218,9 +218,8 @@ public:
 
     void   polar_to_rect( const freal& angle, freal& x, freal& y     ) const;  // a=radius
     void   rect_to_polar( const freal& b,     freal& r, freal& angle ) const;  // x=a, y=b 
-    freal  norm(  const freal& b ) const;    // x=a, y=b
-    freal  hypot( const freal& b ) const;    // same as norm()
-    freal  normh( const freal& b ) const;    // x=a, y=b
+    freal  hypot(  const freal& b ) const;    
+    freal  hypoth( const freal& b ) const;   
 
     freal  sinh( void ) const;
     freal  sinh( const freal& r ) const;                                // multiply sinh by r
@@ -514,16 +513,12 @@ static inline void   rect_to_polar( const freal<T,FLT>& a, const freal<T,FLT>& b
 { a.rect_to_polar( b, r, angle );       }
 
 template< typename T=int64_t, typename FLT=double >              
-static inline freal<T,FLT>  norm( const freal<T,FLT>& a,  const freal<T,FLT>& b )                       
-{ return a.norm( b );                   }
-
-template< typename T=int64_t, typename FLT=double >              
 static inline freal<T,FLT>  hypot( const freal<T,FLT>& a, const freal<T,FLT>& b )                       
-{ return a.norm( b );                   }
+{ return a.hypot( b );                  }
 
 template< typename T=int64_t, typename FLT=double >              
-static inline freal<T,FLT>  normh( const freal<T,FLT>& a, const freal<T,FLT>& b )                       
-{ return a.normh( b );                  }
+static inline freal<T,FLT>  hypoth( const freal<T,FLT>& a, const freal<T,FLT>& b )                       
+{ return a.hypoth( b );                 }
 
 template< typename T=int64_t, typename FLT=double >              
 static inline freal<T,FLT>  sinh( const freal<T,FLT>& a )                                               
@@ -1233,16 +1228,12 @@ inline void freal<T,FLT>::rect_to_polar( const freal<T,FLT>& b,     freal<T,FLT>
 }
 
 template< typename T, typename FLT >              
-inline freal<T,FLT> freal<T,FLT>::norm(  const freal<T,FLT>& b ) const                                  
-{ return( c( b ), pop_value( cordic, cordic->norm( v, b.v ) ) ); }
-
-template< typename T, typename FLT >              
 inline freal<T,FLT> freal<T,FLT>::hypot(  const freal<T,FLT>& b ) const                                  
 { return( c( b ), pop_value( cordic, cordic->hypot( v, b.v ) ) ); }
 
 template< typename T, typename FLT >              
-inline freal<T,FLT> freal<T,FLT>::normh( const freal<T,FLT>& b ) const                                  
-{ return( c( b ), pop_value( cordic, cordic->normh( v, b.v ) ) ); }
+inline freal<T,FLT> freal<T,FLT>::hypoth( const freal<T,FLT>& b ) const                                  
+{ return( c( b ), pop_value( cordic, cordic->hypoth( v, b.v ) ) ); }
 
 template< typename T, typename FLT >              
 inline freal<T,FLT> freal<T,FLT>::sinh( void ) const                                                    
