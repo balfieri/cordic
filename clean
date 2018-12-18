@@ -1,1 +1,1 @@
-rm -fr test_basic test_mpint analyze *.o *.out
+rm -fr test_basic test_mpint analyze *.o *.out *.csv
