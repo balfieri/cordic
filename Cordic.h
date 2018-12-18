@@ -99,8 +99,8 @@ public:
     T two_div_pi( void ) const;                         // encoded 2/PI
     T four_div_pi( void ) const;                        // encoded PI/4
     T e( void ) const;                                  // encoded natural exponent
-    T nan( const char * x ) const;                      // fixed-point: 0 
-    T infinity( void ) const;                           // fixed-point: maxval()
+    T nan( const char * arg ) const;                    // fixed-point: zero()
+    T inf( void ) const;                                // fixed-point: maxval()
 
     //-----------------------------------------------------
     // Well-Known Math Functions Implemented Using CORDIC
@@ -1129,6 +1129,19 @@ inline T Cordic<T,FLT>::e( void ) const
 {
     _log_1f( push_constant, to_flt(impl->e) ); 
     return impl->e;
+}
+
+template< typename T, typename FLT >
+inline T Cordic<T,FLT>::nan( const char * arg ) const
+{
+    (void)arg;
+    return zero();
+}
+
+template< typename T, typename FLT >
+inline T Cordic<T,FLT>::inf( void ) const
+{
+    return maxval();
 }
 
 template< typename T, typename FLT >

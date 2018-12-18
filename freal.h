@@ -114,6 +114,8 @@ public:
     freal two_div_pi( void );                                   // 2/PI
     freal four_div_pi( void );                                  // 4/PI
     freal e( void );                                            // natural exponent
+    freal nan( const char * arg );                              // not-a-number (NaN)
+    freal inf( void );                                          // +infinity
 
     //-----------------------------------------------------
     // Standard Operators
@@ -877,6 +879,14 @@ inline freal<T,FLT> freal<T,FLT>::four_div_pi( void )
 template< typename T, typename FLT >              
 inline freal<T,FLT> freal<T,FLT>::e( void ) 
 { return( c(), pop_value( cordic, cordic->e() ) ); }
+
+template< typename T, typename FLT >              
+inline freal<T,FLT> freal<T,FLT>::nan( const char * arg ) 
+{ return( c(), pop_value( cordic, cordic->nan( arg ) ) ); }
+
+template< typename T, typename FLT >              
+inline freal<T,FLT> freal<T,FLT>::inf( void ) 
+{ return( c(), pop_value( cordic, cordic->inf() ) ); }
 
 //-----------------------------------------------------
 // Standard Operators 
