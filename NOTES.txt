@@ -1,0 +1,111 @@
+                        Generalizing CORDIC TO N Dimensions
+                        -----------------------------------
+
+All the code in this directory is 2D-oriented at this point.
+There exist CORDIC formulations that handle higher dimensions.
+3D or 4D rotations are obviously relevant in many fields,
+so I'm trying here to regurgitate those formulations in
+terms that I can understand (i.e., no mathematical symbols!).
+
+The way to do this is to think about CORDIC in matrix form.
+
+Let's look at Euclidean rotation mode only.  
+We can come back later and make adjustments for Euclidean vector,
+hyperbolic rotation, and hyperbolic vectoring modes.
+
+
+2D Circular Rotation in Matrix Form
+-----------------------------------
+
+Input: m0 = angle of rotation in xy plane
+
+P = |  cos(m0)  sin(m0) |
+    |                   |
+    | -sin(m0)  cos(m0) |
+
+V = | x0 |
+    | y0 |
+
+Goal: compute P * V = | x0*cos(m0) + y0*sin(m0) |       xn
+                      |-x0*sin(m0) + y0*cos(m0) |       yn
+
+n = number of CORDIC shift-and-add iterations (== fractional bits)
+i = CORDIC iteration (i=0..n for one application of CORDIC)
+
+For each iteration i, use the elementary rotation:
+
+Ri = |  1      ai*ti  |
+     |                |
+     | -ai*ti  1      |
+
+where:
+    fi = sign( xi )
+    ti = 2^(-fi)
+    ai = fi * sign( yi )
+
+R   = product( Ri )                             forall i    
+R*V = kP*V                                      where k is the scale factor 
+dmi = delta(m) = m(i+1) - mi = atan(2^(-i))     atan(2^(-i)) is precomputed into a LUT
+dmi0= m0
+ki  = 1/cos(dmi)
+    = sqrt( 1 + 2^(-2i) )
+k   = product( ki )                             forall i
+    = R applied to I = { 1, 0 }         
+P*V = (1/k)R*V
+
+
+4D Circular Rotation in Matrix Form (Quaternions)
+-------------------------------------------------
+
+Input: m0 = angle of rotation in xy plane
+
+P = |  cos(m0)  sin(m0)  sin(m0)  sin(m0) |
+    |                                     |
+    | -sin(m0)  cos(m0) -sin(m0)  sin(m0) |
+    |                                     |     
+    | -sin(m0)  cos(m0)  cos(m0) -sin(m0) |
+    |                                     |
+    | -sin(m0) -sin(m0)  sin(m0)  cos(m0) |
+
+Goal: compute P * V = | x0*cos(m0) + y0*sin(m0) + z0*sin(m0) + w0*sin(m0) |     xn
+                      |-x0*sin(m0) + y0*cos(m0) - z0*sin(m0) + w0*sin(m0) |     yn
+                      |-x0*sin(m0) + y0*cos(m0) + z0*cos(m0) - w0*sin(m0) |     zn
+                      |-x0*sin(m0) - y0*sin(m0) + z0*sin(m0) + w0*cos(m0) |     wn
+
+V = | x0 |
+    | y0 |
+    | z0 |
+    | w0 |
+
+For each iteration i, use the elementary rotation:
+
+Ri = |  1       ai*ti   bi*ti   ci*ti |
+     |                                |
+     | -ai*ti   1      -ci*ti   bi*ti |
+     |                                |
+     | -bi*ti   ci*ti   1      -ai*ti |
+     |                                |
+     | -ci*ti  -bi*ti   ai*ti   1     |
+
+where:
+    fi = sign( xi )
+    ti = 2^(-fi)
+    ai = fi * sign( yi )
+    bi = fi * sign( zi )
+    ci = fi * sign( wi )
+
+R   = product( Ri )                             forall i    
+R*V = kP*V                                      where k is the scale factor 
+dmi = delta(m) = m(i+1) - mi = atan(2^(-i))     atan(2^(-i)) is precomputed into a LUT
+dmi0= m0
+ki  = 1/cos(dmi)
+    = sqrt( 1 + 3*ti^2 )                        (I think)
+k   = product( ki )                             forall i
+    = R applied to I = { 1, 0 }         
+P*V = (1/k)R*V
+
+
+8D Circular Rotation in Matrix Form (Octonions)
+-----------------------------------------------
+
+[Let me get the 4D case working before coming back here.  It looks similar.]
