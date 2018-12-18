@@ -44,7 +44,7 @@ public:
     Analysis( std::string base_name = "log" );     
     ~Analysis();
 
-    void print_stats( void ) const;
+    void print_stats( const std::vector<std::string>& ignore_funcs=std::vector<std::string>() ) const;
 
 private:
     std::string         base_name;
@@ -560,18 +560,26 @@ Analysis<T,FLT>::~Analysis()
 }
 
 template< typename T, typename FLT >
-void Analysis<T,FLT>::print_stats( void ) const
+void Analysis<T,FLT>::print_stats( const std::vector<std::string>& ignore_funcs ) const
 {
     //--------------------------------------------------------
-    // Print only the non-zero counts.
+    // Print only the non-zero counts from non-ignored functions.
     //--------------------------------------------------------
-    std::ofstream out( base_name + ".csv", std::ofstream::out );
+    std::map<std::string, bool> func_ignored;
+    for( auto it = ignore_funcs.begin(); it != ignore_funcs.end(); it++ )
+    {
+        func_ignored[*it] = true;
+    }
+    std::string out_name = base_name + ".out";
+    FILE * out = fopen( out_name.c_str(), "w" );
+    std::ofstream csv( base_name + ".csv", std::ofstream::out );
     for( auto nit = func_names.begin(); nit != func_names.end(); nit++ )
     {
+        if ( func_ignored.find( *nit ) != func_ignored.end() ) continue;
         auto it = funcs.find( *nit );
         const FuncInfo& func = it->second;
-        printf( "\n%-44s: %8lld calls\n", it->first.c_str(), it->second.call_cnt );
-        out << "\n\"" << it->first + "\", " << it->second.call_cnt << "\n";
+        fprintf( out, "\n%-44s: %8lld calls\n", it->first.c_str(), it->second.call_cnt );
+        csv << "\n\"" << it->first + "\", " << it->second.call_cnt << "\n";
         for( uint32_t i = 0; i < OP_cnt; i++ )
         {
             OP op = OP(i);
@@ -580,13 +588,14 @@ void Analysis<T,FLT>::print_stats( void ) const
             uint64_t cnt = func.op_cnt[i];
             if ( cnt != 0 ) {
                 double avg = double(cnt) / double(it->second.call_cnt);
-                printf( "    %-40s: %8.1f/call %8lld total\n", Cordic<T,FLT>::op_to_str( i ).c_str(), avg, cnt );
-                out << "\"" << Cordic<T,FLT>::op_to_str( i ) << "\", " << avg << ", " << cnt << "\n";
+                fprintf( out, "    %-40s: %8.1f/call %8lld total\n", Cordic<T,FLT>::op_to_str( i ).c_str(), avg, cnt );
+                csv << "\"" << Cordic<T,FLT>::op_to_str( i ) << "\", " << avg << ", " << cnt << "\n";
             }
         }
     }
-    out.close();
-    std::cout << "\nWrote same stats to " + base_name + ".csv\n";
+    fclose( out );
+    csv.close();
+    std::cout << "\nWrote stats to " + base_name + ".{out,csv}\n";
 }
 
 #endif

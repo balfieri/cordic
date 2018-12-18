@@ -29,11 +29,17 @@ using FLT = double;
 
 int main( int argc, const char * argv[] )
 {
-    if ( argc != 2 ) {
-        std::cout << "usage: analyze <base_name>\n";
+    if ( argc < 2 ) {
+        std::cout << "usage: analyze <base_name> <funcs to ignore>\n";
         exit( 1 );
     }
     std::string base_name = argv[1];
+    std::vector<std::string> ignore_funcs;
+    for( int i = 2; i < argc; i++ ) 
+    {
+        std::string ignore_name = argv[i];
+        ignore_funcs.push_back( ignore_name );
+    }
     auto a = new Analysis<T,FLT>( base_name );
-    a->print_stats();
+    a->print_stats( ignore_funcs );
 }

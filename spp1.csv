@@ -1,23 +1,7 @@
 
 "main", 1
 
-"init", 1
-"neg", 768, 768
-"add", 1280, 1280
-"fma", 2301, 2301
-"fda", 769, 769
-"sqrt", 256, 256
-
 "uniform", 6261
-
-"make_new_scene", 1
-"neg", 2, 2
-"add", 4, 4
-"sub", 18, 18
-"fma", 41, 41
-"fda", 8, 8
-"sqrt", 2, 2
-"tan", 1, 1
 
 "render_thread", 1
 
@@ -124,7 +108,3 @@
 "fma", 1, 105
 "sqrt", 1, 105
 "sincos", 1, 105
-
-"image::write", 1
-"fma", 3072, 3072
-"pow", 3072, 3072
