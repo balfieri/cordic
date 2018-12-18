@@ -108,6 +108,7 @@ private:
 
     std::map<std::string, KIND>                 kinds;
     std::map<std::string, OP>                   ops;
+    std::vector<std::string>                    func_names;             // in order of appearance
     std::map<std::string, FuncInfo>             funcs;
     std::map<uint64_t, CordicInfo>              cordics;
     std::map<uint64_t, ValInfo>                 vals;
@@ -359,6 +360,7 @@ Analysis<T,FLT>::Analysis( std::string file_name )
                 std::string name = parse_name( c );
                 auto it = funcs.find( name );
                 if ( it == funcs.end() ) {
+                    func_names.push_back( name );       // for printouts
                     FuncInfo info;
                     funcs[name] = info;
                     it = funcs.find( name );
@@ -558,8 +560,9 @@ void Analysis<T,FLT>::print_stats( void ) const
     //--------------------------------------------------------
     // Print only the non-zero counts.
     //--------------------------------------------------------
-    for( auto it = funcs.begin(); it != funcs.end(); it++ )
+    for( auto nit = func_names.begin(); nit != func_names.end(); nit++ )
     {
+        auto it = funcs.find( *nit );
         const FuncInfo& func = it->second;
         printf( "\n%-44s: %8lld calls\n", it->first.c_str(), it->second.call_cnt );
         for( uint32_t i = 0; i < OP_cnt; i++ )
