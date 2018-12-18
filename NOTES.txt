@@ -105,13 +105,13 @@ R*V = kP*V                                      where k is the scale factor
 dmi = delta(m) = m(i+1) - mi = atan(2^(-i))     atan(2^(-i)) is precomputed into a LUT
 dmi0= m0
 ki  = 1/cos(dmi)
-    = sqrt( 1 + 3*ti^2 )                        (I think)
+    = sqrt( 1 + 3*ti^2 )                        (this is probably wrong, octonion: sqrt( 1 + 7*ti^2 )
 k   = product( ki )                             forall i
-    = R applied to I = { 1, 0 }         
+    = R applied to I = { 1, 0, 0, 0 }           (I think)
 P*V = (1/k)R*V
 
 
 8D Circular Rotation in Matrix Form (Octonions)
 -----------------------------------------------
 
-[Let me get the 4D case working before coming back here.  It looks similar.]
+[Let me get the 4D case 100% correct before coming back here.  It looks similar.]
