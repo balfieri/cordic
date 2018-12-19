@@ -54,11 +54,11 @@ public:
     virtual void op1( uint16_t op, const T * opnd1 );
     virtual void op1( uint16_t op, const T&  opnd1 );
     virtual void op1( uint16_t op, const FLT&opnd1 );
-    virtual void op2( uint16_t op, const T * opnd1, const T * opnd2 );
-    virtual void op2( uint16_t op, const T * opnd1, const T&  opnd2 );
-    virtual void op2( uint16_t op, const T * opnd1, const FLT&opnd2 );
-    virtual void op3( uint16_t op, const T * opnd1, const T * opnd2, const T * opnd3 );
-    virtual void op4( uint16_t op, const T * opnd1, const T * opnd2, const T * opnd3, const T * opnd4 );
+    virtual void op2( uint16_t op, const T * opnd1, const T *  opnd2 );
+    virtual void op2( uint16_t op, const T * opnd1, const T&   opnd2 );
+    virtual void op2( uint16_t op, const T * opnd1, const FLT& opnd2 );
+    virtual void op3( uint16_t op, const T * opnd1, const T *  opnd2, const T * opnd3 );
+    virtual void op4( uint16_t op, const T * opnd1, const T *  opnd2, const T * opnd3, const T * opnd4 );
 
 private:
     op_to_str_fn_t      op_to_str;
