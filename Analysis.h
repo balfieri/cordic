@@ -71,7 +71,7 @@ public:
     virtual void inc_op_cnt( OP op, uint32_t by=1 );
 
     virtual void parse( void );
-    virtual void print_stats( double scale_factor=1.0, const std::vector<std::string>& ignore_funcs=std::vector<std::string>() ) const;
+    virtual void print_stats( std::string basename="", double scale_factor=1.0, const std::vector<std::string>& ignore_funcs=std::vector<std::string>() ) const;
 
 private:
     std::string         base_name;
@@ -741,19 +741,20 @@ void Analysis<T,FLT>::parse( void )
 }
 
 template< typename T, typename FLT >
-void Analysis<T,FLT>::print_stats( double scale_factor, const std::vector<std::string>& ignore_funcs ) const
+void Analysis<T,FLT>::print_stats( std::string basename, double scale_factor, const std::vector<std::string>& ignore_funcs ) const
 {
     //--------------------------------------------------------
     // Print only the non-zero counts from non-ignored functions.
     //--------------------------------------------------------
+    if ( basename == "" ) basename = base_name;
     std::map<std::string, bool> func_ignored;
     for( auto it = ignore_funcs.begin(); it != ignore_funcs.end(); it++ )
     {
         func_ignored[*it] = true;
     }
-    std::string out_name = base_name + ".out";
+    std::string out_name = basename + ".out";
     FILE * out = fopen( out_name.c_str(), "w" );
-    std::ofstream csv( base_name + ".csv", std::ofstream::out );
+    std::ofstream csv( basename + ".csv", std::ofstream::out );
     uint64_t total_cnt[OP_cnt];
     for( uint32_t i = 0; i < OP_cnt; i++ ) total_cnt[i] = 0;
 
@@ -796,7 +797,7 @@ void Analysis<T,FLT>::print_stats( double scale_factor, const std::vector<std::s
     
     fclose( out );
     csv.close();
-    std::cout << "\nWrote stats to " + base_name + ".{out,csv}\n";
+    std::cout << "\nWrote stats to " + basename + ".{out,csv}\n";
 }
 
 #endif

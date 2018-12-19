@@ -43,5 +43,5 @@ int main( int argc, const char * argv[] )
     }
     auto a = new Analysis<T,FLT>( base_name );
     a->parse();
-    a->print_stats( scale_factor, ignore_funcs );
+    a->print_stats( "", scale_factor, ignore_funcs );
 }
