@@ -243,6 +243,8 @@ public:
     const Cordic<T,FLT> * c( const freal& b ) const;                  // validates two     cordics and returns one to use for operation
     const Cordic<T,FLT> * c( const freal& b, const freal& _c ) const; // validates three   cordics and returns one to use for operation
 
+    const T * raw_ptr( void ) const;                                  // useful for some gross things like manual logging by callers
+
 private:
     static const Cordic<T,FLT> * implicit_to;
     static bool                  implicit_from;
@@ -807,6 +809,12 @@ inline const Cordic<T,FLT> * freal<T,FLT>::c( const freal<T,FLT>& b, const freal
     cassert( _c.cordic != nullptr, "c has undefined type" );
     cassert( cordic == b.cordic && cordic == _c.cordic, "a and b and c must have same type currently" );
     return cordic;
+}
+
+template< typename T, typename FLT >              
+inline const T * freal<T,FLT>::raw_ptr( void ) const 
+{ 
+    return &v; 
 }
 
 //-----------------------------------------------------
