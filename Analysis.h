@@ -768,7 +768,7 @@ void Analysis<T,FLT>::print_stats( std::string basename, double scale_factor, co
         for( uint32_t i = 0; i < OP_cnt; i++ )
         {
             OP op = OP(i);
-            if ( op == OP::push_constant || op == OP::assign || op == OP::pop_value ) continue; // consume no hardware
+            if ( op == OP::push_constant || op == OP::assign || op == OP::pop_value || op == OP::pop_bool ) continue; // consume no hardware
 
             uint64_t cnt = func.op_cnt[i];
             if ( cnt != 0 ) {
