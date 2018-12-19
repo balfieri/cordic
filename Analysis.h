@@ -286,8 +286,9 @@ void Analysis<T,FLT>::destructed(  const T * v, const void * cordic_ptr )
 }
 
 template< typename T, typename FLT >
-void Analysis<T,FLT>::op( uint16_t op, uint32_t opnd_cnt, const T * opnd[] )
+void Analysis<T,FLT>::op( uint16_t _op, uint32_t opnd_cnt, const T * opnd[] )
 {
+    OP op = OP(_op);
     inc_op_cnt( op );
     for( uint32_t i = 0; i < opnd_cnt; i++ )
     {
@@ -296,10 +297,10 @@ void Analysis<T,FLT>::op( uint16_t op, uint32_t opnd_cnt, const T * opnd[] )
              !(i == 2 && op == OP::sincos) &&
              !(i == 1 && op == OP::sinhcosh) &&
              !(i == 2 && op == OP::sinhcosh) ) {
-            auto it = vals.find( opnd[i] );
+            auto it = vals.find( reinterpret_cast<uint64_t>( opnd[i] ) );
             cassert( it != vals.end() && it->second.is_alive, "opnd[" + std::to_string(i) + "] does not exist" );
             cassert( it->second.is_assigned, "opnd[" + std::to_string(i) + "] used when not previously assigned" );
-            if ( i == 1 && op == OP::assign ) vals[opnd[0]] = it->second;
+            if ( i == 1 && op == OP::assign ) vals[reinterpret_cast<uint64_t>(opnd[0])] = it->second;
             if ( debug && it->second.is_constant ) {
                 std::cout << "    opnd[" + std::to_string(i) + "] is constant " << it->second.constant << "\n";
             }
@@ -352,12 +353,12 @@ inline void Analysis<T,FLT>::op2( uint16_t _op, const T * opnd1, const T * opnd2
 }
 
 template< typename T, typename FLT >
-inline void Analysis<T,FLT>::op2( uint16_t _op, const T * opnd1, const T&  opnd2 )
+inline void Analysis<T,FLT>::op2( uint16_t _op, const T * opnd1, const T& opnd2 )
 {
     OP op = OP(_op);
     cassert( op == OP::lshift || op == OP::rshift || op == OP::pop_value, "op2i allowed only for lshift/rshift/pop_value" );
     inc_op_cnt( op );
-    auto it = vals.find( opnd1 );
+    auto it = vals.find( reinterpret_cast<uint64_t>( opnd1 ) );
     cassert( it != vals.end() && it->second.is_alive, "opnd[0] does not exist" );
     switch( op )
     {
@@ -386,15 +387,16 @@ inline void Analysis<T,FLT>::op2( uint16_t _op, const T * opnd1, const T&  opnd2
 template< typename T, typename FLT >
 inline void Analysis<T,FLT>::op2( uint16_t op, const T * opnd1, const FLT& opnd2 ) 
 {
-    inc_op_cnt( op );
-    auto it = vals.find( opnd1 );
+    inc_op_cnt( OP(op) );
+    auto it = vals.find( reinterpret_cast<uint64_t>( opnd1 ) );
     cassert( it != vals.end() && it->second.is_alive, "opnd1 does not exist" );
     cassert( it->second.is_assigned,                  "opnd1 is used before being assigned" );
     ValInfo val;
     val.is_alive    = true;
     val.is_assigned = true;
     val.is_constant = false;
-    val.constant    = opnd2;   // save conversion to FLT
+    (void)opnd2;
+//  val.constant    = opnd2;   // save conversion to FLT
     val_stack_push( val );
 }
 
@@ -672,7 +674,7 @@ void Analysis<T,FLT>::parse( void )
                 std::string name  = parse_name( c );
                 T           opnd0 = parse_int( c );
                 OP op = ops[name];
-                op1( op, opnd0 );
+                op1( uint16_t(op), opnd0 );
                 break;
             }
 
