@@ -55,14 +55,15 @@ public:
     virtual void destructed(  const T * v, const void * cordic );
 
     virtual void op(  uint16_t op, uint32_t opnd_cnt, const T * opnd[] );
-    virtual void op1( uint16_t op, const T * opnd1 );
-    virtual void op1( uint16_t op, const T&  opnd1 );
-    virtual void op1( uint16_t op, const FLT&opnd1 );
-    virtual void op2( uint16_t op, const T * opnd1, const T * opnd2 );
-    virtual void op2( uint16_t op, const T * opnd1, const T&  opnd2 );
-    virtual void op2( uint16_t op, const T * opnd1, const FLT&opnd2 );
-    virtual void op3( uint16_t op, const T * opnd1, const T * opnd2, const T * opnd3 );
-    virtual void op4( uint16_t op, const T * opnd1, const T * opnd2, const T * opnd3, const T * opnd4 );
+    virtual void op1( uint16_t op, const T *  opnd1 );
+    virtual void op1( uint16_t op, const T&   opnd1 );
+    virtual void op1( uint16_t op, const bool opnd1 );
+    virtual void op1( uint16_t op, const FLT& opnd1 );
+    virtual void op2( uint16_t op, const T *  opnd1, const T * opnd2 );
+    virtual void op2( uint16_t op, const T *  opnd1, const T&  opnd2 );
+    virtual void op2( uint16_t op, const T *  opnd1, const FLT&opnd2 );
+    virtual void op3( uint16_t op, const T *  opnd1, const T * opnd2, const T * opnd3 );
+    virtual void op4( uint16_t op, const T *  opnd1, const T * opnd2, const T * opnd3, const T * opnd4 );
 
     using OP                         = typename Cordic<T,FLT>::OP;
     static constexpr uint64_t OP_cnt = Cordic<T,FLT>::OP_cnt;
@@ -125,6 +126,7 @@ private:
         op3, 
         op4, 
         op1i, 
+        op1b, 
         op1f, 
         op2i, 
         op2f, 
@@ -214,6 +216,9 @@ Analysis<T,FLT>::Analysis( std::string _base_name ) : Logger<T,FLT>( Cordic<T,FL
     kinds["constructed"]        = KIND::constructed;
     kinds["destructed"]         = KIND::destructed;
     kinds["op1"]                = KIND::op1;
+    kinds["op1i"]               = KIND::op1i;
+    kinds["op1b"]               = KIND::op1b;
+    kinds["op1f"]               = KIND::op1f;
     kinds["op2"]                = KIND::op2;
     kinds["op2i"]               = KIND::op2i;
     kinds["op2f"]               = KIND::op2f;
@@ -368,6 +373,16 @@ inline void Analysis<T,FLT>::op1( uint16_t _op, const T& opnd1 )
     (void)_op;
     (void)opnd1;
     _die( "op1i should not be used right now" );
+}
+
+template< typename T, typename FLT >
+inline void Analysis<T,FLT>::op1( uint16_t _op, bool opnd1 )
+{
+    (void)opnd1;
+    OP op = OP(_op);
+    cassert( op == OP::pop_bool, "op1b allowed only for pop_bool right now" );
+    inc_op_cnt( op );
+    (void)val_stack_pop();
 }
 
 template< typename T, typename FLT >
@@ -674,6 +689,15 @@ void Analysis<T,FLT>::parse( void )
             {
                 std::string name  = parse_name( c );
                 T           opnd0 = parse_int( c );
+                OP op = ops[name];
+                op1( uint16_t(op), opnd0 );
+                break;
+            }
+
+            case KIND::op1b:
+            {
+                std::string name  = parse_name( c );
+                bool        opnd0 = parse_int( c );
                 OP op = ops[name];
                 op1( uint16_t(op), opnd0 );
                 break;

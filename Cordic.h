@@ -534,6 +534,7 @@ public:
     void destructed( const T& x ) const;                          // so we can log destruction of x
     T&   assign( T& x, const T& y ) const;                        // x = y  (this exists so we can log assignments)
     T&   pop_value( T& x, const T& y ) const;                     // x = y  (where y is top of stack for logging)
+    bool pop_bool( bool ) const;                                  // so we can log consumption of bool
 
     enum class OP
     {
@@ -541,6 +542,7 @@ public:
         to_flt,
         assign,
         pop_value,
+        pop_bool,
 
         abs,
         neg,
@@ -722,6 +724,7 @@ std::string Cordic<T,FLT>::op_to_str( uint16_t op )
         _ocase( to_flt )
         _ocase( assign )
         _ocase( pop_value )
+        _ocase( pop_bool )
 
         _ocase( abs )
         _ocase( neg )
@@ -790,6 +793,10 @@ std::string Cordic<T,FLT>::op_to_str( uint16_t op )
 
 #define _log_1( op, opnd1 ) \
             if ( Cordic<T,FLT>::logger != nullptr ) Cordic<T,FLT>::logger->op1( uint16_t(Cordic<T,FLT>::OP::op), &opnd1 )
+#define _log_1i( op, opnd1 ) \
+            if ( Cordic<T,FLT>::logger != nullptr ) Cordic<T,FLT>::logger->op1( uint16_t(Cordic<T,FLT>::OP::op), opnd1 )
+#define _log_1b( op, opnd1 ) \
+            if ( Cordic<T,FLT>::logger != nullptr ) Cordic<T,FLT>::logger->op1( uint16_t(Cordic<T,FLT>::OP::op), opnd1 )
 #define _log_1f( op, opnd1 ) \
             if ( Cordic<T,FLT>::logger != nullptr ) Cordic<T,FLT>::logger->op1( uint16_t(Cordic<T,FLT>::OP::op), opnd1 )
 #define _log_2( op, opnd1, opnd2 ) \
@@ -1777,6 +1784,13 @@ inline T&   Cordic<T,FLT>::pop_value( T& x, const T& y ) const
 }
 
 template< typename T, typename FLT >
+inline bool Cordic<T,FLT>::pop_bool( bool b ) const
+{
+    _log_1i( pop_bool, b );
+    return b;
+}
+
+template< typename T, typename FLT >
 inline bool Cordic<T,FLT>::signbit( const T& x ) const                                     
 {
     return x < 0;
@@ -2115,48 +2129,56 @@ T Cordic<T,FLT>::rcbrt( const T& x ) const
 template< typename T, typename FLT >
 inline bool Cordic<T,FLT>::isgreater( const T& x, const T& y ) const
 {
+    _log_2( isgreater, x, y );
     return x > y;
 }
 
 template< typename T, typename FLT >
 inline bool Cordic<T,FLT>::isgreaterequal( const T& x, const T& y ) const
 {
+    _log_2( isgreaterequal, x, y );
     return x >= y;
 }
 
 template< typename T, typename FLT >
 inline bool Cordic<T,FLT>::isless( const T& x, const T& y ) const
 {
+    _log_2( isless, x, y );
     return x < y;
 }
 
 template< typename T, typename FLT >
 inline bool Cordic<T,FLT>::islessequal( const T& x, const T& y ) const
 {
+    _log_2( islessequal, x, y );
     return x <= y;
 }
 
 template< typename T, typename FLT >
 inline bool Cordic<T,FLT>::islessgreater( const T& x, const T& y ) const
 {
+    _log_2( islessgreater, x, y );
     return x < y || x > y;
 }
 
 template< typename T, typename FLT >
 inline bool Cordic<T,FLT>::isunordered( const T& x, const T& y ) const
 {
+    _log_2( isunordered, x, y );
     return !(x == y || x != y);
 }
 
 template< typename T, typename FLT >
 inline bool Cordic<T,FLT>::isunequal( const T& x, const T& y ) const
 {
+    _log_2( isunequal, x, y );
     return x != y;
 }
 
 template< typename T, typename FLT >
 inline bool Cordic<T,FLT>::isequal( const T& x, const T& y ) const
 {
+    _log_2( isequal, x, y );
     return x == y;
 }
 

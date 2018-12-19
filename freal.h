@@ -253,6 +253,7 @@ private:
     T                           v;              // this value encoded in type T
 
     static freal pop_value( const Cordic<T,FLT> * cordic, const T& encoded );   // pop value associated with last operation
+    static bool  pop_bool(  const Cordic<T,FLT> * cordic, bool );               // pop bool  associated with last operation 
 };
 
 // Well-Known std:xxx() Functions 
@@ -663,6 +664,14 @@ inline freal<T,FLT> freal<T,FLT>::pop_value( const Cordic<T,FLT> * cordic, const
     cordic->constructed( r.v );
     cordic->pop_value( r.v, encoded );
     return r;
+}
+
+template< typename T, typename FLT >              
+inline bool freal<T,FLT>::pop_bool( const Cordic<T,FLT> * cordic, bool b )
+{
+    cassert( cordic != nullptr, "pop_bool(cordic, b) called with null cordic" );
+    cordic->pop_bool( b );
+    return b;
 }
 
 //-----------------------------------------------------
@@ -1088,35 +1097,35 @@ inline freal<T,FLT> freal<T,FLT>::rcbrt( void ) const
 
 template< typename T, typename FLT >              
 inline bool freal<T,FLT>::isgreater( const freal<T,FLT>& b ) const                                    
-{ return c( b )->isgreater( v, b.v );   }
+{ return( c( b ), pop_bool( cordic, cordic->isgreater( v, b.v ) ) ); }
 
 template< typename T, typename FLT >              
 inline bool freal<T,FLT>::isgreaterequal( const freal<T,FLT>& b ) const                                    
-{ return c( b )->isgreaterequal( v, b.v );   }
+{ return( c( b ), pop_bool( cordic, cordic->isgreaterequal( v, b.v ) ) ); }
 
 template< typename T, typename FLT >              
 inline bool freal<T,FLT>::isless( const freal<T,FLT>& b ) const                                    
-{ return c( b )->isless( v, b.v );   }
+{ return( c( b ), pop_bool( cordic, cordic->isless( v, b.v ) ) ); }
 
 template< typename T, typename FLT >              
 inline bool freal<T,FLT>::islessequal( const freal<T,FLT>& b ) const                                    
-{ return c( b )->islessequal( v, b.v );   }
+{ return( c( b ), pop_bool( cordic, cordic->islessequal( v, b.v ) ) ); }
 
 template< typename T, typename FLT >              
 inline bool freal<T,FLT>::islessgreater( const freal<T,FLT>& b ) const                                    
-{ return c( b )->islessgreater( v, b.v );   }
+{ return( c( b ), pop_bool( cordic, cordic->islessgreater( v, b.v ) ) ); }
 
 template< typename T, typename FLT >              
 inline bool freal<T,FLT>::isunordered( const freal<T,FLT>& b ) const                                    
-{ return c( b )->isunordered( v, b.v );   }
+{ return( c( b ), pop_bool( cordic, cordic->isunordered( v, b.v ) ) ); }
 
 template< typename T, typename FLT >              
 inline bool freal<T,FLT>::isunequal( const freal<T,FLT>& b ) const                                    
-{ return c( b )->isunequal( v, b.v );   }
+{ return( c( b ), pop_bool( cordic, cordic->isunequal( v, b.v ) ) ); }
 
 template< typename T, typename FLT >              
 inline bool freal<T,FLT>::isequal( const freal<T,FLT>& b ) const                                    
-{ return c( b )->isequal( v, b.v );   }
+{ return( c( b ), pop_bool( cordic, cordic->isequal( v, b.v ) ) ); }
 
 template< typename T, typename FLT >              
 inline freal<T,FLT> freal<T,FLT>::fdim( const freal<T,FLT>& b ) const                                                    

@@ -51,14 +51,15 @@ public:
 
     // log operations
     //
-    virtual void op1( uint16_t op, const T * opnd1 );
-    virtual void op1( uint16_t op, const T&  opnd1 );
-    virtual void op1( uint16_t op, const FLT&opnd1 );
-    virtual void op2( uint16_t op, const T * opnd1, const T *  opnd2 );
-    virtual void op2( uint16_t op, const T * opnd1, const T&   opnd2 );
-    virtual void op2( uint16_t op, const T * opnd1, const FLT& opnd2 );
-    virtual void op3( uint16_t op, const T * opnd1, const T *  opnd2, const T * opnd3 );
-    virtual void op4( uint16_t op, const T * opnd1, const T *  opnd2, const T * opnd3, const T * opnd4 );
+    virtual void op1( uint16_t op, const T *  opnd1 );
+    virtual void op1( uint16_t op, const T&   opnd1 );
+    virtual void op1( uint16_t op, const bool opnd1 );
+    virtual void op1( uint16_t op, const FLT& opnd1 );
+    virtual void op2( uint16_t op, const T *  opnd1, const T *  opnd2 );
+    virtual void op2( uint16_t op, const T *  opnd1, const T&   opnd2 );
+    virtual void op2( uint16_t op, const T *  opnd1, const FLT& opnd2 );
+    virtual void op3( uint16_t op, const T *  opnd1, const T *  opnd2, const T * opnd3 );
+    virtual void op4( uint16_t op, const T *  opnd1, const T *  opnd2, const T * opnd3, const T * opnd4 );
 
 private:
     op_to_str_fn_t      op_to_str;
@@ -154,6 +155,14 @@ inline void Logger<T,FLT>::op1( uint16_t op, const T * opnd1 )
 {
     if ( out_text ) {
         *out << "op1( " << op_to_str( op ) << ", " << opnd1 << " )\n";
+    }
+}
+
+template< typename T, typename FLT >
+inline void Logger<T,FLT>::op1( uint16_t op, bool opnd1 )
+{
+    if ( out_text ) {
+        *out << "op1b( " << op_to_str( op ) << ", 0x" << std::hex << int64_t(opnd1) << " )\n";
     }
 }
 
