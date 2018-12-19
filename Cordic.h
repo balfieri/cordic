@@ -1894,7 +1894,13 @@ inline T Cordic<T,FLT>::sub( const T& x, const T& y ) const
 template< typename T, typename FLT >
 inline T Cordic<T,FLT>::fma( const T& _x, const T& _y, const T& addend, bool do_reduce, bool can_log ) const
 {
-    if ( can_log ) _log_3( fma, _x, _y, addend );
+    if ( can_log ) {
+        if ( addend == 0 ) {
+            _log_2( mul, _x, _y );
+        } else {
+            _log_3( fma, _x, _y, addend );
+        }
+    }
     T x = _x;
     T y = _y;
     if ( debug ) std::cout << "fma begin: x_orig=" << to_flt(x) << " y_orig=" << to_flt(y) << " addend=" << to_flt(addend) << " do_reduce=" << do_reduce << "\n";
@@ -1982,7 +1988,13 @@ inline T Cordic<T,FLT>::rshift( const T& x, int rs ) const
 template< typename T, typename FLT >
 T Cordic<T,FLT>::fda( const T& _y, const T& _x, const T& addend, bool do_reduce, bool can_log ) const
 {
-    if ( can_log ) _log_3( fda, _y, _x, addend );
+    if ( can_log ) {
+        if ( addend == 0 ) {
+            _log_2( div, _x, _y );
+        } else {
+            _log_3( fda, _x, _y, addend );
+        }
+    }
     T x = _x;
     T y = _y;
     if ( debug ) std::cout << "fda begin: x_orig=" << to_flt(x) << " y_orig=" << to_flt(y) << " addend=" << to_flt(addend) << " do_reduce=" << do_reduce << "\n";
