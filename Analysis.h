@@ -190,19 +190,28 @@ static inline void _die( std::string msg )
 // Logger Method Overrides
 //-----------------------------------------------------
 template< typename T, typename FLT >
-void Analysis<T,FLT>::cordic_constructed( const void * cordic, uint32_t int_w, uint32_t frac_w, uint32_t guard_w, uint32_t n )
+void Analysis<T,FLT>::cordic_constructed( const void * cordic_ptr, uint32_t int_w, uint32_t frac_w, uint32_t guard_w, uint32_t n )
 {
-    (void)cordic;
-    (void)int_w;
-    (void)frac_w;
-    (void)guard_w;
-    (void)n;
+    CordicInfo info;
+    uint64_t cordic = uint64_t(cordic_ptr); 
+    info.is_alive   = true;
+    info.int_w      = int_w;
+    info.frac_w     = frac_w;
+    info.guard_w    = guard_w;
+    info.n          = n;
+
+    auto it = cordics.find( cordic );
+    cassert( it == cordics.end() || !it->second.is_alive, "Cordic reconstructed before previous was destructed" );
+    cordics[cordic] = info;
 }
 
 template< typename T, typename FLT >
-void Analysis<T,FLT>::cordic_destructed(  const void * cordic )
+void Analysis<T,FLT>::cordic_destructed( const void * cordic_ptr )
 {
-    (void)cordic;
+    uint64_t cordic = uint64_t(cordic_ptr); 
+    auto it = cordics.find( cordic );
+    cassert( it != cordics.end() && it->second.is_alive, "Cordic destructed before being constructed" );
+    it->second.is_alive = false;
 }
 
 template< typename T, typename FLT >
@@ -480,25 +489,19 @@ void Analysis<T,FLT>::parse( void )
         {
             case KIND::cordic_constructed:
             {
-                CordicInfo info;
-                uint64_t cordic = parse_addr( c );
-                info.is_alive   = true;
-                info.int_w      = parse_int( c );
-                info.frac_w     = parse_int( c );
-                info.guard_w    = parse_int( c );
-                info.n          = parse_int( c );
-                auto it = cordics.find( cordic );
-                cassert( it == cordics.end() || !it->second.is_alive, "Cordic reconstructed before previous was destructed" );
-                cordics[cordic] = info;
+                void *   cordic  = reinterpret_cast<void *>( parse_addr( c ) );
+                uint32_t int_w   = parse_int( c );
+                uint32_t frac_w  = parse_int( c );
+                uint32_t guard_w = parse_int( c );
+                uint32_t n       = parse_int( c );
+                cordic_constructed( cordic, int_w, frac_w, guard_w, n );
                 break;
             }
 
             case KIND::cordic_destructed:
             {
-                uint64_t cordic = parse_addr( c );
-                auto it = cordics.find( cordic );
-                cassert( it != cordics.end() && it->second.is_alive, "Cordic destructed before being constructed" );
-                it->second.is_alive = false;
+                void * cordic  = reinterpret_cast<void *>( parse_addr( c ) );
+                cordic_destructed( cordic );
                 break;
             }
 
