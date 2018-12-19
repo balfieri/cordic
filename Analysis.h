@@ -188,6 +188,44 @@ static inline void _die( std::string msg )
     exit( 1 );
 }
 
+template< typename T, typename FLT >
+Analysis<T,FLT>::Analysis( std::string _base_name ) : Logger<T,FLT>( Cordic<T,FLT>::op_to_str )
+{
+    base_name = _base_name;
+
+    in_text = true;  // for now
+    if ( in_text ) {
+        in = &std::cin;
+    }
+
+    // set up ops map
+    for( uint32_t o = 0; o < Cordic<T,FLT>::OP_cnt; o++ )
+    {
+        std::string name = Cordic<T,FLT>::op_to_str( o );
+        ops[name] = OP(o);
+    }
+
+    // set up kinds map
+    kinds["cordic_constructed"] = KIND::cordic_constructed;
+    kinds["cordic_destructed"]  = KIND::cordic_destructed;
+    kinds["enter"]              = KIND::enter;
+    kinds["leave"]              = KIND::leave;
+    kinds["constructed"]        = KIND::constructed;
+    kinds["destructed"]         = KIND::destructed;
+    kinds["op1"]                = KIND::op1;
+    kinds["op2"]                = KIND::op2;
+    kinds["op2i"]               = KIND::op2i;
+    kinds["op2f"]               = KIND::op2f;
+    kinds["op3"]                = KIND::op3;
+    kinds["op4"]                = KIND::op4;
+
+}
+
+template< typename T, typename FLT >
+Analysis<T,FLT>::~Analysis()
+{
+}
+
 //-----------------------------------------------------
 // Logger Method Overrides
 //-----------------------------------------------------
@@ -548,44 +586,6 @@ inline typename Analysis<T,FLT>::ValInfo Analysis<T,FLT>::val_stack_pop( void )
     cassert( val_stack_cnt > 0, "can't pop an empty val_stack" );
     //if ( debug ) std::cout << "    new stack depth=" << (val_stack_cnt-1) << "\n";
     return val_stack[--val_stack_cnt];
-}
-
-template< typename T, typename FLT >
-Analysis<T,FLT>::Analysis( std::string _base_name ) : Logger<T,FLT>( Cordic<T,FLT>::op_to_str )
-{
-    base_name = _base_name;
-
-    in_text = true;  // for now
-    if ( in_text ) {
-        in = &std::cin;
-    }
-
-    // set up ops map
-    for( uint32_t o = 0; o < Cordic<T,FLT>::OP_cnt; o++ )
-    {
-        std::string name = Cordic<T,FLT>::op_to_str( o );
-        ops[name] = OP(o);
-    }
-
-    // set up kinds map
-    kinds["cordic_constructed"] = KIND::cordic_constructed;
-    kinds["cordic_destructed"]  = KIND::cordic_destructed;
-    kinds["enter"]              = KIND::enter;
-    kinds["leave"]              = KIND::leave;
-    kinds["constructed"]        = KIND::constructed;
-    kinds["destructed"]         = KIND::destructed;
-    kinds["op1"]                = KIND::op1;
-    kinds["op2"]                = KIND::op2;
-    kinds["op2i"]               = KIND::op2i;
-    kinds["op2f"]               = KIND::op2f;
-    kinds["op3"]                = KIND::op3;
-    kinds["op4"]                = KIND::op4;
-
-}
-
-template< typename T, typename FLT >
-Analysis<T,FLT>::~Analysis()
-{
 }
 
 template< typename T, typename FLT >
