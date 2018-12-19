@@ -785,6 +785,7 @@ void Analysis<T,FLT>::print_stats( std::string basename, double scale_factor, co
     // And the totals.
     //--------------------------------------------------------
     fprintf( out, "\n\nTotals:\n" );
+    csv << "\n\n\"Totals:\"" << "\n";
     for( uint32_t i = 0; i < OP_cnt; i++ )
     {
         if ( total_cnt[i] != 0 ) {
