@@ -64,17 +64,19 @@ public:
     virtual void op3( uint16_t op, const T * opnd1, const T * opnd2, const T * opnd3 );
     virtual void op4( uint16_t op, const T * opnd1, const T * opnd2, const T * opnd3, const T * opnd4 );
 
-    void         parse( void );
-    void         print_stats( double scale_factor=1.0, const std::vector<std::string>& ignore_funcs=std::vector<std::string>() ) const;
+    using OP                         = typename Cordic<T,FLT>::OP;
+    static constexpr uint64_t OP_cnt = Cordic<T,FLT>::OP_cnt;
+
+    virtual void inc_op_cnt( OP op, uint32_t by=1 );
+
+    virtual void parse( void );
+    virtual void print_stats( double scale_factor=1.0, const std::vector<std::string>& ignore_funcs=std::vector<std::string>() ) const;
 
 private:
     std::string         base_name;
 
     std::istream *      in;
     bool                in_text;
-
-    using OP                         = typename Cordic<T,FLT>::OP;
-    static constexpr uint64_t OP_cnt = Cordic<T,FLT>::OP_cnt;
 
     struct FuncInfo
     {
@@ -148,7 +150,6 @@ private:
     void                stack_push( const FrameInfo& info );
     FrameInfo&          stack_top( void );
     void                stack_pop( void );
-    void                inc_op_cnt( OP op );
 
     void                val_stack_push( const ValInfo& val );
     ValInfo             val_stack_pop( void );
@@ -564,12 +565,12 @@ inline void Analysis<T,FLT>::stack_pop( void )
 }
 
 template< typename T, typename FLT >
-inline void Analysis<T,FLT>::inc_op_cnt( OP op )
+inline void Analysis<T,FLT>::inc_op_cnt( OP op, uint32_t by )
 {
     FrameInfo& frame = stack_top();
     //std::cout << "incr " << frame.func_name << " " << Cordic<T,FLT>::op_to_str( uint16_t(op) ) << "\n";
     FuncInfo& func = funcs[frame.func_name];
-    func.op_cnt[uint32_t(op)]++;
+    func.op_cnt[uint32_t(op)] += by;
 }
 
 template< typename T, typename FLT > 
