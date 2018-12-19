@@ -54,6 +54,7 @@ public:
     virtual void constructed( const T * v, const void * cordic );
     virtual void destructed(  const T * v, const void * cordic );
 
+    virtual void op(  uint16_t op, uint32_t opnd_cnt, const T * opnd[] );
     virtual void op1( uint16_t op, const T * opnd1 );
     virtual void op1( uint16_t op, const T&  opnd1 );
     virtual void op1( uint16_t op, const FLT&opnd1 );
@@ -155,7 +156,8 @@ private:
     static void         _skip_junk( char *& c );
     static std::string  parse_name( char *& c );
     static KIND         parse_kind( char *& c );
-    static uint64_t     parse_addr( char *& c );
+    static const void * parse_addr( char *& c );
+    static const T *    parse_val_addr( char *& c );
     static T            parse_int( char *& c );
     static FLT          parse_flt( char *& c );
 };
@@ -215,92 +217,199 @@ void Analysis<T,FLT>::cordic_destructed( const void * cordic_ptr )
 }
 
 template< typename T, typename FLT >
-void Analysis<T,FLT>::enter( const char * name )
+void Analysis<T,FLT>::enter( const char * _name )
 {
-    (void)name;
+    std::string name = _name;
+    auto it = funcs.find( name );
+    if ( it == funcs.end() ) {
+        func_names.push_back( name );       // for printouts
+        FuncInfo info;
+        funcs[name] = info;
+        it = funcs.find( name );
+        it->second.call_cnt = 0;
+        for( uint32_t i = 0; i < OP_cnt; i++ )
+        {
+            it->second.op_cnt[i] = 0;
+        }
+    } 
+    it->second.call_cnt++;
+    FrameInfo frame;
+    frame.func_name = name;
+    stack_push( frame );
 }
 
 template< typename T, typename FLT >
-void Analysis<T,FLT>::leave( const char * name )
+void Analysis<T,FLT>::leave( const char * _name )
 {
-    (void)name;
+    std::string name = _name;
+    auto it = funcs.find( name );
+    cassert( it != funcs.end(), "leave should have found function " + name );
+    FrameInfo& frame = stack_top();
+    cassert( frame.func_name == name, "trying to leave a routine that's not at the top of the stack: entered " + 
+                                      frame.func_name + " leaving " + name );
+    stack_pop();
 }
 
 template< typename T, typename FLT >
-void Analysis<T,FLT>::constructed( const T * v, const void * cordic )
+void Analysis<T,FLT>::constructed( const T * v, const void * cordic_ptr )
 {
-    (void)v;
-    (void)cordic;
+    uint64_t val    = reinterpret_cast<uint64_t>( v );
+    uint64_t cordic = reinterpret_cast<uint64_t>( cordic_ptr );
+    ValInfo info;
+    info.is_alive    = true;
+    info.is_assigned = false;
+    info.is_constant = false;
+    if ( cordic != 0 ) {
+        auto cit = cordics.find( cordic );
+        cassert( cit != cordics.end() && cit->second.is_alive, "val constructed using unknown cordic" );
+        info.cordic_i = cit->second.cordic_i;
+    } else {
+        info.cordic_i = size_t(-1);
+    }
+    auto vit = vals.find( val );
+    if ( vit == vals.end() ) {
+        vals[val] = info;
+    } else {
+        //cassert( !vit->second.is_alive, "val constructed before previous was desctructed" );
+        vit->second = info;
+    }
 }
 
 template< typename T, typename FLT >
-void Analysis<T,FLT>::destructed(  const T * v, const void * cordic )
+void Analysis<T,FLT>::destructed(  const T * v, const void * cordic_ptr )
 {
-    (void)v;
-    (void)cordic;
+    uint64_t val    = reinterpret_cast<uint64_t>( v );
+    uint64_t cordic = reinterpret_cast<uint64_t>( cordic_ptr );
+    auto it = vals.find( val );
+    cassert( it != vals.end() && it->second.is_alive, "val destructed before being constructed" );
+    it->second.is_alive = false;
 }
 
 template< typename T, typename FLT >
-void Analysis<T,FLT>::op1( uint16_t op, const T * opnd1 )
+void Analysis<T,FLT>::op( uint16_t op, uint32_t opnd_cnt, const T * opnd[] )
 {
-    (void)op;
+    inc_op_cnt( op );
+    for( uint32_t i = 0; i < opnd_cnt; i++ )
+    {
+        if ( !(i == 0 && op == OP::assign) &&
+             !(i == 1 && op == OP::sincos) &&
+             !(i == 2 && op == OP::sincos) &&
+             !(i == 1 && op == OP::sinhcosh) &&
+             !(i == 2 && op == OP::sinhcosh) ) {
+            auto it = vals.find( opnd[i] );
+            cassert( it != vals.end() && it->second.is_alive, "opnd[" + std::to_string(i) + "] does not exist" );
+            cassert( it->second.is_assigned, "opnd[" + std::to_string(i) + "] used when not previously assigned" );
+            if ( i == 1 && op == OP::assign ) vals[opnd[0]] = it->second;
+            if ( debug && it->second.is_constant ) {
+                std::cout << "    opnd[" + std::to_string(i) + "] is constant " << it->second.constant << "\n";
+            }
+        }
+    }
+    
+    // push result if not assign
+    uint32_t cnt = (op == OP::sincos || op == OP::sinhcosh) ? 2 : 
+                   (op == OP::assign)                       ? 0 : 1;
+    ValInfo val;
+    val.is_alive    = true;
+    val.is_assigned = true;
+    val.is_constant = false;
+    for ( uint32_t i = 0; i < cnt; i++ ) val_stack_push( val );
+}
+
+template< typename T, typename FLT >
+inline void Analysis<T,FLT>::op1( uint16_t _op, const T * opnd1 )
+{
+    op( _op, 1, &opnd1 );
+}
+
+template< typename T, typename FLT >
+inline void Analysis<T,FLT>::op1( uint16_t _op, const T& opnd1 )
+{
+    (void)_op;
     (void)opnd1;
+    _die( "op1i should not be used right now" );
 }
 
 template< typename T, typename FLT >
-void Analysis<T,FLT>::op1( uint16_t op, const T&  opnd1 )
+inline void Analysis<T,FLT>::op1( uint16_t _op, const FLT& opnd1 )
 {
-    (void)op;
-    (void)opnd1;
+    OP op = OP(_op);
+    cassert( op == OP::push_constant, "op1f allowed only for make_constant" );
+    inc_op_cnt( op );
+    ValInfo val;
+    val.is_alive    = true;
+    val.is_assigned = true;
+    val.is_constant = true;
+    val.constant    = opnd1;
+    val_stack_push( val );
 }
 
 template< typename T, typename FLT >
-void Analysis<T,FLT>::op1( uint16_t op, const FLT&opnd1 )
+inline void Analysis<T,FLT>::op2( uint16_t _op, const T * opnd1, const T * opnd2 )
 {
-    (void)op;
-    (void)opnd1;
+    const T * opnds[] = { opnd1, opnd2 };
+    op( _op, 2, opnds );
 }
 
 template< typename T, typename FLT >
-void Analysis<T,FLT>::op2( uint16_t op, const T * opnd1, const T * opnd2 )
+inline void Analysis<T,FLT>::op2( uint16_t _op, const T * opnd1, const T&  opnd2 )
 {
-    (void)op;
-    (void)opnd1;
-    (void)opnd2;
+    OP op = OP(_op);
+    cassert( op == OP::lshift || op == OP::rshift || op == OP::pop_value, "op2i allowed only for lshift/rshift/pop_value" );
+    inc_op_cnt( op );
+    auto it = vals.find( opnd1 );
+    cassert( it != vals.end() && it->second.is_alive, "opnd[0] does not exist" );
+    switch( op )
+    {
+        case OP::pop_value:
+        {
+            // pop result
+            it->second  = val_stack_pop();
+            it->second.encoded = opnd2;
+            break;
+        }
+
+        default:
+        {
+            // push result
+            ValInfo val;
+            val.is_alive    = true;
+            val.is_assigned = true;
+            val.is_constant = false;
+            val.encoded     = opnd2;
+            val_stack_push( val );
+            break;
+        }
+    }
 }
 
 template< typename T, typename FLT >
-void Analysis<T,FLT>::op2( uint16_t op, const T * opnd1, const T&  opnd2 )
+inline void Analysis<T,FLT>::op2( uint16_t op, const T * opnd1, const FLT& opnd2 ) 
 {
-    (void)op;
-    (void)opnd1;
-    (void)opnd2;
+    inc_op_cnt( op );
+    auto it = vals.find( opnd1 );
+    cassert( it != vals.end() && it->second.is_alive, "opnd1 does not exist" );
+    cassert( it->second.is_assigned,                  "opnd1 is used before being assigned" );
+    ValInfo val;
+    val.is_alive    = true;
+    val.is_assigned = true;
+    val.is_constant = false;
+    val.constant    = opnd2;   // save conversion to FLT
+    val_stack_push( val );
 }
 
 template< typename T, typename FLT >
-void Analysis<T,FLT>::op2( uint16_t op, const T * opnd1, const FLT& opnd2 ) {
-    (void)op;
-    (void)opnd1;
-    (void)opnd2;
-}
-
-template< typename T, typename FLT >
-void Analysis<T,FLT>::op3( uint16_t op, const T * opnd1, const T * opnd2, const T * opnd3 )
+inline void Analysis<T,FLT>::op3( uint16_t _op, const T * opnd1, const T * opnd2, const T * opnd3 )
 {
-    (void)op;
-    (void)opnd1;
-    (void)opnd2;
-    (void)opnd3;
+    const T * opnds[] = { opnd1, opnd2, opnd3 };
+    op( _op, 3, opnds );
 }
 
 template< typename T, typename FLT >
-void Analysis<T,FLT>::op4( uint16_t op, const T * opnd1, const T * opnd2, const T * opnd3, const T * opnd4 )
+inline void Analysis<T,FLT>::op4( uint16_t _op, const T * opnd1, const T * opnd2, const T * opnd3, const T * opnd4 )
 {
-    (void)op;
-    (void)opnd1;
-    (void)opnd2;
-    (void)opnd3;
-    (void)opnd4;
+    const T * opnds[] = { opnd1, opnd2, opnd3, opnd4 };
+    op( _op, 4, opnds );
 }
 
 //-----------------------------------------------------
@@ -367,11 +476,17 @@ inline typename Analysis<T,FLT>::KIND Analysis<T,FLT>::parse_kind( char *& c )
 }
 
 template< typename T, typename FLT >
-inline uint64_t Analysis<T,FLT>::parse_addr( char *& c )
+inline const void * Analysis<T,FLT>::parse_addr( char *& c )
 {
     std::string addr_s = parse_name( c );
     char * end;
-    return std::strtoull( addr_s.c_str(), &end, 16 );
+    return reinterpret_cast<const void *>( std::strtoull( addr_s.c_str(), &end, 16 ) );
+}
+
+template< typename T, typename FLT >
+inline const T * Analysis<T,FLT>::parse_val_addr( char *& c )
+{
+    return reinterpret_cast<const T *>( parse_addr( c ) );
 }
 
 template< typename T, typename FLT >
@@ -489,18 +604,18 @@ void Analysis<T,FLT>::parse( void )
         {
             case KIND::cordic_constructed:
             {
-                void *   cordic  = reinterpret_cast<void *>( parse_addr( c ) );
-                uint32_t int_w   = parse_int( c );
-                uint32_t frac_w  = parse_int( c );
-                uint32_t guard_w = parse_int( c );
-                uint32_t n       = parse_int( c );
+                const void * cordic  = parse_addr( c );
+                T            int_w   = parse_int( c );
+                T            frac_w  = parse_int( c );
+                T            guard_w = parse_int( c );
+                T            n       = parse_int( c );
                 cordic_constructed( cordic, int_w, frac_w, guard_w, n );
                 break;
             }
 
             case KIND::cordic_destructed:
             {
-                void * cordic  = reinterpret_cast<void *>( parse_addr( c ) );
+                const void * cordic  = parse_addr( c );
                 cordic_destructed( cordic );
                 break;
             }
@@ -508,68 +623,30 @@ void Analysis<T,FLT>::parse( void )
             case KIND::enter:
             {
                 std::string name = parse_name( c );
-                auto it = funcs.find( name );
-                if ( it == funcs.end() ) {
-                    func_names.push_back( name );       // for printouts
-                    FuncInfo info;
-                    funcs[name] = info;
-                    it = funcs.find( name );
-                    it->second.call_cnt = 0;
-                    for( uint32_t i = 0; i < OP_cnt; i++ )
-                    {
-                        it->second.op_cnt[i] = 0;
-                    }
-                } 
-                it->second.call_cnt++;
-                FrameInfo frame;
-                frame.func_name = name;
-                stack_push( frame );
+                enter( name.c_str() );
                 break;
             }
 
             case KIND::leave:
             {
                 std::string name = parse_name( c );
-                auto it = funcs.find( name );
-                cassert( it != funcs.end(), "leave should have found function " + name );
-                FrameInfo& frame = stack_top();
-                cassert( frame.func_name == name, "trying to leave a routine that's not at the top of the stack: entered " + 
-                                                  frame.func_name + " leaving " + name );
-                stack_pop();
+                leave( name.c_str() );
                 break;
             }
 
             case KIND::constructed:
             {
-                ValInfo info;
-                info.is_alive    = true;
-                info.is_assigned = false;
-                info.is_constant = false;
-                uint64_t val     = parse_addr( c );
-                uint64_t cordic  = parse_addr( c );
-                if ( cordic != 0 ) {
-                    auto cit = cordics.find( cordic );
-                    cassert( cit != cordics.end() && cit->second.is_alive, "val constructed using unknown cordic" );
-                    info.cordic_i = cit->second.cordic_i;
-                } else {
-                    info.cordic_i = size_t(-1);
-                }
-                auto vit = vals.find( val );
-                if ( vit == vals.end() ) {
-                    vals[val] = info;
-                } else {
-                    //cassert( !vit->second.is_alive, "val constructed before previous was desctructed" );
-                    vit->second = info;
-                }
+                const T    * val     = parse_val_addr( c );
+                const void * cordic  = parse_addr( c );
+                constructed( val, cordic );
                 break;
             }
 
             case KIND::destructed:
             {
-                uint64_t val = parse_addr( c );
-                auto it = vals.find( val );
-                cassert( it != vals.end() && it->second.is_alive, "val destructed before being constructed" );
-                it->second.is_alive = false;
+                const T    * val     = parse_val_addr( c );
+                const void * cordic  = parse_addr( c );
+                destructed( val, cordic );
                 break;
             }
 
@@ -579,62 +656,32 @@ void Analysis<T,FLT>::parse( void )
             case KIND::op4:
             {
                 std::string name = parse_name( c );
-                OP op = ops[name];
-                inc_op_cnt( op );
+                uint16_t o = uint16_t( ops[name] );
                 uint32_t opnd_cnt = uint32_t(kind) - uint32_t(KIND::op1) + 1;
-                uint64_t opnd[4];
+                const T * opnd[4];
                 for( uint32_t i = 0; i < opnd_cnt; i++ )
                 {
-                    opnd[i] = parse_addr( c );
-                    if ( !(i == 0 && op == OP::assign) &&
-                         !(i == 1 && op == OP::sincos) &&
-                         !(i == 2 && op == OP::sincos) &&
-                         !(i == 1 && op == OP::sinhcosh) &&
-                         !(i == 2 && op == OP::sinhcosh) ) {
-                        auto it = vals.find( opnd[i] );
-                        cassert( it != vals.end() && it->second.is_alive, name + " opnd[" + std::to_string(i) + "] does not exist" );
-                        cassert( it->second.is_assigned, name + " opnd[" + std::to_string(i) + "] used when not previously assigned" );
-                        if ( i == 1 && op == OP::assign ) vals[opnd[0]] = it->second;
-                        if ( debug && it->second.is_constant ) {
-                            std::cout << "    opnd[" + std::to_string(i) + "] is constant " << it->second.constant << "\n";
-                        }
-                    }
+                    opnd[i] = parse_val_addr( c );
                 }
-                
-                // push result if not assign
-                uint32_t cnt = (op == OP::sincos || op == OP::sinhcosh) ? 2 : 
-                               (op == OP::assign)                       ? 0 : 1;
-                ValInfo val;
-                val.is_alive    = true;
-                val.is_assigned = true;
-                val.is_constant = false;
-                for ( uint32_t i = 0; i < cnt; i++ ) val_stack_push( val );
+                op( uint16_t(o), opnd_cnt, opnd );
                 break;
             }
 
             case KIND::op1i:
             {
-                std::string name = parse_name( c );
+                std::string name  = parse_name( c );
+                T           opnd0 = parse_int( c );
                 OP op = ops[name];
-                inc_op_cnt( op );
-                uint32_t opnd_cnt = uint32_t(kind) - uint32_t(KIND::op1) + 1;
-                _die( "should not have gotten op1i " + name );
+                op1( op, opnd0 );
                 break;
             }
 
             case KIND::op1f:
             {
-                // push constant
-                std::string name = parse_name( c );
+                std::string name  = parse_name( c );
+                FLT         opnd0 = parse_flt( c );
                 OP op = ops[name];
-                inc_op_cnt( op );
-                cassert( op == OP::push_constant, "op1f allowed only for make_constant" );
-                ValInfo val;
-                val.is_alive    = true;
-                val.is_assigned = true;
-                val.is_constant = true;
-                val.constant    = parse_flt( c );
-                val_stack_push( val );
+                op1( uint16_t(op), opnd0 );
                 break;
             }
 
@@ -642,53 +689,19 @@ void Analysis<T,FLT>::parse( void )
             {
                 std::string name = parse_name( c );
                 OP op = ops[name];
-                inc_op_cnt( op );
-                cassert( op == OP::lshift || op == OP::rshift || op == OP::pop_value, "op2i allowed only for lshift/rshift/pop_value" );
-                uint64_t opnd0 = parse_addr( c );
-                T        opnd1 = parse_int( c );
-                auto it = vals.find( opnd0 );
-                cassert( it != vals.end() && it->second.is_alive, name + " opnd[0] does not exist" );
-                switch( op )
-                {
-                    case OP::pop_value:
-                    {
-                        // pop result
-                        it->second  = val_stack_pop();
-                        it->second.encoded = opnd1;
-                        break;
-                    }
-
-                    default:
-                    {
-                        // push result
-                        ValInfo val;
-                        val.is_alive    = true;
-                        val.is_assigned = true;
-                        val.is_constant = false;
-                        val.encoded     = opnd1;
-                        val_stack_push( val );
-                        break;
-                    }
-                }
+                const T * opnd0 = parse_val_addr( c );
+                T         opnd1 = parse_int( c );
+                op2( uint16_t(op), opnd0, opnd1 );
                 break;
             }
 
             case KIND::op2f:
             {
-                // push result
                 std::string name = parse_name( c );
                 OP op = ops[name];
-                inc_op_cnt( op );
-                uint64_t opnd0 = parse_addr( c );   
-                FLT      opnd1 = parse_flt( c );   
-                auto it = vals.find( opnd0 );
-                cassert( it != vals.end() && it->second.is_alive, name + " opnd[0] does not exist" );
-                cassert( it->second.is_assigned,                  name + " opnd[0] is used before being assigned" );
-                ValInfo val;
-                val.is_alive    = true;
-                val.is_assigned = true;
-                val.is_constant = false;
-                val_stack_push( val );
+                const T * opnd0 = parse_val_addr( c );   
+                FLT       opnd1 = parse_flt( c );   
+                op2( uint16_t(op), opnd0, opnd1 );
                 break;
             }
 
