@@ -459,7 +459,6 @@ public:
     //      -PI/2 <= z <= PI/2  (if z0 == 0)
     //
     void linear_vectoring( const T& x0, const T& y0, const T& z0, T& x, T& y, T& z ) const;
-    void linear_vectoring_xy( const T& x0, const T& y0, T& x, T& y ) const;   // if z not needed
 
     //-----------------------------------------------------
     // More Constants 
@@ -1381,6 +1380,13 @@ void Cordic<T,FLT>::circular_rotation( const T& x0, const T& y0, const T& z0, T&
         y = yi;
         z = zi;
     }
+
+    //-----------------------------------------------------
+    // circular rotation mode results after step n:
+    //      x = gain*(x0*cos(z0) - y0*sin(z0))          gain=1.64676...
+    //      y = gain*(y0*cos(z0) + x0*sin(z0))
+    //      z = 0
+    //-----------------------------------------------------
 }
 
 template< typename T, typename FLT >
@@ -1433,6 +1439,13 @@ void Cordic<T,FLT>::circular_vectoring( const T& x0, const T& y0, const T& z0, T
         y = yi;
         z = zi;
     }
+
+    //-----------------------------------------------------
+    // circular vectoring mode results after step n:
+    //      x = gain*sqrt(x0^2 + y0^2)                  gain=1.64676...
+    //      y = 0
+    //      z = z0 + atan( y0/x0 )
+    //-----------------------------------------------------
 }
 
 template< typename T, typename FLT >
@@ -1472,6 +1485,12 @@ void Cordic<T,FLT>::circular_vectoring_xy( const T& x0, const T& y0, T& x, T& y 
         x = xi;
         y = yi;
     }
+
+    //-----------------------------------------------------
+    // circular vectoring mode results after step n:
+    //      x = gain*sqrt(x0^2 + y0^2)                  gain=1.64676...
+    //      y = 0
+    //-----------------------------------------------------
 }
 
 template< typename T, typename FLT >
@@ -1526,6 +1545,13 @@ void Cordic<T,FLT>::hyperbolic_rotation( const T& x0, const T& y0, const T& z0, 
             i--;
         }
     }
+
+    //-----------------------------------------------------
+    // hyperbolic rotation mode results after step n:
+    //      x = gain*(x0*cosh(z0) + y0*sinh(z0))        gain=0.828159...
+    //      y = gain*(y0*cosh(z0) + x0*sinh(z0))
+    //      z = 0
+    //-----------------------------------------------------
 }
 
 template< typename T, typename FLT >
@@ -1585,6 +1611,13 @@ void Cordic<T,FLT>::hyperbolic_vectoring( const T& x0, const T& y0, const T& z0,
             i--;
         }
     }
+
+    //-----------------------------------------------------
+    // hyperbolic vectoring mode results after step n:
+    //      x = gain*sqrt(x0^2 - y0^2)                  gain=0.828159...
+    //      y = 0
+    //      z = z0 + atanh( y0/x0 )
+    //-----------------------------------------------------
 }
 
 template< typename T, typename FLT >
@@ -1631,6 +1664,12 @@ void Cordic<T,FLT>::hyperbolic_vectoring_xy( const T& x0, const T& y0, T& x, T& 
             i--;
         }
     }
+
+    //-----------------------------------------------------
+    // hyperbolic vectoring mode results after step n:
+    //      x = gain*sqrt(x0^2 - y0^2)                  gain=0.828159...
+    //      y = 0
+    //-----------------------------------------------------
 }
 
 template< typename T, typename FLT >
@@ -1674,6 +1713,13 @@ void Cordic<T,FLT>::linear_rotation( const T& x0, const T& y0, const T& z0, T& x
         y = yi;
         z = zi;
     }
+
+    //-----------------------------------------------------
+    // linear rotation mode results after step n:
+    //      x = x0
+    //      y = y0 + x0*z0
+    //      z = 0
+    //-----------------------------------------------------
 }
 
 template< typename T, typename FLT >
@@ -1719,40 +1765,13 @@ void Cordic<T,FLT>::linear_vectoring( const T& x0, const T& y0, const T& z0, T& 
         y = yi;
         z = zi;
     }
-}
 
-template< typename T, typename FLT >
-void Cordic<T,FLT>::linear_vectoring_xy( const T& x0, const T& y0, T& x, T& y ) const
-{
     //-----------------------------------------------------
-    // input ranges allowed:
-    //      -2      <= x0 <= 2
-    //      -2      <= y0 <= 2
+    // linear vectoring mode results after step n:
+    //      x = x0
+    //      y = 0
+    //      z = z0 + y0/x0
     //-----------------------------------------------------
-    const T TWO = impl->two;
-    if ( debug ) std::cout << "linear_vectoring_xy begin: x0,y0=[ " << to_flt(x0) << ", " << to_flt(y0) << "\n";
-    cassert( x0 >= -TWO && x0 <= TWO, "linear_vectoring_xy x0 must be in the range -2 .. 2" );
-    cassert( y0 >= -TWO && y0 <= TWO, "linear_vectoring_xy y0 must be in the range -2 .. 2" );
-    
-    //-----------------------------------------------------
-    // d = (y < 0) ? 1 : -1
-    // xi = x
-    // yi = y + d*(x >> i)
-    //-----------------------------------------------------
-    x = x0;
-    y = y0;
-    uint32_t n = impl->n;
-    for( uint32_t i = 0; i <= n; i++ )
-    {
-        if ( debug ) printf( "linear_vectoring_xy: i=%d xy=[%.30f,%.30f] test=%d\n", i, to_flt(x), to_flt(y), int(y < impl->zero) );
-        T yi;
-        if ( y < T(0) ) {
-            yi = y + (x >> i);
-        } else {
-            yi = y - (x >> i);
-        }
-        y = yi;
-    }
 }
 
 template< typename T, typename FLT >
