@@ -2100,7 +2100,8 @@ T Cordic<T,FLT>::rsqrt( const T& _x ) const
     T x = _x;
     bool sign = x < 0;
     if ( sign ) x = -x;
-    T r = exp( div( log( x ), -impl->two, true, false ) );              // TODO: mul by -0.5 constant
+    T log_div_m2 = -log( x, true, false ) >> 1;
+    T r = exp( log_div_m2, true, false );
     if ( sign ) r = -r;
     return r;
 }
@@ -2114,7 +2115,7 @@ inline T Cordic<T,FLT>::cbrt( const T& _x ) const
     bool sign = x < 0;
     if ( sign ) x = -x;
     const T THREE = impl->two | impl->one;
-    T r = exp( div( log( x ), THREE, true, false ) );                   // TODO: mul by inexact constant
+    T r = exp( div( log( x, true, false ), THREE, true, false ) );                   // TODO: mul by inexact constant
     if ( sign ) r = -r;
     return r;
 }
@@ -2128,7 +2129,7 @@ T Cordic<T,FLT>::rcbrt( const T& _x ) const
     bool sign = x < 0;
     if ( sign ) x = -x;
     const T THREE = impl->two | impl->one;
-    T r = exp( div( log( x ), -THREE, true, false ) );                  // TODO: mul by inexact constant
+    T r = exp( div( log( x, true, false ), -THREE, true, false ) );                  // TODO: mul by inexact constant
     return r;
 }
 
@@ -2235,7 +2236,7 @@ T Cordic<T,FLT>::exp( const T& _x, bool do_reduce, bool can_log ) const
     if ( impl->do_reduce ) {
         if ( debug ) std::cout << "exp mid: b=" << M_E << " x_orig=" << to_flt(_x) << " f=reduced_x=" << to_flt(x) << 
                                   " exp(f)=" << to_flt(xx) << " log(b)*log(i)=" << to_flt(factor) << "\n";
-        xx = mul( xx, factor, do_reduce, false );
+        xx = mul( xx, factor, do_reduce, false );   // TODO: don't do this if didn't need to
     }
     if ( debug ) std::cout << "exp: x_orig=" << to_flt(_x) << " reduced_x=" << to_flt(x) << " exp=" << to_flt(xx) << "\n";
     return xx;
@@ -2617,7 +2618,7 @@ inline T Cordic<T,FLT>::hypoth( const T& x, const T& y, bool do_reduce, bool can
     if ( can_log ) _log_2( hypoth, x, y );
     if ( debug ) std::cout << "hypoth begin: x=" << to_flt(x) << " y=" << to_flt(y) << " do_reduce=" << impl->do_reduce << "\n";
     cassert( x >= y, "hypoth x must be >= y" );
-    return sqrt( mul( x+y, x-y, do_reduce, false ), do_reduce, false );
+    return sqrt( mul( x+y, x-y, do_reduce, false ), do_reduce, false ); // TODO: go back to using CORDIC hyperbolic core
 }
 
 template< typename T, typename FLT >
