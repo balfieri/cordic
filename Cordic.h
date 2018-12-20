@@ -162,9 +162,9 @@ public:
 
     // elementary functions
     T    sqrt( const T& x ) const;                                        // hypoth( x+1, x-1 ) / 2
-    T    rsqrt( const T& x ) const;                                       // 1/sqrt 
-    T    cbrt( const T& x ) const;                                        // x^(1/3)  (but x can be negative)
-    T    rcbrt( const T& x ) const;                                       // 1/cbrt
+    T    rsqrt( const T& x ) const;                                       // x^(-1/2) = exp(log(x)/-2)
+    T    cbrt( const T& x ) const;                                        // x^(1/3)  = exp(log(x)/3)
+    T    rcbrt( const T& x ) const;                                       // x^(-1/3) = exp(log(x)/-3)
 
     T    exp( const T& x ) const;                                         // e^x
     T    expm1( const T& x ) const;                                       // e^x - 1
