@@ -2093,19 +2093,22 @@ inline T Cordic<T,FLT>::sqrt( const T& x ) const
 }
 
 template< typename T, typename FLT >
-T Cordic<T,FLT>::rsqrt( const T& x ) const
+T Cordic<T,FLT>::rsqrt( const T& _x ) const
 { 
-    _log_1( rsqrt, x );
-    if ( debug ) std::cout << "rsqrt begin: x_orig=" << to_flt(x) << " do_reduce=" << impl->do_reduce << "\n";
-    cassert( x != 0, "rsqrt x must not be 0" );
-
-    // There might be a better way, but exp(-log(x)/2) is probably not it
-    return div( impl->one, sqrt( x ), true, false );
+    // x^(-1/2) = exp( log(x) / -2 );
+    _log_1( rsqrt, _x );
+    T x = _x;
+    bool sign = x < 0;
+    if ( sign ) x = -x;
+    T r = exp( div( log( x ), -impl->two, true, false ) );
+    if ( sign ) r = -r;
+    return r;
 }
 
 template< typename T, typename FLT >
 inline T Cordic<T,FLT>::cbrt( const T& _x ) const
 { 
+    // x^(1/3) = exp( log(x) / 3 );
     _log_1( cbrt, _x );
     T x = _x;
     bool sign = x < 0;
@@ -2117,13 +2120,16 @@ inline T Cordic<T,FLT>::cbrt( const T& _x ) const
 }
 
 template< typename T, typename FLT >
-T Cordic<T,FLT>::rcbrt( const T& x ) const
+T Cordic<T,FLT>::rcbrt( const T& _x ) const
 { 
-    _log_1( rcbrt, x );
-    if ( debug ) std::cout << "rcbrt begin: x_orig=" << to_flt(x) << " do_reduce=" << impl->do_reduce << "\n";
-
-    // There might be a better way, but exp(-log(x)/3) is probably not it
-    return div( impl->one, cbrt( x ), true, false );
+    // x^(-1/3) = exp( log(x) / -3 );
+    _log_1( rcbrt, _x );
+    T x = _x;
+    bool sign = x < 0;
+    if ( sign ) x = -x;
+    const T THREE = impl->two | impl->one;
+    T r = exp( div( log( x ), -THREE, true, false ) );  
+    return r;
 }
 
 template< typename T, typename FLT >
