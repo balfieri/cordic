@@ -160,6 +160,8 @@ private:
     void                val_stack_push( const ValInfo& val );
     ValInfo             val_stack_pop( void );
 
+    void                calc_int_w_used( ValInfo& val );
+
     static void         _skip_junk( char *& c );
     static std::string  parse_name( char *& c );
     static KIND         parse_kind( char *& c );
@@ -417,7 +419,7 @@ inline void Analysis<T,FLT>::op2( uint16_t _op, const T * opnd1, const T * opnd2
 }
 
 template< typename T, typename FLT >
-inline void calc_int_w_used( ValInfo& val )
+inline void Analysis<T,FLT>::calc_int_w_used( ValInfo& val )
 {
     // calculate number of bits needed to hold integer part of abs(x)
     T x = val.encoded;
