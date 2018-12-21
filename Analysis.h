@@ -882,6 +882,7 @@ void Analysis<T,FLT>::print_stats( std::string basename, double scale_factor, co
                     csv << "\"" << Cordic<T,FLT>::op_to_str( i ) << "\", " << avg << ", " << cnt << ", " << scaled_cnt << "\n";
                 } else {
                     fprintf( out, "    %s:\n", Cordic<T,FLT>::op_to_str( i ).c_str() );
+                    fprintf( out, "        %-50s: %lld\n", "Total op count", cnt );
                     fprintf( out, "        %-50s: %lld\n", "Total operand count", func.opnd_cnt[i] );
                     fprintf( out, "        %-50s: %lld\n", "Total operands that were constants", func.opnd_is_const_cnt[i] );
                     fprintf( out, "        %-50s: %lld\n", "Total times all operands were constants", func.opnd_all_are_const_cnt[i] );
@@ -924,6 +925,7 @@ void Analysis<T,FLT>::print_stats( std::string basename, double scale_factor, co
                 uint64_t cnt = total_op_cnt[i];
                 uint64_t scaled_cnt = double(cnt) * scale_factor + 0.5;
                 fprintf( out, "    %s:\n", Cordic<T,FLT>::op_to_str( i ).c_str() );
+                fprintf( out, "        %-50s: %lld\n", "Total op count", total_op_cnt[i] );
                 fprintf( out, "        %-50s: %lld\n", "Total operand count", total_opnd_cnt[i] );
                 fprintf( out, "        %-50s: %lld\n", "Total operands that were constants", total_opnd_is_const_cnt[i] );
                 fprintf( out, "        %-50s: %lld\n", "Total times all operands were constants", total_opnd_all_are_const_cnt[i] );
