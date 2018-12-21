@@ -102,15 +102,19 @@ private:
 
     struct ValInfo
     {
-        bool    is_alive;
-        bool    is_assigned;
-        size_t  cordic_i;
-        size_t  opnd_i[3];
-        T       encoded;
-        bool    is_constant;
-        FLT     constant;
-        FLT     min;
-        FLT     max;
+        bool     is_alive;
+        bool     is_assigned;
+        size_t   cordic_i;
+        uint32_t int_w;
+        uint32_t frac_w;
+        uint32_t guard_w;
+        size_t   opnd_i[3];
+        T        encoded;
+        uint32_t encoded_int_w_used;
+        bool     is_constant;
+        FLT      constant;
+        FLT      min;
+        FLT      max;
     };
 
     enum class KIND
@@ -307,8 +311,14 @@ void Analysis<T,FLT>::constructed( const T * v, const void * cordic_ptr )
         auto cit = cordics.find( cordic );
         cassert( cit != cordics.end() && cit->second.is_alive, "val constructed using unknown cordic" );
         info.cordic_i = cit->second.cordic_i;
+        info.int_w    = cit->second.int_w;
+        info.frac_w   = cit->second.frac_w;
+        info.guard_w  = cit->second.guard_w;
     } else {
         info.cordic_i = size_t(-1);
+        info.int_w    = 0;
+        info.frac_w   = 0;
+        info.guard_w  = 0;
     }
     auto vit = vals.find( val );
     if ( vit == vals.end() ) {
@@ -407,6 +417,26 @@ inline void Analysis<T,FLT>::op2( uint16_t _op, const T * opnd1, const T * opnd2
 }
 
 template< typename T, typename FLT >
+inline void calc_int_w_used( ValInfo& val )
+{
+    // calculate number of bits needed to hold integer part of abs(x)
+    T x = val.encoded;
+    if ( x < T(0) ) x = -x;
+    bool is_frac_zero = (x & ((T(1) << (val.frac_w+val.guard_w)) - 1)) != T(0);
+    x >>= val.frac_w + val.guard_w;
+    if ( !is_frac_zero ) x++;
+
+    // ceil(log2(x))
+    uint32_t lg2 = 0;
+    while( x != T(0) )
+    {
+        lg2++;
+        x >>= 1;
+    }
+    val.encoded_int_w_used = lg2;
+}
+
+template< typename T, typename FLT >
 inline void Analysis<T,FLT>::op2( uint16_t _op, const T * opnd1, const T& opnd2 )
 {
     OP op = OP(_op);
@@ -421,6 +451,7 @@ inline void Analysis<T,FLT>::op2( uint16_t _op, const T * opnd1, const T& opnd2 
             // pop result
             it->second  = val_stack_pop();
             it->second.encoded = opnd2;
+            calc_int_w_used( it->second );
             break;
         }
 
@@ -432,6 +463,7 @@ inline void Analysis<T,FLT>::op2( uint16_t _op, const T * opnd1, const T& opnd2 
             val.is_assigned = true;
             val.is_constant = false;
             val.encoded     = opnd2;
+            calc_int_w_used( val );
             val_stack_push( val );
             break;
         }
