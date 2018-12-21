@@ -291,9 +291,11 @@ void Analysis<T,FLT>::enter( const char * _name )
             it->second.op_cnt[i] = 0;
             it->second.opnd_cnt[i] = 0;
             it->second.opnd_is_const_cnt[i] = 0;
+            it->second.opnd_all_are_const_cnt[i] = 0;
             for( uint32_t j = 0; j < (INT_W_MAX+1); j++ )
             {
                 it->second.opnd_int_w_used_cnt[i][j] = 0;
+                it->second.opnd_max_int_w_used_cnt[i][j] = 0;
             }
         }
     } 
@@ -832,47 +834,95 @@ void Analysis<T,FLT>::print_stats( std::string basename, double scale_factor, co
     std::string out_name = basename + ".out";
     FILE * out = fopen( out_name.c_str(), "w" );
     std::ofstream csv( basename + ".csv", std::ofstream::out );
-    uint64_t total_cnt[OP_cnt];
-    for( uint32_t i = 0; i < OP_cnt; i++ ) total_cnt[i] = 0;
-
-    for( auto nit = func_names.begin(); nit != func_names.end(); nit++ )
-    {
-        if ( func_ignored.find( *nit ) != func_ignored.end() ) continue;
-        auto it = funcs.find( *nit );
-        const FuncInfo& func = it->second;
-        fprintf( out, "\n%-44s: %8lld calls\n", it->first.c_str(), it->second.call_cnt );
-        csv << "\n\"" << it->first + "\", " << it->second.call_cnt << "\n";
-        for( uint32_t i = 0; i < OP_cnt; i++ )
+    uint64_t total_op_cnt[OP_cnt];
+    uint64_t total_opnd_cnt[OP_cnt];
+    uint64_t total_opnd_is_const_cnt[OP_cnt];                     
+    uint64_t total_opnd_all_are_const_cnt[OP_cnt];               
+    uint64_t total_opnd_int_w_used_cnt[OP_cnt][INT_W_MAX+1];    
+    uint64_t total_opnd_max_int_w_used_cnt[OP_cnt][INT_W_MAX+1];
+    for( uint32_t i = 0; i < OP_cnt; i++ ) 
+    { 
+        total_op_cnt[i] = 0;
+        total_opnd_cnt[i] = 0;
+        total_opnd_is_const_cnt[i] = 0;
+        total_opnd_all_are_const_cnt[i] = 0;
+        for( uint32_t j = 0; j < (INT_W_MAX+1); j++ )
         {
-            OP op = OP(i);
-            if ( op == OP::push_constant || op == OP::assign || op == OP::pop_value || op == OP::pop_bool ) continue; // consume no hardware
+            total_opnd_int_w_used_cnt[i][j] = 0;
+            total_opnd_max_int_w_used_cnt[i][j] = 0;
+        }
+    }
+    for( uint32_t for_opnds = 0; for_opnds < 2; for_opnds++ )
+    {
+        fprintf( out, for_opnds ? "\nOPERAND COUNTS:\n" : "\nOP COUNTS:\n" );
+        for( auto nit = func_names.begin(); nit != func_names.end(); nit++ )
+        {
+            if ( func_ignored.find( *nit ) != func_ignored.end() ) continue;
+            auto it = funcs.find( *nit );
+            const FuncInfo& func = it->second;
+            if ( !for_opnds ) {
+                fprintf( out, "\n%-44s: %8lld calls\n", it->first.c_str(), it->second.call_cnt );
+                csv << "\n\"" << it->first + "\", " << it->second.call_cnt << "\n";
+            } else {
+                fprintf( out, "\n%s:\n", it->first.c_str() );
+            }
+            for( uint32_t i = 0; i < OP_cnt; i++ )
+            {
+                OP op = OP(i);
+                if ( op == OP::push_constant || op == OP::assign || op == OP::pop_value || op == OP::pop_bool ) continue; // consume no hardware
 
-            uint64_t cnt = func.op_cnt[i];
-            if ( cnt != 0 ) {
-                total_cnt[i] += cnt;
-                double avg = double(cnt) / double(it->second.call_cnt);
+                uint64_t cnt = func.op_cnt[i];
+                if ( cnt == 0 ) continue;
+
+                if ( !for_opnds ) {
+                    total_op_cnt[i] += cnt;
+                    double avg = double(cnt) / double(it->second.call_cnt);
+                    uint64_t scaled_cnt = double(cnt) * scale_factor + 0.5;
+                    fprintf( out, "    %-40s: %8.1f/call   %10lld total   %10lld scaled_total\n", Cordic<T,FLT>::op_to_str( i ).c_str(), avg, cnt, scaled_cnt );
+                    csv << "\"" << Cordic<T,FLT>::op_to_str( i ) << "\", " << avg << ", " << cnt << ", " << scaled_cnt << "\n";
+                } else {
+                    fprintf( out, "    %s:\n", Cordic<T,FLT>::op_to_str( i ).c_str() );
+                    fprintf( out, "        %-50s: %lld\n", "Total operand count", func.opnd_cnt[i] );
+                    fprintf( out, "        %-50s: %lld\n", "Total operands that were constants", func.opnd_is_const_cnt[i] );
+                    fprintf( out, "        %-50s: %lld\n", "Total times all operands were constants", func.opnd_all_are_const_cnt[i] );
+                    total_opnd_cnt[i] += func.opnd_cnt[i];
+                    total_opnd_is_const_cnt[i] += func.opnd_is_const_cnt[i];
+                    total_opnd_all_are_const_cnt[i] += func.opnd_all_are_const_cnt[i];
+                }
+            }
+        }
+
+        //--------------------------------------------------------
+        // And the totals.
+        //--------------------------------------------------------
+        if ( !for_opnds ) {
+            fprintf( out, "\n\nOP Totals:\n" );
+            csv << "\n\n\"Totals:\"" << "\n";
+            for( uint32_t i = 0; i < OP_cnt; i++ )
+            {
+                if ( total_op_cnt[i] == 0 ) continue;
+
+                uint64_t cnt = total_op_cnt[i];
                 uint64_t scaled_cnt = double(cnt) * scale_factor + 0.5;
-                fprintf( out, "    %-40s: %8.1f/call   %10lld total   %10lld scaled_total\n", Cordic<T,FLT>::op_to_str( i ).c_str(), avg, cnt, scaled_cnt );
-                csv << "\"" << Cordic<T,FLT>::op_to_str( i ) << "\", " << avg << ", " << cnt << ", " << scaled_cnt << "\n";
+                fprintf( out, "    %-40s:  %10lld   %10lld\n", Cordic<T,FLT>::op_to_str( i ).c_str(), cnt, scaled_cnt );
+                csv << "\"" << Cordic<T,FLT>::op_to_str( i ) << "\", " << cnt << ", " << scaled_cnt << "\n";
+            }
+        } else {
+            fprintf( out, "\n\nOPND Totals:\n" );
+            for( uint32_t i = 0; i < OP_cnt; i++ )
+            {
+                if ( total_op_cnt[i] == 0 ) continue;
+
+                uint64_t cnt = total_op_cnt[i];
+                uint64_t scaled_cnt = double(cnt) * scale_factor + 0.5;
+                fprintf( out, "    %s:\n", Cordic<T,FLT>::op_to_str( i ).c_str() );
+                fprintf( out, "        %-50s: %lld\n", "Total operand count", total_opnd_cnt[i] );
+                fprintf( out, "        %-50s: %lld\n", "Total operands that were constants", total_opnd_is_const_cnt[i] );
+                fprintf( out, "        %-50s: %lld\n", "Total times all operands were constants", total_opnd_all_are_const_cnt[i] );
             }
         }
     }
 
-    //--------------------------------------------------------
-    // And the totals.
-    //--------------------------------------------------------
-    fprintf( out, "\n\nTotals:\n" );
-    csv << "\n\n\"Totals:\"" << "\n";
-    for( uint32_t i = 0; i < OP_cnt; i++ )
-    {
-        if ( total_cnt[i] != 0 ) {
-            uint64_t cnt = total_cnt[i];
-            uint64_t scaled_cnt = double(cnt) * scale_factor + 0.5;
-            fprintf( out, "    %-40s:  %10lld   %10lld\n", Cordic<T,FLT>::op_to_str( i ).c_str(), cnt, scaled_cnt );
-            csv << "\"" << Cordic<T,FLT>::op_to_str( i ) << "\", " << cnt << ", " << scaled_cnt << "\n";
-        }
-    }
-    
     fclose( out );
     csv.close();
     std::cout << "\nWrote stats to " + basename + ".{out,csv}\n";
