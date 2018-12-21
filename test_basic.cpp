@@ -21,6 +21,7 @@
 // test_basic.cpp - basic black-box test of Cordic.h math functions
 //
 #include "Cordic.h"
+#include "Analysis.h"
 #include "freal.h"                                      // not used yet, just here to test build
 #include "mpint.h"
 

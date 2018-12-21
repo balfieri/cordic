@@ -83,11 +83,13 @@ private:
 
     struct FuncInfo
     {
-        uint64_t call_cnt;                              // number of enters for this function
-        uint64_t op_cnt[OP_cnt];                        // total op counts from all calls
-        uint64_t opnd_cnt[OP_cnt];                      // total number of operands per OP
-        uint64_t opnd_is_const_cnt[OP_cnt];             // total number of operands per OP that are constants
-        uint64_t opnd_int_w_used_cnt[OP_cnt][INT_W_MAX+1]; // for each op, total number of operands that use each int_w
+        uint64_t call_cnt;                                      // number of enters for this function
+        uint64_t op_cnt[OP_cnt];                                // total op counts from all calls
+        uint64_t opnd_cnt[OP_cnt];                              // total number of operands per OP
+        uint64_t opnd_is_const_cnt[OP_cnt];                     // total number of operands per OP that are constants
+        uint64_t opnd_all_are_const_cnt[OP_cnt];                // same but only if all operands to OP are constants
+        uint64_t opnd_int_w_used_cnt[OP_cnt][INT_W_MAX+1];      // for each op, total number of operands that use each int_w
+        uint64_t opnd_max_int_w_used_cnt[OP_cnt][INT_W_MAX+1];  // same but using maximum int_w
     };
 
     struct FrameInfo
@@ -167,6 +169,7 @@ private:
 
     void                calc_int_w_used( ValInfo& val );
     void                inc_opnd_cnt( OP op, const ValInfo& val, uint32_t by=1 );
+    void                inc_all_opnd_cnt( OP op, bool all_are_const, uint32_t max_int_w_used, uint32_t by=1 );
 
     static void         _skip_junk( char *& c );
     static std::string  parse_name( char *& c );
@@ -358,6 +361,8 @@ void Analysis<T,FLT>::op( uint16_t _op, uint32_t opnd_cnt, const T * opnd[] )
 {
     OP op = OP(_op);
     inc_op_cnt( op );
+    uint32_t max_int_w_used = 0;
+    bool     all_are_const = true;
     for( uint32_t i = 0; i < opnd_cnt; i++ )
     {
         if ( !(i == 0 && op == OP::assign) &&
@@ -369,13 +374,17 @@ void Analysis<T,FLT>::op( uint16_t _op, uint32_t opnd_cnt, const T * opnd[] )
             cassert( it != vals.end() && it->second.is_alive, "opnd[" + std::to_string(i) + "] does not exist" );
             cassert( it->second.is_assigned, "opnd[" + std::to_string(i) + "] used when not previously assigned" );
             inc_opnd_cnt( op, it->second );
+            if ( it->second.encoded_int_w_used > max_int_w_used ) max_int_w_used = it->second.encoded_int_w_used;
+            all_are_const &= it->second.is_constant;
             if ( i == 1 && op == OP::assign ) vals[reinterpret_cast<uint64_t>(opnd[0])] = it->second;
             if ( debug && it->second.is_constant ) {
                 std::cout << "    opnd[" + std::to_string(i) + "] is constant " << it->second.constant << "\n";
             }
         }
     }
-    
+
+    inc_all_opnd_cnt( op, max_int_w_used, all_are_const );
+
     // push result if not assign
     uint32_t cnt = (op == OP::sincos || op == OP::sinhcosh) ? 2 : 
                    (op == OP::assign)                       ? 0 : 1;
@@ -645,6 +654,17 @@ inline void Analysis<T,FLT>::inc_opnd_cnt( OP op, const ValInfo& val, uint32_t b
     uint32_t int_w_used = val.encoded_int_w_used;
     if ( int_w_used > INT_W_MAX ) int_w_used = INT_W_MAX;
     func.opnd_int_w_used_cnt[op_i][int_w_used] += by;
+}
+
+template< typename T, typename FLT > 
+inline void Analysis<T,FLT>::inc_all_opnd_cnt( OP op, bool all_are_const, uint32_t max_int_w_used, uint32_t by )
+{
+    FrameInfo& frame = stack_top();
+    FuncInfo& func = funcs[frame.func_name];
+    uint16_t op_i = uint16_t(op);
+    if ( all_are_const ) func.opnd_all_are_const_cnt[op_i] += by;
+    if ( max_int_w_used > INT_W_MAX ) max_int_w_used = INT_W_MAX;
+    func.opnd_max_int_w_used_cnt[op_i][max_int_w_used] += by;
 }
 
 template< typename T, typename FLT > 
