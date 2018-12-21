@@ -385,7 +385,7 @@ void Analysis<T,FLT>::op( uint16_t _op, uint32_t opnd_cnt, const T * opnd[] )
         }
     }
 
-    inc_all_opnd_cnt( op, max_int_w_used, all_are_const );
+    inc_all_opnd_cnt( op, all_are_const, max_int_w_used );
 
     // push result if not assign
     uint32_t cnt = (op == OP::sincos || op == OP::sinhcosh) ? 2 : 
@@ -888,6 +888,14 @@ void Analysis<T,FLT>::print_stats( std::string basename, double scale_factor, co
                     total_opnd_cnt[i] += func.opnd_cnt[i];
                     total_opnd_is_const_cnt[i] += func.opnd_is_const_cnt[i];
                     total_opnd_all_are_const_cnt[i] += func.opnd_all_are_const_cnt[i];
+                    for( uint32_t w = 0; w <= INT_W_MAX; w++ )
+                    {
+                        uint64_t wcnt = func.opnd_int_w_used_cnt[i][w]; 
+                        if ( wcnt == 0 ) continue;
+                        std::string s = "Total operands that fit into " + std::to_string(w) + " integer bits";
+                        fprintf( out, "        %-50s: %lld\n", s.c_str(), wcnt );
+                        total_opnd_int_w_used_cnt[i][w] += wcnt;
+                    }
                 }
             }
         }
@@ -919,6 +927,13 @@ void Analysis<T,FLT>::print_stats( std::string basename, double scale_factor, co
                 fprintf( out, "        %-50s: %lld\n", "Total operand count", total_opnd_cnt[i] );
                 fprintf( out, "        %-50s: %lld\n", "Total operands that were constants", total_opnd_is_const_cnt[i] );
                 fprintf( out, "        %-50s: %lld\n", "Total times all operands were constants", total_opnd_all_are_const_cnt[i] );
+                for( uint32_t w = 0; w <= INT_W_MAX; w++ )
+                {
+                    uint64_t wcnt = total_opnd_int_w_used_cnt[i][w]; 
+                    if ( wcnt == 0 ) continue;
+                    std::string s = "Total operands that fit into " + std::to_string(w) + " integer bits";
+                    fprintf( out, "        %-50s: %lld\n", s.c_str(), wcnt );
+                }
             }
         }
     }
