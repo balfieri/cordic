@@ -33,9 +33,12 @@ static constexpr uint32_t debug = DEBUG_LEVEL;
 static constexpr uint32_t debug = 0;
 #endif
 
+#ifdef NO_ASSERT
+#define cassert(expr, msg)
+#else
 #define cassert(expr, msg) if ( !(expr) ) \
                 { std::cout << "ERROR: assertion failure: " << (msg) << " at " << __FILE__ << ":" << __LINE__ << "\n"; exit( 1 ); }
-
+#endif
 
 // T      = some signed integer type that can hold fixed-point values (default is int64_t)
 // FLT    = some floating-point type that can hold constants of the desired precision (default is double)
