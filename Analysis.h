@@ -79,10 +79,15 @@ private:
     std::istream *      in;
     bool                in_text;
 
+    static constexpr uint32_t INT_W_MAX = 32;           // maximum int_w we expect
+
     struct FuncInfo
     {
         uint64_t call_cnt;                              // number of enters for this function
         uint64_t op_cnt[OP_cnt];                        // total op counts from all calls
+        uint64_t opnd_cnt[OP_cnt];                      // total number of operands per OP
+        uint64_t opnd_is_const_cnt[OP_cnt];             // total number of operands per OP that are constants
+        uint64_t opnd_int_w_used_cnt[OP_cnt][INT_W_MAX+1]; // for each op, total number of operands that use each int_w
     };
 
     struct FrameInfo
@@ -161,6 +166,7 @@ private:
     ValInfo             val_stack_pop( void );
 
     void                calc_int_w_used( ValInfo& val );
+    void                inc_opnd_cnt( OP op, const ValInfo& val, uint32_t by=1 );
 
     static void         _skip_junk( char *& c );
     static std::string  parse_name( char *& c );
@@ -280,6 +286,12 @@ void Analysis<T,FLT>::enter( const char * _name )
         for( uint32_t i = 0; i < OP_cnt; i++ )
         {
             it->second.op_cnt[i] = 0;
+            it->second.opnd_cnt[i] = 0;
+            it->second.opnd_is_const_cnt[i] = 0;
+            for( uint32_t j = 0; j < (INT_W_MAX+1); j++ )
+            {
+                it->second.opnd_int_w_used_cnt[i][j] = 0;
+            }
         }
     } 
     it->second.call_cnt++;
@@ -356,6 +368,7 @@ void Analysis<T,FLT>::op( uint16_t _op, uint32_t opnd_cnt, const T * opnd[] )
             auto it = vals.find( reinterpret_cast<uint64_t>( opnd[i] ) );
             cassert( it != vals.end() && it->second.is_alive, "opnd[" + std::to_string(i) + "] does not exist" );
             cassert( it->second.is_assigned, "opnd[" + std::to_string(i) + "] used when not previously assigned" );
+            inc_opnd_cnt( op, it->second );
             if ( i == 1 && op == OP::assign ) vals[reinterpret_cast<uint64_t>(opnd[0])] = it->second;
             if ( debug && it->second.is_constant ) {
                 std::cout << "    opnd[" + std::to_string(i) + "] is constant " << it->second.constant << "\n";
@@ -619,6 +632,19 @@ inline void Analysis<T,FLT>::inc_op_cnt( OP op, uint32_t by )
     FrameInfo& frame = stack_top();
     FuncInfo& func = funcs[frame.func_name];
     func.op_cnt[uint32_t(op)] += by;
+}
+
+template< typename T, typename FLT >
+inline void Analysis<T,FLT>::inc_opnd_cnt( OP op, const ValInfo& val, uint32_t by )
+{
+    FrameInfo& frame = stack_top();
+    FuncInfo& func = funcs[frame.func_name];
+    uint16_t op_i = uint16_t(op);
+    func.opnd_cnt[op_i] += by;
+    if ( val.is_constant ) func.opnd_is_const_cnt[op_i] += by;
+    uint32_t int_w_used = val.encoded_int_w_used;
+    if ( int_w_used > INT_W_MAX ) int_w_used = INT_W_MAX;
+    func.opnd_int_w_used_cnt[op_i][int_w_used] += by;
 }
 
 template< typename T, typename FLT > 
