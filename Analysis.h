@@ -422,11 +422,10 @@ template< typename T, typename FLT >
 inline void Analysis<T,FLT>::calc_int_w_used( ValInfo& val )
 {
     // calculate number of bits needed to hold integer part of abs(x)
+    cassert( (val.int_w + val.frac_w + val.guard_w) != 0, "calc_int_w_used: int_w/frac_w/guard_w are not defined" );
     T x = val.encoded;
     if ( x < T(0) ) x = -x;
-    bool is_frac_zero = (x & ((T(1) << (val.frac_w+val.guard_w)) - 1)) != T(0);
     x >>= val.frac_w + val.guard_w;
-    if ( !is_frac_zero ) x++;
 
     // ceil(log2(x))
     uint32_t lg2 = 0;
@@ -451,8 +450,10 @@ inline void Analysis<T,FLT>::op2( uint16_t _op, const T * opnd1, const T& opnd2 
         case OP::pop_value:
         {
             // pop result
-            it->second  = val_stack_pop();
-            it->second.encoded = opnd2;
+            ValInfo pval = val_stack_pop();
+            it->second.is_assigned = true;
+            it->second.is_constant = pval.is_constant;
+            it->second.encoded     = opnd2;
             calc_int_w_used( it->second );
             break;
         }
@@ -465,7 +466,6 @@ inline void Analysis<T,FLT>::op2( uint16_t _op, const T * opnd1, const T& opnd2 
             val.is_assigned = true;
             val.is_constant = false;
             val.encoded     = opnd2;
-            calc_int_w_used( val );
             val_stack_push( val );
             break;
         }
@@ -617,7 +617,6 @@ template< typename T, typename FLT >
 inline void Analysis<T,FLT>::inc_op_cnt( OP op, uint32_t by )
 {
     FrameInfo& frame = stack_top();
-    //std::cout << "incr " << frame.func_name << " " << Cordic<T,FLT>::op_to_str( uint16_t(op) ) << "\n";
     FuncInfo& func = funcs[frame.func_name];
     func.op_cnt[uint32_t(op)] += by;
 }
@@ -627,14 +626,12 @@ inline void Analysis<T,FLT>::val_stack_push( const ValInfo& info )
 {
     cassert( val_stack_cnt < VAL_STACK_CNT_MAX, "depth of val_stack exceeded" );
     val_stack[val_stack_cnt++] = info;
-    //if ( 0 && debug ) std::cout << "    new stack depth=" << val_stack_cnt << "\n";
 }
 
 template< typename T, typename FLT >
 inline typename Analysis<T,FLT>::ValInfo Analysis<T,FLT>::val_stack_pop( void )
 {
     cassert( val_stack_cnt > 0, "can't pop an empty val_stack" );
-    //if ( debug ) std::cout << "    new stack depth=" << (val_stack_cnt-1) << "\n";
     return val_stack[--val_stack_cnt];
 }
 
