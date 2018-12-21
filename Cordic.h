@@ -690,7 +690,6 @@ struct Cordic<T,FLT>::Impl
     T                           hyperbolic_vectoring_one_over_gain;     // hyperbolic vectoring 1/gain
     T                           hyperbolic_angle_max;                   // hyperbolic vectoring |z0| max value
 
-    T *                         linear_pow2;                            // linear 2^(-i) values
     T *                         reduce_sinhcosh_sinh_i;                // for each possible integer value, sinh(i)
     T *                         reduce_sinhcosh_cosh_i;                // for each possible integer value, cosh(i)
     bool *                      reduce_sinhcosh_sinh_i_oflow;          // boolean indicating if this index creates too big of a number
@@ -867,7 +866,6 @@ Cordic<T,FLT>::Cordic( uint32_t int_w, uint32_t frac_w, bool do_reduce, uint32_t
 
     impl->circular_atan    = new T[n+1];
     impl->hyperbolic_atanh = new T[n+1];
-    impl->linear_pow2      = new T[n+1];
 
     // compute atan/atanh table in high-resolution floating point
     //
@@ -876,7 +874,6 @@ Cordic<T,FLT>::Cordic( uint32_t int_w, uint32_t frac_w, bool do_reduce, uint32_t
     {
         FLT a  = std::atan( pow2 );
         FLT ah = std::atanh( pow2 );
-        impl->linear_pow2[i] =      to_t( pow2 );
         impl->circular_atan[i] =    to_t( a );
         impl->hyperbolic_atanh[i] = (i == 0) ? to_t(-1) : to_t( ah );
 
@@ -981,7 +978,6 @@ Cordic<T,FLT>::~Cordic( void )
 
     delete impl->circular_atan;
     delete impl->hyperbolic_atanh;
-    delete impl->linear_pow2;
     delete impl->reduce_sinhcosh_sinh_i;
     delete impl->reduce_sinhcosh_cosh_i;
     delete impl->reduce_sinhcosh_sinh_i_oflow;
@@ -1703,17 +1699,18 @@ void Cordic<T,FLT>::linear_rotation( const T& x0, const T& y0, const T& z0, T& x
     y = y0;
     z = z0;
     uint32_t n = impl->n;
-    for( uint32_t i = 0; i <= n; i++ )
+    T pow2 = impl->one;
+    for( uint32_t i = 0; i <= n; i++, pow2 >>= 1 )
     {
         if ( debug ) printf( "linear_rotation: i=%d xyz=[%.30f,%.30f,%.30f] test=%d\n", i, to_flt(x), to_flt(y), to_flt(z), int(z >= impl->zero) );
         T yi;
         T zi;
         if ( z >= T(0) ) {
             yi = y + (x >> i);
-            zi = z - impl->linear_pow2[i];
+            zi = z - pow2;
         } else {
             yi = y - (x >> i);
-            zi = z + impl->linear_pow2[i];
+            zi = z + pow2;
         }
         y = yi;
         z = zi;
@@ -1754,7 +1751,8 @@ void Cordic<T,FLT>::linear_vectoring( const T& x0, const T& y0, const T& z0, T& 
     y = y0;
     z = z0;
     uint32_t n = impl->n;
-    for( uint32_t i = 0; i <= n; i++ )
+    T pow2 = impl->one;
+    for( uint32_t i = 0; i <= n; i++, pow2 >>= 1 )
     {
         if ( debug ) printf( "linear_vectoring: i=%d xyz=[%.30f,%.30f,%.30f] test=%d\n", 
                              i, to_flt(x), to_flt(y), to_flt(z), int(y < impl->zero) );
@@ -1762,10 +1760,10 @@ void Cordic<T,FLT>::linear_vectoring( const T& x0, const T& y0, const T& z0, T& 
         T zi;
         if ( y < T(0) ) {
             yi = y + (x >> i);
-            zi = z - impl->linear_pow2[i];
+            zi = z - pow2;
         } else {
             yi = y - (x >> i);
-            zi = z + impl->linear_pow2[i];
+            zi = z + pow2;
         }
         y = yi;
         z = zi;
