@@ -75,9 +75,6 @@ public:
     std::string to_rstring( const T& _x ) const;// T to std::string in raw decimal integer format 
     std::string to_bstring( const T& x ) const; // T to std::string in binary format, like "1 001 101101011010"
 
-    T       make_fixed( bool sign, T i, T f );  // encode a fixed-point    value using sign, integer  part i, and fractional part f
-    T       make_float( bool sign, T e, T f );  // encode a floating-point value using sign, exponent part 3, and fractional part f
-
     //-----------------------------------------------------
     // Constants 
     //-----------------------------------------------------
@@ -120,121 +117,135 @@ public:
     // (2) means requires 2 applications of a CORDIC algorithm.              functionality
     //-----------------------------------------------------               ---------------------------
 
-    // queries
-    bool signbit( const T& x ) const;                                     // x < 0
-    int  fpclassify( const T& x ) const;                                  // fixed-point: FP_ZERO or FP_SUBNORMAL
-    bool isfinite( const T& x ) const;                                    // fixed-point: true  (always)
-    bool isinf( const T& x ) const;                                       // fixed-point: false (always)
-    bool isnan( const T& x ) const;                                       // fixed-point: false (always)
-    bool isnormal( const T& x ) const;                                    // fixed-point: false (always)
+    // construction
+    T    ldexp( const T& x, int exp ) const;                            // x * 2^exp
+    T    scalbn( const T& x, int exp ) const;                           // x * 2^exp (i.e., same thing)
+    T    make_fixed( bool sign, const T& i, const T& f ) const;         // fixed-point    value with sign, integer  part i, and fractional part f
+    T    make_float( bool sign, const T& e, const T& f ) const;         // floating-point value using sign, exponent part 3, and fractional part f
+
+    // deconstruction
+    bool signbit( const T& x ) const;                                   // x < 0
+    T    frexp( const T& x, int * e ) const;                            // return normalized fraction and exponent
+    T    modf( const T& x, T * i ) const;                               // decompose into fraction and integer, still encoded 
+    int  ilogb( const T& x ) const;                                     // unbiased exponent as int
+    T    logb( const T& x ) const;                                      // unbiased exponent, still encoded
+    int  fpclassify( const T& x ) const;                                // fixed-point: FP_ZERO or FP_SUBNORMAL
+    bool isfinite( const T& x ) const;                                  // fixed-point: true  (always)
+    bool isinf( const T& x ) const;                                     // fixed-point: false (always)
+    bool isnan( const T& x ) const;                                     // fixed-point: false (always)
+    bool isnormal( const T& x ) const;                                  // fixed-point: false (always)
+
 
     // rounding
-    T    nextafter( const T& from, const T& to ) const;                   // (from == to) ?      to  :     (from +/- min toward to)
-    T    nexttoward( const T& from, long double to ) const;               // (from == to) ? to_t(to) : to_t(from +/- min toward to)
-    T    floor( const T& x ) const;                                       // largest  integral value <= x
-    T    ceil( const T& x ) const;                                        // smallest integral value >= x
-    T    trunc( const T& x ) const;                                       // nearest  integral value toward 0
-    T    round( const T& x ) const;                                       // nearest  integral value; halfway cases away from 0 
-    T    lround( const T& x ) const;                                      // same as round() except returns just the integer part
-    T    rint( const T& x ) const;                                        // nearest  integral value according to rounding mode:
-                                                                          //    FE_DOWNWARD:    floor(x)
-                                                                          //    FE_UPWARD:      ceil(x)
-                                                                          //    FE_TOWWARDZERO: trunc(x)
-                                                                          //    FE_TONEAREST:   round(x)
-    T    lrint( const T& x ) const;                                       // same as rint() except returns just the integer part
-    T    nearbyint( const T& x ) const;                                   // same as rint() but never raises FE_INEXACT
+    T    nextafter( const T& from, const T& to ) const;                 // (from == to) ?      to  :     (from +/- min toward to)
+    T    nexttoward( const T& from, long double to ) const;             // (from == to) ? to_t(to) : to_t(from +/- min toward to)
+    T    floor( const T& x ) const;                                     // largest  integral value <= x
+    T    ceil( const T& x ) const;                                      // smallest integral value >= x
+    T    trunc( const T& x ) const;                                     // nearest  integral value toward 0
+    T    round( const T& x ) const;                                     // nearest  integral value; halfway cases away from 0 
+    T    lround( const T& x ) const;                                    // same as round() except returns just the integer part
+    T    rint( const T& x ) const;                                      // nearest  integral value according to rounding mode:
+                                                                        //    FE_DOWNWARD:    floor(x)
+                                                                        //    FE_UPWARD:      ceil(x)
+                                                                        //    FE_TOWWARDZERO: trunc(x)
+                                                                        //    FE_TONEAREST:   round(x)
+    T    lrint( const T& x ) const;                                     // same as rint() except returns just the integer part
+    T    nearbyint( const T& x ) const;                                 // same as rint() but never raises FE_INEXACT
 
     // basic arithmetic
-    T    abs( const T& x ) const;                                         // |x|
-    T    neg( const T& x ) const;                                         // -x
-    T    copysign( const T& x, const T& y ) const;                        // |x| with sign of y
-    T    add( const T& x, const T& y ) const;                             // x+y 
-    T    sub( const T& x, const T& y ) const;                             // x-y 
-    T    fma( const T& x, const T& y, const T& addend ) const;            // x*y + addend
-    T    mul( const T& x, const T& y ) const;                             // x*y 
-    T    sqr( const T& x ) const;                                         // x*x
-    T    lshift( const T& x, int y, bool can_log=true ) const;            // x << y
-    T    rshift( const T& x, int y ) const;                               // x >> y
-    T    fda( const T& y, const T& x, const T& addend ) const;            // y/x + addend
-    T    div( const T& y, const T& x ) const;                             // y/x
-    T    rcp( const T& x ) const;                                         // 1/x
+    T    abs( const T& x ) const;                                       // |x|
+    T    neg( const T& x ) const;                                       // -x
+    T    copysign( const T& x, const T& y ) const;                      // |x| with sign of y
+    T    add( const T& x, const T& y ) const;                           // x+y 
+    T    sub( const T& x, const T& y ) const;                           // x-y 
+    T    fma( const T& x, const T& y, const T& addend ) const;          // x*y + addend
+    T    mul( const T& x, const T& y ) const;                           // x*y 
+    T    sqr( const T& x ) const;                                       // x*x
+    T    lshift( const T& x, int y, bool can_log=true ) const;          // x << y
+    T    rshift( const T& x, int y ) const;                             // x >> y
+    T    fda( const T& y, const T& x, const T& addend ) const;          // y/x + addend
+    T    div( const T& y, const T& x ) const;                           // y/x
+    T    remainder( const T& y, const T& x ) const;                     // IEEE 754-style remainder: y - n*x (where n is nearest int)
+    T    fmod( const T& y, const T& x ) const;                          // rem = remainder( |y|, |x| ); if (rem < 0) rem += x; rem = copysign(rem, x)
+    T    remquo( const T& y, const T& x, int * quo );                   // remainder(), and *quo receives sign and at least 3 LSBs of y/x
+    T    rcp( const T& x ) const;                                       // 1/x
 
     // comparisons
-    bool isgreater( const T& x, const T& y ) const;                       // x > y
-    bool isgreaterequal( const T& x, const T& y ) const;                  // x >= y
-    bool isless( const T& x, const T& y ) const;                          // x > y
-    bool islessequal( const T& x, const T& y ) const;                     // x >= y
-    bool islessgreater( const T& x, const T& y ) const;                   // x != y (but returns false if at least one is NaN)
-    bool isunordered( const T& x, const T& y ) const;                     // returns true if x is a NaN OR y is a NaN
-    bool isunequal( const T& x, const T& y ) const;                       // x != y (returns true if only one is NaN)
-    bool isequal( const T& x, const T& y ) const;                         // x == y (returns true if both are NaN)
-    T    fdim( const T& x, const T& y ) const;                            // (x >= y) ? (x-y) : 0
-    T    fmax( const T& x, const T& y ) const;                            // max(x, y)
-    T    fmin( const T& x, const T& y ) const;                            // min(x, y)
+    bool isgreater( const T& x, const T& y ) const;                     // x > y
+    bool isgreaterequal( const T& x, const T& y ) const;                // x >= y
+    bool isless( const T& x, const T& y ) const;                        // x > y
+    bool islessequal( const T& x, const T& y ) const;                   // x >= y
+    bool islessgreater( const T& x, const T& y ) const;                 // x != y (but returns false if at least one is NaN)
+    bool isunordered( const T& x, const T& y ) const;                   // returns true if x is a NaN OR y is a NaN
+    bool isunequal( const T& x, const T& y ) const;                     // x != y (returns true if only one is NaN)
+    bool isequal( const T& x, const T& y ) const;                       // x == y (returns true if both are NaN)
+    T    fdim( const T& x, const T& y ) const;                          // (x >= y) ? (x-y) : 0
+    T    fmax( const T& x, const T& y ) const;                          // max(x, y)
+    T    fmin( const T& x, const T& y ) const;                          // min(x, y)
 
     // elementary functions
-    T    sqrt( const T& x ) const;                                        // hypoth( x+1, x-1 ) / 2
-    T    rsqrt( const T& x ) const;                                       // x^(-1/2) = exp(log(x)/-2)
-    T    cbrt( const T& x ) const;                                        // x^(1/3)  = exp(log(x)/3)
-    T    rcbrt( const T& x ) const;                                       // x^(-1/3) = exp(log(x)/-3)
+    T    sqrt( const T& x ) const;                                      // hypoth( x+1, x-1 ) / 2
+    T    rsqrt( const T& x ) const;                                     // x^(-1/2) = exp(log(x)/-2)
+    T    cbrt( const T& x ) const;                                      // x^(1/3)  = exp(log(x)/3)
+    T    rcbrt( const T& x ) const;                                     // x^(-1/3) = exp(log(x)/-3)
 
-    T    exp( const T& x ) const;                                         // e^x
-    T    expm1( const T& x ) const;                                       // e^x - 1
-    T    expc( const FLT& b, const T& x ) const;                          // b^x  = exp(x * log(b))  b=const     (2)
-    T    exp2( const T& x ) const;                                        // 2^x
-    T    exp10( const T& x ) const;                                       // 10^x
-    T    pow( const T& b, const T& x ) const;                             // b^x  = exp(x * log(b))              (3)
-    T    log( const T& x ) const;                                         // 2*atan2(x-1, x+1)    
-    T    log( const T& x, const T& b ) const;                             // log(x)/log(b)                (3)
-    T    log1p( const T& x ) const;                                       // 2*atan2(x, x+2) = log(x+1)
-    T    logc( const T& x, const FLT& b ) const;                          // log(x)/log(b)    b=const     (2)
-    T    log2( const T& x ) const;                                        // log(x)/log(2)                (2)
-    T    log10( const T& x ) const;                                       // log(x)/log(10)               (2)
+    T    exp( const T& x ) const;                                       // e^x
+    T    expm1( const T& x ) const;                                     // e^x - 1
+    T    expc( const FLT& b, const T& x ) const;                        // b^x  = exp(x * log(b))  b=const     (2)
+    T    exp2( const T& x ) const;                                      // 2^x
+    T    exp10( const T& x ) const;                                     // 10^x
+    T    pow( const T& b, const T& x ) const;                           // b^x  = exp(x * log(b))              (3)
+    T    log( const T& x ) const;                                       // 2*atan2(x-1, x+1)    
+    T    log( const T& x, const T& b ) const;                           // log(x)/log(b)                (3)
+    T    log1p( const T& x ) const;                                     // 2*atan2(x, x+2) = log(x+1)
+    T    logc( const T& x, const FLT& b ) const;                        // log(x)/log(b)    b=const     (2)
+    T    log2( const T& x ) const;                                      // log(x)/log(2)                (2)
+    T    log10( const T& x ) const;                                     // log(x)/log(10)               (2)
 
-    T    sin( const T& x, const T * r=nullptr  ) const;                   // r*sin(x)                   (default r is 1)
-    T    cos( const T& x, const T * r=nullptr ) const;                    // r*cos(x)                   (default r is 1)
+    T    sin( const T& x, const T * r=nullptr  ) const;                 // r*sin(x)                   (default r is 1)
+    T    cos( const T& x, const T * r=nullptr ) const;                  // r*cos(x)                   (default r is 1)
     void sincos( const T& x, T& si, T& co, const T * r=nullptr ) const;   // si=r*sin(x), co=r*cos(x)   (default r is 1)
-    T    tan( const T& x ) const;                                         // sin(x) / cos(x)              (2)
-    T    asin( const T& x ) const;                                        // atan2(x, sqrt(1 - x^2))      (2)
-    T    acos( const T& x ) const;                                        // atan2(sqrt(1 - x^2), x)      (2)
-    T    atan( const T& x ) const;                                        // atan(x)
-    T    atan2( const T& y, const T& x ) const;                           // atan2(y, x)                  
+    T    tan( const T& x ) const;                                       // sin(x) / cos(x)              (2)
+    T    asin( const T& x ) const;                                      // atan2(x, sqrt(1 - x^2))      (2)
+    T    acos( const T& x ) const;                                      // atan2(sqrt(1 - x^2), x)      (2)
+    T    atan( const T& x ) const;                                      // atan(x)
+    T    atan2( const T& y, const T& x ) const;                         // atan2(y, x)                  
 
-    void polar_to_rect( const T& r, const T& a, T& x, T& y ) const;       // sincos(a, x, y, &r)  
-    void rect_to_polar( const T& x, const T& y, T& r, T& a ) const;       // r=sqrt(x^2 + y^2), a=atan2(y, x)
-    T    hypot( const T& x, const T& y ) const;                           // sqrt(x^2 + y^2)  (Euclidean hypot)
-    T    hypoth( const T& x, const T& y ) const;                          // sqrt(x^2 - y^2)  (hyperbolic hypot)
+    void polar_to_rect( const T& r, const T& a, T& x, T& y ) const;     // sincos(a, x, y, &r)  
+    void rect_to_polar( const T& x, const T& y, T& r, T& a ) const;     // r=sqrt(x^2 + y^2), a=atan2(y, x)
+    T    hypot( const T& x, const T& y ) const;                         // sqrt(x^2 + y^2)  (Euclidean hypot)
+    T    hypoth( const T& x, const T& y ) const;                        // sqrt(x^2 - y^2)  (hyperbolic hypot)
 
-    T    sinh( const T& x, const T * r=nullptr ) const;                   // r*sinh(x), also r*(e^x - e^-x)/2  (default r is 1)
-    T    cosh( const T& x, const T * r=nullptr ) const;                   // r*cosh(x), also r*(e^x + e^-x)/2  (default r is 1)
+    T    sinh( const T& x, const T * r=nullptr ) const;                 // r*sinh(x), also r*(e^x - e^-x)/2  (default r is 1)
+    T    cosh( const T& x, const T * r=nullptr ) const;                 // r*cosh(x), also r*(e^x + e^-x)/2  (default r is 1)
     void sinhcosh( const T& x, T& sih, T& coh, const T * r=nullptr ) const;// sih=r*sinh(x), coh=r*cosh(x)    (default r is 1)
-    T    tanh( const T& x ) const;                                        // sinh(x) / cosh(x)            (2)
-    T    asinh( const T& x ) const;                                       // log(x + sqrt(x^2 + 1))       (2)
-    T    acosh( const T& x ) const;                                       // log(x + sqrt(x^2 - 1))       (2)
-    T    atanh( const T& x ) const;                                       // atanh(x)
-    T    atanh2( const T& y, const T& x ) const;                          // atanh(y/x)
+    T    tanh( const T& x ) const;                                      // sinh(x) / cosh(x)            (2)
+    T    asinh( const T& x ) const;                                     // log(x + sqrt(x^2 + 1))       (2)
+    T    acosh( const T& x ) const;                                     // log(x + sqrt(x^2 - 1))       (2)
+    T    atanh( const T& x ) const;                                     // atanh(x)
+    T    atanh2( const T& y, const T& x ) const;                        // atanh(y/x)
 
     // random numbers
     T    rand_seed( uint64_t seed0, uint64_t seed1=0xdeadbeefbabecafe );  // set random seed(s)
-    T    rand_raw32_mwc( void );                                          // 32 bits from Frank Marsaglia's MWC RNG     (good fast&small)
-    T    rand_raw32_jsf( void );                                          // 32 bits from Robert Jenkins' JSF RNG       (better f&s)
-    T    rand_raw64_jsf( void );                                          // 64 bits from Robert Jenkins' JSF RNG       (better f&s)
-    T    rand_raw16_sfc( void );                                          // 16 bits from Chris Doty-Humphrey's SFC RNG (best   f&s)
-    T    rand_raw32_sfc( void );                                          // 32 bits from Chris Doty-Humphrey's SFC RNG (best   f&s)
-    T    rand_raw64_sfc( void );                                          // 64 bits from Chris Doty-Humphrey's SFC RNG (best   f&s)
-    T    rand_raw128_hc128( void );                                       //128 bits from eSTREAM's HC128 RNG (larger, but crypto-secure)
-    T    rand_raw256_hc256( void );                                       //256 bits from eSTREAM's HC256 RNG (larger, but crypto-secure)
-    static void rand_raw32_fn_set( T (*raw32_fn)(void) );                 // set default raw32() function to use for following routines:
-    static void rand_raw64_fn_set( T (*raw64_fn)(void) );                 // set default raw64() function to use for following routines:
-    T    rand_uniform( void );                                            // return uniform random in range [0.0, 1.0)  (1.0 excluded)
-    T    rand_gaussian( const T& mu, const T& std );                      // return gaussian random with mu and std using uniform_fn
+    T    rand_raw32_mwc( void );                                        // 32 bits from Frank Marsaglia's MWC RNG     (good fast&small)
+    T    rand_raw32_jsf( void );                                        // 32 bits from Robert Jenkins' JSF RNG       (better f&s)
+    T    rand_raw64_jsf( void );                                        // 64 bits from Robert Jenkins' JSF RNG       (better f&s)
+    T    rand_raw16_sfc( void );                                        // 16 bits from Chris Doty-Humphrey's SFC RNG (best   f&s)
+    T    rand_raw32_sfc( void );                                        // 32 bits from Chris Doty-Humphrey's SFC RNG (best   f&s)
+    T    rand_raw64_sfc( void );                                        // 64 bits from Chris Doty-Humphrey's SFC RNG (best   f&s)
+    T    rand_raw128_hc128( void );                                     //128 bits from eSTREAM's HC128 RNG (larger, but crypto-secure)
+    T    rand_raw256_hc256( void );                                     //256 bits from eSTREAM's HC256 RNG (larger, but crypto-secure)
+    static void rand_raw32_fn_set( T (*raw32_fn)(void) );               // set default raw32() function to use for following routines:
+    static void rand_raw64_fn_set( T (*raw64_fn)(void) );               // set default raw64() function to use for following routines:
+    T    rand_uniform( void );                                          // return uniform random in range [0.0, 1.0)  (1.0 excluded)
+    T    rand_gaussian( const T& mu, const T& std );                    // return gaussian random with mu and std using uniform_fn
     
     // machine learning
-    T    tanh_backprop( const T& x, const T& x_backprop ) const;          // (1-x^2) * x_backprop
-    T    sigmoid( const T& x ) const;                                     // 1/(1 + exp(-x)) = exp(x)/(exp(x) + 1)
-    T    sigmoid_backprop( const T& x, const T& x_backprop ) const;       // x * (1-x) * x_backprop
-    T    relu( const T& x ) const;                                        // (x > 0) x : 0
-    T    relu_backprop( const T& x, const T& x_backprop ) const;          // (x > 0) x_backprop : 0
+    T    tanh_backprop( const T& x, const T& x_backprop ) const;        // (1-x^2) * x_backprop
+    T    sigmoid( const T& x ) const;                                   // 1/(1 + exp(-x)) = exp(x)/(exp(x) + 1)
+    T    sigmoid_backprop( const T& x, const T& x_backprop ) const;     // x * (1-x) * x_backprop
+    T    relu( const T& x ) const;                                      // (x > 0) x : 0
+    T    relu_backprop( const T& x, const T& x_backprop ) const;        // (x > 0) x_backprop : 0
 
     //-----------------------------------------------------
     // Bob's Collection of Math Identities (some are used in the implementation, most are not)
@@ -536,7 +547,7 @@ public:
     //
     // NOTE: Logging is done globally, not just for one Cordic.  
     //       Thus the static methods here.
-    //-----------------------------------------------------
+   //-----------------------------------------------------
     static void            logger_set( Logger<T,FLT> * logger );  // null means use the default logger
     static Logger<T,FLT> * logger_get( void );                    // returns current logger
     static std::string     op_to_str( uint16_t op );              // supply this to Logger constructor
@@ -1374,7 +1385,7 @@ inline std::string Cordic<T,FLT>::to_bstring( const T& _x ) const
 }
 
 template< typename T, typename FLT >
-inline T Cordic<T,FLT>::make_fixed( bool sign, T i, T f )
+inline T Cordic<T,FLT>::make_fixed( bool sign, const T& i, const T& f ) const
 {
     cassert( i >= 0 && i <= impl->maxint              , "make_fixed integer part must be in range 0 .. impl->maxint" );
     cassert( f >= 0 && f <= ((T(1) << impl->frac_w+impl->guard_w)-1), 
