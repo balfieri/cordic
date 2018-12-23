@@ -97,9 +97,13 @@ public:
     //-----------------------------------------------------
     // Constants
     //-----------------------------------------------------               
-    freal maxval( void );                                       // maximum positive value 
-    freal minval( void );                                       // minimum positive value
     T     maxint( void );                                       // largest positive integer (just integer part, does not include fraction)
+    freal max( void );                                          // maximum positive value 
+    freal min( void );                                          // minimum positive value
+    freal denorm_min( void );                                   // minimum positive denorm value
+    freal lowest( void );                                       // most negative value
+    freal epsilon( void );                                      // difference between 1 and first number above 1
+    freal round_error( void );                                  // maximum rounding error
     freal zero( void );                                         // 0.0
     freal one( void );                                          // 1.0
     freal two( void );                                          // 2.0
@@ -115,7 +119,10 @@ public:
     freal four_div_pi( void );                                  // 4/PI
     freal e( void );                                            // natural exponent
     freal nan( const char * arg );                              // not-a-number (NaN)
+    freal quiet_nan( void );                                    // quiet not-a-number (NaN)
+    freal signaling_nan( void );                                // signaling not-a-number (NaN)
     freal inf( void );                                          // +infinity
+    freal ninf( void );                                         // -infinity
 
     //-----------------------------------------------------
     // Standard Operators
@@ -572,6 +579,45 @@ static inline freal<T,FLT>  atanh2( const freal<T,FLT>& a, const freal<T,FLT>& b
 
 }
 
+template< typename T, typename FLT >              
+class std::numeric_limits<freal<T,FLT>> 
+{
+public:
+    static const bool                   is_specialized = true;
+    static freal<T,FLT>                 min() throw()           { return freal<T,FLT>::c()->min(); }
+    static freal<T,FLT>                 max() throw()           { return freal<T,FLT>::c()->max(); }
+    static const int                    digits = 0;
+    static const int                    digits10 = 0;
+    static const bool                   is_signed = true;
+    static const bool                   is_integer = false;
+    static const bool                   is_exact = false;
+    static const int                    radix = 2;
+    static freal<T,FLT>                 epsilon() throw()       { return freal<T,FLT>::c()->epsilon(); }
+    static freal<T,FLT>                 round_error() throw()   { return freal<T,FLT>::c()->round_error(); }
+
+    static const int                    min_exponent = 0;
+    static const int                    min_exponent10 = 0;
+    static const int                    max_exponent = 0;
+    static const int                    max_exponent10 = 0;
+
+    static const bool                   has_infinity = false;
+    static const bool                   has_quiet_NaN = false;
+    static const bool                   has_signaling_NaN = false;
+    static const float_denorm_style     has_denorm = denorm_present;
+    static const bool                   has_denorm_loss = false;
+    static freal<T,FLT>                 infinity() throw()      { return freal<T,FLT>::c()->inf(); }
+    static freal<T,FLT>                 quiet_NaN() throw()     { return freal<T,FLT>::c()->quiet_nan(); }
+    static freal<T,FLT>                 signaling_NaN() throw() { return freal<T,FLT>::c()->signaling_nan(); }
+    static freal<T,FLT>                 denorm_min() throw()    { return freal<T,FLT>::c()->denorm_min(); }
+
+    static const bool                   is_iec559 = false;
+    static const bool                   is_bounded = true;
+    static const bool                   is_modulo = true;
+    static const bool                   traps = false;
+    static const bool                   tinyness_before = false;
+    static const float_round_style      round_style = round_to_nearest;
+};
+
 //-----------------------------------------------------
 //-----------------------------------------------------
 //-----------------------------------------------------
@@ -834,12 +880,28 @@ inline T            freal<T,FLT>::maxint( void )
 { return( c(), cordic->maxint() );      } 
 
 template< typename T, typename FLT >              
-inline freal<T,FLT> freal<T,FLT>::maxval( void ) 
-{ return( c(), pop_value( cordic, cordic->maxval() ) ); }
+inline freal<T,FLT> freal<T,FLT>::max( void ) 
+{ return( c(), pop_value( cordic, cordic->max() ) ); }
 
 template< typename T, typename FLT >              
-inline freal<T,FLT> freal<T,FLT>::minval( void ) 
-{ return( c(), pop_value( cordic, cordic->minval() ) ); }
+inline freal<T,FLT> freal<T,FLT>::min( void ) 
+{ return( c(), pop_value( cordic, cordic->min() ) ); }
+
+template< typename T, typename FLT >              
+inline freal<T,FLT> freal<T,FLT>::denorm_min( void ) 
+{ return( c(), pop_value( cordic, cordic->denorm_min() ) ); }
+
+template< typename T, typename FLT >              
+inline freal<T,FLT> freal<T,FLT>::lowest( void ) 
+{ return( c(), pop_value( cordic, cordic->lowest() ) ); }
+
+template< typename T, typename FLT >              
+inline freal<T,FLT> freal<T,FLT>::epsilon( void ) 
+{ return( c(), pop_value( cordic, cordic->epsilon() ) ); }
+
+template< typename T, typename FLT >              
+inline freal<T,FLT> freal<T,FLT>::round_error( void ) 
+{ return( c(), pop_value( cordic, cordic->round_error() ) ); }
 
 template< typename T, typename FLT >              
 inline freal<T,FLT> freal<T,FLT>::zero( void ) 
@@ -902,8 +964,20 @@ inline freal<T,FLT> freal<T,FLT>::nan( const char * arg )
 { return( c(), pop_value( cordic, cordic->nan( arg ) ) ); }
 
 template< typename T, typename FLT >              
+inline freal<T,FLT> freal<T,FLT>::quiet_nan( void )
+{ return( c(), pop_value( cordic, cordic->quiet_nan() ) ); }
+
+template< typename T, typename FLT >              
+inline freal<T,FLT> freal<T,FLT>::signaling_nan( void )
+{ return( c(), pop_value( cordic, cordic->signaling_nan() ) ); }
+
+template< typename T, typename FLT >              
 inline freal<T,FLT> freal<T,FLT>::inf( void ) 
 { return( c(), pop_value( cordic, cordic->inf() ) ); }
+
+template< typename T, typename FLT >              
+inline freal<T,FLT> freal<T,FLT>::ninf( void ) 
+{ return( c(), pop_value( cordic, cordic->ninf() ) ); }
 
 //-----------------------------------------------------
 // Standard Operators 

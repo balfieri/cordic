@@ -88,8 +88,12 @@ public:
     uint32_t n( void ) const;                           // n       from above
     T maxint( void ) const;                             // largest positive integer (just integer part, does not include fractional bits)
 
-    T maxval( void ) const;                             // encoded maximum positive value 
-    T minval( void ) const;                             // encoded minimum positive value
+    T max( void ) const;                                // encoded maximum positive value 
+    T min( void ) const;                                // encoded minimum positive value
+    T denorm_min( void ) const;                         // fixed-point: min()
+    T lowest( void ) const;                             // encoded most negative value
+    T epsilon( void ) const;                            // difference between 1 and least value greater than 1
+    T round_error( void ) const;                        // maximum rounding error
     T zero( void ) const;                               // encoded 0.0
     T one( void ) const;                                // encoded 1.0
     T two( void ) const;                                // encoded 2.0
@@ -105,7 +109,10 @@ public:
     T four_div_pi( void ) const;                        // encoded PI/4
     T e( void ) const;                                  // encoded natural exponent
     T nan( const char * arg ) const;                    // fixed-point: zero()
-    T inf( void ) const;                                // fixed-point: maxval()
+    T quiet_nan( void ) const;                          // fixed-point: zero()
+    T signaling_nan( void ) const;                      // fixed-point: zero()
+    T inf( void ) const;                                // fixed-point: max()
+    T ninf( void ) const;                               // fixed-point: lowest()
 
     //-----------------------------------------------------
     // Well-Known Math Functions Implemented Using CORDIC
@@ -122,8 +129,8 @@ public:
     bool isnormal( const T& x ) const;                                    // fixed-point: false (always)
 
     // rounding
-    T    nextafter( const T& from, const T& to ) const;                   // (from == to) ?      to  :     (from +/- minval toward to)
-    T    nexttoward( const T& from, long double to ) const;               // (from == to) ? to_t(to) : to_t(from +/- minval toward to)
+    T    nextafter( const T& from, const T& to ) const;                   // (from == to) ?      to  :     (from +/- min toward to)
+    T    nexttoward( const T& from, long double to ) const;               // (from == to) ? to_t(to) : to_t(from +/- min toward to)
     T    floor( const T& x ) const;                                       // largest  integral value <= x
     T    ceil( const T& x ) const;                                        // smallest integral value >= x
     T    trunc( const T& x ) const;                                       // nearest  integral value toward 0
@@ -657,8 +664,9 @@ struct Cordic<T,FLT>::Impl
     uint32_t                    n;
 
     T                           maxint;
-    T                           maxval;
-    T                           minval;
+    T                           max;
+    T                           min;
+    T                           lowest;
     T                           zero;
     T                           one;
     T                           two;
@@ -842,8 +850,9 @@ Cordic<T,FLT>::Cordic( uint32_t int_w, uint32_t frac_w, bool do_reduce, uint32_t
     impl->maxint  = (T(1) << int_w) - 1;
     impl->one     = T(1) << (frac_w+guard_w);                         // required before calling to_t()
 
-    impl->maxval        = to_t( std::pow( 2.0, int_w ) - 1.0 );
-    impl->minval        = to_t( 1.0 / std::pow( 2.0, frac_w ) );
+    impl->max           = to_t( std::pow( 2.0, int_w ) - 1.0 );
+    impl->min           = to_t( 1.0 / std::pow( 2.0, frac_w ) );
+    impl->lowest        = T(-1) << (int_w+frac_w+guard_w);            // sign bits are only things set
     impl->zero          = to_t( 0.0 );
     impl->one           = to_t( 1.0 );
     impl->two           = to_t( 2.0 );
@@ -1028,17 +1037,42 @@ inline T Cordic<T,FLT>::maxint( void ) const
 }
 
 template< typename T, typename FLT >
-inline T Cordic<T,FLT>::maxval( void ) const
+inline T Cordic<T,FLT>::max( void ) const
 {
-    _log_1f( push_constant, to_flt(impl->maxval) );
-    return impl->maxval;
+    _log_1f( push_constant, to_flt(impl->max) );
+    return impl->max;
 }
 
 template< typename T, typename FLT >
-inline T Cordic<T,FLT>::minval( void ) const
+inline T Cordic<T,FLT>::min( void ) const
 {
-    _log_1f( push_constant, to_flt(impl->minval) );
-    return impl->minval;
+    _log_1f( push_constant, to_flt(impl->min) );
+    return impl->min;
+}
+
+template< typename T, typename FLT >
+inline T Cordic<T,FLT>::denorm_min( void ) const
+{
+    return min();
+}
+
+template< typename T, typename FLT >
+inline T Cordic<T,FLT>::lowest( void ) const
+{
+    _log_1f( push_constant, to_flt(impl->lowest) );
+    return impl->lowest;
+}
+
+template< typename T, typename FLT >
+inline T Cordic<T,FLT>::epsilon( void ) const
+{
+    return min();
+}
+
+template< typename T, typename FLT >
+inline T Cordic<T,FLT>::round_error( void ) const
+{
+    return min();
 }
 
 template< typename T, typename FLT >
@@ -1147,9 +1181,27 @@ inline T Cordic<T,FLT>::nan( const char * arg ) const
 }
 
 template< typename T, typename FLT >
+inline T Cordic<T,FLT>::quiet_nan( void ) const
+{
+    return zero();
+}
+
+template< typename T, typename FLT >
+inline T Cordic<T,FLT>::signaling_nan( void ) const
+{
+    return zero();
+}
+
+template< typename T, typename FLT >
 inline T Cordic<T,FLT>::inf( void ) const
 {
-    return maxval();
+    return max();
+}
+
+template< typename T, typename FLT >
+inline T Cordic<T,FLT>::ninf( void ) const
+{
+    return lowest();
 }
 
 template< typename T, typename FLT >
