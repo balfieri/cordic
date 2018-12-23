@@ -583,40 +583,46 @@ template< typename T, typename FLT >
 class std::numeric_limits<freal<T,FLT>> 
 {
 public:
-    static const bool                   is_specialized = true;
-    static freal<T,FLT>                 min() throw()           { return freal<T,FLT>::c()->min(); }
-    static freal<T,FLT>                 max() throw()           { return freal<T,FLT>::c()->max(); }
-    static const int                    digits = 0;
-    static const int                    digits10 = 0;
-    static const bool                   is_signed = true;
-    static const bool                   is_integer = false;
-    static const bool                   is_exact = false;
-    static const int                    radix = 2;
-    static freal<T,FLT>                 epsilon() throw()       { return freal<T,FLT>::c()->epsilon(); }
-    static freal<T,FLT>                 round_error() throw()   { return freal<T,FLT>::c()->round_error(); }
+    // any static field that depends on the current implicit_to is (re)initialized
+    // when implicit_to_set() is called to change the implicit Cordic, therefore
+    // these static fields are not marked const
+    static bool                 is_specialized;
+    static freal<T,FLT>         min() throw()           { return freal<T,FLT>::c()->min(); }
+    static freal<T,FLT>         max() throw()           { return freal<T,FLT>::c()->max(); }
+    static int                  digits;
+    static int                  digits10;
+    static const bool           is_signed = true;
+    static const bool           is_integer = false;
+    static const bool           is_exact = false;
+    static const int            radix = 2;
+    static freal<T,FLT>         epsilon() throw()       { return freal<T,FLT>::c()->epsilon(); }
+    static freal<T,FLT>         round_error() throw()   { return freal<T,FLT>::c()->round_error(); }
 
-    static const int                    min_exponent = 0;
-    static const int                    min_exponent10 = 0;
-    static const int                    max_exponent = 0;
-    static const int                    max_exponent10 = 0;
+    static int                  min_exponent;
+    static int                  min_exponent10;
+    static int                  max_exponent;
+    static int                  max_exponent10;
 
-    static const bool                   has_infinity = false;
-    static const bool                   has_quiet_NaN = false;
-    static const bool                   has_signaling_NaN = false;
-    static const float_denorm_style     has_denorm = denorm_present;
-    static const bool                   has_denorm_loss = false;
-    static freal<T,FLT>                 infinity() throw()      { return freal<T,FLT>::c()->inf(); }
-    static freal<T,FLT>                 quiet_NaN() throw()     { return freal<T,FLT>::c()->quiet_nan(); }
-    static freal<T,FLT>                 signaling_NaN() throw() { return freal<T,FLT>::c()->signaling_nan(); }
-    static freal<T,FLT>                 denorm_min() throw()    { return freal<T,FLT>::c()->denorm_min(); }
+    static bool                 has_infinity;
+    static bool                 has_quiet_NaN;
+    static bool                 has_signaling_NaN;
+    static const float_denorm_style has_denorm = denorm_present;
+    static const bool           has_denorm_loss = false;
+    static freal<T,FLT>         infinity() throw()      { return freal<T,FLT>::c()->inf(); }
+    static freal<T,FLT>         quiet_NaN() throw()     { return freal<T,FLT>::c()->quiet_nan(); }
+    static freal<T,FLT>         signaling_NaN() throw() { return freal<T,FLT>::c()->signaling_nan(); }
+    static freal<T,FLT>         denorm_min() throw()    { return freal<T,FLT>::c()->denorm_min(); }
 
-    static const bool                   is_iec559 = false;
-    static const bool                   is_bounded = true;
-    static const bool                   is_modulo = true;
-    static const bool                   traps = false;
-    static const bool                   tinyness_before = false;
-    static const float_round_style      round_style = round_to_nearest;
+    static bool                 is_iec559;
+    static bool                 is_bounded;
+    static bool                 is_modulo;
+    static bool                 traps;
+    static bool                 tinyness_before;
+    static float_round_style    round_style;
 };
+
+template< typename T, typename FLT >              
+bool std::numeric_limits<freal<T,FLT>>::is_specialized = false; 
 
 //-----------------------------------------------------
 //-----------------------------------------------------
@@ -738,6 +744,27 @@ template< typename T, typename FLT >
 inline void freal<T,FLT>::implicit_to_set( const Cordic<T,FLT> * cordic )
 { 
     implicit_to = cordic;
+
+    if ( cordic != nullptr ) {
+        std::numeric_limits<freal<T,FLT>>::is_specialized       = true;
+        std::numeric_limits<freal<T,FLT>>::digits               = cordic->int_w() + cordic->frac_w();
+        std::numeric_limits<freal<T,FLT>>::digits10             = std::numeric_limits<freal<T,FLT>>::digits / std::log2( 10 );
+        std::numeric_limits<freal<T,FLT>>::min_exponent         = 0;
+        std::numeric_limits<freal<T,FLT>>::min_exponent10       = 0;
+        std::numeric_limits<freal<T,FLT>>::max_exponent         = 0;
+        std::numeric_limits<freal<T,FLT>>::max_exponent10       = 0;
+        std::numeric_limits<freal<T,FLT>>::has_inifinity        = false;
+        std::numeric_limits<freal<T,FLT>>::has_quiet_NaN        = false;
+        std::numeric_limits<freal<T,FLT>>::has_signaling_NaN    = false;
+        std::numeric_limits<freal<T,FLT>>::is_iec559            = false;
+        std::numeric_limits<freal<T,FLT>>::is_bounded           = true;
+        std::numeric_limits<freal<T,FLT>>::is_modulo            = true;
+        std::numeric_limits<freal<T,FLT>>::traps                = false;
+        std::numeric_limits<freal<T,FLT>>::tinyness_before      = true;
+        std::numeric_limits<freal<T,FLT>>::round_style          = std::numeric_limits<freal<T,FLT>>::round_to_nearest;
+    } else {
+        std::numeric_limits<freal<T,FLT>>::is_specialized       = false;
+    }
 }
 
 template< typename T, typename FLT >              
