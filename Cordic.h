@@ -523,6 +523,7 @@ public:
     T    atan2(  const T& y, const T& x, bool do_reduce, bool can_log, bool x_is_one, T * r ) const; 
     T    atanh2( const T& y, const T& x, bool do_reduce, bool can_log, bool x_is_one ) const; // same but override do_reduce
     void sincos( const T& x, T& si, T& co, bool do_reduce, bool can_log, bool need_si, bool need_co, const T * r ) const;
+    void sinpicospi( const T& x, T& si, T& co, bool do_reduce, bool can_log, bool need_si, bool need_co, const T * r ) const;
     void sinhcosh( const T& x, T& sih, T& coh, bool do_reduce, bool can_log, bool need_sih, bool need_coh, const T * r ) const;
 
     //-----------------------------------------------------
@@ -544,6 +545,7 @@ public:
     void reduce_atan2_args( T& y, T& x, bool& y_sign, bool& x_sign, bool& swapped, bool& is_pi ) const;     
     void reduce_hypot_args( T& x, T& y, int32_t& lshift, bool& swapped ) const;
     void reduce_sincos_arg( T& a, uint32_t& quadrant, bool& sign, bool& did_minus_pi_div_4 ) const;
+    void reduce_sinpicospi_arg( T& a, uint32_t& quadrant, bool& sign, bool& did_minus_pi_div_4 ) const;
     void reduce_sinhcosh_arg( T& x, T& sinh_i, T& cosh_i, bool& sign ) const;                  
 
     //-----------------------------------------------------
@@ -635,9 +637,14 @@ public:
         log10,
 
         sin,
+        sinpi,
         cos,
+        cospi,
         sincos,
+        sinpicospi,
         tan,
+        tanpi,
+
         asin,
         acos,
         atan,
@@ -819,9 +826,13 @@ std::string Cordic<T,FLT>::op_to_str( uint16_t op )
         _ocase( log10 )
 
         _ocase( sin )
+        _ocase( sinpi )
         _ocase( cos )
+        _ocase( cospi )
         _ocase( sincos )
-        _ocase( tan )
+        _ocase( sinpicospi )
+        _ocase( tanpi )
+
         _ocase( asin )
         _ocase( acos )
         _ocase( atan )
@@ -1322,7 +1333,7 @@ inline T Cordic<T,FLT>::to_t( FLT _x, bool can_log ) const
     bool is_neg = x < 0.0;
     if ( is_neg ) x = -x;
     cassert( T(x) < (T(1) << _int_w), "to_t: integer part of |x| " + std::to_string(x) + " does not fit in int_w bits" ); 
-    T x_t = x * FLT( _one ); // need to round
+    T x_t = x * FLT( _one ); // TODO: need to round
     if ( is_neg ) x_t = -x_t;
     if ( can_log ) _log_1f( push_constant, _x );
     return x_t;
@@ -2686,6 +2697,15 @@ inline void Cordic<T,FLT>::sincos( const T& x, T& si, T& co, const T * r ) const
 }
 
 template< typename T, typename FLT >
+inline T Cordic<T,FLT>::tan( const T& x ) const
+{ 
+    _log_1( tan, x );
+    T si, co;
+    sincos( x, si, co, _do_reduce, false, true, true, nullptr );
+    return div( si, co, true, false );
+}
+
+template< typename T, typename FLT >
 void Cordic<T,FLT>::sincos( const T& _x, T& si, T& co, bool do_reduce, bool can_log, bool need_si, bool need_co, const T * _r ) const             
 { 
     if ( can_log ) {
@@ -2753,12 +2773,115 @@ void Cordic<T,FLT>::sincos( const T& _x, T& si, T& co, bool do_reduce, bool can_
 }
 
 template< typename T, typename FLT >
-inline T Cordic<T,FLT>::tan( const T& x ) const
+inline T Cordic<T,FLT>::sinpi( const T& x, const T * r ) const
+{ 
+    if ( r != nullptr ) {
+        _log_2( sinpi, x, *r );
+    } else {
+        _log_1( sinpi, x );
+    }
+    T si;
+    T co;
+    sinpicospi( x, si, co, _do_reduce, false, true, false, r );
+    return si;
+}
+
+template< typename T, typename FLT >
+inline T Cordic<T,FLT>::cospi( const T& x, const T * r ) const
+{ 
+    if ( r != nullptr ) {
+        _log_2( cospi, x, *r );
+    } else {
+        _log_1( cospi, x );
+    }
+    T si;
+    T co;
+    sinpicospi( x, si, co, _do_reduce, false, false, true, r );
+    return co;
+}
+
+template< typename T, typename FLT >
+inline void Cordic<T,FLT>::sinpicospi( const T& x, T& si, T& co, const T * r ) const             
+{
+    sinpicospi( x, si, co, _do_reduce, true, true, true, r );
+}
+
+template< typename T, typename FLT >
+inline T Cordic<T,FLT>::tanpi( const T& x ) const
 { 
     _log_1( tan, x );
     T si, co;
-    sincos( x, si, co, _do_reduce, false, true, true, nullptr );
+    sinpicospi( x, si, co, _do_reduce, false, true, true, nullptr );
     return div( si, co, true, false );
+}
+
+template< typename T, typename FLT >
+void Cordic<T,FLT>::sinpicospi( const T& _x, T& si, T& co, bool do_reduce, bool can_log, bool need_si, bool need_co, const T * _r ) const             
+{ 
+    if ( can_log ) {
+        if ( _r != nullptr ) {
+            _log_4( sinpicospi, _x, si, co, *_r );
+        } else {
+            _log_3( sinpicospi, _x, si, co );
+        }
+    }
+    T x = _x;
+    uint32_t quadrant;
+    bool x_sign;
+    bool did_minus_pi_div_4;
+    if ( do_reduce ) {
+        //-----------------------------------------------------
+        // reduce_sinpicospi_arg() will get x in the range 0 .. PI/2 and tell us the quadrant.
+        // It will then check if x is still > PI/4 and, if so, subtract PI/4 and
+        // set did_minus_pi_div_4.  If did_minus_pi_div_4 is true, then we need
+        // to do some adjustments below after the cordic routine completes.
+        // Except that it can do a better job because x has not been multiplied
+        // by PI yet.
+        //-----------------------------------------------------
+        reduce_sinpicospi_arg( x, quadrant, x_sign, did_minus_pi_div_4 );
+    }
+
+    T r = _circular_rotation_one_over_gain;
+    int32_t r_lshift;
+    bool r_sign = false;
+    if ( _r != nullptr ) {
+        r = *_r;
+        if ( do_reduce ) reduce_arg( r, r_lshift, r_sign );
+        r = mul( r, _circular_rotation_one_over_gain, true, false );   // TODO: mul by constant 
+    }
+
+    T zz;
+    circular_rotation( r, _zero, x, co, si, zz );
+    if ( do_reduce ) {
+        //-----------------------------------------------------
+        // If did_minus_pi_div_4 is true, then we need to perform this
+        // modification for sinpi and cospi:
+        //
+        // sinpi(x+PI/4) = sqrt(2)/2 * ( sinpi(x) + cospi(x) )
+        // cospi(x+PI/4) = sqrt(2)/2 * ( cospi(x) - sinpi(x) )
+        //-----------------------------------------------------
+        if ( did_minus_pi_div_4 ) {
+            T si_new = mul( _sqrt2_div_2, si+co, true, false );    // TODO: mul by constant
+            T co_new = mul( _sqrt2_div_2, co-si, true, false );    // TODO: mul by constant
+            si = si_new;
+            co = co_new;
+        }
+
+        //-----------------------------------------------------
+        // Next, make adjustments for the quadrant and r multiply.
+        //-----------------------------------------------------
+        if ( quadrant&1 ) {
+            T tmp = co;
+            co = si;
+            si = tmp;
+        }
+        if ( _r != nullptr ) {
+            if ( need_si ) si <<= r_lshift;
+            if ( need_co ) co <<= r_lshift;
+        }
+        if ( need_si && (r_sign ^ x_sign ^ (quadrant >= 2)) )                  si = -si;
+        if ( need_co && (r_sign ^          (quadrant == 1) || quadrant == 2) ) co = -co;
+    }
 }
 
 template< typename T, typename FLT >
@@ -3281,6 +3404,30 @@ inline void Cordic<T,FLT>::reduce_sincos_arg( T& a, uint32_t& quad, bool& sign, 
                               " subtract=" << to_flt(s) << " a_reduced=" << to_flt(a) << 
                               " quadrant=" << quad << " did_minus_pi_div_4=" << did_minus_pi_div_4 << "\n"; 
 
+}
+
+template< typename T, typename FLT >
+inline void Cordic<T,FLT>::reduce_sinpicospi_arg( T& a, uint32_t& quad, bool& sign, bool& did_minus_pi_div_4 ) const
+{
+    //-----------------------------------------------------
+    // split a into i and f where i is integer part plus first two bits of fraction, 
+    // and f is remaining fraction shifted left by 2.
+    //
+    // so our reduced angle is (i + f) * PI/4.
+    // subtracting i*PI/4 leads to f*PI/4.
+    // if i is odd, then set the flag.
+    //-----------------------------------------------------
+    const T a_orig = a;
+    sign = a < 0;
+    if ( sign ) a = -a;
+    const T i = a >> (_frac_w-2 + _guard_w);
+    const T f = ( a & (_quarter - 1) ) << 2;
+            a = mul( f, _four_div_pi, true, false );               // TODO: mul by constant
+    quad      = (i >> 1) & 3;
+    did_minus_pi_div_4 = i & 1;
+    if ( debug ) std::cout << "reduce_sinpicospi_arg: a_orig=" << to_flt(a_orig) << " i=" << to_rstring(i) << 
+                              " f=" << to_flt(f) << " a_reduced=" << to_flt(a) << 
+                              " quadrant=" << quad << " did_minus_pi_div_4=" << did_minus_pi_div_4 << "\n"; 
 }
 
 template< typename T, typename FLT >
