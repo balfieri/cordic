@@ -177,8 +177,8 @@ public:
     freal  sub( const freal& b ) const; 
     freal  fma( const freal& b, const freal& c ) const;             
     freal  mul( const freal& b ) const;                             
-    freal  lshift( int b ) const;
-    freal  rshift( int b ) const;
+    freal  scalbn( int b ) const;
+    freal  ldexp( int b ) const;
     freal  sqr( void ) const;
     freal  dad( const freal& b, const freal& c ) const;      
     freal  div( const freal& b ) const;      // a/b
@@ -1031,11 +1031,11 @@ inline freal<T,FLT>  freal<T,FLT>::operator /  ( const freal<T,FLT>& b ) const
 
 template< typename T, typename FLT >              
 inline freal<T,FLT>  freal<T,FLT>::operator << (       int    b ) const                                 
-{ return lshift( b );                   }
+{ return scalbn( b );                   }
 
 template< typename T, typename FLT >              
 inline freal<T,FLT>  freal<T,FLT>::operator >> (       int    b ) const                                 
-{ return rshift( b );                   }
+{ return scalbn( -b );                  }
 
 template< typename T, typename FLT >              
 inline freal<T,FLT>& freal<T,FLT>::operator =  ( const freal<T,FLT>& b ) 
@@ -1063,11 +1063,11 @@ inline freal<T,FLT>& freal<T,FLT>::operator /= ( const freal<T,FLT>& b )
 
 template< typename T, typename FLT >              
 inline freal<T,FLT>& freal<T,FLT>::operator <<=(       int    b )
-{ return assign( lshift( b ) );         }
+{ return assign( scalbn( b ) );         }
 
 template< typename T, typename FLT >              
 inline freal<T,FLT>& freal<T,FLT>::operator >>=(       int    b )
-{ return assign( rshift( b ) );         }
+{ return assign( scalbn( -b ) );        }
 
 template< typename T, typename FLT >             
 inline bool   freal<T,FLT>::operator >  ( const freal<T,FLT>& b ) const                                        

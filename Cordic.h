@@ -67,6 +67,12 @@ public:
     ~Cordic();
 
     //-----------------------------------------------------
+    // Construction
+    //-----------------------------------------------------
+    T    make_fixed( bool sign, const T& i, const T& f ) const;         // fixed-point    value with sign, integer  part i, and fractional part f
+    T    make_float( bool sign, const T& e, const T& f ) const;         // floating-point value using sign, exponent part 3, and fractional part f
+
+    //-----------------------------------------------------
     // Explicit Conversions
     //-----------------------------------------------------
     T       to_t( FLT x, bool can_log=false ) const;        // FLT to T encoded value
@@ -117,16 +123,10 @@ public:
     // (2) means requires 2 applications of a CORDIC algorithm.              functionality
     //-----------------------------------------------------               ---------------------------
 
-    // construction
-    T    ldexp( const T& x, int exp ) const;                            // x * 2^exp
-    T    scalbn( const T& x, int exp ) const;                           // x * 2^exp (i.e., same thing)
-    T    make_fixed( bool sign, const T& i, const T& f ) const;         // fixed-point    value with sign, integer  part i, and fractional part f
-    T    make_float( bool sign, const T& e, const T& f ) const;         // floating-point value using sign, exponent part 3, and fractional part f
-
     // deconstruction
     bool signbit( const T& x ) const;                                   // x < 0
     T    frexp( const T& x, int * e ) const;                            // return normalized fraction and exponent
-    T    modf( const T& x, T * i ) const;                               // decompose into fraction and integer, still encoded 
+    T    modf( const T& x, T * i ) const;                               // decompose into fraction and integer (both with sign of x), still encoded 
     int  ilogb( const T& x ) const;                                     // unbiased exponent as int
     T    logb( const T& x ) const;                                      // unbiased exponent, still encoded
     int  fpclassify( const T& x ) const;                                // fixed-point: FP_ZERO or FP_SUBNORMAL
@@ -143,14 +143,14 @@ public:
     T    ceil( const T& x ) const;                                      // smallest integral value >= x
     T    trunc( const T& x ) const;                                     // nearest  integral value toward 0
     T    round( const T& x ) const;                                     // nearest  integral value; halfway cases away from 0 
-    T    lround( const T& x ) const;                                    // same as round() except returns just the integer part
+    T    lround( const T& x ) const;                                    // same as round() except returns just the raw integer part 
     T    rint( const T& x ) const;                                      // nearest  integral value according to rounding mode:
                                                                         //    FE_DOWNWARD:    floor(x)
                                                                         //    FE_UPWARD:      ceil(x)
                                                                         //    FE_TOWWARDZERO: trunc(x)
                                                                         //    FE_TONEAREST:   round(x)
-    T    lrint( const T& x ) const;                                     // same as rint() except returns just the integer part
     T    nearbyint( const T& x ) const;                                 // same as rint() but never raises FE_INEXACT
+    T    lrint( const T& x ) const;                                     // same as rint() except returns just the raw integer part
 
     // basic arithmetic
     T    abs( const T& x ) const;                                       // |x|
@@ -161,8 +161,8 @@ public:
     T    fma( const T& x, const T& y, const T& addend ) const;          // x*y + addend
     T    mul( const T& x, const T& y ) const;                           // x*y 
     T    sqr( const T& x ) const;                                       // x*x
-    T    lshift( const T& x, int y, bool can_log=true ) const;          // x << y
-    T    rshift( const T& x, int y ) const;                             // x >> y
+    T    scalbn( const T& x, int y ) const;                             // x * 2^y (i.e., left-shift)
+    T    ldexp( const T& x, int y ) const;                              // x * 2^y (same thing)
     T    fda( const T& y, const T& x, const T& addend ) const;          // y/x + addend
     T    div( const T& y, const T& x ) const;                           // y/x
     T    remainder( const T& y, const T& x ) const;                     // IEEE 754-style remainder: y - n*x (where n is nearest int)
@@ -203,9 +203,13 @@ public:
     T    log10( const T& x ) const;                                     // log(x)/log(10)               (2)
 
     T    sin( const T& x, const T * r=nullptr  ) const;                 // r*sin(x)                   (default r is 1)
+    T    sinpi( const T& x, const T * r=nullptr ) const;                // r*sin(x*PI)                (defualt r is 1
     T    cos( const T& x, const T * r=nullptr ) const;                  // r*cos(x)                   (default r is 1)
-    void sincos( const T& x, T& si, T& co, const T * r=nullptr ) const;   // si=r*sin(x), co=r*cos(x)   (default r is 1)
+    T    cospi( const T& x, const T * r=nullptr ) const;                // r*cos(x*PI)                (defualt r is 1
+    void sincos( const T& x, T& si, T& co, const T * r=nullptr ) const; // si=r*sin(x), co=r*cos(x)   (default r is 1)
+    void sinpicospi( const T& x, T& si, T& co, const T * r=nullptr ) const;// si=r*sin(x*PI), co=r*cos(x*PI) (default r is 1)
     T    tan( const T& x ) const;                                       // sin(x) / cos(x)              (2)
+    T    tanpi( const T& x ) const;                                     // sin(x*PI) / cos(x*PI)        (2)
     T    asin( const T& x ) const;                                      // atan2(x, sqrt(1 - x^2))      (2)
     T    acos( const T& x ) const;                                      // atan2(sqrt(1 - x^2), x)      (2)
     T    atan( const T& x ) const;                                      // atan(x)
@@ -214,7 +218,7 @@ public:
     void polar_to_rect( const T& r, const T& a, T& x, T& y ) const;     // sincos(a, x, y, &r)  
     void rect_to_polar( const T& x, const T& y, T& r, T& a ) const;     // r=sqrt(x^2 + y^2), a=atan2(y, x)
     T    hypot( const T& x, const T& y ) const;                         // sqrt(x^2 + y^2)  (Euclidean hypot)
-    T    hypoth( const T& x, const T& y ) const;                        // sqrt(x^2 - y^2)  (hyperbolic hypot)
+    T    hypoth( const T& x, const T& y ) const;                        // sqrt(x^2 - y^2)  ("hyperbolic hypot")
 
     T    sinh( const T& x, const T * r=nullptr ) const;                 // r*sinh(x), also r*(e^x - e^-x)/2  (default r is 1)
     T    cosh( const T& x, const T * r=nullptr ) const;                 // r*cosh(x), also r*(e^x + e^-x)/2  (default r is 1)
@@ -502,6 +506,7 @@ public:
     // These version are used internally, but making them available publically.
     // In general, you should only call the earlier routines.
     //-----------------------------------------------------
+    T    scalbn( const T& x, int y, bool can_log ) const;                             
     T    fma( const T& x, const T& y, const T& addend, bool do_reduce, bool can_log ) const;
     T    mul( const T& x, const T& y, bool do_reduce, bool can_log ) const;                 
     T    fda( const T& y, const T& x, const T& addend, bool do_reduce, bool can_log ) const; 
@@ -547,7 +552,7 @@ public:
     //
     // NOTE: Logging is done globally, not just for one Cordic.  
     //       Thus the static methods here.
-   //-----------------------------------------------------
+    //-----------------------------------------------------
     static void            logger_set( Logger<T,FLT> * logger );  // null means use the default logger
     static Logger<T,FLT> * logger_get( void );                    // returns current logger
     static std::string     op_to_str( uint16_t op );              // supply this to Logger constructor
@@ -576,8 +581,8 @@ public:
         fma,
         mul,
         sqr,
-        lshift,
-        rshift,
+        scalbn,
+        ldexp,
         fda,
         div,
         rcp,
@@ -713,8 +718,8 @@ struct Cordic<T,FLT>::Impl
     T *                         reduce_sinhcosh_cosh_i;                // for each possible integer value, cosh(i)
     bool *                      reduce_sinhcosh_sinh_i_oflow;          // boolean indicating if this index creates too big of a number
     bool *                      reduce_sinhcosh_cosh_i_oflow;          // boolean indicating if this index creates too big of a number
-    FLT *                       reduce_exp_factor;                      // for each possible integer value, std::exp(i)
-    T *                         reduce_log_addend;                      // for each possible lshift value, log( 1 << lshift )
+    FLT *                       reduce_exp_factor;                     // for each possible integer value, std::exp(i)
+    T *                         reduce_log_addend;                     // for each possible lshift value, log( 1 << lshift )
 };
 
 //-----------------------------------------------------
@@ -757,8 +762,8 @@ std::string Cordic<T,FLT>::op_to_str( uint16_t op )
         _ocase( sub )
         _ocase( fma )
         _ocase( mul )
-        _ocase( lshift )
-        _ocase( rshift )
+        _ocase( scalbn )
+        _ocase( ldexp )
         _ocase( fda )
         _ocase( div )
         _ocase( rcp )
@@ -2012,7 +2017,7 @@ inline T Cordic<T,FLT>::fma( const T& _x, const T& _y, const T& addend, bool do_
     T xx, yy, zz;
     linear_rotation( x, do_reduce ? impl->zero : addend, y, xx, yy, zz );
     if ( do_reduce ) {
-        yy = lshift( yy, x_lshift + y_lshift, false );
+        yy = scalbn( yy, x_lshift + y_lshift, false );
         yy += addend;
         if ( sign ) yy = -yy;
     }
@@ -2049,9 +2054,9 @@ inline T Cordic<T,FLT>::sqr( const T& x ) const
 }
 
 template< typename T, typename FLT >
-T Cordic<T,FLT>::lshift( const T& x, int ls, bool can_log ) const
+T Cordic<T,FLT>::scalbn( const T& x, int ls, bool can_log ) const
 {
-    if ( can_log ) _log_2i( lshift, x, T(ls) );
+    if ( can_log ) _log_2i( scalbn, x, T(ls) );
     cassert( x >= 0, "lshift x should be non-negative" );
     if ( ls > 0 ) {
         //-----------------------------------------------------
@@ -2079,9 +2084,15 @@ T Cordic<T,FLT>::lshift( const T& x, int ls, bool can_log ) const
 }
 
 template< typename T, typename FLT >
-inline T Cordic<T,FLT>::rshift( const T& x, int rs ) const
+T Cordic<T,FLT>::scalbn( const T& x, int ls ) const
 {
-    return lshift( x, -rs );
+    return scalbn( x, ls, true );
+}
+
+template< typename T, typename FLT >
+T Cordic<T,FLT>::ldexp( const T& x, int y ) const
+{
+    return scalbn( x, y );
 }
 
 template< typename T, typename FLT >
@@ -2107,7 +2118,7 @@ T Cordic<T,FLT>::fda( const T& _y, const T& _x, const T& addend, bool do_reduce,
     T xx, yy, zz;
     linear_vectoring( x, y, do_reduce ? impl->zero : addend, xx, yy, zz );
     if ( do_reduce ) {
-        zz = lshift( zz, y_lshift-x_lshift, false );
+        zz = scalbn( zz, y_lshift-x_lshift, false );
         zz += addend;
         if ( sign ) zz = -zz;
     }
@@ -2165,7 +2176,7 @@ T Cordic<T,FLT>::sqrt( const T& _x, bool do_reduce, bool can_log ) const
     T xx, yy;
     hyperbolic_vectoring_xy( x+impl->one, x-impl->one, xx, yy );  // gain*sqrt((s+1)^2 - (s-1)^2)
     xx = mul( xx, impl->hyperbolic_vectoring_one_over_gain, false, false );   // TODO: mul by constant
-    if ( do_reduce ) xx = lshift( xx, ls, false );                  // log2(p)/2 - 1
+    if ( do_reduce ) xx = scalbn( xx, ls, false );                  // log2(p)/2 - 1
 
     if ( debug ) std::cout << "sqrt end: x_orig=" << to_flt(_x) << " x_reduced=s=" << to_flt(x) << " do_reduce=" << do_reduce << " xx=" << to_flt(xx) << "\n";
     return xx;
@@ -2680,7 +2691,7 @@ inline T Cordic<T,FLT>::hypot( const T& _x, const T& _y, bool do_reduce, bool ca
     T xx, yy, zz;
     circular_vectoring_xy( x, y, xx, yy );
     xx = mul( xx, impl->circular_vectoring_one_over_gain, true, false );        // TODO: mul by constant
-    if ( do_reduce ) xx = lshift( xx, ls, false );
+    if ( do_reduce ) xx = scalbn( xx, ls, false );
     if ( debug ) std::cout << "hypot end: x=" << to_flt(x) << " y=" << to_flt(y) << " do_reduce=" << do_reduce << " xx=" << to_flt(xx) << "\n";
     return xx;
 }

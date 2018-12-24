@@ -465,7 +465,7 @@ template< typename T, typename FLT >
 inline void Analysis<T,FLT>::op2( uint16_t _op, const T * opnd1, const T& opnd2 )
 {
     OP op = OP(_op);
-    cassert( op == OP::lshift || op == OP::rshift || op == OP::pop_value, "op2i allowed only for lshift/rshift/pop_value" );
+    cassert( op == OP::scalbn || op == OP::pop_value, "op2i allowed only for scalbn/pop_value" );
     inc_op_cnt( op );
     auto it = vals.find( reinterpret_cast<uint64_t>( opnd1 ) );
     cassert( it != vals.end() && it->second.is_alive, "opnd[0] does not exist" );
