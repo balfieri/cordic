@@ -571,6 +571,11 @@ public:
         pop_value,
         pop_bool,
 
+        frexp,
+        modf,
+        ilogb,
+        logb,
+
         abs,
         neg,
         floor,
@@ -752,6 +757,11 @@ std::string Cordic<T,FLT>::op_to_str( uint16_t op )
         _ocase( assign )
         _ocase( pop_value )
         _ocase( pop_bool )
+
+        _ocase( frexp )
+        _ocase( modf )
+        _ocase( ilogb )
+        _ocase( logb )
 
         _ocase( abs )
         _ocase( neg )
@@ -1884,6 +1894,43 @@ template< typename T, typename FLT >
 inline bool Cordic<T,FLT>::signbit( const T& x ) const                                     
 {
     return x < 0;
+}
+
+template< typename T, typename FLT >
+inline T Cordic<T,FLT>::frexp( const T& _x, int * e ) const
+{
+    T x = _x;
+    int32_t lshift;
+    bool sign;
+    reduce_arg( x, lshift, sign, true, true, false );
+    _log_2i( frexp, _x, T(lshift) );
+    *e = lshift;
+    if ( sign ) x = -x;
+    return x;
+}
+
+template< typename T, typename FLT >
+T Cordic<T,FLT>::modf( const T& x, T * i ) const
+{
+    *i = x & ~(impl->one - 1);
+    T frac = (x < 0) ? (T(-1) << (impl->frac_w + impl->int_w)) : 0;
+    frac |= x & (impl->one - 1);
+    return frac;
+}
+
+template< typename T, typename FLT >
+int Cordic<T,FLT>::ilogb( const T& x ) const
+{
+    int exp;
+    (void)frexp( x, &exp );
+    return exp;
+}
+
+template< typename T, typename FLT >
+T Cordic<T,FLT>::logb( const T& x ) const
+{
+    int exp = ilogb( x );
+    return scalbn( impl->one, exp );
 }
 
 template< typename T, typename FLT >
