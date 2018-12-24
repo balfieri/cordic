@@ -160,6 +160,10 @@ public:
     freal& assign( const freal& b );
 
     bool   signbit( void ) const;    
+    freal  frexp( int * e ) const;
+    freal  modf( freal * i ) const;
+    int    ilogb( void ) const;
+    freal  logb( void ) const;
     int    fpclassify( void ) const; 
     bool   isfinite( void ) const;  
     bool   isinf( void ) const;    
@@ -304,6 +308,22 @@ static inline std::ostream& operator << ( std::ostream &out, const freal<T,FLT>&
 template< typename T=int64_t, typename FLT=double >              
 static inline bool signbit( const freal<T,FLT>& a )
 { return a.signbit();                   }
+
+template< typename T=int64_t, typename FLT=double >              
+static inline freal<T,FLT> frexp( const freal<T,FLT>& a, int * e )
+{ return a.frexp( e );                  }
+
+template< typename T=int64_t, typename FLT=double >              
+static inline freal<T,FLT> modf( const freal<T,FLT>& a, freal<T,FLT> * i )
+{ return a.modf( i );                   }
+
+template< typename T=int64_t, typename FLT=double >              
+static inline int ilogb( const freal<T,FLT>& a )
+{ return a.ilogb();                     }
+
+template< typename T=int64_t, typename FLT=double >              
+static inline freal<FLT,T> logb( const freal<T,FLT>& a )
+{ return a.logb();                      }
 
 template< typename T=int64_t, typename FLT=double >              
 static inline int fpclassify( const freal<T,FLT>& a )
@@ -1155,6 +1175,22 @@ inline bool freal<T,FLT>::signbit( void ) const
 { return( c(), cordic->signbit( v ) ); }
 
 template< typename T, typename FLT >              
+inline freal<T,FLT> freal<T,FLT>::frexp( int * e ) const
+{ return( c(), pop_value( cordic, cordic->frexp( v, e ) ) ); }
+
+template< typename T, typename FLT >              
+inline freal<T,FLT> freal<T,FLT>::modf( freal<T,FLT> * i ) const
+{ return( c(), pop_value( cordic, cordic->modf( v, &i->v ) ) ); }
+
+template< typename T, typename FLT >              
+inline int freal<T,FLT>::ilogb( void ) const
+{ return( c(), cordic->ilogb( v ) ); }
+
+template< typename T, typename FLT >              
+inline freal<T,FLT> freal<T,FLT>::logb( void ) const
+{ return( c(), pop_value( cordic, cordic->logb( v ) ) ); }
+
+template< typename T, typename FLT >              
 inline int freal<T,FLT>::fpclassify( void ) const
 { return( c(), cordic->fpclassify( v ) ); }
 
@@ -1175,20 +1211,20 @@ inline bool freal<T,FLT>::isnormal( void ) const
 { return( c(), cordic->isnormal( v ) ); }
 
 template< typename T, typename FLT >              
-inline freal<T,FLT>  freal<T,FLT>::abs( void ) const
-{ return( c(), pop_value( cordic, cordic->abs( v ) ) ); }
-
-template< typename T, typename FLT >              
-inline freal<T,FLT>  freal<T,FLT>::neg( void ) const
-{ return( c(), pop_value( cordic, cordic->neg( v ) ) ); }
-
-template< typename T, typename FLT >              
 inline freal<T,FLT>  freal<T,FLT>::floor( void ) const
 { return( c(), pop_value( cordic, cordic->floor( v ) ) ); }
 
 template< typename T, typename FLT >              
 inline freal<T,FLT>  freal<T,FLT>::ceil( void ) const
 { return( c(), pop_value( cordic, cordic->ceil( v ) ) ); }
+
+template< typename T, typename FLT >              
+inline freal<T,FLT>  freal<T,FLT>::abs( void ) const
+{ return( c(), pop_value( cordic, cordic->abs( v ) ) ); }
+
+template< typename T, typename FLT >              
+inline freal<T,FLT>  freal<T,FLT>::neg( void ) const
+{ return( c(), pop_value( cordic, cordic->neg( v ) ) ); }
 
 template< typename T, typename FLT >              
 inline freal<T,FLT> freal<T,FLT>::copysign( const freal<T,FLT>& b ) const                                    
