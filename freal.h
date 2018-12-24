@@ -170,8 +170,8 @@ public:
     bool   isnan( void ) const;   
     bool   isnormal( void ) const;
 
-    static int fesetround( int round );
-    static int fegetround( void );
+    int    fesetround( int round );
+    int    fegetround( void );
     freal  nextafter( const freal& to ) const;
     freal  nexttoward( long double to ) const;
     freal  floor( void ) const;
@@ -351,11 +351,11 @@ static inline std::string   to_string( const freal<T,FLT>& a )
 
 template< typename T=int64_t, typename FLT=double >              
 static inline int fesetround( int round ) 
-{ return freal<T,FLT>::fesetround( round ); }
+{ return freal<T,FLT>::implicit_to->fesetround( round ); }
 
 template< typename T=int64_t, typename FLT=double >              
 static inline int fegetround( void ) 
-{ return freal<T,FLT>::fegetround();    }
+{ return freal<T,FLT>::implicit_to->fegetround(); }
 
 template< typename T=int64_t, typename FLT=double >              
 static inline freal<T,FLT> nextafter( const freal<T,FLT>& a, const freal<T,FLT>& to )
@@ -1211,12 +1211,52 @@ inline bool freal<T,FLT>::isnormal( void ) const
 { return( c(), cordic->isnormal( v ) ); }
 
 template< typename T, typename FLT >              
+inline int freal<T,FLT>::fesetround( int round ) 
+{ return( c(), cordic->fesetround( round ) ); }
+
+template< typename T, typename FLT >              
+inline int freal<T,FLT>::fegetround( void ) 
+{ return( c(), cordic->fegetround() ); }
+
+template< typename T, typename FLT >              
+inline freal<T,FLT> freal<T,FLT>::nextafter( const freal<T,FLT>& to ) const
+{ return( c(), pop_value( cordic, cordic->nextafter( v, to.v ) ) ); }
+
+template< typename T, typename FLT >              
+inline freal<T,FLT>  freal<T,FLT>::nexttoward( long double to ) const
+{ return( c(), pop_value( cordic, cordic->nexttoward( to ) ) ); }
+
+template< typename T, typename FLT >              
 inline freal<T,FLT>  freal<T,FLT>::floor( void ) const
 { return( c(), pop_value( cordic, cordic->floor( v ) ) ); }
 
 template< typename T, typename FLT >              
 inline freal<T,FLT>  freal<T,FLT>::ceil( void ) const
 { return( c(), pop_value( cordic, cordic->ceil( v ) ) ); }
+
+template< typename T, typename FLT >              
+inline freal<T,FLT>  freal<T,FLT>::trunc( void ) const
+{ return( c(), pop_value( cordic, cordic->trunc( v ) ) ); }
+
+template< typename T, typename FLT >              
+inline freal<T,FLT>  freal<T,FLT>::round( void ) const
+{ return( c(), pop_value( cordic, cordic->round( v ) ) ); }
+
+template< typename T, typename FLT >              
+inline T freal<T,FLT>::lround( void ) const
+{ return( c(), cordic->lround( v ) ); }
+
+template< typename T, typename FLT >              
+inline freal<T,FLT>  freal<T,FLT>::rint( void ) const
+{ return( c(), pop_value( cordic, cordic->rint( v ) ) ); }
+
+template< typename T, typename FLT >              
+inline freal<T,FLT>  freal<T,FLT>::nearbyint( void ) const
+{ return( c(), pop_value( cordic, cordic->nearbyint( v ) ) ); }
+
+template< typename T, typename FLT >              
+inline T freal<T,FLT>::lrint( void ) const
+{ return( c(), cordic->lrint( v ) ); }
 
 template< typename T, typename FLT >              
 inline freal<T,FLT>  freal<T,FLT>::abs( void ) const
