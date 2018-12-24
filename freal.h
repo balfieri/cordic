@@ -80,15 +80,13 @@ public:
     static void implicit_to_set( const Cordic<T,FLT> * cordic );
     static void implicit_from_set( bool allow );
 
-    freal( float f );
-    freal( double f );
+    freal( FLT f );
     freal( uint64_t i );
     freal( int64_t i );
     freal( uint32_t i );
     freal( int32_t i );
 
-    operator float( void );
-    operator double( void );
+    operator FLT( void );
     operator uint64_t( void );
     operator int64_t( void );
     operator uint32_t( void );
@@ -183,7 +181,7 @@ public:
 
     freal  abs( void ) const;
     freal  neg( void ) const; 
-    freal  copysign( void ) const;
+    freal  copysign( const freal& b ) const;
     freal  add( const freal& b ) const; 
     freal  sub( const freal& b ) const; 
     freal  fma( const freal& b, const freal& c ) const;             
@@ -270,8 +268,8 @@ private:
     static const Cordic<T,FLT> * implicit_to;
     static bool                  implicit_from;
 
-    const Cordic<T,FLT> *       cordic;         // defines the type and most operations
-    T                           v;              // this value encoded in type T
+    const Cordic<T,FLT> *        cordic;         // defines the type and most operations
+    T                            v;              // this value encoded in type T
 
     static freal pop_value( const Cordic<T,FLT> * cordic, const T& encoded );   // pop value associated with last operation
     static bool  pop_bool(  const Cordic<T,FLT> * cordic, bool );               // pop bool  associated with last operation 
@@ -839,17 +837,10 @@ inline void freal<T,FLT>::implicit_from_set( bool allow )
 }
 
 template< typename T, typename FLT >              
-inline freal<T,FLT>::freal( double f )
+inline freal<T,FLT>::freal( FLT f )
 {
-    cassert( implicit_to != nullptr, "implicit_to_set() must be called before relying on any implicit from double to freal<>" );
-    *this = freal( implicit_to, FLT(f) );
-}
-
-template< typename T, typename FLT >              
-inline freal<T,FLT>::freal( float f )
-{
-    cassert( implicit_to != nullptr, "implicit_to_set() must be called before relying on any implicit from float to freal<>" );
-    *this = freal( implicit_to, FLT(f) );
+    cassert( implicit_to != nullptr, "implicit_to_set() must be called before relying on any implicit from FLT to freal<>" );
+    *this = freal( implicit_to, f );
 }
 
 template< typename T, typename FLT >              
@@ -881,16 +872,9 @@ inline freal<T,FLT>::freal( int32_t i )
 }
 
 template< typename T, typename FLT >              
-inline freal<T,FLT>::operator double( void )
+inline freal<T,FLT>::operator FLT( void )
 { 
-    cassert( implicit_from, "implicit_from_set( true ) must be called before relying on any implicit from freal<> to double" );
-    return to_flt();
-}
-
-template< typename T, typename FLT >              
-inline freal<T,FLT>::operator float( void )
-{ 
-    cassert( implicit_from, "implicit_from_set( true ) must be called before relying on any implicit from freal<> to float" );
+    cassert( implicit_from, "implicit_from_set( true ) must be called before relying on any implicit from freal<> to FLT" );
     return to_flt();
 }
 
@@ -1205,6 +1189,10 @@ inline freal<T,FLT>  freal<T,FLT>::floor( void ) const
 template< typename T, typename FLT >              
 inline freal<T,FLT>  freal<T,FLT>::ceil( void ) const
 { return( c(), pop_value( cordic, cordic->ceil( v ) ) ); }
+
+template< typename T, typename FLT >              
+inline freal<T,FLT> freal<T,FLT>::copysign( const freal<T,FLT>& b ) const                                    
+{ return( c( b ), pop_value( cordic, cordic->copysign( v, b.v ) ) ); }
 
 template< typename T, typename FLT >              
 inline freal<T,FLT> freal<T,FLT>::add( const freal<T,FLT>& b ) const                                    
