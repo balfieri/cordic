@@ -22,6 +22,7 @@
 #define _Cordic_h
 
 #include <cmath>
+#include <cfenv>
 #include <iostream>
 #include <iomanip>
 
@@ -75,11 +76,11 @@ public:
     //-----------------------------------------------------
     // Explicit Conversions
     //-----------------------------------------------------
-    T       to_t( FLT x, bool can_log=false ) const;        // FLT to T encoded value
-    FLT     to_flt( const T& x, bool can_log=false ) const; // T encoded value to FLT
-    std::string to_string( const T& x ) const;  // T to std::string in decimal floating-point format
-    std::string to_rstring( const T& _x ) const;// T to std::string in raw decimal integer format 
-    std::string to_bstring( const T& x ) const; // T to std::string in binary format, like "1 001 101101011010"
+    T           to_t( FLT x, bool can_log=false ) const;        // FLT to T encoded value
+    FLT         to_flt( const T& x, bool can_log=false ) const; // T encoded value to FLT
+    std::string to_string( const T& x ) const;          // T to std::string in decimal floating-point format
+    std::string to_rstring( const T& _x ) const;        // T to std::string in raw decimal integer format 
+    std::string to_bstring( const T& x ) const;         // T to std::string in binary format, like "1 001 101101011010"
 
     //-----------------------------------------------------
     // Constants 
@@ -137,14 +138,16 @@ public:
 
 
     // rounding
-    T    nextafter( const T& from, const T& to ) const;                 // (from == to) ?      to  :     (from +/- min toward to)
-    T    nexttoward( const T& from, long double to ) const;             // (from == to) ? to_t(to) : to_t(from +/- min toward to)
+    int  fesetround( int round );                                       // set rounding mode to FE_{DOWNWARD,UPWARD,TOWARDZDERO,TONEAREST}; return 0
+    int  fegetround( void ) const;                                      // returns current rounding mode
+    T    nextafter( const T& from, const T& to ) const;                 // (from == to) ?      to  : (from +/- min toward to)
+    T    nexttoward( const T& from, long double to ) const;             // (from == to) ? to_t(to) : (from +/- min toward to)
     T    floor( const T& x ) const;                                     // largest  integral value <= x
     T    ceil( const T& x ) const;                                      // smallest integral value >= x
     T    trunc( const T& x ) const;                                     // nearest  integral value toward 0
     T    round( const T& x ) const;                                     // nearest  integral value; halfway cases away from 0 
     T    lround( const T& x ) const;                                    // same as round() except returns just the raw integer part 
-    T    rint( const T& x ) const;                                      // nearest  integral value according to rounding mode:
+    T    rint( const T& x ) const;                                      // nearest integral value according to rounding mode:
                                                                         //    FE_DOWNWARD:    floor(x)
                                                                         //    FE_UPWARD:      ceil(x)
                                                                         //    FE_TOWWARDZERO: trunc(x)
@@ -167,7 +170,7 @@ public:
     T    div( const T& y, const T& x ) const;                           // y/x
     T    remainder( const T& y, const T& x ) const;                     // IEEE 754-style remainder: y - n*x (where n is nearest int)
     T    fmod( const T& y, const T& x ) const;                          // rem = remainder( |y|, |x| ); if (rem < 0) rem += x; rem = copysign(rem, x)
-    T    remquo( const T& y, const T& x, int * quo );                   // remainder(), and *quo receives sign and at least 3 LSBs of y/x
+    T    remquo( const T& y, const T& x, int * quo ) const;             // remainder(), and *quo receives sign and at least 3 LSBs of y/x
     T    rcp( const T& x ) const;                                       // 1/x
 
     // comparisons
@@ -506,9 +509,9 @@ public:
     // These version are used internally, but making them available publically.
     // In general, you should only call the earlier routines.
     //-----------------------------------------------------
-    T    scalbn( const T& x, int y, bool can_log ) const;                             
     T    fma( const T& x, const T& y, const T& addend, bool do_reduce, bool can_log ) const;
     T    mul( const T& x, const T& y, bool do_reduce, bool can_log ) const;                 
+    T    scalbn( const T& x, int y, bool can_log ) const;                             
     T    fda( const T& y, const T& x, const T& addend, bool do_reduce, bool can_log ) const; 
     T    div( const T& y, const T& x, bool do_reduce, bool can_log ) const;                  
     T    sqrt( const T& x, bool do_reduce, bool can_log ) const;                              
@@ -576,11 +579,20 @@ public:
         ilogb,
         logb,
 
-        abs,
-        neg,
+        nextafter,
+        nexttoward,
         floor,
         ceil,
+        trunc,
+        round,
+        lround,
+        rint,
+        nearbyint,
+        lrint,
 
+        abs,
+        neg,
+        copysign,
         add,
         sub,
         fma,
@@ -683,6 +695,7 @@ struct Cordic<T,FLT>::Impl
     uint32_t                    w;
     bool                        do_reduce;
     uint32_t                    n;
+    int                         rounding_mode;
 
     T                           maxint;
     T                           max;
@@ -763,11 +776,20 @@ std::string Cordic<T,FLT>::op_to_str( uint16_t op )
         _ocase( ilogb )
         _ocase( logb )
 
-        _ocase( abs )
-        _ocase( neg )
+        _ocase( nextafter )
+        _ocase( nexttoward )
         _ocase( floor )
         _ocase( ceil )
+        _ocase( trunc )
+        _ocase( round )
+        _ocase( lround )
+        _ocase( rint )
+        _ocase( nearbyint )
+        _ocase( lrint )
 
+        _ocase( abs )
+        _ocase( neg )
+        _ocase( copysign )
         _ocase( add )
         _ocase( sub )
         _ocase( fma )
@@ -873,6 +895,7 @@ Cordic<T,FLT>::Cordic( uint32_t int_w, uint32_t frac_w, bool do_reduce, uint32_t
     impl->w       = 1 + int_w + frac_w + guard_w;
     impl->do_reduce = do_reduce;
     impl->n       = n;
+    impl->rounding_mode = FE_TONEAREST;
     impl->maxint  = (T(1) << int_w) - 1;
     impl->one     = T(1) << (frac_w+guard_w);                         // required before calling to_t()
 
@@ -1899,6 +1922,7 @@ inline bool Cordic<T,FLT>::signbit( const T& x ) const
 template< typename T, typename FLT >
 inline T Cordic<T,FLT>::frexp( const T& _x, int * e ) const
 {
+    _log_1( frexp, _x );
     T x = _x;
     int32_t lshift;
     bool sign;
@@ -1912,6 +1936,7 @@ inline T Cordic<T,FLT>::frexp( const T& _x, int * e ) const
 template< typename T, typename FLT >
 T Cordic<T,FLT>::modf( const T& x, T * i ) const
 {
+    _log_1( modf, x );
     *i = x & ~(impl->one - 1);
     T frac = (x < 0) ? (T(-1) << (impl->frac_w + impl->int_w)) : 0;
     frac |= x & (impl->one - 1);
@@ -1968,6 +1993,129 @@ inline bool Cordic<T,FLT>::isnormal( const T& x ) const
 }
 
 template< typename T, typename FLT >
+inline int Cordic<T,FLT>::fesetround( int round )
+{
+    switch( round )
+    {
+        case FE_DOWNWARD:        
+        case FE_UPWARD:        
+        case FE_TOWARDZERO:
+        case FE_TONEAREST:
+            impl->rounding_mode = round;
+            return 0;
+
+        default:
+            return -1;
+    }
+}
+
+template< typename T, typename FLT >
+inline int Cordic<T,FLT>::fegetround( void ) const
+{
+    return impl->rounding_mode;
+}
+
+template< typename T, typename FLT >
+inline T Cordic<T,FLT>::nextafter( const T& from, const T& to ) const
+{
+    _log_2( nextafter, from, to );
+    if ( from == to ) {
+        return to;
+    } else if ( from < to ) {
+        return from + min();
+    } else {
+        return from - min();
+    }
+}
+
+template< typename T, typename FLT >
+inline T Cordic<T,FLT>::nexttoward( const T& from, long double to ) const
+{
+    return nextafter( from, to_t(to) );
+}
+
+template< typename T, typename FLT >
+inline T Cordic<T,FLT>::floor( const T& x ) const
+{
+    _log_1( floor, x );
+    T frac_mask = impl->one - 1;
+    if ( (x & frac_mask) == 0 ) {
+        return x;
+    } else if ( x < 0 ) {
+        return (x & ~frac_mask) - impl->one;
+    } else {
+        return x & ~frac_mask;
+    }
+}
+
+template< typename T, typename FLT >
+inline T Cordic<T,FLT>::ceil( const T& x ) const
+{
+    _log_1( ceil, x );
+    T frac_mask = impl->one - 1;
+    if ( (x & frac_mask) == 0 ) {
+        return x;
+    } else if ( x < 0 ) {
+        return x & ~frac_mask;
+    } else {
+        return (x & ~frac_mask) + impl->one;
+    }
+}
+
+template< typename T, typename FLT >
+inline T Cordic<T,FLT>::trunc( const T& x ) const
+{
+    _log_1( trunc, x );
+    T r = x & (impl->one - 1);
+    if ( signbit(x) ) r += impl->one;
+    return r;
+}
+
+template< typename T, typename FLT >
+inline T Cordic<T,FLT>::round( const T& _x ) const
+{
+    _log_1( round, _x );
+    T x = _x;
+    T frac = x & (impl->one - 1);
+    x &= ~(impl->one - 1);
+    if ( frac >= impl->half ) x += signbit(x) ? -impl->one : impl->one;
+    return x;
+}
+
+template< typename T, typename FLT >
+inline T Cordic<T,FLT>::lround( const T& x ) const
+{
+    // same as round(), but just raw integer part
+    return round( x ) >> (impl->frac_w + impl->guard_w);
+}
+
+template< typename T, typename FLT >
+inline T Cordic<T,FLT>::rint( const T& x ) const
+{
+    switch( impl->rounding_mode )
+    {
+        case FE_DOWNWARD:                       return floor( x );
+        case FE_UPWARD:                         return ceil( x );
+        case FE_TOWARDZERO:                     return trunc( x );
+        case FE_TONEAREST:                      return round( x );
+        default:                                return x;                         // shouldn't happen
+    }
+}
+
+template< typename T, typename FLT >
+inline T Cordic<T,FLT>::nearbyint( const T& x ) const
+{
+    return rint( x );                   // needs to make sure FE_INEXACT doesn't get raised
+}
+
+template< typename T, typename FLT >
+inline T Cordic<T,FLT>::lrint( const T& x ) const
+{
+    // return raw integer part of rint()
+    return rint( x ) >> (impl->frac_w + impl->guard_w);
+}
+
+template< typename T, typename FLT >
 inline T Cordic<T,FLT>::abs( const T& x ) const
 {
     _log_1( abs, x );
@@ -1991,31 +2139,12 @@ inline T Cordic<T,FLT>::neg( const T& x ) const
 }
 
 template< typename T, typename FLT >
-inline T Cordic<T,FLT>::floor( const T& x ) const
+inline T Cordic<T,FLT>::copysign( const T& x, const T& y ) const
 {
-    _log_1( floor, x );
-    T frac_mask = (T(1) << (impl->frac_w + impl->guard_w)) - 1;
-    if ( (x & frac_mask) == 0 ) {
-        return x;
-    } else if ( x > 0 ) {
-        return x & ~frac_mask;
-    } else {
-        return (x & ~frac_mask) - impl->one;
-    }
-}
-
-template< typename T, typename FLT >
-inline T Cordic<T,FLT>::ceil( const T& x ) const
-{
-    _log_1( ceil, x );
-    T frac_mask = (T(1) << (impl->frac_w+impl->guard_w)) - 1;
-    if ( (x & frac_mask) == 0 ) {
-        return x;
-    } else if ( x > 0 ) {
-        return (x & ~frac_mask) + impl->one;
-    } else {
-        return x & ~frac_mask;
-    }
+    _log_2( copysign, x, y );
+    bool x_sign = x < 0;
+    bool y_sign = y < 0;
+    return (x_sign != y_sign) ? -x : x;
 }
 
 template< typename T, typename FLT >
@@ -2193,6 +2322,25 @@ template< typename T, typename FLT >
 inline T Cordic<T,FLT>::div( const T& y, const T& x, bool do_reduce, bool can_log ) const
 {
     return fda( y, x, impl->zero, do_reduce, can_log );
+}
+
+template< typename T, typename FLT >
+inline T Cordic<T,FLT>::remainder( const T& y, const T& x ) const
+{
+    return div( y, x );                 // TODO: placeholder
+}
+
+template< typename T, typename FLT >
+inline T Cordic<T,FLT>::fmod( const T& y, const T& x ) const
+{
+    return div( y, x );                 // TODO: placeholder
+}
+
+template< typename T, typename FLT >
+inline T Cordic<T,FLT>::remquo( const T& y, const T& x, int * quo ) const
+{
+    return div( y, x );                 // TODO: placeholder
+    *quo = 0;
 }
 
 template< typename T, typename FLT >

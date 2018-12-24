@@ -168,25 +168,35 @@ public:
     bool   isnan( void ) const;   
     bool   isnormal( void ) const;
 
-    freal  abs( void ) const;
-    freal  neg( void ) const; 
+    static int fesetround( int round );
+    static int fegetround( void );
+    freal  nextafter( const freal& to ) const;
+    freal  nexttoward( long double to ) const;
     freal  floor( void ) const;
     freal  ceil( void ) const;
+    freal  trunc( void ) const;
+    freal  round( void ) const;
+    T      lround( void ) const;
+    freal  rint( void ) const;
+    freal  nearbyint( void ) const;
+    T      lrint( void ) const;
 
+    freal  abs( void ) const;
+    freal  neg( void ) const; 
+    freal  copysign( void ) const;
     freal  add( const freal& b ) const; 
     freal  sub( const freal& b ) const; 
     freal  fma( const freal& b, const freal& c ) const;             
     freal  mul( const freal& b ) const;                             
+    freal  sqr( void ) const;                             
     freal  scalbn( int b ) const;
     freal  ldexp( int b ) const;
-    freal  sqr( void ) const;
     freal  dad( const freal& b, const freal& c ) const;      
-    freal  div( const freal& b ) const;      // a/b
+    freal  div( const freal& b ) const;      
+    freal  remainder( const freal& b ) const;
+    freal  fmod( const freal& b ) const;
+    freal  remquo( const freal& x, int * quo ) const;
     freal  rcp( void ) const;                                    
-    freal  sqrt( void ) const;                                        
-    freal  rsqrt( void ) const;                               
-    freal  cbrt( void ) const;                                        
-    freal  rcbrt( void ) const;                               
 
     bool   isgreater( const freal& b ) const;                        
     bool   isgreaterequal( const freal& b ) const;                 
@@ -196,10 +206,14 @@ public:
     bool   isunordered( const freal& b ) const;              
     bool   isunequal( const freal& b ) const;                 
     bool   isequal( const freal& b ) const;                   
-
     freal  fdim( const freal& b ) const;
     freal  fmax( const freal& b ) const;
     freal  fmin( const freal& b ) const;
+
+    freal  sqrt( void ) const;                                        
+    freal  rsqrt( void ) const;                               
+    freal  cbrt( void ) const;                                        
+    freal  rcbrt( void ) const;                               
 
     freal  exp( void ) const;                                         
     freal  expm1( void ) const;              // exp(x) - 1   (accurately)
@@ -318,31 +332,75 @@ static inline std::string   to_string( const freal<T,FLT>& a )
 { return a.to_string();                 }
 
 template< typename T=int64_t, typename FLT=double >              
-static inline freal<T,FLT>  abs( const freal<T,FLT>& a )
-{ return a.abs();                       }
+static inline int fesetround( int round ) 
+{ return freal<T,FLT>::fesetround( round ); }
 
 template< typename T=int64_t, typename FLT=double >              
-static inline freal<T,FLT>  neg( const freal<T,FLT>& a )
-{ return a.neg();                       }
+static inline int fegetround( void ) 
+{ return freal<T,FLT>::fegetround();    }
 
 template< typename T=int64_t, typename FLT=double >              
-static inline freal<T,FLT>  floor( const freal<T,FLT>& a )
+static inline freal<T,FLT> nextafter( const freal<T,FLT>& a, const freal<T,FLT>& to )
+{ return a.nexafter( to );              } 
+
+template< typename T=int64_t, typename FLT=double >              
+static inline freal<T,FLT> nexttoward( const freal<T,FLT>& a, long double to )
+{ return a.nextoward( to );             }
+
+template< typename T=int64_t, typename FLT=double >              
+static inline freal<T,FLT> floor( const freal<T,FLT>& a )
 { return a.floor();                     }
 
 template< typename T=int64_t, typename FLT=double >              
-static inline freal<T,FLT>  ceil( const freal<T,FLT>& a )
-{ return a.ceil();                      }
+static inline freal<T,FLT> ceil( const freal<T,FLT>& a )
+{ return a.ceil();                     }
 
 template< typename T=int64_t, typename FLT=double >              
-static inline freal<T,FLT>  add( const freal<T,FLT>& a, const freal<T,FLT>& b )                         
+static inline freal<T,FLT> trunc( const freal<T,FLT>& a )
+{ return a.trunc();                     }
+
+template< typename T=int64_t, typename FLT=double >              
+static inline freal<T,FLT> round( const freal<T,FLT>& a )
+{ return a.round();                     }
+
+template< typename T=int64_t, typename FLT=double >              
+static inline T lround( const freal<T,FLT>& a )
+{ return a.lround();                    }
+
+template< typename T=int64_t, typename FLT=double >              
+static inline freal<T,FLT> rint( const freal<T,FLT>& a )
+{ return a.rint();                      }
+
+template< typename T=int64_t, typename FLT=double >              
+static inline freal<T,FLT> nearbyint( const freal<T,FLT>& a )
+{ return a.nearbyint();                 }
+
+template< typename T=int64_t, typename FLT=double >              
+static inline T lrint( const freal<T,FLT>& a )
+{ return a.lrint();                     }
+
+template< typename T=int64_t, typename FLT=double >              
+static inline freal<T,FLT> abs( const freal<T,FLT>& a )
+{ return a.abs();                       }
+
+template< typename T=int64_t, typename FLT=double >              
+static inline freal<T,FLT> neg( const freal<T,FLT>& a )
+{ return a.neg();                       }
+
+template< typename T=int64_t, typename FLT=double >              
+static inline freal<T,FLT> copysign( const freal<T,FLT>& a, const freal<T,FLT>& b )
+{ return a.copysign( b );               }
+
+template< typename T=int64_t, typename FLT=double >              
+static inline freal<T,FLT> add( const freal<T,FLT>& a, const freal<T,FLT>& b )                         
 { return a.add( b );                    }
 
 template< typename T=int64_t, typename FLT=double >              
-static inline freal<T,FLT>  sub( const freal<T,FLT>& a, const freal<T,FLT>& b )                         
+static inline freal<T,FLT> sub( const freal<T,FLT>& a, const freal<T,FLT>& b )                         
 { return a.sub( b );                    }
 
 template< typename T=int64_t, typename FLT=double >              
-static inline freal<T,FLT>  fma( const freal<T,FLT>& a, const freal<T,FLT>& b, const freal<T,FLT>& c )  
+static inline freal<T,FLT> fma( const freal<T,FLT>& a, const freal<T,FLT>& b, const freal<T,FLT>& c )  
 { return a.fma( b, c );                 }
 
 template< typename T=int64_t, typename FLT=double >              
@@ -1181,22 +1239,6 @@ inline freal<T,FLT> freal<T,FLT>::rcp( void ) const
 { return( c(), pop_value( cordic, cordic->rcp( v ) ) ); }
 
 template< typename T, typename FLT >              
-inline freal<T,FLT> freal<T,FLT>::sqrt( void ) const                                                    
-{ return( c(), pop_value( cordic, cordic->sqrt( v ) ) ); }
-
-template< typename T, typename FLT >              
-inline freal<T,FLT> freal<T,FLT>::rsqrt( void ) const                                           
-{ return( c(), pop_value( cordic, cordic->rsqrt( v ) ) ); }
-
-template< typename T, typename FLT >              
-inline freal<T,FLT> freal<T,FLT>::cbrt( void ) const                                                    
-{ return( c(), pop_value( cordic, cordic->cbrt( v ) ) ); }
-
-template< typename T, typename FLT >              
-inline freal<T,FLT> freal<T,FLT>::rcbrt( void ) const                                           
-{ return( c(), pop_value( cordic, cordic->rcbrt( v ) ) ); }
-
-template< typename T, typename FLT >              
 inline bool freal<T,FLT>::isgreater( const freal<T,FLT>& b ) const                                    
 { return( c( b ), pop_bool( cordic, cordic->isgreater( v, b.v ) ) ); }
 
@@ -1239,6 +1281,22 @@ inline freal<T,FLT> freal<T,FLT>::fmax( const freal<T,FLT>& b ) const
 template< typename T, typename FLT >              
 inline freal<T,FLT> freal<T,FLT>::fmin( const freal<T,FLT>& b ) const                                                    
 { return( c( b ), pop_value( cordic, cordic->fmin( v, b.v ) ) ); }
+
+template< typename T, typename FLT >              
+inline freal<T,FLT> freal<T,FLT>::sqrt( void ) const                                                    
+{ return( c(), pop_value( cordic, cordic->sqrt( v ) ) ); }
+
+template< typename T, typename FLT >              
+inline freal<T,FLT> freal<T,FLT>::rsqrt( void ) const                                           
+{ return( c(), pop_value( cordic, cordic->rsqrt( v ) ) ); }
+
+template< typename T, typename FLT >              
+inline freal<T,FLT> freal<T,FLT>::cbrt( void ) const                                                    
+{ return( c(), pop_value( cordic, cordic->cbrt( v ) ) ); }
+
+template< typename T, typename FLT >              
+inline freal<T,FLT> freal<T,FLT>::rcbrt( void ) const                                           
+{ return( c(), pop_value( cordic, cordic->rcbrt( v ) ) ); }
 
 template< typename T, typename FLT >              
 inline freal<T,FLT> freal<T,FLT>::exp( void ) const                                                     
