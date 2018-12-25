@@ -146,14 +146,18 @@ public:
     T    ceil( const T& x ) const;                                      // smallest integral value >= x
     T    trunc( const T& x ) const;                                     // nearest  integral value toward 0
     T    round( const T& x ) const;                                     // nearest  integral value; halfway cases away from 0 
-    T    lround( const T& x ) const;                                    // same as round() except returns just the raw integer part 
+    long lround( const T& x ) const;                                    // same as round() except returns just the raw integer part as long 
+    long long llround( const T& x ) const;                              // same as round() except returns just the raw integer part as long long
+    T    iround( const T& x ) const;                                    // same as round() except returns just the raw integer part as T
     T    rint( const T& x ) const;                                      // nearest integral value according to rounding mode:
                                                                         //    FE_DOWNWARD:    floor(x)
                                                                         //    FE_UPWARD:      ceil(x)
                                                                         //    FE_TOWWARDZERO: trunc(x)
                                                                         //    FE_TONEAREST:   round(x)
+    long lrint( const T& x ) const;                                     // same as rint() except returns just the raw integer part as long
+    long long llrint( const T& x ) const;                               // same as rint() except returns just the raw integer part as long long
+    T    irint( const T& x ) const;                                     // same as rint() except returns just the raw integer part as T
     T    nearbyint( const T& x ) const;                                 // same as rint() but never raises FE_INEXACT
-    T    lrint( const T& x ) const;                                     // same as rint() except returns just the raw integer part
 
     // basic arithmetic
     T    abs( const T& x ) const;                                       // |x|
@@ -588,9 +592,13 @@ public:
         trunc,
         round,
         lround,
+        llround,
+        iround,
         rint,
-        nearbyint,
         lrint,
+        llrint,
+        irint,
+        nearbyint,
 
         abs,
         neg,
@@ -784,9 +792,13 @@ std::string Cordic<T,FLT>::op_to_str( uint16_t op )
         _ocase( trunc )
         _ocase( round )
         _ocase( lround )
+        _ocase( llround )
+        _ocase( iround )
         _ocase( rint )
-        _ocase( nearbyint )
         _ocase( lrint )
+        _ocase( llrint )
+        _ocase( irint )
+        _ocase( nearbyint )
 
         _ocase( abs )
         _ocase( neg )
@@ -2084,7 +2096,21 @@ inline T Cordic<T,FLT>::round( const T& _x ) const
 }
 
 template< typename T, typename FLT >
-inline T Cordic<T,FLT>::lround( const T& x ) const
+inline long Cordic<T,FLT>::lround( const T& x ) const
+{
+    // same as round(), but just raw integer part
+    return round( x ) >> (_frac_w + _guard_w);
+}
+
+template< typename T, typename FLT >
+inline long long Cordic<T,FLT>::llround( const T& x ) const
+{
+    // same as round(), but just raw integer part
+    return round( x ) >> (_frac_w + _guard_w);
+}
+
+template< typename T, typename FLT >
+inline T Cordic<T,FLT>::iround( const T& x ) const
 {
     // same as round(), but just raw integer part
     return round( x ) >> (_frac_w + _guard_w);
@@ -2104,16 +2130,30 @@ inline T Cordic<T,FLT>::rint( const T& x ) const
 }
 
 template< typename T, typename FLT >
-inline T Cordic<T,FLT>::nearbyint( const T& x ) const
-{
-    return rint( x );                   // needs to make sure FE_INEXACT doesn't get raised
-}
-
-template< typename T, typename FLT >
-inline T Cordic<T,FLT>::lrint( const T& x ) const
+inline long Cordic<T,FLT>::lrint( const T& x ) const
 {
     // return raw integer part of rint()
     return rint( x ) >> (_frac_w + _guard_w);
+}
+
+template< typename T, typename FLT >
+inline long long Cordic<T,FLT>::llrint( const T& x ) const
+{
+    // return raw integer part of rint()
+    return rint( x ) >> (_frac_w + _guard_w);
+}
+
+template< typename T, typename FLT >
+inline T Cordic<T,FLT>::irint( const T& x ) const
+{
+    // return raw integer part of rint()
+    return rint( x ) >> (_frac_w + _guard_w);
+}
+
+template< typename T, typename FLT >
+inline T Cordic<T,FLT>::nearbyint( const T& x ) const
+{
+    return rint( x );                   // needs to make sure FE_INEXACT doesn't get raised
 }
 
 template< typename T, typename FLT >

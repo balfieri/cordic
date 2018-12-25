@@ -23,7 +23,7 @@
 // This class is a very simplisitic version of arbitrary precision integers, or "big integers."
 // It provides only a bare minimum set of operations needed by Cordic.h.
 // I didn't use an official class because I wanted to make sure Cordic wasn't
-// using any b integer math operations besides adding and shifting.
+// using any integer math operations besides adding and shifting.
 //
 // Typical usage:
 //
