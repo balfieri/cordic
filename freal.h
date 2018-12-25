@@ -196,6 +196,7 @@ public:
     freal  mul( const freal& b ) const;                             
     freal  sqr( void ) const;                             
     freal  scalbn( int b ) const;
+    freal  scalbnn( int b ) const;                              // scalbn( -b )
     freal  ldexp( int b ) const;
     freal  fda( const freal& b, const freal& c ) const;      
     freal  div( const freal& b ) const;      
@@ -324,7 +325,7 @@ static inline std::ostream& operator << ( std::ostream &out, const freal<T,FLT>&
     static inline _freal name( const _freal& a )                \
     { return a.name(); }                                        \
 
-#define decl_std1_rrr( name, ret_type )                         \
+#define decl_std1_ret( name, ret_type )                         \
     template< typename T=int64_t, typename FLT=double >         \
     static inline ret_type name( const _freal& a )              \
     { return a.name(); }                                        \
@@ -334,7 +335,7 @@ static inline std::ostream& operator << ( std::ostream &out, const freal<T,FLT>&
     static inline _freal name( const _freal& a, const _freal& b ) \
     { return a.name( b ); }                                     \
 
-#define decl_std2_rrr( name, ret_type )                         \
+#define decl_std2_ret( name, ret_type )                         \
     template< typename T=int64_t, typename FLT=double >         \
     static inline ret_type name( const _freal& a, const _freal& b ) \
     { return a.name( b ); }                                     \
@@ -354,17 +355,17 @@ static inline std::ostream& operator << ( std::ostream &out, const freal<T,FLT>&
     static inline _freal name( const _freal& a, const _freal& b, c_type c ) \
     { return a.name( b, c ); }                                  \
 
-decl_std1_rrr( signbit,         bool            )
+decl_std1_ret( signbit,         bool            )
 decl_std2x(    frexp,           int *           )
 decl_std2x(    modf,            _freal *        )
-decl_std1_rrr( ilogb,           int             )
+decl_std1_ret( ilogb,           int             )
 decl_std1(     logb                             )
-decl_std1_rrr( fpclassify,      int             )
-decl_std1_rrr( isfinite,        bool            )
-decl_std1_rrr( isinf,           bool            )
-decl_std1_rrr( isnan,           bool            )
-decl_std1_rrr( isnormal,        bool            )
-decl_std1_rrr( to_string,       std::string     )
+decl_std1_ret( fpclassify,      int             )
+decl_std1_ret( isfinite,        bool            )
+decl_std1_ret( isinf,           bool            )
+decl_std1_ret( isnan,           bool            )
+decl_std1_ret( isnormal,        bool            )
+decl_std1_ret( to_string,       std::string     )
 
 template< typename T=int64_t, typename FLT=double >              
 static inline int fesetround( int round ) 
@@ -380,13 +381,13 @@ decl_std1(     floor                            );
 decl_std1(     ceil                             );
 decl_std1(     trunc                            );
 decl_std1(     round                            );
-decl_std1_rrr( lround,          long            );
-decl_std1_rrr( llround,         long long       );
-decl_std1_rrr( iround,          T               );
+decl_std1_ret( lround,          long            );
+decl_std1_ret( llround,         long long       );
+decl_std1_ret( iround,          T               );
 decl_std1(     rint                             );
-decl_std1_rrr( lrint,           long            );
-decl_std1_rrr( llrint,          long long       );
-decl_std1_rrr( irint,           T               );
+decl_std1_ret( lrint,           long            );
+decl_std1_ret( llrint,          long long       );
+decl_std1_ret( irint,           T               );
 decl_std1(     nearbyint                        );
 decl_std1(     abs                              );
 decl_std1(     neg                              );
@@ -404,14 +405,14 @@ decl_std2(     remainder                        );
 decl_std2(     fmod                             );
 decl_std3x(    remquo,          int             );
 decl_std1(     rcp                              );
-decl_std2_rrr( isgreater,       bool            );
-decl_std2_rrr( isgreaterequal,  bool            );
-decl_std2_rrr( isless,          bool            );
-decl_std2_rrr( islessequal,     bool            );
-decl_std2_rrr( islessgreater,   bool            );
-decl_std2_rrr( isunordered,     bool            );
-decl_std2_rrr( isunequal,       bool            );
-decl_std2_rrr( isequal,         bool            );
+decl_std2_ret( isgreater,       bool            );
+decl_std2_ret( isgreaterequal,  bool            );
+decl_std2_ret( isless,          bool            );
+decl_std2_ret( islessequal,     bool            );
+decl_std2_ret( islessgreater,   bool            );
+decl_std2_ret( isunordered,     bool            );
+decl_std2_ret( isunequal,       bool            );
+decl_std2_ret( isequal,         bool            );
 decl_std2(     fdim                             );
 decl_std2(     fmin                             );
 decl_std2(     fmax                             );
@@ -842,89 +843,62 @@ decl_const( ninf )
 //-----------------------------------------------------
 // Standard Operators 
 //-----------------------------------------------------               
-template< typename T, typename FLT >              
-inline freal<T,FLT>  freal<T,FLT>::operator -  () const 
-{ return neg();                         }
+#define decl_op1( op, name )                                    \
+    template< typename T, typename FLT >                        \
+    inline _freal  _freal::operator op () const                 \
+    { return name();                    }                       \
 
-template< typename T, typename FLT >              
-inline freal<T,FLT>  freal<T,FLT>::operator +  ( const freal<T,FLT>& b ) const                          
-{ return add( b );                      }
+#define decl_op1_code( op, code )                               \
+    template< typename T, typename FLT >                        \
+    inline _freal  _freal::operator op () const                 \
+    { return code;                      }                       \
 
-template< typename T, typename FLT >              
-inline freal<T,FLT>  freal<T,FLT>::operator -  ( const freal<T,FLT>& b ) const                          
-{ return sub( b );                      }
+#define decl_op2( op, name )                                    \
+    template< typename T, typename FLT >                        \
+    inline _freal  _freal::operator op ( const _freal& b ) const \
+    { return name( b );                 }                       \
 
-template< typename T, typename FLT >              
-inline freal<T,FLT>  freal<T,FLT>::operator *  ( const freal<T,FLT>& b ) const                          
-{ return mul( b );                      }
+#define decl_op2_ret( op, name, ret_type )                      \
+    template< typename T, typename FLT >                        \
+    inline ret_type _freal::operator op ( const _freal& b ) const \
+    { return name( b );                 }                       \
 
-template< typename T, typename FLT >              
-inline freal<T,FLT>  freal<T,FLT>::operator /  ( const freal<T,FLT>& b ) const                          
-{ return div( b );                      }
+#define decl_op2x( op, name, b_type )                           \
+    template< typename T, typename FLT >                        \
+    inline _freal  _freal::operator op ( b_type b ) const       \
+    { return name( b );                 }
 
-template< typename T, typename FLT >              
-inline freal<T,FLT>  freal<T,FLT>::operator << (       int    b ) const                                 
-{ return scalbn( b );                   }
+#define decl_op2a( op, name )                                   \
+    template< typename T, typename FLT >                        \
+    inline _freal& _freal::operator op ( const _freal& b )      \
+    { return assign( name( b ) );       }                       \
 
-template< typename T, typename FLT >              
-inline freal<T,FLT>  freal<T,FLT>::operator >> (       int    b ) const                                 
-{ return scalbn( -b );                  }
+#define decl_op2ax( op, name, b_type )                          \
+    template< typename T, typename FLT >                        \
+    inline _freal& _freal::operator op ( b_type b )             \
+    { return assign( name( b ) );       }                       \
 
-template< typename T, typename FLT >              
-inline freal<T,FLT>& freal<T,FLT>::operator =  ( const freal<T,FLT>& b ) 
-{ return assign( b );                   }
-
-template< typename T, typename FLT >              
-inline freal<T,FLT>& freal<T,FLT>::operator =  ( const FLT&   b )
-{ return assign( freal<T,FLT>( b ) );   }
-
-template< typename T, typename FLT >              
-inline freal<T,FLT>& freal<T,FLT>::operator += ( const freal<T,FLT>& b )
-{ return assign( add( b ) );            }
-
-template< typename T, typename FLT >              
-inline freal<T,FLT>& freal<T,FLT>::operator -= ( const freal<T,FLT>& b )
-{ return assign( sub( b ) );            }
-
-template< typename T, typename FLT >              
-inline freal<T,FLT>& freal<T,FLT>::operator *= ( const freal<T,FLT>& b )
-{ return assign( mul( b ) );            }
-
-template< typename T, typename FLT >              
-inline freal<T,FLT>& freal<T,FLT>::operator /= ( const freal<T,FLT>& b )
-{ return assign( div( b ) );            }
-
-template< typename T, typename FLT >              
-inline freal<T,FLT>& freal<T,FLT>::operator <<=(       int    b )
-{ return assign( scalbn( b ) );         }
-
-template< typename T, typename FLT >              
-inline freal<T,FLT>& freal<T,FLT>::operator >>=(       int    b )
-{ return assign( scalbn( -b ) );        }
-
-template< typename T, typename FLT >             
-inline bool   freal<T,FLT>::operator >  ( const freal<T,FLT>& b ) const                                        
-{ return isgreater( b );                }
-
-template< typename T, typename FLT >              
-inline bool   freal<T,FLT>::operator >= ( const freal<T,FLT>& b ) const                                        
-{ return isgreaterequal( b );           }
-
-template< typename T, typename FLT >              
-inline bool   freal<T,FLT>::operator <  ( const freal<T,FLT>& b ) const                                        
-{ return isless( b );                   }
-
-template< typename T, typename FLT >              
-inline bool   freal<T,FLT>::operator <= ( const freal<T,FLT>& b ) const                                        
-{ return islessequal( b );              }
-
-template< typename T, typename FLT >              
-inline bool   freal<T,FLT>::operator != ( const freal<T,FLT>& b ) const                                        
-{ return isunequal( b );                }
-
-template< typename T, typename FLT >              
-inline bool   freal<T,FLT>::operator == ( const freal<T,FLT>& b ) const                                        
-{ return isequal( b );                  }
+decl_op1(     -,        neg             )
+decl_op2(     +,        add             )
+decl_op2(     -,        sub             )
+decl_op2(     *,        mul             )
+decl_op2(     /,        div             )
+decl_op2x(    <<,       scalbn,  int    )
+decl_op2x(    >>,       scalbnn, int    )
+decl_op2a(    =,        _freal          )
+decl_op2ax(   =,        _freal,  const FLT& )
+decl_op2a(    +=,       add             )
+decl_op2a(    -=,       sub             )
+decl_op2a(    *=,       mul             )
+decl_op2a(    /=,       div             )
+decl_op2ax(   <<=,      scalbn,  int    )
+decl_op2ax(   >>=,      scalbnn, int    )
+decl_op2_ret( >,        isgreater,      bool )
+decl_op2_ret( >=,       isgreaterequal, bool )
+decl_op2_ret( <,        isless,         bool )
+decl_op2_ret( <=,       islessequal,    bool )
+decl_op2_ret( !=,       isunequal,      bool )
+decl_op2_ret( ==,       isequal,        bool )
 
 //-----------------------------------------------------
 // Well-Known Math Operators and Functions 
