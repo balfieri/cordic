@@ -318,6 +318,8 @@ static inline std::ostream& operator << ( std::ostream &out, const freal<T,FLT>&
     return out;     
 }
 
+// use macros to avoid redundancy
+//
 #define _freal freal<T,FLT>
 
 #define decl_std1( name )                                       \
@@ -330,6 +332,11 @@ static inline std::ostream& operator << ( std::ostream &out, const freal<T,FLT>&
     static inline ret_type name( const _freal& a )              \
     { return a.name(); }                                        \
 
+#define decl_std1_ret2( name )                                  \
+    template< typename T=int64_t, typename FLT=double >         \
+    static inline void name( const _freal& a, _freal& r1, _freal& r2 ) \
+    { a.name( r1, r2 ); }                                       \
+
 #define decl_std2( name )                                       \
     template< typename T=int64_t, typename FLT=double >         \
     static inline _freal name( const _freal& a, const _freal& b ) \
@@ -340,10 +347,20 @@ static inline std::ostream& operator << ( std::ostream &out, const freal<T,FLT>&
     static inline ret_type name( const _freal& a, const _freal& b ) \
     { return a.name( b ); }                                     \
 
+#define decl_std2_ret2( name )                                  \
+    template< typename T=int64_t, typename FLT=double >         \
+    static inline void name( const _freal& a, const _freal& b, _freal& r1, _freal& r2 ) \
+    { a.name( b, r1, r2 ); }                                    \
+
 #define decl_std2x( name, b_type )                              \
     template< typename T=int64_t, typename FLT=double >         \
     static inline _freal name( const _freal& a, b_type b )      \
     { return a.name( b ); }                                     \
+
+#define decl_std2x_ret2( name, b_type )                         \
+    template< typename T=int64_t, typename FLT=double >         \
+    static inline void name( const _freal& a, _freal& r1, _freal& r2, b_type b ) \
+    { a.name( r1, r2, b ); }                                    \
 
 #define decl_std3( name )                                       \
     template< typename T=int64_t, typename FLT=double >         \
@@ -375,123 +392,96 @@ template< typename T=int64_t, typename FLT=double >
 static inline int fegetround( void ) 
 { return freal<T,FLT>::implicit_to->fegetround(); }
 
-decl_std2(     nextafter                        );
-decl_std2x(    nexttoward,      long double     );
-decl_std1(     floor                            );
-decl_std1(     ceil                             );
-decl_std1(     trunc                            );
-decl_std1(     round                            );
-decl_std1_ret( lround,          long            );
-decl_std1_ret( llround,         long long       );
-decl_std1_ret( iround,          T               );
-decl_std1(     rint                             );
-decl_std1_ret( lrint,           long            );
-decl_std1_ret( llrint,          long long       );
-decl_std1_ret( irint,           T               );
-decl_std1(     nearbyint                        );
-decl_std1(     abs                              );
-decl_std1(     neg                              );
-decl_std2(     copysign                         );
-decl_std2(     add                              );
-decl_std2(     sub                              );
-decl_std3(     fma                              );
-decl_std2(     mul                              );
-decl_std1(     sqr                              );
-decl_std2x(    scalbn,          int             );
-decl_std2x(    ldexp,           int             );
-decl_std3(     fda                              );
-decl_std2(     div                              );
-decl_std2(     remainder                        );
-decl_std2(     fmod                             );
-decl_std3x(    remquo,          int             );
-decl_std1(     rcp                              );
-decl_std2_ret( isgreater,       bool            );
-decl_std2_ret( isgreaterequal,  bool            );
-decl_std2_ret( isless,          bool            );
-decl_std2_ret( islessequal,     bool            );
-decl_std2_ret( islessgreater,   bool            );
-decl_std2_ret( isunordered,     bool            );
-decl_std2_ret( isunequal,       bool            );
-decl_std2_ret( isequal,         bool            );
-decl_std2(     fdim                             );
-decl_std2(     fmin                             );
-decl_std2(     fmax                             );
-decl_std1(     sqrt                             );
-decl_std1(     rsqrt                            );
-decl_std1(     cqrt                             );
-decl_std1(     rcqrt                            );
-decl_std1(     exp                              );
-decl_std1(     expm1                            );
-decl_std2x(    expc,            FLT             );
-decl_std1(     exp2                             );
-decl_std1(     exp10                            );
-decl_std2(     pow                              );
-decl_std1(     log                              );
-decl_std2(     log                              );
-decl_std1(     log1p                            );
-decl_std2x(    logc,            FLT             );
-decl_std1(     log2                             );
-decl_std1(     log10                            );
-decl_std1(     sin                              );
-decl_std1(     sinpi                            );
-decl_std2(     sin                              );
-decl_std2(     sinpi                            );
-decl_std1(     cos                              );
-decl_std1(     cospi                            );
-decl_std2(     cos                              );
-decl_std2(     cospi                            );
-
-template< typename T=int64_t, typename FLT=double >              
-static inline void   sincos( const freal<T,FLT>& a, freal<T,FLT>& si, freal<T,FLT>& co )               
-{ a.sincos( si, co );                   }
-
-template< typename T=int64_t, typename FLT=double >              
-static inline void   sinpicospi( const freal<T,FLT>& a, freal<T,FLT>& si, freal<T,FLT>& co )               
-{ a.sinpicospi( si, co );               }
-
-template< typename T=int64_t, typename FLT=double >              
-static inline void   sincos( const freal<T,FLT>& a, freal<T,FLT>& si, freal<T,FLT>& co, const freal<T,FLT>& r )               
-{ a.sincos( si, co, r );                }
-
-template< typename T=int64_t, typename FLT=double >              
-static inline void   sinpicospi( const freal<T,FLT>& a, freal<T,FLT>& si, freal<T,FLT>& co, const freal<T,FLT>& r )               
-{ a.sinpicospi( si, co, r );            }
-
-decl_std1(     tan                              );
-decl_std1(     tanpi                            );
-decl_std1(     asin                             );
-decl_std1(     acos                             );
-decl_std1(     atan                             );
-decl_std2(     atan2                            );
-
-template< typename T=int64_t, typename FLT=double >              
-static inline void   polar_to_rect( const freal<T,FLT>& a, const freal<T,FLT>& angle, freal<T,FLT>& x, freal<T,FLT>& y )  
-{ a.polar_to_rect( angle, x, y );       }
-
-template< typename T=int64_t, typename FLT=double >              
-static inline void   rect_to_polar( const freal<T,FLT>& a, const freal<T,FLT>& b,     freal<T,FLT>& r, freal<T,FLT>& angle )  
-{ a.rect_to_polar( b, r, angle );       }
-
-decl_std2(     hypot                            );
-decl_std2(     hypoth                           );
-decl_std1(     sinh                             );
-decl_std2(     sinh                             );
-decl_std1(     cosh                             );
-decl_std2(     cosh                             );
-
-template< typename T=int64_t, typename FLT=double >              
-static inline void   sinhcosh( const freal<T,FLT>& a, freal<T,FLT>& sih, freal<T,FLT>& coh )           
-{ a.sinhcosh( sih, coh );               }
-
-template< typename T=int64_t, typename FLT=double >              
-static inline void   sinhcosh( const freal<T,FLT>& a, freal<T,FLT>& sih, freal<T,FLT>& coh, const freal<T,FLT>& r )           
-{ a.sinhcosh( sih, coh, r );            }
-
-decl_std1(     tanh                             );
-decl_std1(     asinh                            );
-decl_std1(     acosh                            );
-decl_std1(     atanh                            );
-decl_std2(     atanh2                           );
+decl_std2(     nextafter                        )
+decl_std2x(    nexttoward,      long double     )
+decl_std1(     floor                            )
+decl_std1(     ceil                             )
+decl_std1(     trunc                            )
+decl_std1(     round                            )
+decl_std1_ret( lround,          long            )
+decl_std1_ret( llround,         long long       )
+decl_std1_ret( iround,          T               )
+decl_std1(     rint                             )
+decl_std1_ret( lrint,           long            )
+decl_std1_ret( llrint,          long long       )
+decl_std1_ret( irint,           T               )
+decl_std1(     nearbyint                        )
+decl_std1(     abs                              )
+decl_std1(     neg                              )
+decl_std2(     copysign                         )
+decl_std2(     add                              )
+decl_std2(     sub                              )
+decl_std3(     fma                              )
+decl_std2(     mul                              )
+decl_std1(     sqr                              )
+decl_std2x(    scalbn,          int             )
+decl_std2x(    ldexp,           int             )
+decl_std3(     fda                              )
+decl_std2(     div                              )
+decl_std2(     remainder                        )
+decl_std2(     fmod                             )
+decl_std3x(    remquo,          int             )
+decl_std1(     rcp                              )
+decl_std2_ret( isgreater,       bool            )
+decl_std2_ret( isgreaterequal,  bool            )
+decl_std2_ret( isless,          bool            )
+decl_std2_ret( islessequal,     bool            )
+decl_std2_ret( islessgreater,   bool            )
+decl_std2_ret( isunordered,     bool            )
+decl_std2_ret( isunequal,       bool            )
+decl_std2_ret( isequal,         bool            )
+decl_std2(     fdim                             )
+decl_std2(     fmin                             )
+decl_std2(     fmax                             )
+decl_std1(     sqrt                             )
+decl_std1(     rsqrt                            )
+decl_std1(     cqrt                             )
+decl_std1(     rcqrt                            )
+decl_std1(     exp                              )
+decl_std1(     expm1                            )
+decl_std2x(    expc,            FLT             )
+decl_std1(     exp2                             )
+decl_std1(     exp10                            )
+decl_std2(     pow                              )
+decl_std1(     log                              )
+decl_std2(     log                              )
+decl_std1(     log1p                            )
+decl_std2x(    logc,            FLT             )
+decl_std1(     log2                             )
+decl_std1(     log10                            )
+decl_std1(     sin                              )
+decl_std1(     sinpi                            )
+decl_std2(     sin                              )
+decl_std2(     sinpi                            )
+decl_std1(     cos                              )
+decl_std1(     cospi                            )
+decl_std2(     cos                              )
+decl_std2(     cospi                            )
+decl_std1_ret2(sincos                           )
+decl_std1_ret2(sinpicospi                       )
+decl_std2x_ret2(sincos,         const _freal&   )
+decl_std2x_ret2(sinpicospi,     const _freal&   )
+decl_std1(     tan                              )
+decl_std1(     tanpi                            )
+decl_std1(     asin                             )
+decl_std1(     acos                             )
+decl_std1(     atan                             )
+decl_std2(     atan2                            )
+decl_std2_ret2(polar_to_rect                    )
+decl_std2_ret2(rect_to_polar                    )
+decl_std2(     hypot                            )
+decl_std2(     hypoth                           )
+decl_std1(     sinh                             )
+decl_std2(     sinh                             )
+decl_std1(     cosh                             )
+decl_std2(     cosh                             )
+decl_std1_ret2(sinhcosh                         );
+decl_std2x_ret2(sinhcosh,       const _freal&   );
+decl_std1(     tanh                             )
+decl_std1(     asinh                            )
+decl_std1(     acosh                            )
+decl_std1(     atanh                            )
+decl_std2(     atanh2                           )
 
 }
 
