@@ -318,6 +318,14 @@ static inline std::ostream& operator << ( std::ostream &out, const freal<T,FLT>&
     return out;     
 }
 
+template< typename T=int64_t, typename FLT=double >              
+static inline int fesetround( int round ) 
+{ return freal<T,FLT>::implicit_to->fesetround( round ); }
+
+template< typename T=int64_t, typename FLT=double >              
+static inline int fegetround( void ) 
+{ return freal<T,FLT>::implicit_to->fegetround(); }
+
 // use macros to avoid redundancy
 //
 #define _freal freal<T,FLT>
@@ -383,15 +391,6 @@ decl_std1_ret( isinf,           bool            )
 decl_std1_ret( isnan,           bool            )
 decl_std1_ret( isnormal,        bool            )
 decl_std1_ret( to_string,       std::string     )
-
-template< typename T=int64_t, typename FLT=double >              
-static inline int fesetround( int round ) 
-{ return freal<T,FLT>::implicit_to->fesetround( round ); }
-
-template< typename T=int64_t, typename FLT=double >              
-static inline int fegetround( void ) 
-{ return freal<T,FLT>::implicit_to->fegetround(); }
-
 decl_std2(     nextafter                        )
 decl_std2x(    nexttoward,      long double     )
 decl_std1(     floor                            )
@@ -910,10 +909,30 @@ inline freal<T,FLT>& freal<T,FLT>::assign( const freal<T,FLT>& b )
     inline _freal _freal::name( void ) const            \
     { return( c(), pop_value( cordic, cordic->name( v ) ) ); } \
 
+#define decl_pop1_ret2( name )                          \
+    template< typename T, typename FLT >                \
+    inline void _freal::name( _freal& r1, _freal& r2 ) const \
+    {                                                   \
+        T r1_t, r2_t;                                   \
+        c()->name( v, r1_t, r2_t );                     \
+        r1 = pop_value( cordic, r1_t );                 \
+        r2 = pop_value( cordic, r2_t );                 \
+    }                                                   \
+
 #define decl_pop2( name )                               \
     template< typename T, typename FLT >                \
     inline _freal _freal::name( const _freal& b ) const \
     { return( c( b ), pop_value( cordic, cordic->name( v, b.v ) ) ); } \
+
+#define decl_pop2_ret2( name )                          \
+    template< typename T, typename FLT >                \
+    inline void _freal::name( const _freal& b, _freal& r1, _freal& r2 ) const \
+    {                                                   \
+        T r1_t, r2_t;                                   \
+        c( b )->name( v, b.v, r1_t, r2_t );             \
+        r1 = pop_value( cordic, r1_t );                 \
+        r2 = pop_value( cordic, r2_t );                 \
+    }                                                   \
 
 #define decl_popb2( name )                              \
     template< typename T, typename FLT >                \
@@ -929,6 +948,16 @@ inline freal<T,FLT>& freal<T,FLT>::assign( const freal<T,FLT>& b )
     template< typename T, typename FLT >                \
     inline _freal _freal::name( b_type b ) const        \
     { return( c(), pop_value( cordic, cordic->name( v, b ) ) ); } \
+
+#define decl_pop2x_ret2( name, b_type )                 \
+    template< typename T, typename FLT >                \
+    inline void _freal::name( _freal& r1, _freal& r2, b_type b ) const \
+    {                                                   \
+        T r1_t, r2_t;                                   \
+        c( b )->name( v, r1_t, r2_t, &b.v );            \
+        r1 = pop_value( cordic, r1_t );                 \
+        r2 = pop_value( cordic, r2_t );                 \
+    }                                                   \
 
 #define decl_pop3( name )                               \
     template< typename T, typename FLT >                \
@@ -1030,93 +1059,26 @@ decl_pop1(      cos                                     )
 decl_pop1(      cospi                                   )
 decl_pop2(      cos                                     )
 decl_pop2(      cospi                                   )
-
-template< typename T, typename FLT >              
-inline void freal<T,FLT>::sincos( freal<T,FLT>& si, freal<T,FLT>& co ) const                           
-{ 
-    T si_t, co_t;
-    c()->sincos( v, si_t, co_t );
-    si = pop_value( cordic, si_t );
-    co = pop_value( cordic, co_t );
-}
-
-template< typename T, typename FLT >              
-inline void freal<T,FLT>::sinpicospi( freal<T,FLT>& si, freal<T,FLT>& co ) const                           
-{ 
-    T si_t, co_t;
-    c()->sinpicospi( v, si_t, co_t );
-    si = pop_value( cordic, si_t );
-    co = pop_value( cordic, co_t );
-}
-
-template< typename T, typename FLT >              
-inline void freal<T,FLT>::sincos( freal<T,FLT>& si, freal<T,FLT>& co, const freal<T,FLT>& r ) const                           
-{ 
-    T si_t, co_t;
-    c()->sincos( v, si_t, co_t, &r.v );
-    si = pop_value( cordic, si_t );
-    co = pop_value( cordic, co_t );
-}
-
-template< typename T, typename FLT >              
-inline void freal<T,FLT>::sinpicospi( freal<T,FLT>& si, freal<T,FLT>& co, const freal<T,FLT>& r ) const                           
-{ 
-    T si_t, co_t;
-    c()->sinpicospi( v, si_t, co_t, &r.v );
-    si = pop_value( cordic, si_t );
-    co = pop_value( cordic, co_t );
-}
-
+decl_pop1_ret2( sincos                                  )
+decl_pop1_ret2( sinpicospi                              )
+decl_pop2x_ret2(sincos,         const _freal&           )
+decl_pop2x_ret2(sinpicospi,     const _freal&           )
 decl_pop1(      tan                                     )
 decl_pop1(      tanpi                                   )
 decl_pop1(      asin                                    )
 decl_pop1(      acos                                    )
 decl_pop1(      atan                                    )
 decl_pop2(      atan2                                   )
-
-template< typename T, typename FLT >              
-inline void freal<T,FLT>::polar_to_rect( const freal<T,FLT>& angle, freal<T,FLT>& x, freal<T,FLT>& y ) const    
-{ 
-    T x_t, y_t;
-    c( angle )->polar_to_rect( v, angle.v, x_t, y_t );
-    x = pop_value( cordic, x_t );
-    y = pop_value( cordic, y_t );
-}
-
-template< typename T, typename FLT >              
-inline void freal<T,FLT>::rect_to_polar( const freal<T,FLT>& b,     freal<T,FLT>& r, freal<T,FLT>& angle ) const    
-{ 
-    T r_t, a_t;
-    c( b )->rect_to_polar( v, b.v, r_t, a_t );
-    r     = pop_value( cordic, r_t );
-    angle = pop_value( cordic, a_t );
-}
-
+decl_pop2_ret2( polar_to_rect                           )
+decl_pop2_ret2( rect_to_polar                           )
 decl_pop2(      hypot                                   )
 decl_pop2(      hypoth                                  )
 decl_pop1(      sinh                                    )
 decl_pop2(      sinh                                    )
 decl_pop1(      cosh                                    )
 decl_pop2(      cosh                                    )
-
-template< typename T, typename FLT >              
-inline void freal<T,FLT>::sinhcosh( freal<T,FLT>& sih, freal<T,FLT>& coh ) const                       
-{ 
-    T sih_t, coh_t;
-    c()->sinhcosh( v, sih_t, coh_t );
-    sih = pop_value( cordic, sih_t );
-    coh = pop_value( cordic, coh_t );
-}
-
-template< typename T, typename FLT >              
-inline void freal<T,FLT>::sinhcosh( freal<T,FLT>& sih, freal<T,FLT>& coh, const freal<T,FLT>& r ) const                       
-{ 
-    T sih_t, coh_t;
-    c()->sinhcosh( v, sih_t, coh_t, &r.v );
-    sih = pop_value( cordic, sih_t );
-    coh = pop_value( cordic, coh_t );
-}
-
+decl_pop1_ret2( sinhcosh                                )
+decl_pop2x_ret2(sinhcosh,       const _freal&           )
 decl_pop1(      tanh                                    )
 decl_pop1(      asinh                                   )
 decl_pop1(      acosh                                   )
