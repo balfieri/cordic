@@ -6,6 +6,7 @@ analyze
 *.o
 *.out
 *.csv
+*.save
 .*.swp
 *.gz
 *secret*
