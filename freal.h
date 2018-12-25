@@ -965,6 +965,7 @@ inline freal<T,FLT>& freal<T,FLT>::assign( const freal<T,FLT>& b )
     inline ret_type _freal::name( b_type b ) const      \
     { return( c(), cordic->name( b ) ); }               \
 
+decl_nopop1(    signbit,        bool                    )
 decl_pop2x(     frexp,          int *                   )
 decl_pop2p(     modf                                    )
 decl_nopop1(    ilogb,          int                     )
