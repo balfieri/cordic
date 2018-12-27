@@ -31,11 +31,11 @@
 // Typical usage:
 //
 //     #include freal.h
-//     using real = freal<>;
+//     freal::implicit_to_set( 8, 21 );         // default is fixed-point 1.8.21
 //     ...
-//     real f;                                  // undefined, no type yet
-//     f = real( 8, 21, 25.573822 );            // assigned using 1.8.21 fixed-point value 25.573822
-//     real g = f;                              // g copies type and value of f
+//     freal g;                                 // g is undefined, no type
+//     freal f = 25.473822;                     // convert to 1.8.21
+//     g = f;                                   // g copies type and value of f
 //
 #ifndef _freal_h
 #define _freal_h
@@ -45,7 +45,14 @@
 // T      = some signed integer type that can hold fixed-point values (default is int64_t)
 // FLT    = some floating-point type that can hold constants of the desired precision (default is double)
 //
-template< typename T=int64_t, typename FLT=double >              
+#ifdef FREAL_USE_MPREAL
+using T   = mpint;
+using FLT = mpreal;
+#else
+using T   = int64_t;
+using FLT = double;
+#endif
+
 class freal
 {
 public:
@@ -55,7 +62,7 @@ public:
     freal( void );                                      // initializes value to undefined
     freal( const freal& other );                        // copy type and value of other
     freal( const freal& other, FLT f );                 // copy type of other, but value of f
-    freal( const Cordic<T,FLT> * cordic, FLT f );       // use type from cordic, but value of f; fractional lsb is never rounded
+    freal( Cordic<T,FLT> * cordic, FLT f );             // use type from cordic, but value of f; fractional lsb is never rounded
 
     static freal make_fixed( uint32_t int_w, uint32_t frac_w, FLT init_f=FLT(0) );  // make a signed fixed-point    number 
     static freal make_float( uint32_t exp_w, uint32_t frac_w, FLT init_f=FLT(0) );  // make a signed floating-point number
@@ -76,9 +83,10 @@ public:
     // IMPORTANT: implicit_from_set() must be called before
     // using any implicit conversions FROM freal.
     //-----------------------------------------------------
-    static void implicit_to_set( uint32_t int_w, uint32_t frac_w, bool is_fixed_point=true );
-    static void implicit_to_set( const Cordic<T,FLT> * cordic );
-    static void implicit_from_set( bool allow );
+    static void            implicit_to_set( uint32_t int_w, uint32_t frac_w, bool is_fixed_point=true );
+    static void            implicit_to_set( Cordic<T,FLT> * cordic );
+    static Cordic<T,FLT> * implicit_to_get( void );
+    static void            implicit_from_set( bool allow );
 
     freal( FLT f );
     freal( uint64_t i );
@@ -282,21 +290,21 @@ public:
     //-----------------------------------------------------
     // Introspection
     //-----------------------------------------------------
-    const Cordic<T,FLT> * c( void ) const;                            // validates current cordic  and returns it
-    const Cordic<T,FLT> * c( const freal& b ) const;                  // validates two     cordics and returns one to use for operation
-    const Cordic<T,FLT> * c( const freal& b, const freal& _c ) const; // validates three   cordics and returns one to use for operation
+    Cordic<T,FLT> * c( void ) const;                                    // validates current cordic  and returns it
+    Cordic<T,FLT> * c( const freal& b ) const;                          // validates two     cordics and returns one to use for operation
+    Cordic<T,FLT> * c( const freal& b, const freal& _c ) const;         // validates three   cordics and returns one to use for operation
 
-    const T * raw_ptr( void ) const;                                  // useful for some gross things like manual logging by callers
+    const T * raw_ptr( void ) const;                                    // useful for some gross things like manual logging by callers
 
 private:
-    static const Cordic<T,FLT> * implicit_to;
-    static bool                  implicit_from;
+    static Cordic<T,FLT> * implicit_to;
+    static bool            implicit_from;
 
-    const Cordic<T,FLT> *        cordic;         // defines the type and most operations
-    T                            v;              // this value encoded in type T
+    Cordic<T,FLT> *        cordic;         // defines the type and most operations
+    T                      v;              // this value encoded in type T
 
-    static freal pop_value( const Cordic<T,FLT> * cordic, const T& encoded );   // pop value associated with last operation
-    static bool  pop_bool(  const Cordic<T,FLT> * cordic, bool );               // pop bool  associated with last operation 
+    static freal pop_value( Cordic<T,FLT> * cordic, const T& encoded );   // pop value associated with last operation
+    static bool  pop_bool(  Cordic<T,FLT> * cordic, bool );               // pop bool  associated with last operation 
 };
 
 // Well-Known std:xxx() Functions 
@@ -304,12 +312,11 @@ private:
 namespace std
 {
 
-template< typename T=int64_t, typename FLT=double >              
-static inline std::istream& operator >> ( std::istream &in, freal<T,FLT>& a )
+static inline std::istream& operator >> ( std::istream &in, freal& a )
 { 
     FLT a_f;
     in >> a_f; 
-    const Cordic<T,FLT> * cordic = a.c();
+    Cordic<T,FLT> * cordic = a.c();
     if ( cordic != nullptr ) {
         a = freal( cordic, a_f );     // use a's current format
     } else {
@@ -318,72 +325,59 @@ static inline std::istream& operator >> ( std::istream &in, freal<T,FLT>& a )
     return in;
 }
 
-template< typename T=int64_t, typename FLT=double >              
-static inline std::ostream& operator << ( std::ostream &out, const freal<T,FLT>& a )
+static inline std::ostream& operator << ( std::ostream &out, const freal& a )
 { 
     out << a.to_string(); 
     return out;     
 }
 
-template< typename T=int64_t, typename FLT=double >              
 static inline int fesetround( int round ) 
-{ return freal<T,FLT>::implicit_to->fesetround( round ); }
+{ return freal::implicit_to_get()->fesetround( round ); }
 
-template< typename T=int64_t, typename FLT=double >              
 static inline int fegetround( void ) 
-{ return freal<T,FLT>::implicit_to->fegetround(); }
+{ return freal::implicit_to_get()->fegetround(); }
 
 // use macros to avoid redundancy
 //
-#define _freal freal<T,FLT>
+#define _freal freal
 
 #define decl_std1( name )                                       \
-    template< typename T=int64_t, typename FLT=double >         \
     static inline _freal name( const _freal& a )                \
     { return a.name(); }                                        \
 
 #define decl_std1_ret( name, ret_type )                         \
-    template< typename T=int64_t, typename FLT=double >         \
     static inline ret_type name( const _freal& a )              \
     { return a.name(); }                                        \
 
 #define decl_std1_ret2( name )                                  \
-    template< typename T=int64_t, typename FLT=double >         \
     static inline void name( const _freal& a, _freal& r1, _freal& r2 ) \
     { a.name( r1, r2 ); }                                       \
 
 #define decl_std2( name )                                       \
-    template< typename T=int64_t, typename FLT=double >         \
     static inline _freal name( const _freal& a, const _freal& b ) \
     { return a.name( b ); }                                     \
 
 #define decl_std2_ret( name, ret_type )                         \
-    template< typename T=int64_t, typename FLT=double >         \
     static inline ret_type name( const _freal& a, const _freal& b ) \
     { return a.name( b ); }                                     \
 
 #define decl_std2_ret2( name )                                  \
-    template< typename T=int64_t, typename FLT=double >         \
     static inline void name( const _freal& a, const _freal& b, _freal& r1, _freal& r2 ) \
     { a.name( b, r1, r2 ); }                                    \
 
 #define decl_std2x( name, b_type )                              \
-    template< typename T=int64_t, typename FLT=double >         \
     static inline _freal name( const _freal& a, b_type b )      \
     { return a.name( b ); }                                     \
 
 #define decl_std2x_ret2( name, b_type )                         \
-    template< typename T=int64_t, typename FLT=double >         \
     static inline void name( const _freal& a, _freal& r1, _freal& r2, b_type b ) \
     { a.name( r1, r2, b ); }                                    \
 
 #define decl_std3( name )                                       \
-    template< typename T=int64_t, typename FLT=double >         \
     static inline _freal name( const _freal& a, const _freal& b, const _freal& c ) \
     { return a.name( b, c ); }                                  \
 
 #define decl_std3x( name, c_type )                              \
-    template< typename T=int64_t, typename FLT=double >         \
     static inline _freal name( const _freal& a, const _freal& b, c_type c ) \
     { return a.name( b, c ); }                                  \
 
@@ -433,7 +427,7 @@ decl_std3(     fda                              )
 decl_std2(     div                              )
 decl_std2(     remainder                        )
 decl_std2(     fmod                             )
-decl_std3x(    remquo,          int             )
+decl_std3x(    remquo,          int *           )
 decl_std1(     rcp                              )
 decl_std2_ret( isgreater,       bool            )
 decl_std2_ret( isgreaterequal,  bool            )
@@ -448,8 +442,8 @@ decl_std2(     fmin                             )
 decl_std2(     fmax                             )
 decl_std1(     sqrt                             )
 decl_std1(     rsqrt                            )
-decl_std1(     cqrt                             )
-decl_std1(     rcqrt                            )
+decl_std1(     cbrt                             )
+decl_std1(     rcbrt                            )
 decl_std1(     exp                              )
 decl_std1(     expm1                            )
 decl_std2x(    expc,            FLT             )
@@ -472,8 +466,8 @@ decl_std2(     cos                              )
 decl_std2(     cospi                            )
 decl_std1_ret2(sincos                           )
 decl_std1_ret2(sinpicospi                       )
-decl_std2x_ret2(sincos,         const _freal&   )
-decl_std2x_ret2(sinpicospi,     const _freal&   )
+decl_std2x_ret2(sincos,         _freal          )
+decl_std2x_ret2(sinpicospi,     _freal          )
 decl_std1(     tan                              )
 decl_std1(     tanpi                            )
 decl_std1(     asin                             )
@@ -488,8 +482,8 @@ decl_std1(     sinh                             )
 decl_std2(     sinh                             )
 decl_std1(     cosh                             )
 decl_std2(     cosh                             )
-decl_std1_ret2(sinhcosh                         );
-decl_std2x_ret2(sinhcosh,       const _freal&   );
+decl_std1_ret2(sinhcosh                         )
+decl_std2x_ret2(sinhcosh,       _freal          )
 decl_std1(     tanh                             )
 decl_std1(     asinh                            )
 decl_std1(     acosh                            )
@@ -498,24 +492,23 @@ decl_std2(     atanh2                           )
 
 }
 
-template< typename T, typename FLT >              
-class std::numeric_limits<freal<T,FLT>> 
+template<> class std::numeric_limits<freal> 
 {
 public:
     // any static field that depends on the current implicit_to is (re)initialized
     // when implicit_to_set() is called to change the implicit Cordic, therefore
     // these static fields are not marked const
     static bool                 is_specialized;
-    static freal<T,FLT>         min() throw()           { return freal<T,FLT>::c()->min(); }
-    static freal<T,FLT>         max() throw()           { return freal<T,FLT>::c()->max(); }
+    static freal                min() throw()           { return freal::implicit_to_get()->min(); }
+    static freal                max() throw()           { return freal::implicit_to_get()->max(); }
     static int                  digits;
     static int                  digits10;
     static const bool           is_signed = true;
     static const bool           is_integer = false;
     static const bool           is_exact = false;
     static const int            radix = 2;
-    static freal<T,FLT>         epsilon() throw()       { return freal<T,FLT>::c()->epsilon(); }
-    static freal<T,FLT>         round_error() throw()   { return freal<T,FLT>::c()->round_error(); }
+    static freal                epsilon() throw()       { return freal::implicit_to_get()->epsilon(); }
+    static freal                round_error() throw()   { return freal::implicit_to_get()->round_error(); }
 
     static int                  min_exponent;
     static int                  min_exponent10;
@@ -527,10 +520,10 @@ public:
     static bool                 has_signaling_NaN;
     static const float_denorm_style has_denorm = denorm_present;
     static const bool           has_denorm_loss = false;
-    static freal<T,FLT>         infinity() throw()      { return freal<T,FLT>::c()->inf(); }
-    static freal<T,FLT>         quiet_NaN() throw()     { return freal<T,FLT>::c()->quiet_nan(); }
-    static freal<T,FLT>         signaling_NaN() throw() { return freal<T,FLT>::c()->signaling_nan(); }
-    static freal<T,FLT>         denorm_min() throw()    { return freal<T,FLT>::c()->denorm_min(); }
+    static freal                infinity() throw()      { return freal::implicit_to_get()->inf(); }
+    static freal                quiet_NaN() throw()     { return freal::implicit_to_get()->quiet_nan(); }
+    static freal                signaling_NaN() throw() { return freal::implicit_to_get()->signaling_nan(); }
+    static freal                denorm_min() throw()    { return freal::implicit_to_get()->denorm_min(); }
 
     static bool                 is_iec559;
     static bool                 is_bounded;
@@ -540,8 +533,7 @@ public:
     static float_round_style    round_style;
 };
 
-template< typename T, typename FLT >              
-bool std::numeric_limits<freal<T,FLT>>::is_specialized = false; 
+bool std::numeric_limits<freal>::is_specialized = false; 
 
 //-----------------------------------------------------
 //-----------------------------------------------------
@@ -560,24 +552,20 @@ bool std::numeric_limits<freal<T,FLT>>::is_specialized = false;
 //-----------------------------------------------------
 // Static Globals
 //-----------------------------------------------------
-template< typename T, typename FLT >              
-const Cordic<T,FLT> * freal<T,FLT>::implicit_to = nullptr;  // disallow
+Cordic<T,FLT> * freal::implicit_to = nullptr;  // disallow
 
-template< typename T, typename FLT >              
-bool                  freal<T,FLT>::implicit_from = false;  // disallow
+bool                  freal::implicit_from = false;  // disallow
 
 //-----------------------------------------------------
 // Constructors
 //-----------------------------------------------------
-template< typename T, typename FLT >              
-inline freal<T,FLT>::freal( void )
+inline freal::freal( void )
 {
     cordic = nullptr;
     v      = T(666);
 }
 
-template< typename T, typename FLT >              
-inline freal<T,FLT>::~freal()
+inline freal::~freal()
 {
     if ( cordic != nullptr ) {
         cordic->destructed( v );
@@ -586,8 +574,7 @@ inline freal<T,FLT>::~freal()
     v = T(668);
 }
 
-template< typename T, typename FLT >              
-inline freal<T,FLT>::freal( const Cordic<T,FLT> * _cordic, FLT f )
+inline freal::freal( Cordic<T,FLT> * _cordic, FLT f )
 {
     cassert( _cordic != nullptr, "freal(cordic, f) cordic argument must be non-null" );
     cordic = _cordic;
@@ -595,8 +582,7 @@ inline freal<T,FLT>::freal( const Cordic<T,FLT> * _cordic, FLT f )
     cordic->pop_value( v, cordic->to_t( f, true ) );
 }
 
-template< typename T, typename FLT >              
-inline freal<T,FLT>::freal( const freal& other )
+inline freal::freal( const freal& other )
 {
     cordic = other.c();
     v      = other.v;
@@ -604,20 +590,17 @@ inline freal<T,FLT>::freal( const freal& other )
     cordic->assign( v, other.v ); 
 }
 
-template< typename T, typename FLT >              
-inline freal<T,FLT>::freal( const freal& other, FLT f )
+inline freal::freal( const freal& other, FLT f )
 {
     freal( other.cordic, f );
 }
 
-template< typename T, typename FLT >              
-inline freal<T,FLT> freal<T,FLT>::make_fixed( uint32_t int_w, uint32_t frac_w, FLT init_f )
+inline freal freal::make_fixed( uint32_t int_w, uint32_t frac_w, FLT init_f )
 {
     return freal( new Cordic<T,FLT>( int_w, frac_w ), init_f );
 }
 
-template< typename T, typename FLT >              
-inline freal<T,FLT> freal<T,FLT>::make_float( uint32_t exp_w, uint32_t frac_w, FLT init_f )
+inline freal freal::make_float( uint32_t exp_w, uint32_t frac_w, FLT init_f )
 {
     cassert( false, "can't encode floating-point values right now" );
     (void)exp_w;   // unused
@@ -626,8 +609,7 @@ inline freal<T,FLT> freal<T,FLT>::make_float( uint32_t exp_w, uint32_t frac_w, F
     return freal();
 }
 
-template< typename T, typename FLT >              
-inline freal<T,FLT> freal<T,FLT>::pop_value( const Cordic<T,FLT> * cordic, const T& encoded )
+inline freal freal::pop_value( Cordic<T,FLT> * cordic, const T& encoded )
 {
     cassert( cordic != nullptr, "pop_value(cordic, encoded) called with null cordic" );
     freal r;
@@ -637,8 +619,7 @@ inline freal<T,FLT> freal<T,FLT>::pop_value( const Cordic<T,FLT> * cordic, const
     return r;
 }
 
-template< typename T, typename FLT >              
-inline bool freal<T,FLT>::pop_bool( const Cordic<T,FLT> * cordic, bool b )
+inline bool freal::pop_bool( Cordic<T,FLT> * cordic, bool b )
 {
     cassert( cordic != nullptr, "pop_bool(cordic, b) called with null cordic" );
     cordic->pop_bool( b );
@@ -648,122 +629,112 @@ inline bool freal<T,FLT>::pop_bool( const Cordic<T,FLT> * cordic, bool b )
 //-----------------------------------------------------
 // Explicit Conversions
 //-----------------------------------------------------
-template< typename T, typename FLT >              
-FLT    freal<T,FLT>::to_flt( void ) const                                                               
+FLT    freal::to_flt( void ) const                                                               
 { return c()->to_flt( v );              }
 
-template< typename T, typename FLT >              
-std::string freal<T,FLT>::to_string( void ) const                                                               
+std::string freal::to_string( void ) const                                                               
 { return c()->to_string( v );           }
 
 //-----------------------------------------------------
 // Implicit Conversions
 //-----------------------------------------------------
-template< typename T, typename FLT >              
-inline void freal<T,FLT>::implicit_to_set( const Cordic<T,FLT> * cordic )
+inline void freal::implicit_to_set( Cordic<T,FLT> * cordic )
 { 
     implicit_to = cordic;
 
     if ( cordic != nullptr ) {
-        std::numeric_limits<freal<T,FLT>>::is_specialized       = true;
-        std::numeric_limits<freal<T,FLT>>::digits               = cordic->int_w() + cordic->frac_w();
-        std::numeric_limits<freal<T,FLT>>::digits10             = std::numeric_limits<freal<T,FLT>>::digits / std::log2( 10 );
-        std::numeric_limits<freal<T,FLT>>::min_exponent         = 0;
-        std::numeric_limits<freal<T,FLT>>::min_exponent10       = 0;
-        std::numeric_limits<freal<T,FLT>>::max_exponent         = 0;
-        std::numeric_limits<freal<T,FLT>>::max_exponent10       = 0;
-        std::numeric_limits<freal<T,FLT>>::has_inifinity        = false;
-        std::numeric_limits<freal<T,FLT>>::has_quiet_NaN        = false;
-        std::numeric_limits<freal<T,FLT>>::has_signaling_NaN    = false;
-        std::numeric_limits<freal<T,FLT>>::is_iec559            = false;
-        std::numeric_limits<freal<T,FLT>>::is_bounded           = true;
-        std::numeric_limits<freal<T,FLT>>::is_modulo            = true;
-        std::numeric_limits<freal<T,FLT>>::traps                = false;
-        std::numeric_limits<freal<T,FLT>>::tinyness_before      = true;
-        std::numeric_limits<freal<T,FLT>>::round_style          = std::numeric_limits<freal<T,FLT>>::round_to_nearest;
+        std::numeric_limits<freal>::is_specialized       = true;
+        std::numeric_limits<freal>::digits               = cordic->int_w() + cordic->frac_w();
+        std::numeric_limits<freal>::digits10             = std::numeric_limits<freal>::digits / std::log2( 10 );
+        std::numeric_limits<freal>::min_exponent         = 0;
+        std::numeric_limits<freal>::min_exponent10       = 0;
+        std::numeric_limits<freal>::max_exponent         = 0;
+        std::numeric_limits<freal>::max_exponent10       = 0;
+        std::numeric_limits<freal>::has_infinity         = false;
+        std::numeric_limits<freal>::has_quiet_NaN        = false;
+        std::numeric_limits<freal>::has_signaling_NaN    = false;
+        std::numeric_limits<freal>::is_iec559            = false;
+        std::numeric_limits<freal>::is_bounded           = true;
+        std::numeric_limits<freal>::is_modulo            = true;
+        std::numeric_limits<freal>::traps                = false;
+        std::numeric_limits<freal>::tinyness_before      = true;
+        std::numeric_limits<freal>::round_style          = std::round_to_nearest;
     } else {
-        std::numeric_limits<freal<T,FLT>>::is_specialized       = false;
+        std::numeric_limits<freal>::is_specialized       = false;
     }
 }
 
-template< typename T, typename FLT >              
-inline void freal<T,FLT>::implicit_to_set( uint32_t int_w, uint32_t frac_w, bool is_fixed_point )
+inline Cordic<T,FLT> * freal::implicit_to_get( void )
+{
+    return implicit_to;
+}
+
+inline void freal::implicit_to_set( uint32_t int_w, uint32_t frac_w, bool is_fixed_point )
 { 
     cassert( is_fixed_point, "implicit_to_set() floating-point is not implemented yet" );
     implicit_to = new Cordic<T,FLT>( int_w, frac_w );
 }
 
-template< typename T, typename FLT >              
-inline void freal<T,FLT>::implicit_from_set( bool allow )
+inline void freal::implicit_from_set( bool allow )
 { 
     implicit_from = allow;
 }
 
-template< typename T, typename FLT >              
-inline freal<T,FLT>::freal( FLT f )
+inline freal::freal( FLT f )
 {
     cassert( implicit_to != nullptr, "implicit_to_set() must be called before relying on any implicit from FLT to freal<>" );
     *this = freal( implicit_to, f );
 }
 
-template< typename T, typename FLT >              
-inline freal<T,FLT>::freal( uint64_t i )
+inline freal::freal( uint64_t i )
 {
     cassert( implicit_to != nullptr, "implicit_to_set() must be called before relying on any implicit from uint64_t to freal<>" );
     *this = freal( implicit_to, FLT(i) );
 }
 
-template< typename T, typename FLT >              
-inline freal<T,FLT>::freal( int64_t i )
+inline freal::freal( int64_t i )
 {
     cassert( implicit_to != nullptr, "implicit_to_set() must be called before relying on any implicit from int64_t to freal<>" );
     *this = freal( implicit_to, FLT(i) );
 }
 
-template< typename T, typename FLT >              
-inline freal<T,FLT>::freal( uint32_t i )
+inline freal::freal( uint32_t i )
 {
     cassert( implicit_to != nullptr, "implicit_to_set() must be called before relying on any implicit from uint32_t to freal<>" );
     *this = freal( implicit_to, FLT(i) );
 }
 
-template< typename T, typename FLT >              
-inline freal<T,FLT>::freal( int32_t i )
+inline freal::freal( int32_t i )
 {
     cassert( implicit_to != nullptr, "implicit_to_set() must be called before relying on any implicit from int32_t to freal<>" );
     *this = freal( implicit_to, FLT(i) );
 }
 
-template< typename T, typename FLT >              
-inline freal<T,FLT>::operator FLT( void )
+inline freal::operator FLT( void )
 { 
     cassert( implicit_from, "implicit_from_set( true ) must be called before relying on any implicit from freal<> to FLT" );
     return to_flt();
 }
 
-template< typename T, typename FLT >              
-inline freal<T,FLT>::operator uint64_t( void )
+inline freal::operator uint64_t( void )
 { 
     cassert( implicit_from, "implicit_from_set( true ) must be called before relying on any implicit from freal<> to uint64_t" );
     return uint64_t( to_flt() );
 }
 
-template< typename T, typename FLT >              
-inline freal<T,FLT>::operator int64_t( void )
+inline freal::operator int64_t( void )
 { 
     cassert( implicit_from, "implicit_from_set( true ) must be called before relying on any implicit from freal<> to int64_t" );
     return int64_t( to_flt() );
 }
 
-template< typename T, typename FLT >              
-inline freal<T,FLT>::operator uint32_t( void )
+inline freal::operator uint32_t( void )
 { 
     cassert( implicit_from, "implicit_from_set( true ) must be called before relying on any implicit from freal<> to uint32_t" );
     return uint32_t( to_flt() );
 }
 
-template< typename T, typename FLT >              
-inline freal<T,FLT>::operator int32_t( void )
+inline freal::operator int32_t( void )
 { 
     cassert( implicit_from, "implicit_from_set( true ) must be called before relying on any implicit from freal<> to int32_t" );
     return int32_t( to_flt() );
@@ -772,15 +743,13 @@ inline freal<T,FLT>::operator int32_t( void )
 //-----------------------------------------------------
 // Check that cordic(s) defined and return it.
 //-----------------------------------------------------
-template< typename T, typename FLT >              
-inline const Cordic<T,FLT> * freal<T,FLT>::c( void ) const
+inline Cordic<T,FLT> * freal::c( void ) const
 {
     cassert( cordic != nullptr, "undefined type" );
     return cordic;
 }
 
-template< typename T, typename FLT >              
-inline const Cordic<T,FLT> * freal<T,FLT>::c( const freal<T,FLT>& b ) const
+inline Cordic<T,FLT> * freal::c( const freal& b ) const
 {
     cassert( cordic   != nullptr, "a has undefined type" );
     cassert( b.cordic != nullptr, "b has undefined type" );
@@ -788,8 +757,7 @@ inline const Cordic<T,FLT> * freal<T,FLT>::c( const freal<T,FLT>& b ) const
     return cordic;
 }
 
-template< typename T, typename FLT >              
-inline const Cordic<T,FLT> * freal<T,FLT>::c( const freal<T,FLT>& b, const freal<T,FLT>& _c ) const
+inline Cordic<T,FLT> * freal::c( const freal& b, const freal& _c ) const
 {
     cassert( cordic    != nullptr, "a has undefined type" );
     cassert( b.cordic  != nullptr, "b has undefined type" );
@@ -798,8 +766,7 @@ inline const Cordic<T,FLT> * freal<T,FLT>::c( const freal<T,FLT>& b, const freal
     return cordic;
 }
 
-template< typename T, typename FLT >              
-inline const T * freal<T,FLT>::raw_ptr( void ) const 
+inline const T * freal::raw_ptr( void ) const 
 { 
     return &v; 
 }
@@ -808,13 +775,11 @@ inline const T * freal<T,FLT>::raw_ptr( void ) const
 // Constants
 //-----------------------------------------------------               
 #define decl_const( name )                      \
-    template< typename T, typename FLT >        \
-    inline _freal freal<T,FLT>::name( void )    \
+    inline _freal freal::name( void )    \
     { return( c(), pop_value( cordic, cordic->name() ) ); } \
 
 #define decl_const1x( name, a_type )            \
-    template< typename T, typename FLT >        \
-    inline _freal freal<T,FLT>::name( a_type a ) \
+    inline _freal freal::name( a_type a ) \
     { return( c(), pop_value( cordic, cordic->name( a ) ) ); } \
 
 decl_const( max )
@@ -847,37 +812,30 @@ decl_const( ninf )
 // Standard Operators 
 //-----------------------------------------------------               
 #define decl_op1( op, name )                                    \
-    template< typename T, typename FLT >                        \
     inline _freal  _freal::operator op () const                 \
     { return name();                    }                       \
 
 #define decl_op1_code( op, code )                               \
-    template< typename T, typename FLT >                        \
     inline _freal  _freal::operator op () const                 \
     { return code;                      }                       \
 
 #define decl_op2( op, name )                                    \
-    template< typename T, typename FLT >                        \
     inline _freal  _freal::operator op ( const _freal& b ) const \
     { return name( b );                 }                       \
 
 #define decl_op2_ret( op, name, ret_type )                      \
-    template< typename T, typename FLT >                        \
     inline ret_type _freal::operator op ( const _freal& b ) const \
     { return name( b );                 }                       \
 
 #define decl_op2x( op, name, b_type )                           \
-    template< typename T, typename FLT >                        \
     inline _freal  _freal::operator op ( b_type b ) const       \
     { return name( b );                 }
 
 #define decl_op2a( op, name )                                   \
-    template< typename T, typename FLT >                        \
     inline _freal& _freal::operator op ( const _freal& b )      \
     { return assign( name( b ) );       }                       \
 
 #define decl_op2ax( op, name, b_type )                          \
-    template< typename T, typename FLT >                        \
     inline _freal& _freal::operator op ( b_type b )             \
     { return assign( name( b ) );       }                       \
 
@@ -909,8 +867,7 @@ decl_op2_ret( ==,       isequal,        bool )
 // a = *this
 //-----------------------------------------------------               
 
-template< typename T, typename FLT >              
-inline freal<T,FLT>& freal<T,FLT>::assign( const freal<T,FLT>& b ) 
+inline freal& freal::assign( const freal& b ) 
 { 
     cassert( b.cordic != nullptr, "assigning from undefined value b" );
     cordic = b.cordic;
@@ -919,13 +876,11 @@ inline freal<T,FLT>& freal<T,FLT>::assign( const freal<T,FLT>& b )
 }
 
 #define decl_pop1( name )                               \
-    template< typename T, typename FLT >                \
-    inline _freal _freal::name( void ) const            \
+    inline _freal _freal::name( void )                  \
     { return( c(), pop_value( cordic, cordic->name( v ) ) ); } \
 
 #define decl_pop1_ret2( name )                          \
-    template< typename T, typename FLT >                \
-    inline void _freal::name( _freal& r1, _freal& r2 ) const \
+    inline void _freal::name( _freal& r1, _freal& r2 )  \
     {                                                   \
         T r1_t, r2_t;                                   \
         c()->name( v, r1_t, r2_t );                     \
@@ -934,13 +889,11 @@ inline freal<T,FLT>& freal<T,FLT>::assign( const freal<T,FLT>& b )
     }                                                   \
 
 #define decl_pop2( name )                               \
-    template< typename T, typename FLT >                \
-    inline _freal _freal::name( const _freal& b ) const \
+    inline _freal _freal::name( const _freal& b )       \
     { return( c( b ), pop_value( cordic, cordic->name( v, b.v ) ) ); } \
 
 #define decl_pop2_ret2( name )                          \
-    template< typename T, typename FLT >                \
-    inline void _freal::name( const _freal& b, _freal& r1, _freal& r2 ) const \
+    inline void _freal::name( const _freal& b, _freal& r1, _freal& r2 ) \
     {                                                   \
         T r1_t, r2_t;                                   \
         c( b )->name( v, b.v, r1_t, r2_t );             \
@@ -949,23 +902,19 @@ inline freal<T,FLT>& freal<T,FLT>::assign( const freal<T,FLT>& b )
     }                                                   \
 
 #define decl_popb2( name )                              \
-    template< typename T, typename FLT >                \
-    inline bool _freal::name( const _freal& b ) const   \
+    inline bool _freal::name( const _freal& b )         \
     { return( c( b ), pop_bool( cordic, cordic->name( v, b.v ) ) ); } \
 
 #define decl_pop2p( name )                              \
-    template< typename T, typename FLT >                \
-    inline _freal _freal::name( _freal * b ) const      \
+    inline _freal _freal::name( _freal * b )            \
     { return( c(), pop_value( cordic, cordic->name( v, &b->v ) ) ); } \
 
 #define decl_pop2x( name, b_type )                      \
-    template< typename T, typename FLT >                \
-    inline _freal _freal::name( b_type b ) const        \
+    inline _freal _freal::name( b_type b )              \
     { return( c(), pop_value( cordic, cordic->name( v, b ) ) ); } \
 
 #define decl_pop2x_ret2( name, b_type )                 \
-    template< typename T, typename FLT >                \
-    inline void _freal::name( _freal& r1, _freal& r2, b_type b ) const \
+    inline void _freal::name( _freal& r1, _freal& r2, b_type b ) \
     {                                                   \
         T r1_t, r2_t;                                   \
         c( b )->name( v, r1_t, r2_t, &b.v );            \
@@ -974,27 +923,22 @@ inline freal<T,FLT>& freal<T,FLT>::assign( const freal<T,FLT>& b )
     }                                                   \
 
 #define decl_pop3( name )                               \
-    template< typename T, typename FLT >                \
-    inline _freal _freal::name( const _freal& b, const _freal& c ) const \
+    inline _freal _freal::name( const _freal& b, const _freal& c ) \
     { return( c( b, c ), pop_value( cordic, cordic->name( v, b.v, c.v ) ) ); } \
 
 #define decl_pop3x( name, c_type )                      \
-    template< typename T, typename FLT >                \
-    inline _freal _freal::name( const _freal& b, c_type c ) const \
+    inline _freal _freal::name( const _freal& b, c_type c ) \
     { return( c( b ), pop_value( cordic, cordic->name( v, b.v, c ) ) ); } \
 
 #define decl_nopop0( name, ret_type )                   \
-    template< typename T, typename FLT >                \
     inline ret_type _freal::name( void ) const          \
     { return( c(), cordic->name() ); }                  \
 
 #define decl_nopop1( name, ret_type )                   \
-    template< typename T, typename FLT >                \
     inline ret_type _freal::name( void ) const          \
     { return( c(), cordic->name( v ) ); }               \
 
 #define decl_nopop1x( name, ret_type, b_type )          \
-    template< typename T, typename FLT >                \
     inline ret_type _freal::name( b_type b ) const      \
     { return( c(), cordic->name( b ) ); }               \
 

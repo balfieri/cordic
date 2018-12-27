@@ -27,7 +27,6 @@
 
 using FLT  = double;                                    // later, use a more precise float type
 using T    = __int128_t;                                // integer container to hold encoded numbers (int64_t also works)
-using real = freal<>;                                   // real number (not used yet)
 
 #include "test_helpers.h"                               // must be included after FLT is defined
 
@@ -43,7 +42,7 @@ int main( int argc, const char * argv[] )
     bool     new_bugs = false;                  // by default, don't run new bugs
     uint32_t loop_cnt = 2;                      
 
-    real unused = real::make_fixed( int_w, frac_w, 1.78302 ); // smoke test on freal type; freal is not used yet
+    freal unused = freal::make_fixed( int_w, frac_w, 1.78302 ); // smoke test on freal type; freal is not used yet
 
     for( int i = 1; i < argc; i++ )
     {
