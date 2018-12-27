@@ -1364,7 +1364,16 @@ inline T Cordic<T,FLT>::to_t( FLT _x, bool can_log ) const
     bool is_neg = x < 0.0;
     if ( is_neg ) x = -x;
     cassert( T(x) < (T(1) << _int_w), "to_t: integer part of |x| " + std::to_string(x) + " does not fit in int_w bits" ); 
-    T x_t = std::rint( x * FLT( _one ) );
+    FLT x_f = x * FLT( _one );
+    switch( _rounding_mode )
+    {
+        case FE_DOWNWARD:                       x_f = std::floor( x_f );        break;
+        case FE_UPWARD:                         x_f = std::ceil( x_f );         break;
+        case FE_TOWARDZERO:                     x_f = std::trunc( x_f );        break;
+        case FE_TONEAREST:                      x_f = std::round( x_f );        break;
+        default:                                                                break;
+    }
+    T x_t = x_f;
     if ( is_neg ) x_t = -x_t;
     if ( can_log ) _log_1f( push_constant, _x );
     return x_t;
