@@ -158,6 +158,15 @@ public:
     long long llrint( const T& x ) const;                               // same as rint() except returns just the raw integer part as long long
     T    irint( const T& x ) const;                                     // same as rint() except returns just the raw integer part as T
     T    nearbyint( const T& x ) const;                                 // same as rint() but never raises FE_INEXACT
+    T    floorval( const T& x ) const;                                  // largest  value <= x                       (and clear guard bits)
+    T    ceilval( const T& x ) const;                                   // smallest value >= x                       (and clear guard bits)
+    T    truncval( const T& x ) const;                                  // nearest  value toward 0                   (and clear guard bits)
+    T    roundval( const T& x ) const;                                  // nearest  value; halfway cases away from 0 (and clear guard bits)
+    T    rval( const T& x ) const;                                      // use guard bits to round value according to rounding mode:
+                                                                        //    FE_DOWNWARD:    floorval(x)
+                                                                        //    FE_UPWARD:      ceilval(x)
+                                                                        //    FE_TOWWARDZERO: truncval(x)
+                                                                        //    FE_TONEAREST:   roundval(x)
 
     // basic arithmetic
     T    abs( const T& x ) const;                                       // |x|
@@ -599,6 +608,11 @@ public:
         llrint,
         irint,
         nearbyint,
+        floorval,
+        ceilval,
+        truncval,
+        roundval,
+        rval,
 
         abs,
         neg,
@@ -799,6 +813,11 @@ std::string Cordic<T,FLT>::op_to_str( uint16_t op )
         _ocase( llrint )
         _ocase( irint )
         _ocase( nearbyint )
+        _ocase( floorval )
+        _ocase( ceilval )
+        _ocase( truncval )
+        _ocase( roundval )
+        _ocase( rval )
 
         _ocase( abs )
         _ocase( neg )
@@ -2079,9 +2098,14 @@ template< typename T, typename FLT >
 inline T Cordic<T,FLT>::trunc( const T& x ) const
 {
     _log_1( trunc, x );
-    T r = x & (_one - 1);
-    if ( signbit(x) ) r += _one;
-    return r;
+    T frac_mask = _one - 1;
+    if ( (x & frac_mask) == 0 ) {
+        return x;
+    } else {
+        T r = x & ~frac_mask;
+        if ( signbit(x) ) r += _min;
+        return r;
+    }
 }
 
 template< typename T, typename FLT >
@@ -2089,8 +2113,9 @@ inline T Cordic<T,FLT>::round( const T& _x ) const
 {
     _log_1( round, _x );
     T x = _x;
-    T frac = x & (_one - 1);
-    x &= ~(_one - 1);
+    T frac_mask = _one - 1;
+    T frac = x & frac_mask;
+    x &= ~frac_mask;
     if ( frac >= _half ) x += signbit(x) ? -_one : _one;
     return x;
 }
@@ -2154,6 +2179,75 @@ template< typename T, typename FLT >
 inline T Cordic<T,FLT>::nearbyint( const T& x ) const
 {
     return rint( x );                   // needs to make sure FE_INEXACT doesn't get raised
+}
+
+template< typename T, typename FLT >
+inline T Cordic<T,FLT>::floorval( const T& x ) const
+{
+    _log_1( floorval, x );
+    T guard_mask = _min - 1;
+    if ( (x & guard_mask) == 0 ) {
+        return x;
+    } else if ( x < 0 ) {
+        return (x & ~guard_mask) - _min;
+    } else {
+        return x & ~guard_mask;
+    }
+}
+
+template< typename T, typename FLT >
+inline T Cordic<T,FLT>::ceilval( const T& x ) const
+{
+    _log_1( ceilval, x );
+    T guard_mask = _min - 1;
+    if ( (x & guard_mask) == 0 ) {
+        return x;
+    } else if ( x < 0 ) {
+        return x & ~guard_mask;
+    } else {
+        return (x & ~guard_mask) + _min;
+    }
+}
+
+template< typename T, typename FLT >
+inline T Cordic<T,FLT>::truncval( const T& x ) const
+{
+    _log_1( truncval, x );
+    T guard_mask = _min - 1;
+    if ( (x & guard_mask) == 0 ) {
+        return x;
+    } else {
+        T r = x & ~guard_mask;
+        if ( signbit(x) ) r += _min;
+        return r;
+    }
+}
+
+template< typename T, typename FLT >
+inline T Cordic<T,FLT>::roundval( const T& _x ) const
+{
+    _log_1( roundval, _x );
+    T x = _x;
+    T guard_mask = _min - 1;
+    T guard = x & guard_mask;
+    x &= ~guard_mask;
+    if ( guard >= (1 << (_guard_w-1)) ) x += signbit(x) ? -_min : _min;
+    return x;
+}
+
+template< typename T, typename FLT >
+inline T Cordic<T,FLT>::rval( const T& x ) const
+{
+    if ( (x & ((1 << _guard_w)-1)) == 0 ) return x;
+
+    switch( _rounding_mode )
+    {
+        case FE_DOWNWARD:                       return floorval( x );
+        case FE_UPWARD:                         return ceilval( x );
+        case FE_TOWARDZERO:                     return truncval( x );
+        case FE_TONEAREST:                      return roundval( x );
+        default:                                return x;                         // shouldn't happen
+    }
 }
 
 template< typename T, typename FLT >
