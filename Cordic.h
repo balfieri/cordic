@@ -1364,7 +1364,7 @@ inline T Cordic<T,FLT>::to_t( FLT _x, bool can_log ) const
     bool is_neg = x < 0.0;
     if ( is_neg ) x = -x;
     cassert( T(x) < (T(1) << _int_w), "to_t: integer part of |x| " + std::to_string(x) + " does not fit in int_w bits" ); 
-    T x_t = x * FLT( _one ); // TODO: need to round
+    T x_t = std::rint( x * FLT( _one ) );
     if ( is_neg ) x_t = -x_t;
     if ( can_log ) _log_1f( push_constant, _x );
     return x_t;
