@@ -93,7 +93,7 @@ public:
     operator int32_t( void );
 
     //-----------------------------------------------------
-    // Constants
+    // Constants (freal ones are never rounded, so call rfrac() if you want them rounded)
     //-----------------------------------------------------               
     T     maxint( void );                                       // largest positive integer (just integer part, does not include fraction)
     freal max( void );                                          // maximum positive value 

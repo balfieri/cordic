@@ -81,14 +81,14 @@ public:
     //-----------------------------------------------------
     // Explicit Conversions
     //-----------------------------------------------------
-    T           to_t( FLT x, bool is_final=false ) const;        // FLT to T encoded value
+    T           to_t( FLT x, bool is_final=false ) const;        // FLT to T encoded value; default is to not round to nearest fraction
     FLT         to_flt( const T& x, bool is_final=false ) const; // T encoded value to FLT
     std::string to_string( const T& x ) const;          // T to std::string in decimal floating-point format
     std::string to_rstring( const T& _x ) const;        // T to std::string in raw decimal integer format 
     std::string to_bstring( const T& x ) const;         // T to std::string in binary format, like "1 001 101101011010"
 
     //-----------------------------------------------------
-    // Constants 
+    // Constants (T ones are never rounded, so call rfrac() if you want them rounded)
     //-----------------------------------------------------
     uint32_t int_w( void ) const;                       // int_w   from above
     uint32_t frac_w( void ) const;                      // frac_w  from above
