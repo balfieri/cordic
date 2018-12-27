@@ -492,12 +492,15 @@ decl_std2(     atanh2                           )
 
 }
 
+// specialize for freal
+//
 template<> class std::numeric_limits<freal> 
 {
 public:
     // any static field that depends on the current implicit_to is (re)initialized
     // when implicit_to_set() is called to change the implicit Cordic, therefore
-    // these static fields are not marked const
+    // these static fields are not marked const and will change from these
+    // default values in the typical usage scenario
     static bool                 is_specialized;
     static freal                min() throw()           { return freal::implicit_to_get()->min(); }
     static freal                max() throw()           { return freal::implicit_to_get()->max(); }
