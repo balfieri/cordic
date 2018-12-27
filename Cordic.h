@@ -2374,8 +2374,8 @@ inline T Cordic<T,FLT>::mul( const T& x, const T& y, bool do_reduce, bool is_fin
 template< typename T, typename FLT >
 inline T Cordic<T,FLT>::mulc( const T& x, const T& c, bool do_reduce, bool is_final ) const
 {
-    //if ( is_final ) _log_2i( mulc, x, c );
-    return mul( x, c, do_reduce, is_final );     // TODO: change this to minimum shifts and adds
+    if ( is_final ) _log_2i( mulc, x, c );
+    return mul( x, c, do_reduce, false );     // later, change this to minimum shifts and adds
 }
 
 template< typename T, typename FLT >
@@ -2688,7 +2688,7 @@ T Cordic<T,FLT>::exp( const T& _x, bool do_reduce, bool is_final ) const
     if ( _do_reduce ) {
         if ( debug ) std::cout << "exp mid: b=" << M_E << " x_orig=" << to_flt(_x) << " f=reduced_x=" << to_flt(x) << 
                                   " exp(f)=" << to_flt(xx) << " log(b)*log(i)=" << to_flt(factor) << "\n";
-        xx = mul( xx, factor, do_reduce, false );   // TODO: don't do this if didn't need to
+        xx = mul( xx, factor, do_reduce, false );
     }
     if ( debug ) std::cout << "exp: x_orig=" << to_flt(_x) << " reduced_x=" << to_flt(x) << " exp=" << to_flt(xx) << "\n";
     return xx;
@@ -2703,7 +2703,11 @@ inline T Cordic<T,FLT>::exp( const T& x ) const
 template< typename T, typename FLT >
 inline T Cordic<T,FLT>::expm1( const T& x ) const
 { 
-    return exp( x ) - one();            // TODO: see identities for more accurate way to do this
+    //-----------------------------------------------------
+    // Compute without rounding, then round.
+    //-----------------------------------------------------
+    _log_1( expm1, x );
+    return exp( x, _do_reduce, false ) - one();
 }
 
 template< typename T, typename FLT >
