@@ -43,6 +43,11 @@ static constexpr bool do_asserts = true;
 #define cassert(expr, msg) if ( do_asserts && !(expr) ) \
                 { std::cout << "ERROR: assertion failure: " << (msg) << " at " << __FILE__ << ":" << __LINE__ << "\n"; exit( 1 ); }
 
+// extended rounding modes beyond FE_TONEAREST etc
+//
+static constexpr int FE_NOROUND      = 0x1000;  // perform no rounding at all; leave guard bits alone
+static constexpr int FE_AWAYFROMZERO = 0x2000;  // like FE_TOWARDZERO, but away from zero
+
 // T      = some signed integer type that can hold fixed-point values (default is int64_t)
 // FLT    = some floating-point type that can hold constants of the desired precision (default is double)
 //
@@ -145,28 +150,34 @@ public:
     T    floor( const T& x ) const;                                     // largest  integral value <= x
     T    ceil( const T& x ) const;                                      // smallest integral value >= x
     T    trunc( const T& x ) const;                                     // nearest  integral value toward 0
+    T    extend( const T& x ) const;                                    // nearest  integral value away from 0
     T    round( const T& x ) const;                                     // nearest  integral value; halfway cases away from 0 
     long lround( const T& x ) const;                                    // same as round() except returns just the raw integer part as long 
     long long llround( const T& x ) const;                              // same as round() except returns just the raw integer part as long long
     T    iround( const T& x ) const;                                    // same as round() except returns just the raw integer part as T
     T    rint( const T& x ) const;                                      // nearest integral value according to rounding mode:
-                                                                        //    FE_DOWNWARD:    floor(x)
-                                                                        //    FE_UPWARD:      ceil(x)
-                                                                        //    FE_TOWWARDZERO: trunc(x)
-                                                                        //    FE_TONEAREST:   round(x)
+                                                                        //    FE_NOROUND:      x                (extension)
+                                                                        //    FE_DOWNWARD:     floor(x)
+                                                                        //    FE_UPWARD:       ceil(x)
+                                                                        //    FE_TOWWARDZERO:  trunc(x)
+                                                                        //    FE_AWAYFROMZERO: extend(x)        (extension)
+                                                                        //    FE_TONEAREST:    round(x)
     long lrint( const T& x ) const;                                     // same as rint() except returns just the raw integer part as long
     long long llrint( const T& x ) const;                               // same as rint() except returns just the raw integer part as long long
     T    irint( const T& x ) const;                                     // same as rint() except returns just the raw integer part as T
     T    nearbyint( const T& x ) const;                                 // same as rint() but never raises FE_INEXACT
-    T    floorval( const T& x ) const;                                  // largest  value <= x                       (and clear guard bits)
-    T    ceilval( const T& x ) const;                                   // smallest value >= x                       (and clear guard bits)
-    T    truncval( const T& x ) const;                                  // nearest  value toward 0                   (and clear guard bits)
-    T    roundval( const T& x ) const;                                  // nearest  value; halfway cases away from 0 (and clear guard bits)
-    T    rval( const T& x ) const;                                      // use guard bits to round value according to rounding mode:
-                                                                        //    FE_DOWNWARD:    floorval(x)
-                                                                        //    FE_UPWARD:      ceilval(x)
-                                                                        //    FE_TOWWARDZERO: truncval(x)
-                                                                        //    FE_TONEAREST:   roundval(x)
+    T    floorfrac( const T& x ) const;                                 // largest  value <= x                       (and clear guard bits)
+    T    ceilfrac( const T& x ) const;                                  // smallest value >= x                       (and clear guard bits)
+    T    truncfrac( const T& x ) const;                                 // nearest  value toward 0                   (and clear guard bits)
+    T    extendfrac( const T& x ) const;                                // nearest  value away from 0                (and clear guard bits)
+    T    roundfrac( const T& x ) const;                                 // nearest  value; halfway cases away from 0 (and clear guard bits)
+    T    rfrac( const T& x ) const;                                     // use guard bits to round value according to rounding mode:
+                                                                        //    FE_NOROUND:      x                (extension)
+                                                                        //    FE_DOWNWARD:     floorfrac(x)
+                                                                        //    FE_UPWARD:       ceilfrac(x)
+                                                                        //    FE_TOWWARDZERO:  truncfrac(x)
+                                                                        //    FE_AWAYFROMZERO: extendfrac(x)    (extension)
+                                                                        //    FE_TONEAREST:    roundfrac(x)
 
     // basic arithmetic
     T    abs( const T& x ) const;                                       // |x|
@@ -601,6 +612,7 @@ public:
         floor,
         ceil,
         trunc,
+        extend,
         round,
         lround,
         llround,
@@ -610,11 +622,12 @@ public:
         llrint,
         irint,
         nearbyint,
-        floorval,
-        ceilval,
-        truncval,
-        roundval,
-        rval,
+        floorfrac,
+        ceilfrac,
+        truncfrac,
+        extendfrac,
+        roundfrac,
+        rfrac,
 
         abs,
         neg,
@@ -807,6 +820,7 @@ std::string Cordic<T,FLT>::op_to_str( uint16_t op )
         _ocase( floor )
         _ocase( ceil )
         _ocase( trunc )
+        _ocase( extend )
         _ocase( round )
         _ocase( lround )
         _ocase( llround )
@@ -816,11 +830,12 @@ std::string Cordic<T,FLT>::op_to_str( uint16_t op )
         _ocase( llrint )
         _ocase( irint )
         _ocase( nearbyint )
-        _ocase( floorval )
-        _ocase( ceilval )
-        _ocase( truncval )
-        _ocase( roundval )
-        _ocase( rval )
+        _ocase( floorfrac )
+        _ocase( ceilfrac )
+        _ocase( truncfrac )
+        _ocase( extendfrac )
+        _ocase( roundfrac )
+        _ocase( rfrac )
 
         _ocase( abs )
         _ocase( neg )
@@ -1371,9 +1386,11 @@ inline T Cordic<T,FLT>::to_t( FLT _x, bool is_final ) const
     FLT x_f = x * FLT( _one );
     switch( _rounding_mode )
     {
+        case FE_NOROUND:                                                        break;
         case FE_DOWNWARD:                       x_f = std::floor( x_f );        break;
         case FE_UPWARD:                         x_f = std::ceil( x_f );         break;
         case FE_TOWARDZERO:                     x_f = std::trunc( x_f );        break;
+        case FE_AWAYFROMZERO:                   x_f = std::signbit( x_f ) ? std::floor( x_f ) : std::ceil( x_f ); break;
         case FE_TONEAREST:                      x_f = std::round( x_f );        break;
         default:                                                                break;
     }
@@ -2042,9 +2059,11 @@ inline int Cordic<T,FLT>::fesetround( int round )
 {
     switch( round )
     {
+        case FE_NOROUND:        
         case FE_DOWNWARD:        
         case FE_UPWARD:        
         case FE_TOWARDZERO:
+        case FE_AWAYFROMZERO:
         case FE_TONEAREST:
             _rounding_mode = round;
             return 0;
@@ -2122,6 +2141,20 @@ inline T Cordic<T,FLT>::trunc( const T& x ) const
 }
 
 template< typename T, typename FLT >
+inline T Cordic<T,FLT>::extend( const T& x ) const
+{
+    _log_1( extend, x );
+    T frac_mask = _one - 1;
+    if ( (x & frac_mask) == 0 ) {
+        return x;
+    } else {
+        T r = x & ~frac_mask;
+        r += _min;
+        return r;
+    }
+}
+
+template< typename T, typename FLT >
 inline T Cordic<T,FLT>::round( const T& _x ) const
 {
     _log_1( round, _x );
@@ -2159,9 +2192,11 @@ inline T Cordic<T,FLT>::rint( const T& x ) const
 {
     switch( _rounding_mode )
     {
+        case FE_NOROUND:                        return x;
         case FE_DOWNWARD:                       return floor( x );
         case FE_UPWARD:                         return ceil( x );
         case FE_TOWARDZERO:                     return trunc( x );
+        case FE_AWAYFROMZERO:                   return extend( x );
         case FE_TONEAREST:                      return round( x );
         default:                                return x;                         // shouldn't happen
     }
@@ -2195,9 +2230,9 @@ inline T Cordic<T,FLT>::nearbyint( const T& x ) const
 }
 
 template< typename T, typename FLT >
-inline T Cordic<T,FLT>::floorval( const T& x ) const
+inline T Cordic<T,FLT>::floorfrac( const T& x ) const
 {
-    _log_1( floorval, x );
+    _log_1( floorfrac, x );
     T guard_mask = _min - 1;
     if ( (x & guard_mask) == 0 ) {
         return x;
@@ -2209,9 +2244,9 @@ inline T Cordic<T,FLT>::floorval( const T& x ) const
 }
 
 template< typename T, typename FLT >
-inline T Cordic<T,FLT>::ceilval( const T& x ) const
+inline T Cordic<T,FLT>::ceilfrac( const T& x ) const
 {
-    _log_1( ceilval, x );
+    _log_1( ceilfrac, x );
     T guard_mask = _min - 1;
     if ( (x & guard_mask) == 0 ) {
         return x;
@@ -2223,9 +2258,9 @@ inline T Cordic<T,FLT>::ceilval( const T& x ) const
 }
 
 template< typename T, typename FLT >
-inline T Cordic<T,FLT>::truncval( const T& x ) const
+inline T Cordic<T,FLT>::truncfrac( const T& x ) const
 {
-    _log_1( truncval, x );
+    _log_1( truncfrac, x );
     T guard_mask = _min - 1;
     if ( (x & guard_mask) == 0 ) {
         return x;
@@ -2237,9 +2272,23 @@ inline T Cordic<T,FLT>::truncval( const T& x ) const
 }
 
 template< typename T, typename FLT >
-inline T Cordic<T,FLT>::roundval( const T& _x ) const
+inline T Cordic<T,FLT>::extendfrac( const T& x ) const
 {
-    _log_1( roundval, _x );
+    _log_1( extendfrac, x );
+    T guard_mask = _min - 1;
+    if ( (x & guard_mask) == 0 ) {
+        return x;
+    } else {
+        T r = x & ~guard_mask;
+        if ( signbit(x) ) r += _min;
+        return r;
+    }
+}
+
+template< typename T, typename FLT >
+inline T Cordic<T,FLT>::roundfrac( const T& _x ) const
+{
+    _log_1( roundfrac, _x );
     T x = _x;
     T guard_mask = _min - 1;
     T guard = x & guard_mask;
@@ -2249,16 +2298,18 @@ inline T Cordic<T,FLT>::roundval( const T& _x ) const
 }
 
 template< typename T, typename FLT >
-inline T Cordic<T,FLT>::rval( const T& x ) const
+inline T Cordic<T,FLT>::rfrac( const T& x ) const
 {
     if ( (x & ((1 << _guard_w)-1)) == 0 ) return x;
 
     switch( _rounding_mode )
     {
-        case FE_DOWNWARD:                       return floorval( x );
-        case FE_UPWARD:                         return ceilval( x );
-        case FE_TOWARDZERO:                     return truncval( x );
-        case FE_TONEAREST:                      return roundval( x );
+        case FE_NOROUND:                        return x;
+        case FE_DOWNWARD:                       return floorfrac( x );
+        case FE_UPWARD:                         return ceilfrac( x );
+        case FE_TOWARDZERO:                     return truncfrac( x );
+        case FE_AWAYFROMZERO:                   return extendfrac( x );
+        case FE_TONEAREST:                      return roundfrac( x );
         default:                                return x;                         // shouldn't happen
     }
 }
