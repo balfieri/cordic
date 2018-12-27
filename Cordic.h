@@ -176,6 +176,7 @@ public:
     T    sub( const T& x, const T& y ) const;                           // x-y 
     T    fma( const T& x, const T& y, const T& addend ) const;          // x*y + addend
     T    mul( const T& x, const T& y ) const;                           // x*y 
+    T    mulc( const T& x, const T& c ) const;                          // x*c where c is known to be a constant
     T    sqr( const T& x ) const;                                       // x*x
     T    scalbn( const T& x, int y ) const;                             // x * 2^y (i.e., left-shift)
     T    ldexp( const T& x, int y ) const;                              // x * 2^y (same thing)
@@ -524,6 +525,7 @@ public:
     //-----------------------------------------------------
     T    fma( const T& x, const T& y, const T& addend, bool do_reduce, bool is_final ) const;
     T    mul( const T& x, const T& y, bool do_reduce, bool is_final ) const;                 
+    T    mulc( const T& x, const T& c, bool do_reduce, bool is_final ) const;
     T    scalbn( const T& x, int y, bool is_final ) const;                             
     T    fda( const T& y, const T& x, const T& addend, bool do_reduce, bool is_final ) const; 
     T    div( const T& y, const T& x, bool do_reduce, bool is_final ) const;                  
@@ -534,7 +536,7 @@ public:
     T    hypot( const T& x, const T& y, bool do_reduce, bool is_final ) const;          
     T    hypoth( const T& x, const T& y, bool do_reduce, bool is_final ) const;          
     T    atan2(  const T& y, const T& x, bool do_reduce, bool is_final, bool x_is_one, T * r ) const; 
-    T    atanh2( const T& y, const T& x, bool do_reduce, bool is_final, bool x_is_one ) const; // same but override do_reduce
+    T    atanh2( const T& y, const T& x, bool do_reduce, bool is_final, bool x_is_one ) const; 
     void sincos( const T& x, T& si, T& co, bool do_reduce, bool is_final, bool need_si, bool need_co, const T * r ) const;
     void sinpicospi( const T& x, T& si, T& co, bool do_reduce, bool is_final, bool need_si, bool need_co, const T * r ) const;
     void sinhcosh( const T& x, T& sih, T& coh, bool do_reduce, bool is_final, bool need_sih, bool need_coh, const T * r ) const;
@@ -621,6 +623,7 @@ public:
         sub,
         fma,
         mul,
+        mulc,
         sqr,
         scalbn,
         ldexp,
@@ -826,6 +829,7 @@ std::string Cordic<T,FLT>::op_to_str( uint16_t op )
         _ocase( sub )
         _ocase( fma )
         _ocase( mul )
+        _ocase( mulc )
         _ocase( scalbn )
         _ocase( ldexp )
         _ocase( fda )
@@ -2368,6 +2372,19 @@ inline T Cordic<T,FLT>::mul( const T& x, const T& y, bool do_reduce, bool is_fin
 }
 
 template< typename T, typename FLT >
+inline T Cordic<T,FLT>::mulc( const T& x, const T& c, bool do_reduce, bool is_final ) const
+{
+    //if ( is_final ) _log_2i( mulc, x, c );
+    return mul( x, c, do_reduce, is_final );     // TODO: change this to minimum shifts and adds
+}
+
+template< typename T, typename FLT >
+inline T Cordic<T,FLT>::mulc( const T& x, const T& c ) const
+{
+    return mulc( x, c, _do_reduce, true );
+}
+
+template< typename T, typename FLT >
 inline T Cordic<T,FLT>::sqr( const T& x ) const
 {
     return fma( x, x, _zero );
@@ -2514,7 +2531,7 @@ T Cordic<T,FLT>::sqrt( const T& _x, bool do_reduce, bool is_final ) const
 
     T xx, yy;
     hyperbolic_vectoring_xy( x+_one, x-_one, xx, yy );  // gain*sqrt((s+1)^2 - (s-1)^2)
-    xx = mul( xx, _hyperbolic_vectoring_one_over_gain, false, false );   // TODO: mul by constant
+    xx = mulc( xx, _hyperbolic_vectoring_one_over_gain, false, false );   
     if ( do_reduce ) xx = scalbn( xx, ls, false );                  // log2(p)/2 - 1
 
     if ( debug ) std::cout << "sqrt end: x_orig=" << to_flt(_x) << " x_reduced=s=" << to_flt(x) << " do_reduce=" << do_reduce << " xx=" << to_flt(xx) << "\n";
@@ -2549,8 +2566,8 @@ inline T Cordic<T,FLT>::cbrt( const T& _x ) const
     T x = _x;
     bool sign = x < 0;
     if ( sign ) x = -x;
-    const T THREE = _two | _one;
-    T r = exp( div( log( x, true, false ), THREE, true, false ) );                   // TODO: mul by inexact constant
+    const T ONE_THIRD = to_t( FLT(1) / FLT(3) );
+    T r = exp( mulc( log( x, true, false ), ONE_THIRD, true, false ) );
     if ( sign ) r = -r;
     return r;
 }
@@ -2563,8 +2580,8 @@ T Cordic<T,FLT>::rcbrt( const T& _x ) const
     T x = _x;
     bool sign = x < 0;
     if ( sign ) x = -x;
-    const T THREE = _two | _one;
-    T r = exp( div( log( x, true, false ), -THREE, true, false ) );                  // TODO: mul by inexact constant
+    const T ONE_THIRD = to_t( FLT(1) / FLT(3) );
+    T r = exp( mulc( log( x, true, false ), -ONE_THIRD, true, false ) ); 
     return r;
 }
 
@@ -2697,7 +2714,7 @@ inline T Cordic<T,FLT>::expc( const FLT& b, const T& x ) const
     const FLT log_b_f = std::log( b );
     cassert( log_b_f >= 0.0, "expc log(b) must be non-negative" );
     const T   log_b   = to_t( log_b_f );
-    return exp( mul( x, log_b, _do_reduce, false ), _do_reduce, false );      // TODO: mul by constant
+    return exp( mulc( x, log_b, _do_reduce, false ), _do_reduce, false );
 }
 
 template< typename T, typename FLT >
@@ -2788,7 +2805,7 @@ inline T Cordic<T,FLT>::logc( const T& x, const FLT& b ) const
           T    log_x            = log( x, _do_reduce, false );
     const bool log_x_sign       = log_x < 0;
     if ( log_x_sign ) log_x = -log_x;
-    T z = mul( log_x, one_over_log_b, _do_reduce, false ); // TODO: mul by constant 
+    T z = mulc( log_x, one_over_log_b, _do_reduce, false );
     if ( log_x_sign ) z = -z;
     return z;
 }
@@ -2878,7 +2895,7 @@ void Cordic<T,FLT>::sincos( const T& _x, T& si, T& co, bool do_reduce, bool is_f
     if ( _r != nullptr ) {
         r = *_r;
         if ( do_reduce ) reduce_arg( r, r_lshift, r_sign );
-        r = mul( r, _circular_rotation_one_over_gain, true, false );   // TODO: mul by constant 
+        r = mulc( r, _circular_rotation_one_over_gain, true, false );   
     }
 
     T zz;
@@ -2892,8 +2909,8 @@ void Cordic<T,FLT>::sincos( const T& _x, T& si, T& co, bool do_reduce, bool is_f
         // cos(x+PI/4) = sqrt(2)/2 * ( cos(x) - sin(x) )
         //-----------------------------------------------------
         if ( did_minus_pi_div_4 ) {
-            T si_new = mul( _sqrt2_div_2, si+co, true, false );    // TODO: mul by constant
-            T co_new = mul( _sqrt2_div_2, co-si, true, false );    // TODO: mul by constant
+            T si_new = mulc( si+co, _sqrt2_div_2, true, false );
+            T co_new = mulc( co-si, _sqrt2_div_2, true, false );
             si = si_new;
             co = co_new;
         }
@@ -2990,7 +3007,7 @@ void Cordic<T,FLT>::sinpicospi( const T& _x, T& si, T& co, bool do_reduce, bool 
     if ( _r != nullptr ) {
         r = *_r;
         if ( do_reduce ) reduce_arg( r, r_lshift, r_sign );
-        r = mul( r, _circular_rotation_one_over_gain, true, false );   // TODO: mul by constant 
+        r = mulc( r, _circular_rotation_one_over_gain, true, false );
     }
 
     T zz;
@@ -3004,8 +3021,8 @@ void Cordic<T,FLT>::sinpicospi( const T& _x, T& si, T& co, bool do_reduce, bool 
         // cospi(x+PI/4) = sqrt(2)/2 * ( cospi(x) - sinpi(x) )
         //-----------------------------------------------------
         if ( did_minus_pi_div_4 ) {
-            T si_new = mul( _sqrt2_div_2, si+co, true, false );    // TODO: mul by constant
-            T co_new = mul( _sqrt2_div_2, co-si, true, false );    // TODO: mul by constant
+            T si_new = mulc( si+co, _sqrt2_div_2, true, false );
+            T co_new = mulc( co-si, _sqrt2_div_2, true, false );
             si = si_new;
             co = co_new;
         }
@@ -3141,7 +3158,7 @@ inline T Cordic<T,FLT>::hypot( const T& _x, const T& _y, bool do_reduce, bool is
 
     T xx, yy, zz;
     circular_vectoring_xy( x, y, xx, yy );
-    xx = mul( xx, _circular_vectoring_one_over_gain, true, false );        // TODO: mul by constant
+    xx = mulc( xx, _circular_vectoring_one_over_gain, true, false );        
     if ( do_reduce ) xx = scalbn( xx, ls, false );
     if ( debug ) std::cout << "hypot end: x=" << to_flt(x) << " y=" << to_flt(y) << " do_reduce=" << do_reduce << " xx=" << to_flt(xx) << "\n";
     return xx;
@@ -3244,7 +3261,7 @@ void Cordic<T,FLT>::sinhcosh( const T& _x, T& sih, T& coh, bool do_reduce, bool 
     if ( _r != nullptr ) {
         r = *_r;
         if ( do_reduce ) reduce_arg( r, r_lshift, r_sign );
-        r = mul( r, _hyperbolic_rotation_one_over_gain, false, false );  // TODO: mul by constant
+        r = mulc( r, _hyperbolic_rotation_one_over_gain, false, false );  
     }
 
     T sinh_f;
@@ -3537,7 +3554,7 @@ inline void Cordic<T,FLT>::reduce_sincos_arg( T& a, uint32_t& quad, bool& sign, 
     const T a_orig = a;
     sign = a < 0;
     if ( sign ) a = -a;
-    const T m = mul( a, _four_div_pi, true, false );               // TODO: mul by constant
+    const T m = mulc( a, _four_div_pi, true, false );
     const T i = m >> (_frac_w + _guard_w);
     const T s = i *  _pi_div_4;
     a        -= s;
@@ -3565,7 +3582,7 @@ inline void Cordic<T,FLT>::reduce_sinpicospi_arg( T& a, uint32_t& quad, bool& si
     if ( sign ) a = -a;
     const T i = a >> (_frac_w-2 + _guard_w);
     const T f = ( a & (_quarter - 1) ) << 2;
-            a = mul( f, _four_div_pi, true, false );               // TODO: mul by constant
+            a = mulc( f, _four_div_pi, true, false );               
     quad      = (i >> 1) & 3;
     did_minus_pi_div_4 = i & 1;
     if ( debug ) std::cout << "reduce_sinpicospi_arg: a_orig=" << to_flt(a_orig) << " i=" << to_rstring(i) << 
