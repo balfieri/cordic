@@ -55,7 +55,7 @@ public:
     freal( void );                                      // initializes value to undefined
     freal( const freal& other );                        // copy type and value of other
     freal( const freal& other, FLT f );                 // copy type of other, but value of f
-    freal( const Cordic<T,FLT> * cordic, FLT f );       // use type from cordic, but value of f
+    freal( const Cordic<T,FLT> * cordic, FLT f );       // use type from cordic, but value of f; fractional lsb is never rounded
 
     static freal make_fixed( uint32_t int_w, uint32_t frac_w, FLT init_f=FLT(0) );  // make a signed fixed-point    number 
     static freal make_float( uint32_t exp_w, uint32_t frac_w, FLT init_f=FLT(0) );  // make a signed floating-point number

@@ -81,7 +81,7 @@ public:
     //-----------------------------------------------------
     // Explicit Conversions
     //-----------------------------------------------------
-    T           to_t( FLT x, bool is_final=false ) const;        // FLT to T encoded value; default is to not round to nearest fraction
+    T           to_t( FLT x, bool is_final=false ) const;        // FLT to T encoded value; fractional lsb is never rounded 
     FLT         to_flt( const T& x, bool is_final=false ) const; // T encoded value to FLT
     std::string to_string( const T& x ) const;          // T to std::string in decimal floating-point format
     std::string to_rstring( const T& _x ) const;        // T to std::string in raw decimal integer format 
@@ -1396,7 +1396,7 @@ inline T Cordic<T,FLT>::to_t( FLT _x, bool is_final ) const
     }
     T x_t = x_f;
     if ( is_neg ) x_t = -x_t;
-    if ( is_final ) _log_1f( push_constant, _x );
+    if ( is_final ) _log_1f( push_constant, _x );       // note: we purposely don't round constants
     return x_t;
 }
 
@@ -2396,10 +2396,11 @@ inline T Cordic<T,FLT>::fma( const T& _x, const T& _y, const T& addend, bool do_
         yy += addend;
         if ( sign ) yy = -yy;
     }
+    if ( is_final ) yy = rfrac( yy );
     if ( debug ) std::cout << "fma end: x_orig=" << to_flt(_x) << " y_orig=" << to_flt(_y) << 
                               " addend=" << to_flt(addend) << " do_reduce=" << do_reduce << 
                               " x_reduced=" << to_flt(x) << " y_reduced=" << to_flt(y) << 
-                              " yy=" << to_flt(yy) << " x_lshift=" << x_lshift << " y_lshift=" << y_lshift << 
+                              " fma=" << to_flt(yy) << " x_lshift=" << x_lshift << " y_lshift=" << y_lshift << 
                               " sign=" << sign << "\n";
     return yy;
 }
@@ -2426,7 +2427,9 @@ template< typename T, typename FLT >
 inline T Cordic<T,FLT>::mulc( const T& x, const T& c, bool do_reduce, bool is_final ) const
 {
     if ( is_final ) _log_2i( mulc, x, c );
-    return mul( x, c, do_reduce, false );     // later, change this to minimum shifts and adds
+    T r = mul( x, c, do_reduce, false );     // later, change this to minimum shifts and adds
+    if ( is_final ) r = rfrac( r );
+    return r;
 }
 
 template< typename T, typename FLT >
@@ -2463,9 +2466,18 @@ T Cordic<T,FLT>::scalbn( const T& x, int ls, bool is_final ) const
             std::cout << "lshift x << " << ls << " will overflow x\n";
             exit( 1 );
         }
-        return x << ls;
+        return x << ls;   // don't round if already not rounded
     } else if ( ls < 0 ) {
-        return x >> -ls;
+        //-----------------------------------------------------
+        // Keep track of the sticky bit even if not rounding.
+        //-----------------------------------------------------
+        int rs = -ls;
+        T mask = (T(1) << rs) - 1;
+        bool set_sticky = (x & mask) != 0;
+        T r = x >> rs;
+        if ( set_sticky ) r |= 1;
+        if ( is_final ) r = rfrac( r );
+        return r;
     } else {
         return x;
     }
@@ -2510,10 +2522,11 @@ T Cordic<T,FLT>::fda( const T& _y, const T& _x, const T& addend, bool do_reduce,
         zz += addend;
         if ( sign ) zz = -zz;
     }
+    if ( is_final ) zz = rfrac( zz );
     if ( debug ) std::cout << "fda end: x_orig=" << to_flt(_x) << " y_orig=" << to_flt(_y) << 
                               " addend=" << to_flt(addend) << " do_reduce=" << do_reduce <<
                               " x_reduced=" << to_flt(x) << " y_reduced=" << to_flt(y) << 
-                              " zz=" << to_flt(zz) << " x_lshift=" << x_lshift << " y_lshift=" << y_lshift << 
+                              " fda=" << to_flt(zz) << " x_lshift=" << x_lshift << " y_lshift=" << y_lshift << 
                               " sign=" << sign << "\n";
     return zz;
 }
@@ -2585,7 +2598,8 @@ T Cordic<T,FLT>::sqrt( const T& _x, bool do_reduce, bool is_final ) const
     xx = mulc( xx, _hyperbolic_vectoring_one_over_gain, false, false );   
     if ( do_reduce ) xx = scalbn( xx, ls, false );                  // log2(p)/2 - 1
 
-    if ( debug ) std::cout << "sqrt end: x_orig=" << to_flt(_x) << " x_reduced=s=" << to_flt(x) << " do_reduce=" << do_reduce << " xx=" << to_flt(xx) << "\n";
+    if ( is_final ) xx = rfrac( xx );
+    if ( debug ) std::cout << "sqrt end: x_orig=" << to_flt(_x) << " x_reduced=s=" << to_flt(x) << " do_reduce=" << do_reduce << " sqrt=" << to_flt(xx) << "\n";
     return xx;
 }
 
@@ -2606,6 +2620,8 @@ T Cordic<T,FLT>::rsqrt( const T& _x ) const
     T log_div_m2 = -log( x, true, false ) >> 1;
     T r = exp( log_div_m2, true, false );
     if ( sign ) r = -r;
+    r = rfrac( r );
+    if ( debug ) std::cout << "rsqrt end: x_orig=" << to_flt(_x) << " x_reduced=" << to_flt(x) << " r=" << to_flt(r) << "\n";
     return r;
 }
 
@@ -2620,6 +2636,8 @@ inline T Cordic<T,FLT>::cbrt( const T& _x ) const
     const T ONE_THIRD = to_t( FLT(1) / FLT(3) );
     T r = exp( mulc( log( x, true, false ), ONE_THIRD, true, false ) );
     if ( sign ) r = -r;
+    r = rfrac( r );
+    if ( debug ) std::cout << "cbrt end: x_orig=" << to_flt(_x) << " x_reduced=" << to_flt(x) << " r=" << to_flt(r) << "\n";
     return r;
 }
 
@@ -2633,6 +2651,8 @@ T Cordic<T,FLT>::rcbrt( const T& _x ) const
     if ( sign ) x = -x;
     const T ONE_THIRD = to_t( FLT(1) / FLT(3) );
     T r = exp( mulc( log( x, true, false ), -ONE_THIRD, true, false ) ); 
+    r = rfrac( r );
+    if ( debug ) std::cout << "rcbrt end: x_orig=" << to_flt(_x) << " x_reduced=" << to_flt(x) << " r=" << to_flt(r) << "\n";
     return r;
 }
 
@@ -2741,6 +2761,7 @@ T Cordic<T,FLT>::exp( const T& _x, bool do_reduce, bool is_final ) const
                                   " exp(f)=" << to_flt(xx) << " log(b)*log(i)=" << to_flt(factor) << "\n";
         xx = mul( xx, factor, do_reduce, false );
     }
+    if ( is_final ) xx = rfrac( xx );
     if ( debug ) std::cout << "exp: x_orig=" << to_flt(_x) << " reduced_x=" << to_flt(x) << " exp=" << to_flt(xx) << "\n";
     return xx;
 }
@@ -2769,7 +2790,10 @@ inline T Cordic<T,FLT>::expc( const FLT& b, const T& x ) const
     const FLT log_b_f = std::log( b );
     cassert( log_b_f >= 0.0, "expc log(b) must be non-negative" );
     const T   log_b   = to_t( log_b_f );
-    return exp( mulc( x, log_b, _do_reduce, false ), _do_reduce, false );
+    T r = exp( mulc( x, log_b, _do_reduce, false ), _do_reduce, false );
+    r = rfrac( r );
+    if ( debug ) std::cout << "expc: b=" << b << " x=" << to_flt(x) << " expc=" << to_flt(r) << "\n";
+    return r;
 }
 
 template< typename T, typename FLT >
@@ -2792,7 +2816,10 @@ inline T Cordic<T,FLT>::pow( const T& b, const T& x ) const
     cassert( b >= 0, "pow base b must be non-negative" );
     T lg = log( b, true, false );
     T m  = mul( x, lg, _do_reduce, false );
-    return exp( m, _do_reduce, false );
+    T r = exp( m, _do_reduce, false );
+    r = rfrac( r );
+    if ( debug ) std::cout << "pow: b=" << to_flt(b) << " x=" << to_flt(x) << " pow=" << to_flt(r) << "\n";
+    return r;
 }
 
 template< typename T, typename FLT >
@@ -2806,6 +2833,7 @@ inline T Cordic<T,FLT>::log( const T& _x, bool do_reduce, bool is_final ) const
     T dv = div( x-_one, x+_one, false, false );
     T lg = atanh2( dv, _one, do_reduce, false, true ) << 1;
     if ( do_reduce ) lg += addend;
+    if ( is_final ) lg = rfrac( lg );
     if ( debug ) std::cout << "log: x_orig=" << to_flt(_x) << " reduced_x=" << to_flt(x) << " log=" << to_flt(lg) << "\n";
     return lg;
 }
@@ -2821,7 +2849,7 @@ inline T Cordic<T,FLT>::log1p( const T& _x, bool do_reduce, bool is_final ) cons
 { 
     return log( _x + _one, do_reduce, is_final );   // for now
 
-    // this doesn't work yet, not sure why
+    // TODO: this doesn't work yet, not sure why
     if ( is_final ) _log_1( log1p, _x );
     T x = _x;
     cassert( x > -one(), "log1p: x+1 must be positive" );
@@ -2830,6 +2858,7 @@ inline T Cordic<T,FLT>::log1p( const T& _x, bool do_reduce, bool is_final ) cons
     T dv = div( x, x+_two, true, false );
     T lg1p = atanh2( dv, _one, _do_reduce, false, true ) << 1;
     if ( do_reduce ) lg1p += addend;
+    if ( is_final ) lg1p = rfrac( lg1p );
     if ( debug ) std::cout << "log1p: x_orig=" << to_flt(_x) << " reduced_x=" << to_flt(x) << " log1p=" << to_flt(lg1p) << "\n";
     return lg1p;
 }
@@ -2847,7 +2876,10 @@ inline T Cordic<T,FLT>::log( const T& x, const T& b ) const
     cassert( b > 0, "log b must be positive" );
     T lgx = log( x, _do_reduce, false );
     T lgb = log( b, _do_reduce, false );
-    return div( lgx, lgb, true, false );
+    T r = div( lgx, lgb, true, false );
+    r = rfrac( r );
+    if ( debug ) std::cout << "log: b=" << to_flt(b) << " x=" << to_flt(x) << " log=" << to_flt(r) << "\n";
+    return r;
 }
 
 template< typename T, typename FLT >
@@ -2860,9 +2892,11 @@ inline T Cordic<T,FLT>::logc( const T& x, const FLT& b ) const
           T    log_x            = log( x, _do_reduce, false );
     const bool log_x_sign       = log_x < 0;
     if ( log_x_sign ) log_x = -log_x;
-    T z = mulc( log_x, one_over_log_b, _do_reduce, false );
-    if ( log_x_sign ) z = -z;
-    return z;
+    T r = mulc( log_x, one_over_log_b, _do_reduce, false );
+    if ( log_x_sign ) r = -r;
+    r = rfrac( r );
+    if ( debug ) std::cout << "logc: b=" << to_flt(b) << " x=" << to_flt(x) << " reduced_x=" << to_flt(x) << " log=" << to_flt(r) << "\n";
+    return r;
 }
 
 template< typename T, typename FLT >
@@ -2888,6 +2922,7 @@ inline T Cordic<T,FLT>::sin( const T& x, const T * r ) const
     T si;
     T co;
     sincos( x, si, co, _do_reduce, false, true, false, r );
+    si = rfrac( si );
     return si;
 }
 
@@ -2902,6 +2937,7 @@ inline T Cordic<T,FLT>::cos( const T& x, const T * r ) const
     T si;
     T co;
     sincos( x, si, co, _do_reduce, false, false, true, r );
+    co = rfrac( co );
     return co;
 }
 
@@ -2917,7 +2953,9 @@ inline T Cordic<T,FLT>::tan( const T& x ) const
     _log_1( tan, x );
     T si, co;
     sincos( x, si, co, _do_reduce, false, true, true, nullptr );
-    return div( si, co, true, false );
+    T r = div( si, co, true, false );
+    r = rfrac( r );
+    return r;
 }
 
 template< typename T, typename FLT >
@@ -2985,6 +3023,11 @@ void Cordic<T,FLT>::sincos( const T& _x, T& si, T& co, bool do_reduce, bool is_f
         if ( need_si && (r_sign ^ x_sign ^ (quadrant >= 2)) )                  si = -si;
         if ( need_co && (r_sign ^          (quadrant == 1) || quadrant == 2) ) co = -co;
     }
+
+    if ( is_final ) {
+        if ( need_si ) si = rfrac( si );
+        if ( need_co ) co = rfrac( co );
+    }
 }
 
 template< typename T, typename FLT >
@@ -2998,6 +3041,7 @@ inline T Cordic<T,FLT>::sinpi( const T& x, const T * r ) const
     T si;
     T co;
     sinpicospi( x, si, co, _do_reduce, false, true, false, r );
+    si = rfrac( si );
     return si;
 }
 
@@ -3012,6 +3056,7 @@ inline T Cordic<T,FLT>::cospi( const T& x, const T * r ) const
     T si;
     T co;
     sinpicospi( x, si, co, _do_reduce, false, false, true, r );
+    co = rfrac( co );
     return co;
 }
 
@@ -3027,7 +3072,9 @@ inline T Cordic<T,FLT>::tanpi( const T& x ) const
     _log_1( tan, x );
     T si, co;
     sinpicospi( x, si, co, _do_reduce, false, true, true, nullptr );
-    return div( si, co, true, false );
+    T r = div( si, co, true, false );
+    r = rfrac( r );
+    return r;
 }
 
 template< typename T, typename FLT >
@@ -3097,6 +3144,11 @@ void Cordic<T,FLT>::sinpicospi( const T& _x, T& si, T& co, bool do_reduce, bool 
         if ( need_si && (r_sign ^ x_sign ^ (quadrant >= 2)) )                  si = -si;
         if ( need_co && (r_sign ^          (quadrant == 1) || quadrant == 2) ) co = -co;
     }
+
+    if ( is_final ) {
+        if ( need_si ) si = rfrac( si );
+        if ( need_co ) co = rfrac( co );
+    }
 }
 
 template< typename T, typename FLT >
@@ -3105,7 +3157,9 @@ inline T Cordic<T,FLT>::asin( const T& x ) const
     _log_1( asin, x );
     cassert( x >= -_one && x <= _one, "asin x must be between -1 and 1" );
     T nh = hypoth( _one, x, _do_reduce, false );
-    return atan2( x, nh, _do_reduce, false, false, nullptr );
+    T r = atan2( x, nh, _do_reduce, false, false, nullptr );
+    r = rfrac( r );
+    return r;
 }
 
 template< typename T, typename FLT >
@@ -3114,7 +3168,9 @@ inline T Cordic<T,FLT>::acos( const T& x ) const
     _log_1( acos, x );
     cassert( x >= -_one && x <= _one, "acos x must be between -1 and 1" );
     T nh = hypoth( _one, x, _do_reduce, false );
-    return atan2( nh, x, true, false, false, nullptr );
+    T r = atan2( nh, x, true, false, false, nullptr );
+    r = rfrac( r );
+    return r;
 }
 
 template< typename T, typename FLT >
@@ -3175,12 +3231,13 @@ T Cordic<T,FLT>::atan2( const T& _y, const T& _x, bool do_reduce, bool is_final,
         zz <<= 1;
         if ( swapped ) zz = _pi_div_2 - zz;
         if ( y_sign ) zz = -zz;
-        if ( debug ) std::cout << "atan2 cordic end: zz=" << to_flt(zz) << "\n";
+        if ( debug ) std::cout << "atan2 cordic end: atan2=" << to_flt(zz) << "\n";
     } else {
         circular_vectoring( x, y, _zero, xx, yy, zz );
     }
+    if ( is_final ) zz = rfrac( zz );
     if ( debug ) std::cout << "atan2 end: y=" << to_flt(_y) << " x=" << to_flt(_x) << " do_reduce=" << do_reduce << " x_is_one=" << x_is_one << 
-                              " zz=" << to_flt(zz) << " r=" << ((r != nullptr) ? to_flt(*r) : to_flt(_zero)) << "\n";
+                              " atan2=" << to_flt(zz) << " r=" << ((r != nullptr) ? to_flt(*r) : to_flt(_zero)) << "\n";
     return zz;
 }
 
@@ -3190,6 +3247,8 @@ inline void Cordic<T,FLT>::polar_to_rect( const T& r, const T& a, T& x, T& y ) c
     _log_4( polar_to_rect, r, a, x, y );
     if ( debug ) std::cout << "polar_to_rect begin: r=" << to_flt(r) << " a=" << to_flt(a) << " do_reduce=" << _do_reduce << "\n";
     sincos( a, y, x, true, false, true, true, &r );
+    x = rfrac( x );
+    y = rfrac( y );
 }
 
 template< typename T, typename FLT >
@@ -3198,6 +3257,8 @@ inline void Cordic<T,FLT>::rect_to_polar( const T& x, const T& y, T& r, T& a ) c
     _log_4( rect_to_polar, x, y, r, a );
     if ( debug ) std::cout << "rect_to_polar begin: x=" << to_flt(x) << " y=" << to_flt(y) << " do_reduce=" << _do_reduce << "\n";
     a = atan2( y, x, true, false, false, &r );
+    r = rfrac( r );
+    a = rfrac( a );
 }
 
 template< typename T, typename FLT >
@@ -3215,7 +3276,8 @@ inline T Cordic<T,FLT>::hypot( const T& _x, const T& _y, bool do_reduce, bool is
     circular_vectoring_xy( x, y, xx, yy );
     xx = mulc( xx, _circular_vectoring_one_over_gain, true, false );        
     if ( do_reduce ) xx = scalbn( xx, ls, false );
-    if ( debug ) std::cout << "hypot end: x=" << to_flt(x) << " y=" << to_flt(y) << " do_reduce=" << do_reduce << " xx=" << to_flt(xx) << "\n";
+    if ( is_final ) xx = rfrac( xx );
+    if ( debug ) std::cout << "hypot end: x=" << to_flt(x) << " y=" << to_flt(y) << " do_reduce=" << do_reduce << " hypot=" << to_flt(xx) << "\n";
     return xx;
 }
 
@@ -3237,7 +3299,9 @@ inline T Cordic<T,FLT>::hypoth( const T& x, const T& y, bool do_reduce, bool is_
     if ( is_final ) _log_2( hypoth, x, y );
     if ( debug ) std::cout << "hypoth begin: x=" << to_flt(x) << " y=" << to_flt(y) << " do_reduce=" << _do_reduce << "\n";
     cassert( x >= y, "hypoth x must be >= y" );
-    return sqrt( mul( x+y, x-y, do_reduce, false ), do_reduce, false ); // TODO: go back to using CORDIC hyperbolic core
+    T r = sqrt( mul( x+y, x-y, do_reduce, false ), do_reduce, false ); // TODO: go back to using CORDIC hyperbolic core
+    if ( is_final ) r = rfrac( r );
+    return r;
 }
 
 template< typename T, typename FLT >
@@ -3257,6 +3321,7 @@ inline T Cordic<T,FLT>::sinh( const T& x, const T * r ) const
     T sih;
     T coh;
     sinhcosh( x, sih, coh, _do_reduce, false, true, false, r );
+    sih = rfrac( sih );
     return sih;
 }
 
@@ -3271,6 +3336,7 @@ inline T Cordic<T,FLT>::cosh( const T& x, const T * r ) const
     T sih;
     T coh;
     sinhcosh( x, sih, coh, _do_reduce, true, false, true, r );
+    coh = rfrac( coh );
     return coh;
 }
 
@@ -3335,6 +3401,11 @@ void Cordic<T,FLT>::sinhcosh( const T& _x, T& sih, T& coh, bool do_reduce, bool 
         sih = sinh_f;
         coh = cosh_f;
     }
+
+    if ( is_final ) {
+        if ( need_sih ) sih = rfrac( sih );
+        if ( need_coh ) coh = rfrac( coh );
+    }
 }
 
 template< typename T, typename FLT >
@@ -3343,14 +3414,18 @@ T Cordic<T,FLT>::tanh( const T& x ) const
     _log_1( tanh, x );
     T sih, coh;
     sinhcosh( x, sih, coh, _do_reduce, false, true, true, nullptr );
-    return div( sih, coh, true, false );
+    T r = div( sih, coh, true, false );
+    r = rfrac( r );
+    return r;
 }
 
 template< typename T, typename FLT >
 T Cordic<T,FLT>::asinh( const T& x ) const
 { 
     _log_1( asinh, x );
-    return log( x + hypot( x, _one, _do_reduce, false ), _do_reduce, false );
+    T r = log( x + hypot( x, _one, _do_reduce, false ), _do_reduce, false );
+    r = rfrac( r );
+    return r;
 }
 
 template< typename T, typename FLT >
@@ -3358,7 +3433,9 @@ inline T Cordic<T,FLT>::acosh( const T& x ) const
 { 
     _log_1( acosh, x );
     cassert( x >= _one, "acosh x must be >= 1" );
-    return log( x + hypoth( x, _one, _do_reduce, false ), _do_reduce, false );
+    T r = log( x + hypoth( x, _one, _do_reduce, false ), _do_reduce, false );
+    r = rfrac( r );
+    return r;
 }
 
 template< typename T, typename FLT >
@@ -3404,6 +3481,7 @@ T Cordic<T,FLT>::atanh2( const T& _y, const T& _x, bool do_reduce, bool is_final
     T xx, yy, zz;
     hyperbolic_vectoring( x, y, _zero, xx, yy, zz );
     if ( sign ) zz = -zz;
+    if ( is_final ) zz = rfrac( zz );
     return zz;
 }
 
@@ -3419,7 +3497,9 @@ void Cordic<T,FLT>::reduce_arg( T& x, int32_t& x_lshift, bool& sign, bool shift_
     {
         x_lshift++;
         if ( shift_x ) {
+            bool set_sticky = x & 1;   // must record sticky bit
             x >>= 1;
+            if ( set_sticky ) x |= 1;
         } else {
             other <<= 1;
         }
@@ -3478,7 +3558,9 @@ inline void Cordic<T,FLT>::reduce_sqrt_arg( T& x, int32_t& lshift ) const
     if ( lshift & 1 ) {
         // make it even
         lshift++;
+        bool set_sticky = x & 1;
         x >>= 1;
+        if ( set_sticky ) x |= 1;
     }
     lshift = lshift/2 - 1;
     if ( debug ) std::cout << "reduce_sqrt_arg: x_orig=" << to_flt(x_orig) << " x_reduced=s=" << to_flt(x) << " lshift=" << to_flt(lshift) << "\n";
@@ -3586,8 +3668,13 @@ inline void Cordic<T,FLT>::reduce_hypot_args( T& x, T& y, int32_t& lshift, bool&
     reduce_arg( x, x_lshift, x_sign, false );
     reduce_arg( y, y_lshift, y_sign, false );   
     lshift = (x_lshift > y_lshift) ? x_lshift : y_lshift;
+    T mask = (lshift > 0) ? ( (T(1) << lshift) - 1 ) : 0;
+    bool x_set_sticky = (x & mask) != 0; 
+    bool y_set_sticky = (y & mask) != 0; 
     x >>= lshift;
     y >>= lshift;
+    if ( x_set_sticky ) x |= 1;
+    if ( y_set_sticky ) y |= 1;
     swapped = x < y;
     if ( swapped ) {
         T tmp = x;
