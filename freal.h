@@ -177,6 +177,7 @@ public:
     freal  floor( void ) const;
     freal  ceil( void ) const;
     freal  trunc( void ) const;
+    freal  extend( void ) const;                                // away from zero
     freal  round( void ) const;
     long   lround( void ) const;
     long long llround( void ) const;
@@ -185,7 +186,13 @@ public:
     long   lrint( void ) const;
     long long llrint( void ) const;
     T      irint( void ) const;
-    freal  nearbyint( void ) const;
+    freal  nearbyint( void ) const;                             
+    freal  floorfrac( void ) const;                             // these round fractional lsb and clear guard bits
+    freal  ceilfrac( void ) const;
+    freal  truncfrac( void ) const;
+    freal  extendfrac( void ) const;                            // away from zero
+    freal  roundfrac( void ) const;
+    freal  rfrac( void ) const;
 
     freal  abs( void ) const;
     freal  neg( void ) const; 
@@ -396,6 +403,7 @@ decl_std2x(    nexttoward,      long double     )
 decl_std1(     floor                            )
 decl_std1(     ceil                             )
 decl_std1(     trunc                            )
+decl_std1(     extend                           )
 decl_std1(     round                            )
 decl_std1_ret( lround,          long            )
 decl_std1_ret( llround,         long long       )
@@ -405,6 +413,12 @@ decl_std1_ret( lrint,           long            )
 decl_std1_ret( llrint,          long long       )
 decl_std1_ret( irint,           T               )
 decl_std1(     nearbyint                        )
+decl_std1(     floorfrac                        )
+decl_std1(     ceilfrac                         )
+decl_std1(     truncfrac                        )
+decl_std1(     extendfrac                       )
+decl_std1(     roundfrac                        )
+decl_std1(     rfrac                            )
 decl_std1(     abs                              )
 decl_std1(     neg                              )
 decl_std2(     copysign                         )

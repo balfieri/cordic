@@ -43,10 +43,10 @@ static constexpr bool do_asserts = true;
 #define cassert(expr, msg) if ( do_asserts && !(expr) ) \
                 { std::cout << "ERROR: assertion failure: " << (msg) << " at " << __FILE__ << ":" << __LINE__ << "\n"; exit( 1 ); }
 
-// extended rounding modes beyond FE_TONEAREST etc
+// extended rounding modes beyond FE_TONEAREST etc.
 //
 static constexpr int FE_NOROUND      = 0x1000;  // perform no rounding at all; leave guard bits alone
-static constexpr int FE_AWAYFROMZERO = 0x2000;  // like FE_TOWARDZERO, but away from zero
+static constexpr int FE_AWAYFROMZERO = 0x2000;  // signbit(x) ? trunc(x) : ceil(x);   and clear guard bits
 
 // T      = some signed integer type that can hold fixed-point values (default is int64_t)
 // FLT    = some floating-point type that can hold constants of the desired precision (default is double)
