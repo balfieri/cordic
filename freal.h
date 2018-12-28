@@ -31,10 +31,10 @@
 // Typical usage:
 //
 //     #include freal.h
-//     freal::implicit_to_set( 8, 21 );         // default is fixed-point 1.8.21
+//     freal::implicit_to_set( 8, 21 );         // default is to convert FLT values to fixed-point 1.8.21
 //     ...
 //     freal g;                                 // g is undefined, no type
-//     freal f = 25.473822;                     // convert to 1.8.21
+//     freal f = 25.473822;                     // implicitly convert to fixed-point 1.8.21
 //     g = f;                                   // g copies type and value of f
 //
 #ifndef _freal_h
@@ -42,8 +42,14 @@
 
 #include "Cordic.h"
 
-// T      = some signed integer type that can hold fixed-point values (default is int64_t)
-// FLT    = some floating-point type that can hold constants of the desired precision (default is double)
+// #defines:
+//
+// FREAL_T   = some signed integer type that can hold fixed-point values                 (default is int64_t)
+// FREAL_FLT = some floating-point type that can hold constants of the desired precision (default is double)
+//
+// For the most generality, use -DFREAL_T=mpint -DFREAL_T=mpreal, but these types have not been tested yet.
+// mpint is my own minimalistic "big integer" class.
+// mpreal is implemented on top of libmpfr which must be installed on your system.  Add -lmpfr to your link link.
 //
 #ifdef FREAL_T
 using T = FREAL_T;
