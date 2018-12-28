@@ -45,11 +45,15 @@
 // T      = some signed integer type that can hold fixed-point values (default is int64_t)
 // FLT    = some floating-point type that can hold constants of the desired precision (default is double)
 //
-#ifdef FREAL_USE_MPREAL
-using T   = mpint;
-using FLT = mpreal;
+#ifdef FREAL_T
+using T = FREAL_T;
 #else
-using T   = int64_t;
+using T = int64_t;
+#endif
+
+#ifdef FREAL_FLT
+using FLT = FREAL_FLT;
+#else
 using FLT = double;
 #endif
 
