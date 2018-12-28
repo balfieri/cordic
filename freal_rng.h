@@ -1,7 +1,7 @@
-// define two classes:
+// later, come back and define two classes:
 // 
-// Rand_Uniform
-// Rand_Dists
+// Rand_Uniform - most of the routines below could be used for this
+// Rand_Dists - would like to find a template somewhere else that's already written
 //
 #if 0
     // random numbers

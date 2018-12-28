@@ -1,3 +1,6 @@
+// come back to this later
+// these are likely just gonna be routines at the std:: level
+//
 #if 0
     // machine learning
     T    tanh_backprop( const T& x, const T& x_backprop ) const;        // (1-x^2) * x_backprop
