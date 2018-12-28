@@ -138,6 +138,7 @@ public:
     freal tau( void );                                          // 2*PI
     freal pi_div_2( void );                                     // PI/2
     freal pi_div_4( void );                                     // PI/4
+    freal one_div_pi( void );                                   // 1/PI
     freal two_div_pi( void );                                   // 2/PI
     freal four_div_pi( void );                                  // 4/PI
     freal e( void );                                            // natural exponent
@@ -267,6 +268,8 @@ public:
     freal  log2( void ) const;               // log base-2
     freal  log10( void ) const;              // log base-10
 
+    freal  deg2rad( void ) const;                                   
+    freal  rad2deg( void ) const;                                   
     freal  sin( void ) const;
     freal  sinpi( void ) const;
     freal  sin( const freal& r ) const;                                 // multiply sin by r
@@ -477,6 +480,8 @@ decl_std1(     log1p                            )
 decl_std2x(    logc,            FLT             )
 decl_std1(     log2                             )
 decl_std1(     log10                            )
+decl_std1(     deg2rad                          )
+decl_std1(     rad2deg                          )
 decl_std1(     sin                              )
 decl_std1(     sinpi                            )
 decl_std2(     sin                              )
@@ -849,6 +854,7 @@ decl_const( pi )
 decl_const( tau )
 decl_const( pi_div_2 )
 decl_const( pi_div_4 )
+decl_const( one_div_pi )
 decl_const( two_div_pi )
 decl_const( four_div_pi )
 decl_const( e )
@@ -1073,6 +1079,8 @@ decl_pop1(      log1p                                   )
 decl_pop2x(     logc,           FLT                     )
 decl_pop1(      log2                                    )
 decl_pop1(      log10                                   )
+decl_pop1(      deg2rad                                 )
+decl_pop1(      rad2deg                                 )
 decl_pop1(      sin                                     )
 decl_pop1(      sinpi                                   )
 decl_pop2np(    sin                                     )

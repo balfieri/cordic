@@ -114,6 +114,7 @@ public:
     T tau( void ) const;                                // encoded 2*PI
     T pi_div_2( void ) const;                           // encoded PI/2
     T pi_div_4( void ) const;                           // encoded PI/4
+    T one_div_pi( void ) const;                         // encoded 1/PI
     T two_div_pi( void ) const;                         // encoded 2/PI
     T four_div_pi( void ) const;                        // encoded PI/4
     T e( void ) const;                                  // encoded natural exponent
@@ -230,6 +231,8 @@ public:
     T    log2( const T& x ) const;                                      // log(x)/log(2)                (2)
     T    log10( const T& x ) const;                                     // log(x)/log(10)               (2)
 
+    T    deg2rad( const T& x ) const;                                   // x * PI / 180
+    T    rad2deg( const T& x ) const;                                   // x * 180 / PI
     T    sin( const T& x, const T * r=nullptr  ) const;                 // r*sin(x)                   (default r is 1)
     T    sinpi( const T& x, const T * r=nullptr ) const;                // r*sin(x*PI)                (defualt r is 1
     T    cos( const T& x, const T * r=nullptr ) const;                  // r*cos(x)                   (default r is 1)
@@ -674,6 +677,8 @@ public:
         log2,
         log10,
 
+        deg2rad,
+        rad2deg,
         sin,
         sinpi,
         cos,
@@ -729,6 +734,7 @@ private:
     T                           _tau;
     T                           _pi_div_2;
     T                           _pi_div_4;
+    T                           _one_div_pi;
     T                           _two_div_pi;
     T                           _four_div_pi;
     T                           _e;
@@ -875,6 +881,8 @@ std::string Cordic<T,FLT>::op_to_str( uint16_t op )
         _ocase( log2 )
         _ocase( log10 )
 
+        _ocase( deg2rad )
+        _ocase( rad2deg )
         _ocase( sin )
         _ocase( sinpi )
         _ocase( cos )
@@ -966,6 +974,7 @@ Cordic<T,FLT>::Cordic( uint32_t int_w, uint32_t frac_w, bool do_reduce, uint32_t
     _tau           = to_t( 2.0 * std::acos( FLT(-1.0) ) );
     _pi_div_2      = to_t( std::acos( FLT(-1.0) ) / FLT(2.0) );
     _pi_div_4      = to_t( std::acos( FLT(-1.0) ) / FLT(4.0) );
+    _one_div_pi    = to_t( FLT(1.0) / std::acos( FLT(-1.0) ) );
     _two_div_pi    = to_t( FLT(2.0) / std::acos( FLT(-1.0) ) );
     _four_div_pi   = to_t( FLT(4.0) / std::acos( FLT(-1.0) ) );
     _e             = to_t( std::exp( FLT(  1 ) ) );
@@ -1250,6 +1259,13 @@ inline T Cordic<T,FLT>::pi_div_4( void ) const
 {
     _log_1f( push_constant, to_flt(_pi_div_4) ); 
     return _pi_div_4;
+}
+
+template< typename T, typename FLT >
+inline T Cordic<T,FLT>::one_div_pi( void ) const
+{
+    _log_1f( push_constant, to_flt(_one_div_pi) ); 
+    return _one_div_pi;
 }
 
 template< typename T, typename FLT >
@@ -2909,6 +2925,28 @@ template< typename T, typename FLT >
 inline T Cordic<T,FLT>::log10( const T& x ) const
 { 
     return logc( x, 10.0 );
+}
+
+template< typename T, typename FLT >
+inline T Cordic<T,FLT>::deg2rad( const T& x ) const
+{
+    _log_1( deg2rad, x );
+    T _180 = to_t( FLT(180) );
+    T r = mulc( x, _180, _do_reduce, false );
+      r = mulc( r, _one_div_pi, _do_reduce, false );
+      r = rfrac( r );
+    return r;
+}
+
+template< typename T, typename FLT >
+inline T Cordic<T,FLT>::rad2deg( const T& x ) const
+{
+    _log_1( rad2deg, x );
+    T ONE_DIV_180 = to_t( FLT(1) / FLT(180) );
+    T r = mulc( x, _pi, _do_reduce, false );
+      r = mulc( r, ONE_DIV_180, _do_reduce, false );
+      r = rfrac( r );
+    return r;
 }
 
 template< typename T, typename FLT >
