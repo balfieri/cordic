@@ -290,11 +290,14 @@ public:
     //-----------------------------------------------------
     // Introspection
     //-----------------------------------------------------
-    Cordic<T,FLT> * c( void ) const;                                    // validates current cordic  and returns it
-    Cordic<T,FLT> * c( const freal& b ) const;                          // validates two     cordics and returns one to use for operation
-    Cordic<T,FLT> * c( const freal& b, const freal& _c ) const;         // validates three   cordics and returns one to use for operation
+    const Cordic<T,FLT> * c( void ) const;                             // validates current cordic  and returns it
+          Cordic<T,FLT> * cw( void ) const;                            // validates current cordic  and returns it
+    const Cordic<T,FLT> * c( const freal& b ) const;                   // validates two     cordics and returns one to use for operation
+          Cordic<T,FLT> * cw( const freal& b ) const;                  // validates two     cordics and returns one to use for operation
+    const Cordic<T,FLT> * c( const freal& b, const freal& _c ) const;  // validates three   cordics and returns one to use for operation
+          Cordic<T,FLT> * cw( const freal& b, const freal& _c ) const; // validates three   cordics and returns one to use for operation
 
-    const T * raw_ptr( void ) const;                                    // useful for some gross things like manual logging by callers
+    const T * raw_ptr( void ) const;                                   // useful for some gross things like manual logging by callers
 
 private:
     static Cordic<T,FLT> * implicit_to;
@@ -316,7 +319,7 @@ static inline std::istream& operator >> ( std::istream &in, freal& a )
 { 
     FLT a_f;
     in >> a_f; 
-    Cordic<T,FLT> * cordic = a.c();
+    Cordic<T,FLT> * cordic = a.cw();
     if ( cordic != nullptr ) {
         a = freal( cordic, a_f );     // use a's current format
     } else {
@@ -587,7 +590,7 @@ inline freal::freal( Cordic<T,FLT> * _cordic, FLT f )
 
 inline freal::freal( const freal& other )
 {
-    cordic = other.c();
+    cordic = other.cw();
     v      = other.v;
     cordic->constructed( v );
     cordic->assign( v, other.v ); 
@@ -746,13 +749,19 @@ inline freal::operator int32_t( void )
 //-----------------------------------------------------
 // Check that cordic(s) defined and return it.
 //-----------------------------------------------------
-inline Cordic<T,FLT> * freal::c( void ) const
+inline const Cordic<T,FLT> * freal::c( void ) const
 {
     cassert( cordic != nullptr, "undefined type" );
     return cordic;
 }
 
-inline Cordic<T,FLT> * freal::c( const freal& b ) const
+inline Cordic<T,FLT> * freal::cw( void ) const
+{
+    cassert( cordic != nullptr, "undefined type" );
+    return cordic;
+}
+
+inline const Cordic<T,FLT> * freal::c( const freal& b ) const
 {
     cassert( cordic   != nullptr, "a has undefined type" );
     cassert( b.cordic != nullptr, "b has undefined type" );
@@ -760,7 +769,24 @@ inline Cordic<T,FLT> * freal::c( const freal& b ) const
     return cordic;
 }
 
-inline Cordic<T,FLT> * freal::c( const freal& b, const freal& _c ) const
+inline Cordic<T,FLT> * freal::cw( const freal& b ) const
+{
+    cassert( cordic   != nullptr, "a has undefined type" );
+    cassert( b.cordic != nullptr, "b has undefined type" );
+    cassert( cordic == b.cordic, "a and b must have same type currently" );
+    return cordic;
+}
+
+inline const Cordic<T,FLT> * freal::c( const freal& b, const freal& _c ) const
+{
+    cassert( cordic    != nullptr, "a has undefined type" );
+    cassert( b.cordic  != nullptr, "b has undefined type" );
+    cassert( _c.cordic != nullptr, "c has undefined type" );
+    cassert( cordic == b.cordic && cordic == _c.cordic, "a and b and c must have same type currently" );
+    return cordic;
+}
+
+inline Cordic<T,FLT> * freal::cw( const freal& b, const freal& _c ) const
 {
     cassert( cordic    != nullptr, "a has undefined type" );
     cassert( b.cordic  != nullptr, "b has undefined type" );
@@ -879,24 +905,24 @@ inline freal& freal::assign( const freal& b )
 }
 
 #define decl_pop1( name )                               \
-    inline _freal _freal::name( void )                  \
-    { return( c(), pop_value( cordic, cordic->name( v ) ) ); } \
+    inline _freal _freal::name( void ) const            \
+    { return( cw(), pop_value( cordic, cordic->name( v ) ) ); } \
 
 #define decl_pop1_ret2( name )                          \
-    inline void _freal::name( _freal& r1, _freal& r2 )  \
+    inline void _freal::name( _freal& r1, _freal& r2 ) const \
     {                                                   \
         T r1_t, r2_t;                                   \
-        c()->name( v, r1_t, r2_t );                     \
+        cw()->name( v, r1_t, r2_t );                    \
         r1 = pop_value( cordic, r1_t );                 \
         r2 = pop_value( cordic, r2_t );                 \
     }                                                   \
 
 #define decl_pop2( name )                               \
-    inline _freal _freal::name( const _freal& b )       \
-    { return( c( b ), pop_value( cordic, cordic->name( v, b.v ) ) ); } \
+    inline _freal _freal::name( const _freal& b ) const \
+    { return( cw( b ), pop_value( cordic, cordic->name( v, b.v ) ) ); } \
 
 #define decl_pop2_ret2( name )                          \
-    inline void _freal::name( const _freal& b, _freal& r1, _freal& r2 ) \
+    inline void _freal::name( const _freal& b, _freal& r1, _freal& r2 ) const \
     {                                                   \
         T r1_t, r2_t;                                   \
         c( b )->name( v, b.v, r1_t, r2_t );             \
@@ -905,45 +931,49 @@ inline freal& freal::assign( const freal& b )
     }                                                   \
 
 #define decl_popb2( name )                              \
-    inline bool _freal::name( const _freal& b )         \
-    { return( c( b ), pop_bool( cordic, cordic->name( v, b.v ) ) ); } \
+    inline bool _freal::name( const _freal& b ) const   \
+    { return( cw( b ), pop_bool( cordic, cordic->name( v, b.v ) ) ); } \
 
 #define decl_pop2p( name )                              \
-    inline _freal _freal::name( _freal * b )            \
-    { return( c(), pop_value( cordic, cordic->name( v, &b->v ) ) ); } \
+    inline _freal _freal::name( _freal * b ) const      \
+    { return( cw(), pop_value( cordic, cordic->name( v, &b->v ) ) ); } \
 
 #define decl_pop2x( name, b_type )                      \
-    inline _freal _freal::name( b_type b )              \
-    { return( c(), pop_value( cordic, cordic->name( v, b ) ) ); } \
+    inline _freal _freal::name( b_type b ) const        \
+    { return( cw(), pop_value( cordic, cordic->name( v, b ) ) ); } \
+
+#define decl_pop2np( name )                             \
+    inline _freal _freal::name( const _freal& b ) const \
+    { return( cw(), pop_value( cordic, cordic->name( v, &b.v ) ) ); } \
 
 #define decl_pop2x_ret2( name, b_type )                 \
-    inline void _freal::name( _freal& r1, _freal& r2, b_type b ) \
+    inline void _freal::name( _freal& r1, _freal& r2, b_type b ) const \
     {                                                   \
         T r1_t, r2_t;                                   \
-        c( b )->name( v, r1_t, r2_t, &b.v );            \
+        cw( b )->name( v, r1_t, r2_t, &b.v );           \
         r1 = pop_value( cordic, r1_t );                 \
         r2 = pop_value( cordic, r2_t );                 \
     }                                                   \
 
 #define decl_pop3( name )                               \
-    inline _freal _freal::name( const _freal& b, const _freal& c ) \
-    { return( c( b, c ), pop_value( cordic, cordic->name( v, b.v, c.v ) ) ); } \
+    inline _freal _freal::name( const _freal& b, const _freal& c ) const \
+    { return( cw( b, c ), pop_value( cordic, cordic->name( v, b.v, c.v ) ) ); } \
 
 #define decl_pop3x( name, c_type )                      \
-    inline _freal _freal::name( const _freal& b, c_type c ) \
-    { return( c( b ), pop_value( cordic, cordic->name( v, b.v, c ) ) ); } \
+    inline _freal _freal::name( const _freal& b, c_type c ) const \
+    { return( cw( b ), pop_value( cordic, cordic->name( v, b.v, c ) ) ); } \
 
 #define decl_nopop0( name, ret_type )                   \
     inline ret_type _freal::name( void ) const          \
-    { return( c(), cordic->name() ); }                  \
+    { return( cw(), cordic->name() ); }                  \
 
 #define decl_nopop1( name, ret_type )                   \
     inline ret_type _freal::name( void ) const          \
-    { return( c(), cordic->name( v ) ); }               \
+    { return( cw(), cordic->name( v ) ); }               \
 
 #define decl_nopop1x( name, ret_type, b_type )          \
     inline ret_type _freal::name( b_type b ) const      \
-    { return( c(), cordic->name( b ) ); }               \
+    { return( cw(), cordic->name( b ) ); }               \
 
 decl_nopop1(    signbit,        bool                    )
 decl_pop2x(     frexp,          int *                   )
@@ -1014,12 +1044,12 @@ decl_pop1(      log2                                    )
 decl_pop1(      log10                                   )
 decl_pop1(      sin                                     )
 decl_pop1(      sinpi                                   )
-decl_pop2(      sin                                     )
-decl_pop2(      sinpi                                   )
+decl_pop2np(    sin                                     )
+decl_pop2np(    sinpi                                   )
 decl_pop1(      cos                                     )
 decl_pop1(      cospi                                   )
-decl_pop2(      cos                                     )
-decl_pop2(      cospi                                   )
+decl_pop2np(    cos                                     )
+decl_pop2np(    cospi                                   )
 decl_pop1_ret2( sincos                                  )
 decl_pop1_ret2( sinpicospi                              )
 decl_pop2x_ret2(sincos,         const _freal&           )
@@ -1035,9 +1065,9 @@ decl_pop2_ret2( rect_to_polar                           )
 decl_pop2(      hypot                                   )
 decl_pop2(      hypoth                                  )
 decl_pop1(      sinh                                    )
-decl_pop2(      sinh                                    )
+decl_pop2np(    sinh                                    )
 decl_pop1(      cosh                                    )
-decl_pop2(      cosh                                    )
+decl_pop2np(    cosh                                    )
 decl_pop1_ret2( sinhcosh                                )
 decl_pop2x_ret2(sinhcosh,       const _freal&           )
 decl_pop1(      tanh                                    )
