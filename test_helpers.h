@@ -48,7 +48,7 @@ static inline FLT tolerance( uint32_t frac_w, FLT expected, FLT tol, int32_t& to
     T   tz  = c->c_fn( tx );		                                \
     FLT fltz = c->to_flt( tz );	                                        \
     FLT flte = exp_fn( fltx );			                        \
-    T   te   = c->to_t( flte );                                         \
+    T   te   = c->rfrac( c->to_t( flte ) );                             \
     T   terr = (tz >= te) ? (tz-te) : (te-tz);                          \
     FLT flterr = c->to_flt( terr );                                     \
     int32_t tol_lg2;                                                    \
@@ -76,8 +76,8 @@ static inline FLT tolerance( uint32_t frac_w, FLT expected, FLT tol, int32_t& to
     FLT fltz2 = c->to_flt( tz2 );		                        \
     FLT flte1, flte2;                                                   \
     exp_fn( fltx, flte1, flte2 );			                \
-    T   te1  = c->to_t( flte1 );                                        \
-    T   te2  = c->to_t( flte2 );                                        \
+    T   te1  = c->rfrac( c->to_t( flte1 ) );                            \
+    T   te2  = c->rfrac( c->to_t( flte2 ) );                            \
     T   terr1 = (tz1 >= te1) ? (tz1-te1) : (te1-tz1);                   \
     T   terr2 = (tz2 >= te2) ? (tz2-te2) : (te2-tz2);                   \
     FLT flterr1 = c->to_flt( terr1 );                                   \
@@ -113,7 +113,7 @@ static inline FLT tolerance( uint32_t frac_w, FLT expected, FLT tol, int32_t& to
     T   tz  = c->c_fn( tx, ty );	                                \
     FLT fltz = c->to_flt( tz );			                        \
     FLT flte = exp_fn( fltx, flty );                                    \
-    T   te   = c->to_t( flte );                                         \
+    T   te   = c->rfrac( c->to_t( flte ) );                             \
     T   terr = (tz >= te) ? (tz-te) : (te-tz);                          \
     FLT flterr = c->to_flt( terr );                                     \
     int32_t tol_lg2;                                                    \
@@ -143,8 +143,8 @@ static inline FLT tolerance( uint32_t frac_w, FLT expected, FLT tol, int32_t& to
     FLT fltz2 = c->to_flt( tz2 );		                        \
     FLT flte1, flte2;                                                   \
     exp_fn( fltx, flty, flte1, flte2 );			                \
-    T   te1  = c->to_t( flte1 );                                        \
-    T   te2  = c->to_t( flte2 );                                        \
+    T   te1  = c->rfrac( c->to_t( flte1 ) );                            \
+    T   te2  = c->rfrac( c->to_t( flte2 ) );                            \
     T   terr1 = (tz1 >= te1) ? (tz1-te1) : (te1-tz1);                   \
     T   terr2 = (tz2 >= te2) ? (tz2-te2) : (te2-tz2);                   \
     FLT flterr1 = c->to_flt( terr1 );                                   \
@@ -182,7 +182,7 @@ static inline FLT tolerance( uint32_t frac_w, FLT expected, FLT tol, int32_t& to
     T   tz  = c->c_fn( tx, ty, tw );	                                \
     FLT fltz = c->to_flt( tz );			                        \
     FLT flte = exp_fn( fltx, flty, fltw );			        \
-    T   te   = c->to_t( flte );                                         \
+    T   te   = c->rfrac( c->to_t( flte ) );                             \
     T   terr = (tz >= te) ? (tz-te) : (te-tz);                          \
     FLT flterr = c->to_flt( terr );                                     \
     int32_t tol_lg2;                                                    \
