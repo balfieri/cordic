@@ -260,28 +260,6 @@ public:
     T    atanh( const T& x ) const;                                     // atanh(x)
     T    atanh2( const T& y, const T& x ) const;                        // atanh(y/x)
 
-    // random numbers
-    T    rand_seed( uint64_t seed0, uint64_t seed1=0xdeadbeefbabecafe );  // set random seed(s)
-    T    rand_raw32_mwc( void );                                        // 32 bits from Frank Marsaglia's MWC RNG     (good fast&small)
-    T    rand_raw32_jsf( void );                                        // 32 bits from Robert Jenkins' JSF RNG       (better f&s)
-    T    rand_raw64_jsf( void );                                        // 64 bits from Robert Jenkins' JSF RNG       (better f&s)
-    T    rand_raw16_sfc( void );                                        // 16 bits from Chris Doty-Humphrey's SFC RNG (best   f&s)
-    T    rand_raw32_sfc( void );                                        // 32 bits from Chris Doty-Humphrey's SFC RNG (best   f&s)
-    T    rand_raw64_sfc( void );                                        // 64 bits from Chris Doty-Humphrey's SFC RNG (best   f&s)
-    T    rand_raw128_hc128( void );                                     //128 bits from eSTREAM's HC128 RNG (larger, but crypto-secure)
-    T    rand_raw256_hc256( void );                                     //256 bits from eSTREAM's HC256 RNG (larger, but crypto-secure)
-    static void rand_raw32_fn_set( T (*raw32_fn)(void) );               // set default raw32() function to use for following routines:
-    static void rand_raw64_fn_set( T (*raw64_fn)(void) );               // set default raw64() function to use for following routines:
-    T    rand_uniform( void );                                          // return uniform random in range [0.0, 1.0)  (1.0 excluded)
-    T    rand_gaussian( const T& mu, const T& std );                    // return gaussian random with mu and std using uniform_fn
-    
-    // machine learning
-    T    tanh_backprop( const T& x, const T& x_backprop ) const;        // (1-x^2) * x_backprop
-    T    sigmoid( const T& x ) const;                                   // 1/(1 + exp(-x)) = exp(x)/(exp(x) + 1)
-    T    sigmoid_backprop( const T& x, const T& x_backprop ) const;     // x * (1-x) * x_backprop
-    T    relu( const T& x ) const;                                      // (x > 0) x : 0
-    T    relu_backprop( const T& x, const T& x_backprop ) const;        // (x > 0) x_backprop : 0
-
     //-----------------------------------------------------
     // Bob's Collection of Math Identities (some are used in the implementation, most are not)
     //
