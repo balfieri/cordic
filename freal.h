@@ -83,6 +83,7 @@ public:
     //-----------------------------------------------------
     FLT         to_flt( void ) const;                   // freal to FLT
     std::string to_string( void ) const;                // freal to std::string
+    std::string to_bstring( void ) const;               // freal binary to std::string
 
     //-----------------------------------------------------
     // Implicit Conversions
@@ -113,6 +114,12 @@ public:
     //-----------------------------------------------------
     // Constants (freal ones are never rounded, so call rfrac() if you want them rounded)
     //-----------------------------------------------------               
+    uint32_t int_w( void ) const;                               // int_w   from above
+    uint32_t frac_w( void ) const;                              // frac_w  from above
+    uint32_t guard_w( void ) const;                             // guard_w from above
+    uint32_t w( void ) const;                                   // 1 + int_w + frac_w + guard_w (i.e., overall width)
+    uint32_t n( void ) const;                                   // number of cordic iterations (default is frac_w)
+
     T     maxint( void );                                       // largest positive integer (just integer part, does not include fraction)
     freal max( void );                                          // maximum positive value 
     freal min( void );                                          // minimum positive value
@@ -405,6 +412,7 @@ decl_std1_ret( isinf,           bool            )
 decl_std1_ret( isnan,           bool            )
 decl_std1_ret( isnormal,        bool            )
 decl_std1_ret( to_string,       std::string     )
+decl_std1_ret( to_bstring,      std::string     )
 decl_std2(     nextafter                        )
 decl_std2x(    nexttoward,      long double     )
 decl_std1(     floor                            )
@@ -651,6 +659,9 @@ FLT    freal::to_flt( void ) const
 std::string freal::to_string( void ) const                                                               
 { return c()->to_string( v );           }
 
+std::string freal::to_bstring( void ) const                                                               
+{ return c()->to_bstring( v );          }
+
 //-----------------------------------------------------
 // Implicit Conversions
 //-----------------------------------------------------
@@ -814,11 +825,11 @@ inline const T * freal::raw_ptr( void ) const
 // Constants
 //-----------------------------------------------------               
 #define decl_const( name )                      \
-    inline _freal freal::name( void )    \
+    inline _freal freal::name( void )           \
     { return( c(), pop_value( cordic, cordic->name() ) ); } \
 
 #define decl_const1x( name, a_type )            \
-    inline _freal freal::name( a_type a ) \
+    inline _freal freal::name( a_type a )       \
     { return( c(), pop_value( cordic, cordic->name( a ) ) ); } \
 
 decl_const( max )
@@ -985,6 +996,11 @@ inline freal& freal::assign( const freal& b )
     inline ret_type _freal::name( b_type b ) const      \
     { return( cw(), cordic->name( b ) ); }               \
 
+decl_nopop0(    int_w,          uint32_t                )
+decl_nopop0(    frac_w,         uint32_t                )
+decl_nopop0(    guard_w,        uint32_t                )
+decl_nopop0(    w,              uint32_t                )
+decl_nopop0(    n,              uint32_t                )
 decl_nopop1(    signbit,        bool                    )
 decl_pop2x(     frexp,          int *                   )
 decl_pop2p(     modf                                    )
@@ -1011,6 +1027,11 @@ decl_nopop1(    lrint,          long                    )
 decl_nopop1(    llrint,         long long               )
 decl_nopop1(    irint,          T                       )
 decl_pop1(      nearbyint                               )
+decl_pop1(      floorfrac                               )
+decl_pop1(      ceilfrac                                )
+decl_pop1(      truncfrac                               )
+decl_pop1(      roundfrac                               )
+decl_pop1(      rfrac                                   )
 decl_pop1(      abs                                     )
 decl_pop1(      neg                                     )
 decl_pop2(      copysign                                )

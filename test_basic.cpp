@@ -18,11 +18,10 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 //
-// test_basic.cpp - basic black-box test of Cordic.h math functions
+// test_basic.cpp - basic black-box test of freal.h math functions
 //
-#include "Cordic.h"
-#include "Analysis.h"
 #include "freal.h"                                      // not used yet, just here to test build
+#include "Analysis.h"
 #include "mpint.h"
 
 #include "test_helpers.h"                               // must be included after FLT is defined
@@ -38,8 +37,6 @@ int main( int argc, const char * argv[] )
                                                 // not clear the CPU is doing the ops correctly either
     bool     new_bugs = false;                  // by default, don't run new bugs
     uint32_t loop_cnt = 2;                      
-
-    freal unused = freal::make_fixed( int_w, frac_w, 1.78302 ); // smoke test on freal type; freal is not used yet
 
     for( int i = 1; i < argc; i++ )
     {
@@ -65,10 +62,10 @@ int main( int argc, const char * argv[] )
     std::cout << "int_w=" << int_w << " frac_w=" << frac_w << " tol=" << TOL << "\n\n";
 
     //---------------------------------------------------------------------------
-    // Allocate do_reduce=true and do_reduce=false Cordic objects.
+    // Set up default freal type to use for implicit conversions.
     //---------------------------------------------------------------------------
-    Cordic<T, FLT> * cordicr  = new Cordic<T,FLT>( int_w, frac_w, true );     // with arg reduction
-    Cordic<T, FLT> * cordicnr = new Cordic<T,FLT>( int_w, frac_w, false );    // without arg reduction
+    freal::implicit_to_set( int_w, frac_w );
+    freal::implicit_from_set( true );
 
     //---------------------------------------------------------------------------
     // New and fixed bugs.
@@ -116,7 +113,7 @@ int main( int argc, const char * argv[] )
             break;
         }
 
-        //                          cordic   reference
+        //                          freal   reference
         do_op3(  "x*y + w",          fma,     fma,            x, y, w, do_reduce );
         do_op2(  "x*y",              mul,     mul,            x, y, do_reduce );
         if ( x > 0.0 ) {
@@ -177,9 +174,6 @@ int main( int argc, const char * argv[] )
         do_op22( "rect_to_polar(x,y)", rect_to_polar, rect_to_polar, x, y, do_reduce );
         do_op22( "polar_to_rect(x,y)", polar_to_rect, polar_to_rect, x, y, do_reduce );
     }
-
-    delete cordicr;
-    delete cordicnr;
 
     std::cout << "PASSED\n";
     return 0;
