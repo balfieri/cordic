@@ -295,25 +295,45 @@ public:
     // sin(-x)          = -sin(x)
     // sin(x)           = sin(i*pi/2 + f)                       where i is an integer and |f| <= pi/4
     // sin(x+y)         = sin(x)*cos(y) + cos(x)*sin(y)         
+    // sin(x-y)         = sin(x)*cos(y) - cos(x)*sin(y)
+    // sin(x+y)         = 2*sin(x)*cos(y) - sin(x-y)
+    // sin(2x)          = 2*sin(x)*cos(x)                       but it's cheaper to just compute sin(x+x)
+    // sin(2x)          = sin(x) * (2*cos(x))
+    // sin^2(x)         = (1 - cos(2x)) / 2
+    // sin(3x)          = sin(x) * (4*cos^2(x) - 1)
+    // sin(nx)          = 2*sin((n-1)*x)*cos(x) - sin((n-2)*x)
     // sin(x+pi/4)      = sqrt(2)/2 * (sin(x) + cos(x))
     // sin(i*pi/2 + f)  = +/-sin(f) or +/-cos(f)
     // sin(x*pi)        = sin(2x * pi/2) = sin((i+f)*pi/2) = +/-sin(f*pi/2) or +/-cos(f*pi/2)
     // sin(x)           = Im(e^(ix)) = (e^(ix) + e^(-ix)) / 2
     // sin(ix)          = i*sinh(x)
     // sin(x)/x         = (1 + x*x*(1/6)) == 1) ? 1 : sin(x)/x
+    // sin(x)*sin(y)    = (cos(x-y) - cos(x+y)) / 2
     //
     // cos(-x)          = cos(x)
     // cos(x+y)         = cos(x)*sin(y) - sin(x)*cos(y)
+    // cos(x+y)         = cos^2(x) - sin^2(x)
     // cos(x+pi/4)      = sqrt(2)/2 * (cos(x) - sin(x))
-    // cos(i*pi/2 + f)  = +/-cos(f) or +/-sin(f)
+    // cos(i*pi/2 + f)  = +/-cos(f) or +/-sin(f)                i=integer, f=frac
     // cos(x*pi)        = cos(2x * pi/2) = cos((i+f)*pi/2) = +/-cos(f*pi/2) or +/-sin(f*pi/2)
-    // cos(x)           = Re(e^(ix)) = (e^(ix) - e^(-ix)) / 2i
-    // cos(ix)          = cosh(x)
+    // cos(2x)          = -sin^2(x) + cos^2(x)
+    // cos(2x)          = 2*cos^2(x) - 1                        but it's cheaper to just compute cos(x+x)
+    // cos^2(x)         = (cos(2x) + 1) / 2                     this could come in handy
+    // cos(3x)          = -3*cos(x) + 4*cos^3(x)                but it's cheaper to just compute cos(x+x+x)
+    // cos(nx)          = 2*cos((n-1)*x)*cos(x) - cos((n-2)x)   
+    // cos(x)           = Re(e^(ix)) = (e^(ix) - e^(-ix)) / 2i  i=sqrt(-1)
+    // cos(ix)          = cosh(x)                               i=sqrt(-1)
     // 1-cos(x)         = 2*sin(x/2)^2
     // (1-cos(x))/x     = (1 + x*x) == 1) ? 0.5*x : cosf1(x)/x
+    // cos(x)*cos(y)    = (cos(x-y) + cos(x+y)) / 2
+    // sin(x)*cos(v)    = (sin(x+y) + sin(x-y)) / 2
+    // cos(x)*sin(v)    = (sin(x+y) - sin(x-y)) / 2
     //
     // tan(-x)          = -tan(x)
     // tan(x+y)         = (tan(x) + tan(y)) / (1 - tan(x)*tan(y))
+    // tan(x/2)         = sin(x) / (1 + cos(x))
+    // tan(x/2 + PI/4)  = cos(x) / (1 - sin(x))
+    // tan^2(x)         = (1 - cos(2x)) / (1 + cos(2x))
     //
     // asin(-x)         = -asin(x)
     // asin(x)          = atan2(x, sqrt(1 - x^2))
@@ -2735,6 +2755,7 @@ T Cordic<T,FLT>::exp( const T& _x, bool do_reduce, bool is_final ) const
     //     Assume: x = i + f  (integer plus fraction)
     //     exp(i+f) = exp(i) * exp(f)
     //     pow(b,x) = log(b) * exp(x) = [log(b)*exp(i)] * exp(f)
+    //     exp(f)   = cosh(f) + sinh(f)
     //
     // Strategy:
     //     Find i such that x-i is in -1 .. 1.
@@ -2748,6 +2769,7 @@ T Cordic<T,FLT>::exp( const T& _x, bool do_reduce, bool is_final ) const
     T factor;
     if ( _do_reduce ) reduce_exp_arg( M_E, x, factor );  // x=log(f) factor=log(e)*exp(i)
 
+    // hyperbolic_rotation() can compute cosh(f) + sinh(f) in one shot
     T xx, yy, zz;
     hyperbolic_rotation( _hyperbolic_rotation_one_over_gain, _hyperbolic_rotation_one_over_gain, x, xx, yy, zz );
     if ( _do_reduce ) {
