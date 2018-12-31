@@ -45,7 +45,8 @@ public:
 
     // Logger Overrides
     //
-    virtual void cordic_constructed( const void * cordic, uint32_t int_w, uint32_t frac_w, uint32_t guard_w, uint32_t n );
+    virtual void cordic_constructed( const void * cordic, uint32_t int_exp_w, uint32_t frac_w, 
+                                     bool is_fixed_point, uint32_t guard_w, uint32_t n );
     virtual void cordic_destructed(  const void * cordic );
 
     virtual void enter( const char * name );
@@ -101,7 +102,8 @@ private:
     {
         size_t   cordic_i;
         bool     is_alive;
-        uint32_t int_w;
+        bool     is_fixed_point;
+        uint32_t int_exp_w;
         uint32_t frac_w;
         uint32_t guard_w;
         uint32_t n;
@@ -112,7 +114,8 @@ private:
         bool     is_alive;
         bool     is_assigned;
         size_t   cordic_i;
-        uint32_t int_w;
+        bool     is_fixed_point;
+        uint32_t int_exp_w;
         uint32_t frac_w;
         uint32_t guard_w;
         size_t   opnd_i[3];
@@ -251,15 +254,17 @@ Analysis<T,FLT>::~Analysis()
 // Logger Method Overrides
 //-----------------------------------------------------
 template< typename T, typename FLT >
-void Analysis<T,FLT>::cordic_constructed( const void * cordic_ptr, uint32_t int_w, uint32_t frac_w, uint32_t guard_w, uint32_t n )
+void Analysis<T,FLT>::cordic_constructed( const void * cordic_ptr, uint32_t int_exp_w, uint32_t frac_w, 
+                                          bool is_fixed_point, uint32_t guard_w, uint32_t n )
 {
     CordicInfo info;
-    uint64_t cordic = uint64_t(cordic_ptr); 
-    info.is_alive   = true;
-    info.int_w      = int_w;
-    info.frac_w     = frac_w;
-    info.guard_w    = guard_w;
-    info.n          = n;
+    uint64_t cordic     = uint64_t(cordic_ptr); 
+    info.is_alive       = true;
+    info.is_fixed_point = is_fixed_point;
+    info.int_exp_w      = int_exp_w;
+    info.frac_w         = frac_w;
+    info.guard_w        = guard_w;
+    info.n              = n;
 
     auto it = cordics.find( cordic );
     cassert( it == cordics.end() || !it->second.is_alive, "Cordic reconstructed before previous was destructed" );
@@ -329,15 +334,17 @@ void Analysis<T,FLT>::constructed( const T * v, const void * cordic_ptr )
     if ( cordic != 0 ) {
         auto cit = cordics.find( cordic );
         cassert( cit != cordics.end() && cit->second.is_alive, "val constructed using unknown cordic" );
-        info.cordic_i = cit->second.cordic_i;
-        info.int_w    = cit->second.int_w;
-        info.frac_w   = cit->second.frac_w;
-        info.guard_w  = cit->second.guard_w;
+        info.cordic_i       = cit->second.cordic_i;
+        info.is_fixed_point = cit->second.is_fixed_point;
+        info.int_exp_w      = cit->second.int_exp_w;
+        info.frac_w         = cit->second.frac_w;
+        info.guard_w        = cit->second.guard_w;
     } else {
         info.cordic_i = size_t(-1);
-        info.int_w    = 0;
-        info.frac_w   = 0;
-        info.guard_w  = 0;
+        info.is_fixed_point = true;
+        info.int_exp_w      = 0;
+        info.frac_w         = 0;
+        info.guard_w        = 0;
     }
     auto vit = vals.find( val );
     if ( vit == vals.end() ) {
@@ -446,7 +453,7 @@ template< typename T, typename FLT >
 inline void Analysis<T,FLT>::calc_int_w_used( ValInfo& val )
 {
     // calculate number of bits needed to hold integer part of abs(x)
-    cassert( (val.int_w + val.frac_w + val.guard_w) != 0, "calc_int_w_used: int_w/frac_w/guard_w are not defined" );
+    cassert( (val.int_exp_w + val.frac_w + val.guard_w) != 0, "calc_int_w_used: int_exp_w/frac_w/guard_w are not defined" );
     T x = val.encoded;
     if ( x < T(0) ) x = -x;
     x >>= val.frac_w + val.guard_w;
@@ -701,12 +708,13 @@ void Analysis<T,FLT>::parse( void )
         {
             case KIND::cordic_constructed:
             {
-                const void * cordic  = parse_addr( c );
-                T            int_w   = parse_int( c );
-                T            frac_w  = parse_int( c );
-                T            guard_w = parse_int( c );
-                T            n       = parse_int( c );
-                cordic_constructed( cordic, int_w, frac_w, guard_w, n );
+                const void * cordic         = parse_addr( c );
+                bool         is_fixed_point = parse_int( c ) != 0;
+                T            int_exp_w      = parse_int( c );
+                T            frac_w         = parse_int( c );
+                T            guard_w        = parse_int( c );
+                T            n              = parse_int( c );
+                cordic_constructed( cordic, int_exp_w, frac_w, is_fixed_point, guard_w, n );
                 break;
             }
 

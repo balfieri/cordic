@@ -114,7 +114,9 @@ public:
     //-----------------------------------------------------
     // Constants (freal ones are never rounded, so call rfrac() if you want them rounded)
     //-----------------------------------------------------               
-    uint32_t int_w( void ) const;                               // int_w   from above
+    bool     is_fixed_point( void ) const;                      // is_fixed_point from above
+    uint32_t int_w( void ) const;                               // int_w   from above (fixed-point only)
+    uint32_t exp_w( void ) const;                               // exp_w   from above (floating-point only)
     uint32_t frac_w( void ) const;                              // frac_w  from above
     uint32_t guard_w( void ) const;                             // guard_w from above
     uint32_t w( void ) const;                                   // 1 + int_w + frac_w + guard_w (i.e., overall width)
@@ -701,10 +703,10 @@ inline Cordic<T,FLT> * freal::implicit_to_get( void )
     return implicit_to;
 }
 
-inline void freal::implicit_to_set( uint32_t int_w, uint32_t frac_w, bool is_fixed_point )
+inline void freal::implicit_to_set( uint32_t int_exp_w, uint32_t frac_w, bool is_fixed_point )
 { 
     cassert( is_fixed_point, "implicit_to_set() floating-point is not implemented yet" );
-    implicit_to = new Cordic<T,FLT>( int_w, frac_w );
+    implicit_to = new Cordic<T,FLT>( int_exp_w, frac_w, is_fixed_point );
 }
 
 inline void freal::implicit_from_set( bool allow )
@@ -1002,7 +1004,9 @@ inline freal& freal::assign( const freal& b )
     inline ret_type _freal::name( b_type b ) const      \
     { return( cw(), cordic->name( b ) ); }               \
 
+decl_nopop0(    is_fixed_point, bool                    )
 decl_nopop0(    int_w,          uint32_t                )
+decl_nopop0(    exp_w,          uint32_t                )
 decl_nopop0(    frac_w,         uint32_t                )
 decl_nopop0(    guard_w,        uint32_t                )
 decl_nopop0(    w,              uint32_t                )
