@@ -60,7 +60,7 @@ public:
     //
     // int_exp_w      = fixed-point integer width  OR floating-point exponent width
     // frac_w         = fixed-point fraction width OR floating-point mantissa width
-    // is_fixed_point = true=fixed-point, false=floating-point
+    // is_float       = true=floating-point, false=fixed-point
     // guard_w        = fixed-point guard bits width (default is calculated as log2(frac_w)
     // 1+int_exp_w+frac_w+guard_w must fit in T
     //
@@ -68,7 +68,7 @@ public:
     //-----------------------------------------------------
     Cordic( uint32_t int_exp_w,                 // fixed-point integer width  OR floating-point exponent width
             uint32_t frac_w,                    // fixed-point fraction width OR floating-point mantissa width
-            bool     is_fixed_point=true,       // true=fixed-point, false=floating-point
+            bool     is_float=false,            // true=floating-point, false=fixed-point
             bool     do_reduce=true,            // whether to do range reduction by default
             uint32_t guard_w=-1,                // number of guard bits used for CORDIC proper (-1 == default == log2(frac_w))
             uint32_t n=-1 );                    // number of iterations used for CORDIC proper (-1 == default == frac_w)
@@ -92,7 +92,7 @@ public:
     //-----------------------------------------------------
     // Constants (T ones are never rounded, so call rfrac() if you want them rounded)
     //-----------------------------------------------------
-    bool     is_fixed_point( void ) const;              // is_fixed_point from above
+    bool     is_float( void ) const;                    // is_float from above
     uint32_t int_w( void ) const;                       // int_w   from above
     uint32_t exp_w( void ) const;                       // exp_w   from above
     uint32_t frac_w( void ) const;                      // frac_w  from above
@@ -713,7 +713,7 @@ public:
     static constexpr uint32_t OP_cnt = uint32_t(OP::atanh2) + 1;
 
 private:
-    bool                        _is_fixed_point;
+    bool                        _is_float;
     uint32_t                    _int_w;
     uint32_t                    _exp_w;
     uint32_t                    _frac_w;
@@ -944,26 +944,26 @@ std::string Cordic<T,FLT>::op_to_str( uint16_t op )
 // Constructor
 //-----------------------------------------------------
 template< typename T, typename FLT >
-Cordic<T,FLT>::Cordic( uint32_t int_exp_w, uint32_t frac_w, bool is_fixed_point, bool do_reduce, uint32_t guard_w, uint32_t n )
+Cordic<T,FLT>::Cordic( uint32_t int_exp_w, uint32_t frac_w, bool is_float, bool do_reduce, uint32_t guard_w, uint32_t n )
 {
     if ( n == uint32_t(-1) ) n = frac_w;
     if ( guard_w == uint32_t(-1) ) guard_w = std::ceil(std::log2(frac_w));
-    if ( logger != nullptr ) logger->cordic_constructed( this, int_exp_w, frac_w, is_fixed_point, guard_w, n );
+    if ( logger != nullptr ) logger->cordic_constructed( this, int_exp_w, frac_w, is_float, guard_w, n );
 
     cassert( (1+int_exp_w+frac_w+guard_w) <= (sizeof( T ) * 8), "1 + int_exp_w + frac_w + guard_w does not fit in T container" );
     cassert( int_exp_w != 0, "int_exp_w must be > 0 currently" );
     cassert( frac_w    != 0, "frac_w must be > 0 currently" );
 
-    _is_fixed_point = is_fixed_point;
-    _int_w          = is_fixed_point ? int_exp_w : 0;
-    _exp_w          = is_fixed_point ? 0         : int_exp_w;
+    _is_float       = is_float;
+    _int_w          = is_float ? 0         : int_exp_w;
+    _exp_w          = is_float ? int_exp_w : 0;
     _frac_w         = frac_w;
     _guard_w        = guard_w;
     _w              = 1 + int_exp_w + frac_w + guard_w;
     _do_reduce      = do_reduce;
     _n              = n;
     _rounding_mode  = FE_TONEAREST;
-    _maxint         = is_fixed_point ? ((T(1) << int_exp_w) - 1) : T(1);
+    _maxint         = is_float ? T(1) : ((T(1) << int_exp_w) - 1);
     _one            = T(1) << (frac_w+guard_w);                         // required before calling to_t()
 
     _max           = to_t( std::pow( 2.0, int_exp_w ) - 1.0 );
@@ -1116,22 +1116,22 @@ Cordic<T,FLT>::~Cordic( void )
 // Constants
 //-----------------------------------------------------
 template< typename T, typename FLT >
-inline bool Cordic<T,FLT>::is_fixed_point( void ) const
+inline bool Cordic<T,FLT>::is_float( void ) const
 {
-    return _is_fixed_point;
+    return _is_float;
 }
 
 template< typename T, typename FLT >
 inline uint32_t Cordic<T,FLT>::int_w( void ) const
 {
-    cassert( _is_fixed_point, "int_w() may be called only for fixed-point Cordics" );
+    cassert( !_is_float, "int_w() may be called only for fixed-point Cordics" );
     return _int_w;
 }
 
 template< typename T, typename FLT >
 inline uint32_t Cordic<T,FLT>::exp_w( void ) const
 {
-    cassert( !_is_fixed_point, "exp_w() may be called only for floating-point Cordics" );
+    cassert( _is_float, "exp_w() may be called only for floating-point Cordics" );
     return _exp_w;
 }
 
