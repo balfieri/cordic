@@ -78,7 +78,7 @@ public:
     // Construction
     //-----------------------------------------------------
     T    make_fixed( bool sign, const T& i, const T& f ) const;         // fixed-point    value with sign, integer  part i, and fractional part f
-    T    make_float( bool sign, const T& e, const T& f ) const;         // floating-point value using sign, exponent part 3, and fractional part f
+    T    make_float( bool sign, const T& e, const T& f ) const;         // floating-point value using sign, exponent part 3, and mantissa part f
 
     //-----------------------------------------------------
     // Explicit Conversions
@@ -99,7 +99,8 @@ public:
     uint32_t guard_w( void ) const;                     // guard_w from above
     uint32_t w( void ) const;                           // 1 + int_exp_w + frac_w + guard_w (i.e., overall width)
     uint32_t n( void ) const;                           // n       from above
-    T maxint( void ) const;                             // largest positive integer (just integer part, does not include fractional bits)
+    T maxint( void ) const;                             // largest positive integer (just integer part)
+    T maxexp( void ) const;                             // largest biased exponent  (just exponent part)
 
     T max( void ) const;                                // encoded maximum positive value 
     T min( void ) const;                                // encoded minimum positive value
@@ -724,6 +725,7 @@ private:
     int                         _rounding_mode;
 
     T                           _maxint;
+    T                           _maxexp;
     T                           _max;
     T                           _min;
     T                           _lowest;
@@ -951,8 +953,8 @@ Cordic<T,FLT>::Cordic( uint32_t int_exp_w, uint32_t frac_w, bool is_float, bool 
     if ( logger != nullptr ) logger->cordic_constructed( this, int_exp_w, frac_w, is_float, guard_w, n );
 
     cassert( (1+int_exp_w+frac_w+guard_w) <= (sizeof( T ) * 8), "1 + int_exp_w + frac_w + guard_w does not fit in T container" );
-    cassert( int_exp_w != 0, "int_exp_w must be > 0 currently" );
-    cassert( frac_w    != 0, "frac_w must be > 0 currently" );
+    cassert( int_exp_w != 0, "int_exp_w must be > 0" );
+    cassert( frac_w    != 0, "frac_w must be > 0" );
 
     _is_float       = is_float;
     _int_w          = is_float ? 0         : int_exp_w;
@@ -963,7 +965,8 @@ Cordic<T,FLT>::Cordic( uint32_t int_exp_w, uint32_t frac_w, bool is_float, bool 
     _do_reduce      = do_reduce;
     _n              = n;
     _rounding_mode  = FE_TONEAREST;
-    _maxint         = is_float ? T(1) : ((T(1) << int_exp_w) - 1);
+    _maxint         = is_float ? T(0) : ((T(1) << int_exp_w) - 1);
+    _maxexp         = is_float ? ((T(1) << int_exp_w) - 1) : T(0);
 
     _max           = to_t( std::pow( 2.0, int_exp_w ) - 1.0 );
     _min           = to_t( 1.0 / std::pow( 2.0, frac_w ) );
@@ -1123,14 +1126,12 @@ inline bool Cordic<T,FLT>::is_float( void ) const
 template< typename T, typename FLT >
 inline uint32_t Cordic<T,FLT>::int_w( void ) const
 {
-    cassert( !_is_float, "int_w() may be called only for fixed-point Cordics" );
     return _int_w;
 }
 
 template< typename T, typename FLT >
 inline uint32_t Cordic<T,FLT>::exp_w( void ) const
 {
-    cassert( _is_float, "exp_w() may be called only for floating-point Cordics" );
     return _exp_w;
 }
 
@@ -1162,6 +1163,12 @@ template< typename T, typename FLT >
 inline T Cordic<T,FLT>::maxint( void ) const
 {
     return _maxint;
+}
+
+template< typename T, typename FLT >
+inline T Cordic<T,FLT>::maxexp( void ) const
+{
+    return _maxexp;
 }
 
 template< typename T, typename FLT >
@@ -1420,6 +1427,7 @@ inline T Cordic<T,FLT>::to_t( FLT _x, bool is_final ) const
     cassert( _is_float || T(x) < (T(1) << _int_w), 
              "to_t: integer part of |x| " + std::to_string(x) + " does not fit in fixed-point int_w bits" ); 
     
+    // TODO: float case
     FLT x_f = x * FLT( T(1) << (_frac_w + _guard_w) );  // treat it as an integer
     switch( _rounding_mode )
     {
@@ -1524,12 +1532,26 @@ inline std::string Cordic<T,FLT>::to_bstring( const T& _x ) const
 template< typename T, typename FLT >
 inline T Cordic<T,FLT>::make_fixed( bool sign, const T& i, const T& f ) const
 {
-    cassert( i >= 0 && i <= _maxint              , "make_fixed integer part must be in range 0 .. _maxint" );
+    cassert( !_is_float, "make_fixed may be called only for is_float=false Cordics" );
+    cassert( i >= 0 && i <= _maxint, "make_fixed integer part must be in range 0 .. _maxint" );
     cassert( f >= 0 && f <= ((T(1) << _frac_w+_guard_w)-1), 
-                                                        "make_fixed fractional part must be in range 0 .. (1 << (frac_w+guard_w))-1" );
+             "make_fixed fractional part must be in range 0 .. (1 << (frac_w+guard_w))-1" );
 
     return (T(sign) << (_w - 1))                  |
            (T(i)    << (_frac_w + _guard_w)) |
+           (T(f)    << 0);
+}
+
+template< typename T, typename FLT >
+inline T Cordic<T,FLT>::make_float( bool sign, const T& e, const T& f ) const
+{
+    cassert( _is_float, "make_float may be called only for is_float=true Cordics" );
+    cassert( e >= 0 && e <= _maxexp, "make_float biased exponent part must be in range 0 .. _maxexp" );
+    cassert( f >= 0 && f <= ((T(1) << _frac_w+_guard_w)-1), 
+             "make_float mantissa part must be in range 0 .. (1 << (frac_w+guard_w))-1" );
+
+    return (T(sign) << (_w - 1))                  |
+           (T(e)    << (_frac_w + _guard_w)) |
            (T(f)    << 0);
 }
 
@@ -2037,7 +2059,7 @@ T Cordic<T,FLT>::modf( const T& x, T * i ) const
 {
     _log_1( modf, x );
     *i = x & ~(_one - 1);
-    T frac = (x < 0) ? (T(-1) << (_frac_w + _int_w)) : 0;
+    T frac = (x < 0) ? (T(-1) << (_frac_w + _int_w)) : 0;  // TODO: float
     frac |= x & (_one - 1);
     return frac;
 }
@@ -2207,21 +2229,21 @@ template< typename T, typename FLT >
 inline long Cordic<T,FLT>::lround( const T& x ) const
 {
     // same as round(), but just raw integer part
-    return round( x ) >> (_frac_w + _guard_w);
+    return round( x ) >> (_frac_w + _guard_w);          // TODO: float
 }
 
 template< typename T, typename FLT >
 inline long long Cordic<T,FLT>::llround( const T& x ) const
 {
     // same as round(), but just raw integer part
-    return round( x ) >> (_frac_w + _guard_w);
+    return round( x ) >> (_frac_w + _guard_w);          // TODO: float
 }
 
 template< typename T, typename FLT >
 inline T Cordic<T,FLT>::iround( const T& x ) const
 {
     // same as round(), but just raw integer part
-    return round( x ) >> (_frac_w + _guard_w);
+    return round( x ) >> (_frac_w + _guard_w);          // TODO: float
 }
 
 template< typename T, typename FLT >
@@ -2243,21 +2265,21 @@ template< typename T, typename FLT >
 inline long Cordic<T,FLT>::lrint( const T& x ) const
 {
     // return raw integer part of rint()
-    return rint( x ) >> (_frac_w + _guard_w);
+    return rint( x ) >> (_frac_w + _guard_w);           // TODO: float
 }
 
 template< typename T, typename FLT >
 inline long long Cordic<T,FLT>::llrint( const T& x ) const
 {
     // return raw integer part of rint()
-    return rint( x ) >> (_frac_w + _guard_w);
+    return rint( x ) >> (_frac_w + _guard_w);           // TODO: float
 }
 
 template< typename T, typename FLT >
 inline T Cordic<T,FLT>::irint( const T& x ) const
 {
     // return raw integer part of rint()
-    return rint( x ) >> (_frac_w + _guard_w);
+    return rint( x ) >> (_frac_w + _guard_w);           // TODO: float
 }
 
 template< typename T, typename FLT >
@@ -2330,14 +2352,14 @@ inline T Cordic<T,FLT>::roundfrac( const T& _x ) const
     T guard_mask = _min - 1;
     T guard = x & guard_mask;
     x &= ~guard_mask;
-    if ( guard >= (1 << (_guard_w-1)) ) x += signbit(x) ? -_min : _min;
+    if ( guard >= (1 << (_guard_w-1)) ) x += signbit(x) ? -_min : _min; // TODO: float
     return x;
 }
 
 template< typename T, typename FLT >
 inline T Cordic<T,FLT>::rfrac( const T& x ) const
 {
-    if ( (x & ((1 << _guard_w)-1)) == 0 ) return x;
+    if ( (x & ((1 << _guard_w)-1)) == 0 ) return x;             // TODO: float
 
     switch( _rounding_mode )
     {
@@ -2491,6 +2513,7 @@ T Cordic<T,FLT>::scalbn( const T& x, int ls, bool is_final ) const
         // For now, crap out if we overflow.
         // At some point, we'll have options to saturate or set a flag in the container.
         //-----------------------------------------------------
+        // TODO: float case
         int32_t ls_max = _int_w;
         uint32_t i = x >> (_frac_w + _guard_w);
         cassert( i <= _maxint, "lshift x integer part should be <= _maxint"  );
