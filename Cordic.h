@@ -964,7 +964,6 @@ Cordic<T,FLT>::Cordic( uint32_t int_exp_w, uint32_t frac_w, bool is_float, bool 
     _n              = n;
     _rounding_mode  = FE_TONEAREST;
     _maxint         = is_float ? T(1) : ((T(1) << int_exp_w) - 1);
-    _one            = T(1) << (frac_w+guard_w);                         // required before calling to_t()
 
     _max           = to_t( std::pow( 2.0, int_exp_w ) - 1.0 );
     _min           = to_t( 1.0 / std::pow( 2.0, frac_w ) );
@@ -1418,8 +1417,10 @@ inline T Cordic<T,FLT>::to_t( FLT _x, bool is_final ) const
     FLT x = _x;
     bool is_neg = x < 0.0;
     if ( is_neg ) x = -x;
-    cassert( T(x) < (T(1) << _int_w), "to_t: integer part of |x| " + std::to_string(x) + " does not fit in int_w bits" ); 
-    FLT x_f = x * FLT( _one );
+    cassert( _is_float || T(x) < (T(1) << _int_w), 
+             "to_t: integer part of |x| " + std::to_string(x) + " does not fit in fixed-point int_w bits" ); 
+    
+    FLT x_f = x * FLT( T(1) << (_frac_w + _guard_w) );  // treat it as an integer
     switch( _rounding_mode )
     {
         case FE_NOROUND:                                                        break;
