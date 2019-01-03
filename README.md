@@ -112,29 +112,24 @@ conversions, operators, and std::xxx functions.</b>
 </p>
 
 <p>
-If you use freal.h, you don't need to use Cordic.h unless you want to set up a default Cordic to
-use for implicit conversions to freal from int, double, etc.
+If you use freal.h, you don't need to use Cordic.h.
 </p>
 
 <p>
-The default freal container T is int64_t and the default floating-point format for any constants is double.  
-These are the same defaults as for Cordic<>.  If you use freal<> as your number type, then you'll pick up these defaults.
-</p>
-
-<p>
-By default, implicit conversions to/from freal will cause an error.  If you would like to enable both, then create
-a Cordic and call these static functions one time:
+By default, implicit conversions to/from freal will cause an error.  If you would like to enable both, then call
+these static functions:
 </p>
 
 <pre>
 #include "freal.h"
-typedef freal&lt;&gt; real;           // so you don't have to type freal<> everywhere :-)
+
+typedef freal real;           
 
 inline void real_init( void ) 
 {
     // one-time calls to static methods
-    real::implicit_to_set( new Cordic&lt;&gt;( 7, 24 ) ); // allow implicit conversion  TO   freal (fixed-point 1.7.24)
-    real::implicit_from_set( true );                // allow implicit conversions FROM freal (to int, double, etc.)
+    real::implicit_to_set( 7, 24 );     // allow implicit conversion  TO   freal (fixed-point 1.7.24)
+    real::implicit_from_set( true );    // allow implicit conversions FROM freal (to int, double, etc.)
 }
 
 [have your main program call real_init() before using real numbers.]
@@ -160,7 +155,7 @@ and all the associated complex math functions will just work:
 <pre>
 #include &lt;complex&gt;
 #include "freal.h"
-typedef freal&lt;&gt; real;
+typedef freal real;
 typedef complex&lt;real&gt; creal;
 </pre>
 
