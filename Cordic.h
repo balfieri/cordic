@@ -709,6 +709,12 @@ public:
         acosh,
         atanh,
         atanh2,
+
+        // these are here for convenience, but have nothing to do with CORDIC
+        sram_rd,
+        sram_wr,
+        dram_rd,
+        dram_wr,
     };
 
     static constexpr uint32_t OP_cnt = uint32_t(OP::atanh2) + 1;
