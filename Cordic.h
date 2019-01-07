@@ -172,12 +172,12 @@ public:
     long long llrint( const T& x ) const;                               // same as rint() except returns just the raw integer part as long long
     T    irint( const T& x ) const;                                     // same as rint() except returns just the raw integer part as T
     T    nearbyint( const T& x ) const;                                 // same as rint() but never raises FE_INEXACT
-    T    floorfrac( const T& x ) const;                                 // largest  value <= x                       (and clear guard bits)
-    T    ceilfrac( const T& x ) const;                                  // smallest value >= x                       (and clear guard bits)
-    T    truncfrac( const T& x ) const;                                 // nearest  value toward 0                   (and clear guard bits)
-    T    extendfrac( const T& x ) const;                                // nearest  value away from 0                (and clear guard bits)
-    T    roundfrac( const T& x ) const;                                 // nearest  value; halfway cases away from 0 (and clear guard bits)
-    T    rfrac( const T& x ) const;                                     // use guard bits to round value according to rounding mode:
+    T    floorfrac( const T& x, bool is_final=true ) const;             // largest  value <= x                       (and clear guard bits)
+    T    ceilfrac( const T& x, bool is_final=true ) const;              // smallest value >= x                       (and clear guard bits)
+    T    truncfrac( const T& x, bool is_final=true ) const;             // nearest  value toward 0                   (and clear guard bits)
+    T    extendfrac( const T& x, bool is_final=true ) const;            // nearest  value away from 0                (and clear guard bits)
+    T    roundfrac( const T& x, bool is_final=true ) const;             // nearest  value; halfway cases away from 0 (and clear guard bits)
+    T    rfrac( const T& x, bool is_final=true ) const;                 // use guard bits to round value according to rounding mode:
                                                                         //    FE_NOROUND:      x                (extension)
                                                                         //    FE_DOWNWARD:     floorfrac(x)
                                                                         //    FE_UPWARD:       ceilfrac(x)
@@ -2295,9 +2295,9 @@ inline T Cordic<T,FLT>::nearbyint( const T& x ) const
 }
 
 template< typename T, typename FLT >
-inline T Cordic<T,FLT>::floorfrac( const T& x ) const
+inline T Cordic<T,FLT>::floorfrac( const T& x, bool is_final ) const
 {
-    _log_1( floorfrac, x );
+    if ( is_final ) _log_1( floorfrac, x );
     T guard_mask = _min - 1;
     if ( (x & guard_mask) == 0 ) {
         return x;
@@ -2309,9 +2309,9 @@ inline T Cordic<T,FLT>::floorfrac( const T& x ) const
 }
 
 template< typename T, typename FLT >
-inline T Cordic<T,FLT>::ceilfrac( const T& x ) const
+inline T Cordic<T,FLT>::ceilfrac( const T& x, bool is_final ) const
 {
-    _log_1( ceilfrac, x );
+    if ( is_final ) _log_1( ceilfrac, x );
     T guard_mask = _min - 1;
     if ( (x & guard_mask) == 0 ) {
         return x;
@@ -2323,9 +2323,9 @@ inline T Cordic<T,FLT>::ceilfrac( const T& x ) const
 }
 
 template< typename T, typename FLT >
-inline T Cordic<T,FLT>::truncfrac( const T& x ) const
+inline T Cordic<T,FLT>::truncfrac( const T& x, bool is_final ) const
 {
-    _log_1( truncfrac, x );
+    if ( is_final ) _log_1( truncfrac, x );
     T guard_mask = _min - 1;
     if ( (x & guard_mask) == 0 ) {
         return x;
@@ -2337,9 +2337,9 @@ inline T Cordic<T,FLT>::truncfrac( const T& x ) const
 }
 
 template< typename T, typename FLT >
-inline T Cordic<T,FLT>::extendfrac( const T& x ) const
+inline T Cordic<T,FLT>::extendfrac( const T& x, bool is_final ) const
 {
-    _log_1( extendfrac, x );
+    if ( is_final ) _log_1( extendfrac, x );
     T guard_mask = _min - 1;
     if ( (x & guard_mask) == 0 ) {
         return x;
@@ -2351,9 +2351,9 @@ inline T Cordic<T,FLT>::extendfrac( const T& x ) const
 }
 
 template< typename T, typename FLT >
-inline T Cordic<T,FLT>::roundfrac( const T& _x ) const
+inline T Cordic<T,FLT>::roundfrac( const T& _x, bool is_final ) const
 {
-    _log_1( roundfrac, _x );
+    if ( is_final ) _log_1( roundfrac, _x );
     T x = _x;
     T guard_mask = _min - 1;
     T guard = x & guard_mask;
@@ -2363,18 +2363,18 @@ inline T Cordic<T,FLT>::roundfrac( const T& _x ) const
 }
 
 template< typename T, typename FLT >
-inline T Cordic<T,FLT>::rfrac( const T& x ) const
+inline T Cordic<T,FLT>::rfrac( const T& x, bool is_final ) const
 {
     if ( (x & ((1 << _guard_w)-1)) == 0 ) return x;             // TODO: float
 
     switch( _rounding_mode )
     {
         case FE_NOROUND:                        return x;
-        case FE_DOWNWARD:                       return floorfrac( x );
-        case FE_UPWARD:                         return ceilfrac( x );
-        case FE_TOWARDZERO:                     return truncfrac( x );
-        case FE_AWAYFROMZERO:                   return extendfrac( x );
-        case FE_TONEAREST:                      return roundfrac( x );
+        case FE_DOWNWARD:                       return floorfrac( x, is_final );
+        case FE_UPWARD:                         return ceilfrac( x, is_final );
+        case FE_TOWARDZERO:                     return truncfrac( x, is_final );
+        case FE_AWAYFROMZERO:                   return extendfrac( x, is_final );
+        case FE_TONEAREST:                      return roundfrac( x, is_final );
         default:                                return x;                         // shouldn't happen
     }
 }
@@ -2461,7 +2461,7 @@ inline T Cordic<T,FLT>::fma( const T& _x, const T& _y, const T& addend, bool do_
         yy += addend;
         if ( sign ) yy = -yy;
     }
-    if ( is_final ) yy = rfrac( yy );
+    if ( is_final ) yy = rfrac( yy, false );
     if ( debug ) std::cout << "fma end: x_orig=" << to_flt(_x) << " y_orig=" << to_flt(_y) << 
                               " addend=" << to_flt(addend) << " do_reduce=" << do_reduce << 
                               " x_reduced=" << to_flt(x) << " y_reduced=" << to_flt(y) << 
@@ -2493,7 +2493,7 @@ inline T Cordic<T,FLT>::mulc( const T& x, const T& c, bool do_reduce, bool is_fi
 {
     if ( is_final ) _log_2i( mulc, x, c );
     T r = mul( x, c, do_reduce, false );     // later, change this to minimum shifts and adds
-    if ( is_final ) r = rfrac( r );
+    if ( is_final ) r = rfrac( r, false );
     return r;
 }
 
@@ -2542,7 +2542,7 @@ T Cordic<T,FLT>::scalbn( const T& x, int ls, bool is_final ) const
         bool set_sticky = (x & mask) != 0;
         T r = x >> rs;
         if ( set_sticky ) r |= 1;
-        if ( is_final ) r = rfrac( r );
+        if ( is_final ) r = rfrac( r, false );
         return r;
     } else {
         return x;
@@ -2588,7 +2588,7 @@ T Cordic<T,FLT>::fda( const T& _y, const T& _x, const T& addend, bool do_reduce,
         zz += addend;
         if ( sign ) zz = -zz;
     }
-    if ( is_final ) zz = rfrac( zz );
+    if ( is_final ) zz = rfrac( zz, false );
     if ( debug ) std::cout << "fda end: x_orig=" << to_flt(_x) << " y_orig=" << to_flt(_y) << 
                               " addend=" << to_flt(addend) << " do_reduce=" << do_reduce <<
                               " x_reduced=" << to_flt(x) << " y_reduced=" << to_flt(y) << 
@@ -2664,7 +2664,7 @@ T Cordic<T,FLT>::sqrt( const T& _x, bool do_reduce, bool is_final ) const
     xx = mulc( xx, _hyperbolic_vectoring_one_over_gain, false, false );   
     if ( do_reduce ) xx = scalbn( xx, ls, false );                  // log2(p)/2 - 1
 
-    if ( is_final ) xx = rfrac( xx );
+    if ( is_final ) xx = rfrac( xx, false );
     if ( debug ) std::cout << "sqrt end: x_orig=" << to_flt(_x) << " x_reduced=s=" << to_flt(x) << " do_reduce=" << do_reduce << " sqrt=" << to_flt(xx) << "\n";
     return xx;
 }
@@ -2686,7 +2686,7 @@ T Cordic<T,FLT>::rsqrt( const T& _x ) const
     T log_div_m2 = -log( x, true, false ) >> 1;
     T r = exp( log_div_m2, true, false );
     if ( sign ) r = -r;
-    r = rfrac( r );
+    r = rfrac( r, false );
     if ( debug ) std::cout << "rsqrt end: x_orig=" << to_flt(_x) << " x_reduced=" << to_flt(x) << " r=" << to_flt(r) << "\n";
     return r;
 }
@@ -2702,7 +2702,7 @@ inline T Cordic<T,FLT>::cbrt( const T& _x ) const
     const T ONE_THIRD = to_t( FLT(1) / FLT(3) );
     T r = exp( mulc( log( x, true, false ), ONE_THIRD, true, false ) );
     if ( sign ) r = -r;
-    r = rfrac( r );
+    r = rfrac( r, false );
     if ( debug ) std::cout << "cbrt end: x_orig=" << to_flt(_x) << " x_reduced=" << to_flt(x) << " r=" << to_flt(r) << "\n";
     return r;
 }
@@ -2717,7 +2717,7 @@ T Cordic<T,FLT>::rcbrt( const T& _x ) const
     if ( sign ) x = -x;
     const T ONE_THIRD = to_t( FLT(1) / FLT(3) );
     T r = exp( mulc( log( x, true, false ), -ONE_THIRD, true, false ) ); 
-    r = rfrac( r );
+    r = rfrac( r, false );
     if ( debug ) std::cout << "rcbrt end: x_orig=" << to_flt(_x) << " x_reduced=" << to_flt(x) << " r=" << to_flt(r) << "\n";
     return r;
 }
@@ -2829,7 +2829,7 @@ T Cordic<T,FLT>::exp( const T& _x, bool do_reduce, bool is_final ) const
                                   " exp(f)=" << to_flt(xx) << " log(b)*log(i)=" << to_flt(factor) << "\n";
         xx = mul( xx, factor, do_reduce, false );
     }
-    if ( is_final ) xx = rfrac( xx );
+    if ( is_final ) xx = rfrac( xx, false );
     if ( debug ) std::cout << "exp: x_orig=" << to_flt(_x) << " reduced_x=" << to_flt(x) << " exp=" << to_flt(xx) << "\n";
     return xx;
 }
@@ -2859,7 +2859,7 @@ inline T Cordic<T,FLT>::expc( const FLT& b, const T& x ) const
     cassert( log_b_f >= 0.0, "expc log(b) must be non-negative" );
     const T   log_b   = to_t( log_b_f );
     T r = exp( mulc( x, log_b, _do_reduce, false ), _do_reduce, false );
-    r = rfrac( r );
+    r = rfrac( r, false );
     if ( debug ) std::cout << "expc: b=" << b << " x=" << to_flt(x) << " expc=" << to_flt(r) << "\n";
     return r;
 }
@@ -2885,7 +2885,7 @@ inline T Cordic<T,FLT>::pow( const T& b, const T& x ) const
     T lg = log( b, true, false );
     T m  = mul( x, lg, _do_reduce, false );
     T r = exp( m, _do_reduce, false );
-    r = rfrac( r );
+    r = rfrac( r, false );
     if ( debug ) std::cout << "pow: b=" << to_flt(b) << " x=" << to_flt(x) << " pow=" << to_flt(r) << "\n";
     return r;
 }
@@ -2901,7 +2901,7 @@ inline T Cordic<T,FLT>::log( const T& _x, bool do_reduce, bool is_final ) const
     T dv = div( x-_one, x+_one, false, false );
     T lg = atanh2( dv, _one, do_reduce, false, true ) << 1;
     if ( do_reduce ) lg += addend;
-    if ( is_final ) lg = rfrac( lg );
+    if ( is_final ) lg = rfrac( lg, false );
     if ( debug ) std::cout << "log: x_orig=" << to_flt(_x) << " reduced_x=" << to_flt(x) << " log=" << to_flt(lg) << "\n";
     return lg;
 }
@@ -2926,7 +2926,7 @@ inline T Cordic<T,FLT>::log1p( const T& _x, bool do_reduce, bool is_final ) cons
     T dv = div( x, x+_two, true, false );
     T lg1p = atanh2( dv, _one, _do_reduce, false, true ) << 1;
     if ( do_reduce ) lg1p += addend;
-    if ( is_final ) lg1p = rfrac( lg1p );
+    if ( is_final ) lg1p = rfrac( lg1p, false );
     if ( debug ) std::cout << "log1p: x_orig=" << to_flt(_x) << " reduced_x=" << to_flt(x) << " log1p=" << to_flt(lg1p) << "\n";
     return lg1p;
 }
@@ -2945,7 +2945,7 @@ inline T Cordic<T,FLT>::log( const T& x, const T& b ) const
     T lgx = log( x, _do_reduce, false );
     T lgb = log( b, _do_reduce, false );
     T r = div( lgx, lgb, true, false );
-    r = rfrac( r );
+    r = rfrac( r, false );
     if ( debug ) std::cout << "log: b=" << to_flt(b) << " x=" << to_flt(x) << " log=" << to_flt(r) << "\n";
     return r;
 }
@@ -2962,7 +2962,7 @@ inline T Cordic<T,FLT>::logc( const T& x, const FLT& b ) const
     if ( log_x_sign ) log_x = -log_x;
     T r = mulc( log_x, one_over_log_b, _do_reduce, false );
     if ( log_x_sign ) r = -r;
-    r = rfrac( r );
+    r = rfrac( r, false );
     if ( debug ) std::cout << "logc: b=" << to_flt(b) << " x=" << to_flt(x) << " reduced_x=" << to_flt(x) << " log=" << to_flt(r) << "\n";
     return r;
 }
@@ -2986,7 +2986,7 @@ inline T Cordic<T,FLT>::deg2rad( const T& x ) const
     T _180 = to_t( FLT(180) );
     T r = mulc( x, _180, _do_reduce, false );
       r = mulc( r, _one_div_pi, _do_reduce, false );
-      r = rfrac( r );
+      r = rfrac( r, false );
     return r;
 }
 
@@ -2997,7 +2997,7 @@ inline T Cordic<T,FLT>::rad2deg( const T& x ) const
     T ONE_DIV_180 = to_t( FLT(1) / FLT(180) );
     T r = mulc( x, _pi, _do_reduce, false );
       r = mulc( r, ONE_DIV_180, _do_reduce, false );
-      r = rfrac( r );
+      r = rfrac( r, false );
     return r;
 }
 
@@ -3012,7 +3012,7 @@ inline T Cordic<T,FLT>::sin( const T& x, const T * r ) const
     T si;
     T co;
     sincos( x, si, co, _do_reduce, false, true, false, r );
-    si = rfrac( si );
+    si = rfrac( si, false );
     return si;
 }
 
@@ -3027,7 +3027,7 @@ inline T Cordic<T,FLT>::cos( const T& x, const T * r ) const
     T si;
     T co;
     sincos( x, si, co, _do_reduce, false, false, true, r );
-    co = rfrac( co );
+    co = rfrac( co, false );
     return co;
 }
 
@@ -3044,7 +3044,7 @@ inline T Cordic<T,FLT>::tan( const T& x ) const
     T si, co;
     sincos( x, si, co, _do_reduce, false, true, true, nullptr );
     T r = div( si, co, true, false );
-    r = rfrac( r );
+    r = rfrac( r, false );
     return r;
 }
 
@@ -3115,8 +3115,8 @@ void Cordic<T,FLT>::sincos( const T& _x, T& si, T& co, bool do_reduce, bool is_f
     }
 
     if ( is_final ) {
-        if ( need_si ) si = rfrac( si );
-        if ( need_co ) co = rfrac( co );
+        if ( need_si ) si = rfrac( si, false );
+        if ( need_co ) co = rfrac( co, false );
     }
 }
 
@@ -3131,7 +3131,7 @@ inline T Cordic<T,FLT>::sinpi( const T& x, const T * r ) const
     T si;
     T co;
     sinpicospi( x, si, co, _do_reduce, false, true, false, r );
-    si = rfrac( si );
+    si = rfrac( si, false );
     return si;
 }
 
@@ -3146,7 +3146,7 @@ inline T Cordic<T,FLT>::cospi( const T& x, const T * r ) const
     T si;
     T co;
     sinpicospi( x, si, co, _do_reduce, false, false, true, r );
-    co = rfrac( co );
+    co = rfrac( co, false );
     return co;
 }
 
@@ -3163,7 +3163,7 @@ inline T Cordic<T,FLT>::tanpi( const T& x ) const
     T si, co;
     sinpicospi( x, si, co, _do_reduce, false, true, true, nullptr );
     T r = div( si, co, true, false );
-    r = rfrac( r );
+    r = rfrac( r, false );
     return r;
 }
 
@@ -3236,8 +3236,8 @@ void Cordic<T,FLT>::sinpicospi( const T& _x, T& si, T& co, bool do_reduce, bool 
     }
 
     if ( is_final ) {
-        if ( need_si ) si = rfrac( si );
-        if ( need_co ) co = rfrac( co );
+        if ( need_si ) si = rfrac( si, false );
+        if ( need_co ) co = rfrac( co, false );
     }
 }
 
@@ -3248,7 +3248,7 @@ inline T Cordic<T,FLT>::asin( const T& x ) const
     cassert( x >= -_one && x <= _one, "asin x must be between -1 and 1" );
     T nh = hypoth( _one, x, _do_reduce, false );
     T r = atan2( x, nh, _do_reduce, false, false, nullptr );
-    r = rfrac( r );
+    r = rfrac( r, false );
     return r;
 }
 
@@ -3259,7 +3259,7 @@ inline T Cordic<T,FLT>::acos( const T& x ) const
     cassert( x >= -_one && x <= _one, "acos x must be between -1 and 1" );
     T nh = hypoth( _one, x, _do_reduce, false );
     T r = atan2( nh, x, true, false, false, nullptr );
-    r = rfrac( r );
+    r = rfrac( r, false );
     return r;
 }
 
@@ -3325,7 +3325,7 @@ T Cordic<T,FLT>::atan2( const T& _y, const T& _x, bool do_reduce, bool is_final,
     } else {
         circular_vectoring( x, y, _zero, xx, yy, zz );
     }
-    if ( is_final ) zz = rfrac( zz );
+    if ( is_final ) zz = rfrac( zz, false );
     if ( debug ) std::cout << "atan2 end: y=" << to_flt(_y) << " x=" << to_flt(_x) << " do_reduce=" << do_reduce << " x_is_one=" << x_is_one << 
                               " atan2=" << to_flt(zz) << " r=" << ((r != nullptr) ? to_flt(*r) : to_flt(_zero)) << "\n";
     return zz;
@@ -3337,8 +3337,8 @@ inline void Cordic<T,FLT>::polar_to_rect( const T& r, const T& a, T& x, T& y ) c
     _log_4( polar_to_rect, r, a, x, y );
     if ( debug ) std::cout << "polar_to_rect begin: r=" << to_flt(r) << " a=" << to_flt(a) << " do_reduce=" << _do_reduce << "\n";
     sincos( a, y, x, true, false, true, true, &r );
-    x = rfrac( x );
-    y = rfrac( y );
+    x = rfrac( x, false );
+    y = rfrac( y, false );
 }
 
 template< typename T, typename FLT >
@@ -3347,8 +3347,8 @@ inline void Cordic<T,FLT>::rect_to_polar( const T& x, const T& y, T& r, T& a ) c
     _log_4( rect_to_polar, x, y, r, a );
     if ( debug ) std::cout << "rect_to_polar begin: x=" << to_flt(x) << " y=" << to_flt(y) << " do_reduce=" << _do_reduce << "\n";
     a = atan2( y, x, true, false, false, &r );
-    r = rfrac( r );
-    a = rfrac( a );
+    r = rfrac( r, false );
+    a = rfrac( a, false );
 }
 
 template< typename T, typename FLT >
@@ -3366,7 +3366,7 @@ inline T Cordic<T,FLT>::hypot( const T& _x, const T& _y, bool do_reduce, bool is
     circular_vectoring_xy( x, y, xx, yy );
     xx = mulc( xx, _circular_vectoring_one_over_gain, true, false );        
     if ( do_reduce ) xx = scalbn( xx, ls, false );
-    if ( is_final ) xx = rfrac( xx );
+    if ( is_final ) xx = rfrac( xx, false );
     if ( debug ) std::cout << "hypot end: x=" << to_flt(x) << " y=" << to_flt(y) << " do_reduce=" << do_reduce << " hypot=" << to_flt(xx) << "\n";
     return xx;
 }
@@ -3390,7 +3390,7 @@ inline T Cordic<T,FLT>::hypoth( const T& x, const T& y, bool do_reduce, bool is_
     if ( debug ) std::cout << "hypoth begin: x=" << to_flt(x) << " y=" << to_flt(y) << " do_reduce=" << _do_reduce << "\n";
     cassert( x >= y, "hypoth x must be >= y" );
     T r = sqrt( mul( x+y, x-y, do_reduce, false ), do_reduce, false ); // TODO: go back to using CORDIC hyperbolic core
-    if ( is_final ) r = rfrac( r );
+    if ( is_final ) r = rfrac( r, false );
     return r;
 }
 
@@ -3411,7 +3411,7 @@ inline T Cordic<T,FLT>::sinh( const T& x, const T * r ) const
     T sih;
     T coh;
     sinhcosh( x, sih, coh, _do_reduce, false, true, false, r );
-    sih = rfrac( sih );
+    sih = rfrac( sih, false );
     return sih;
 }
 
@@ -3426,7 +3426,7 @@ inline T Cordic<T,FLT>::cosh( const T& x, const T * r ) const
     T sih;
     T coh;
     sinhcosh( x, sih, coh, _do_reduce, true, false, true, r );
-    coh = rfrac( coh );
+    coh = rfrac( coh, false );
     return coh;
 }
 
@@ -3493,8 +3493,8 @@ void Cordic<T,FLT>::sinhcosh( const T& _x, T& sih, T& coh, bool do_reduce, bool 
     }
 
     if ( is_final ) {
-        if ( need_sih ) sih = rfrac( sih );
-        if ( need_coh ) coh = rfrac( coh );
+        if ( need_sih ) sih = rfrac( sih, false );
+        if ( need_coh ) coh = rfrac( coh, false );
     }
 }
 
@@ -3505,7 +3505,7 @@ T Cordic<T,FLT>::tanh( const T& x ) const
     T sih, coh;
     sinhcosh( x, sih, coh, _do_reduce, false, true, true, nullptr );
     T r = div( sih, coh, true, false );
-    r = rfrac( r );
+    r = rfrac( r, false );
     return r;
 }
 
@@ -3514,7 +3514,7 @@ T Cordic<T,FLT>::asinh( const T& x ) const
 { 
     _log_1( asinh, x );
     T r = log( x + hypot( x, _one, _do_reduce, false ), _do_reduce, false );
-    r = rfrac( r );
+    r = rfrac( r, false );
     return r;
 }
 
@@ -3524,7 +3524,7 @@ inline T Cordic<T,FLT>::acosh( const T& x ) const
     _log_1( acosh, x );
     cassert( x >= _one, "acosh x must be >= 1" );
     T r = log( x + hypoth( x, _one, _do_reduce, false ), _do_reduce, false );
-    r = rfrac( r );
+    r = rfrac( r, false );
     return r;
 }
 
@@ -3571,7 +3571,7 @@ T Cordic<T,FLT>::atanh2( const T& _y, const T& _x, bool do_reduce, bool is_final
     T xx, yy, zz;
     hyperbolic_vectoring( x, y, _zero, xx, yy, zz );
     if ( sign ) zz = -zz;
-    if ( is_final ) zz = rfrac( zz );
+    if ( is_final ) zz = rfrac( zz, false );
     return zz;
 }
 
