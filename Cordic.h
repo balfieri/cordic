@@ -921,6 +921,12 @@ std::string Cordic<T,FLT>::op_to_str( uint16_t op )
         _ocase( acosh )
         _ocase( atanh )
         _ocase( atanh2 )
+
+        _ocase( sram_rd )
+        _ocase( sram_wr )
+        _ocase( dram_rd )
+        _ocase( dram_wr )
+
         default: return "<unknown OP>";
     }
 }
