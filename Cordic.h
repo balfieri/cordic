@@ -717,7 +717,7 @@ public:
         dram_wr,
     };
 
-    static constexpr uint32_t OP_cnt = uint32_t(OP::atanh2) + 1;
+    static constexpr uint32_t OP_cnt = uint32_t(OP::dram_wr) + 1;
 
 private:
     bool                        _is_float;
