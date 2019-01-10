@@ -316,8 +316,7 @@ public:
     // sin(x)*sin(y)    = (cos(x-y) - cos(x+y)) / 2
     //
     // cos(-x)          = cos(x)
-    // cos(x+y)         = cos(x)*sin(y) - sin(x)*cos(y)
-    // cos(x+y)         = cos^2(x) - sin^2(x)
+    // cos(x+y)         = cos(x)*cos(y) - sin(x)*sin(y)
     // cos(x+pi/4)      = sqrt(2)/2 * (cos(x) - sin(x))
     // cos(i*pi/2 + f)  = +/-cos(f) or +/-sin(f)                i=integer, f=frac
     // cos(x*pi)        = cos(2x * pi/2) = cos((i+f)*pi/2) = +/-cos(f*pi/2) or +/-sin(f*pi/2)
