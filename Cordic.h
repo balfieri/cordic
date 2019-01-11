@@ -281,9 +281,12 @@ public:
     // 1-(1-x)^2        = x * (2-x)
     //
     // pow(b,x)         = exp(log(b) * x)
-    // exp(x)           = sinh(x) + cosh(x)
+    // exp2(x)          = 2^x = exp(log(2) * x) = pow(2,x)            
+    // exp(x)           = sinh(x) + cosh(x)                     if x is already reduced, use hyperbolic CORDIC directly to get this sum
     // exp(-x)          = 1/exp(x)
     // exp(x+y)         = exp(x) * exp(y)
+    // exp(x)           = exp2(log2(e) * x) = exp2(i+f)         let i = integer part of log2(e)*x, f = fractional part
+    // exp2(i+f)        = exp2(f) << i                          exp2(i) * exp2(f)
     // exp(ix)          = cos(x) + i*sin(x)                     Euler's Formula, i = sqrt(-1)
     // exp(i*pi) + 1    = 0                                     Euler's Identity
     // exp(x)-1         = tanh(x/2)*(exp(x)+1)                  expm1(x)
@@ -292,10 +295,12 @@ public:
     // log(x)           = 2*atanh2(x-1, x+1)              
     // log(x)           = atanh2((x^2 - 1, x^2 + 1) 
     // log(x*y)         = log(x) + log(y)
-    // log(x/4)         = atanh2(x-0.25, x+0.25) 
+    // log(b^i)         = i*log(b)
+    // log(2^i + f)     = i*log(2) + log(f)                     i=integer f=fraction
+    // log(x/4)         = atanh((x-0.25)/(x+0.25)) 
     // log(x/y)         = log(x) - log(y)
-    // log(x/y)         = 2*atanh2(x-y, x+y)  
-    // log(1+x)         = 2*atanh2(x, x+2)                      log1p()
+    // log(x/y)         = 2*atanh((x-y)/(x+y))  
+    // log(1+x)         = 2*atanh(x/(x+2))                      log1p()
     //
     // sin(-x)          = -sin(x)
     // sin(x)           = sin(i*pi/2 + f)                       where i is an integer and |f| <= pi/4
@@ -366,12 +371,23 @@ public:
     //
     // sinh(-x)         = -sinh(x)
     // sinh(x)          = (e^x - e^-x)/2
-    // sinh(x+y)        = sinh(x)*cosh(y) + cosh(x)*sinh(y)
-    // sinh(x)          = expm1(x) * (exp1(x)+2)/(expm1(x)+1) / 2
+    //                  = (e^x - 1/e^x)/2
+    // sinh(x)          = expm1(x) * (expm1(x)+2)/(expm1(x)+1) / 2
+    // sinh(x+y)        = sinh(x)*cosh(y) + cosh(x)*sinh(y)             let x=2^i and y=fraction, then sinh(y) and cosh(y) can use CORDIC
+    // sinh(2^i)        = (e^(2^i) - e^(-2^i))/2
+    //                  = (2^(log2(e) << i) - 2^(-log2(e) << i))/2      let j = integer part of (log2(e) << i), f = fractional part
+    //                  = ((2^f << j) - (2^(-f) >> j))/2
+    //                  = (exp(log(2)*f) << (j-1)) - (1/exp(log(2)*f) >> (j+1))   
+    //                    note: exp(log(2)*f) can use CORDIC sinh(log(2)*f) + cosh(log(2)*f)
     //
     // cosh(-x)         = cosh(x)
     // cosh(x)          = (e^x + e^-x)/2
+    //                  = (e^x + 1/e^x)/2
     // cosh(x+y)        = cosh(x)*cosh(y) + sinh(x)*sinh(y)
+    // cosh(2^i)        = (e^(2^i) + e^(-2^i))/2
+    //                  = [similar to above]
+    //                  = (exp(log(2)*f) << (j-1)) + (1/exp(log(2)*f) >> (j+1))   
+    //                    note: exp(log(2)*f) can use CORDIC sinh(log(2)*f) + cosh(log(2)*f)
     //
     // tanh(-x)         = -tanh(x)
     // tanh(x)          = (e^x - e^-x) / (e^x + e^-x)
