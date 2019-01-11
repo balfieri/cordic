@@ -281,12 +281,14 @@ public:
     // 1-(1-x)^2        = x * (2-x)
     //
     // pow(b,x)         = exp(log(b) * x)
-    // exp2(x)          = 2^x = exp(log(2) * x) = pow(2,x)            
+    // exp2(x)          = 2^x = exp(log(2) * x) 
     // exp(x)           = sinh(x) + cosh(x)                     if x is already reduced, use hyperbolic CORDIC directly to get this sum
     // exp(-x)          = 1/exp(x)
     // exp(x+y)         = exp(x) * exp(y)
     // exp(x)           = exp2(log2(e) * x) = exp2(i+f)         let i = integer part of log2(e)*x, f = fractional part
-    // exp2(i+f)        = exp2(f) << i                          exp2(i) * exp2(f)
+    // exp2(i+f)        = exp2(i) * exp2(f)
+    //                  = exp2(f) << i    
+    //                  = exp(log(2)*f) << i
     // exp(ix)          = cos(x) + i*sin(x)                     Euler's Formula, i = sqrt(-1)
     // exp(i*pi) + 1    = 0                                     Euler's Identity
     // exp(x)-1         = tanh(x/2)*(exp(x)+1)                  expm1(x)
@@ -296,7 +298,7 @@ public:
     // log(x)           = atanh2((x^2 - 1, x^2 + 1) 
     // log(x*y)         = log(x) + log(y)
     // log(b^i)         = i*log(b)
-    // log(2^i + f)     = i*log(2) + log(f)                     i=integer f=fraction
+    // log(2^i + f)     = i*log(2) + log(f)                     i=integer f=rest
     // log(x/4)         = atanh((x-0.25)/(x+0.25)) 
     // log(x/y)         = log(x) - log(y)
     // log(x/y)         = 2*atanh((x-y)/(x+y))  
