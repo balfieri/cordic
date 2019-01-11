@@ -3684,16 +3684,15 @@ inline void Cordic<T,FLT>::reduce_exp_arg( FLT b, T& x, T& factor ) const
 {
     //-----------------------------------------------------
     // Identities:
-    //     Assume: x = i + f  (integer plus fraction)
-    //     exp(i+f) = exp(i) * exp(f)
-    //     pow(b,x) = log(b) * exp(x) = [log(b)*exp(i)] * exp(f)
+    //     pow(b,x)  = exp2(log2(b) * x)
+    //     exp2(i+f) = exp2(i) * exp2(f)     i = integer part, f = fractional remainder
+    //               = exp2(f) << i    
+    //               = exp(log(2)*f) << i
     //
     // Strategy:
-    //     Find i such that x-i is in -1 .. 1.
-    //     Because x can be negative, so can i.
-    //     exp(i) comes from a pre-built LUT kept in FLT
-    //     so we can multiply it by log(b) before converting to type T and
-    //     then multiplying by exp(f) in the caller.
+    //     For exp2(i+f), choose i such at f is in -1..1.  Note that i can be negative.
+    //     Multiply f by log(2) and return that as the returned x.
+    //     And return i as the lshift.
     //-----------------------------------------------------
     const T TWO = _two;
     const T MININT = -_maxint - 1;
