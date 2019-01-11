@@ -285,7 +285,7 @@ public:
     // exp(x)           = sinh(x) + cosh(x)                     if x is already reduced, use hyperbolic CORDIC directly to get this sum
     // exp(-x)          = 1/exp(x)
     // exp(x+y)         = exp(x) * exp(y)
-    // exp(x)           = exp2(log2(e) * x) = exp2(i+f)         
+    // exp(x)           = exp2(log2(e) * x)
     // exp2(i+f)        = exp2(i) * exp2(f)                     i = integer part, f = fractional remainder
     //                  = exp2(f) << i    
     //                  = exp(log(2)*f) << i
