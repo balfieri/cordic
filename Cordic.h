@@ -564,7 +564,7 @@ public:
     T    fda( const T& y, const T& x, const T& addend, bool do_reduce, bool is_final ) const; 
     T    div( const T& y, const T& x, bool do_reduce, bool is_final ) const;                  
     T    sqrt( const T& x, bool do_reduce, bool is_final ) const;                              
-    T    exp( const T& x, bool do_reduce, bool is_final ) const;                              
+    T    exp( const T& x, bool do_reduce, bool is_final, FLT b=M_E ) const;                              
     T    log( const T& x, bool do_reduce, bool is_final ) const;                             
     T    log1p( const T& x, bool do_reduce, bool is_final ) const;                          
     T    hypot( const T& x, const T& y, bool do_reduce, bool is_final ) const;          
@@ -2810,7 +2810,7 @@ T Cordic<T,FLT>::fmin( const T& x, const T& y ) const
 }
 
 template< typename T, typename FLT >
-T Cordic<T,FLT>::exp( const T& _x, bool do_reduce, bool is_final ) const
+T Cordic<T,FLT>::exp( const T& _x, bool do_reduce, bool is_final, FLT b ) const
 { 
     //-----------------------------------------------------
     // Identities:
@@ -2827,13 +2827,13 @@ T Cordic<T,FLT>::exp( const T& _x, bool do_reduce, bool is_final ) const
     if ( is_final ) _log_1( exp, _x );
     T x = _x;
     int32_t lshift;
-    if ( do_reduce ) reduce_exp_arg( M_E, x, lshift ); 
+    if ( do_reduce ) reduce_exp_arg( b, x, lshift ); 
 
     // hyperbolic_rotation() can compute cosh(f) + sinh(f) in one shot
     T xx, yy, zz;
     hyperbolic_rotation( _hyperbolic_rotation_one_over_gain, _hyperbolic_rotation_one_over_gain, x, xx, yy, zz );
     if ( do_reduce ) {
-        if ( debug ) std::cout << "exp mid: b=" << M_E << " x_orig=" << to_flt(_x) << 
+        if ( debug ) std::cout << "exp mid: b=" << b << " x_orig=" << to_flt(_x) << 
                                   " lshift << " << lshift << " exp(log(2)*f)=" << to_flt(xx) << "\n";
         xx = scalbn( xx, lshift, false );
     }
@@ -2861,15 +2861,7 @@ inline T Cordic<T,FLT>::expm1( const T& x ) const
 template< typename T, typename FLT >
 inline T Cordic<T,FLT>::expc( const FLT& b, const T& x ) const
 { 
-    _log_2f( expc, x, b );
-    cassert( b > 0, "expc b must be positive" );
-    const FLT log_b_f = std::log( b );
-    cassert( log_b_f >= 0.0, "expc log(b) must be non-negative" );
-    const T   log_b   = to_t( log_b_f );
-    T r = exp( mulc( x, log_b, _do_reduce, false ), _do_reduce, false );
-    r = rfrac( r, false );
-    if ( debug ) std::cout << "expc: b=" << b << " x=" << to_flt(x) << " expc=" << to_flt(r) << "\n";
-    return r;
+    return exp( x, _do_reduce, true, b );
 }
 
 template< typename T, typename FLT >
