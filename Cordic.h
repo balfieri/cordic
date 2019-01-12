@@ -589,7 +589,7 @@ public:
     void reduce_mul_args( T& x, T& y, int32_t& x_lshift, int32_t& y_lshift, bool& sign ) const; 
     void reduce_div_args( T& y, T& x, int32_t& y_lshift, int32_t& x_lshift, bool& sign ) const;
     void reduce_sqrt_arg( T& x, int32_t& lshift ) const;
-    void reduce_exp_arg( FLT b, T& x, int32_t lshift ) const;
+    void reduce_exp_arg( FLT b, T& x, int32_t& lshift ) const;
     void reduce_log_arg( T& x, T& addend ) const;                                            
     void reduce_atan2_args( T& y, T& x, bool& y_sign, bool& x_sign, bool& swapped, bool& is_pi ) const;     
     void reduce_hypot_args( T& x, T& y, int32_t& lshift, bool& swapped ) const;
@@ -3665,7 +3665,7 @@ inline void Cordic<T,FLT>::reduce_sqrt_arg( T& x, int32_t& lshift ) const
 }
 
 template< typename T, typename FLT >
-inline void Cordic<T,FLT>::reduce_exp_arg( FLT b, T& x, int32_t ) const
+inline void Cordic<T,FLT>::reduce_exp_arg( FLT b, T& x, int32_t& i ) const
 {
     //-----------------------------------------------------
     // Identities:
@@ -3682,11 +3682,11 @@ inline void Cordic<T,FLT>::reduce_exp_arg( FLT b, T& x, int32_t ) const
     T x_orig = x;
     if ( debug ) std::cout << "reduce_exp_arg: b=" << b << " x_orig=" << to_flt(x_orig) << "\n";
     T log2_b = to_t( std::log2( b ) );
-    x     = mulc( x, log2_b, true, false );
-    T   i = x >> (_frac_w + _guard_w);  // can be + or -
-    T   f = x - (i << (_frac_w + _guard_w));
+    x   = mulc( x, log2_b, true, false );
+    i   = x >> (_frac_w + _guard_w);  // can be + or -
+    T f = x - (i << (_frac_w + _guard_w));
     if ( debug ) std::cout << "reduce_exp_arg: log2(b)*x=" << to_flt(x) << " i=" << i << " f=" << to_flt(f) << "\n";
-    x     = mulc( x, _log2, true, false );
+    x   = mulc( f, _log2, true, false );
     if ( debug ) std::cout << "reduce_exp_arg: b=" << b << " x_orig=" << to_flt(x_orig) << 
                               " i=" << i << " f=" << to_flt(f) << " x_reduced=log(2)*f=" << to_flt(x) << "\n";
 }
