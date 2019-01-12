@@ -788,7 +788,6 @@ private:
     T *                         _reduce_sinhcosh_cosh_i;                // for each possible integer value, cosh(i)
     bool *                      _reduce_sinhcosh_sinh_i_oflow;          // boolean indicating if this index creates too big of a number
     bool *                      _reduce_sinhcosh_cosh_i_oflow;          // boolean indicating if this index creates too big of a number
-    T *                         _reduce_log_addend;                     // for each possible lshift value, log( 1 << lshift )
 
     static Logger<T,FLT> * logger;
 };
@@ -1101,17 +1100,6 @@ Cordic<T,FLT>::Cordic( uint32_t int_exp_w, uint32_t frac_w, bool is_float, bool 
                                   " sinh_i=" << to_flt(sinh_i[i]) << " cosh_i=" << to_flt(cosh_i[i]) << 
                                   " sinh_i_oflow=" << sinh_i_oflow[i] << " cosh_i_oflow=" << cosh_i_oflow[i] << "\n";
     }
-
-    // construct LUT used by reduce_log_arg()
-    T * addend = new T[_w - 1];
-    _reduce_log_addend = addend;
-    for( int32_t i = -(frac_w+guard_w); i <= int32_t(int_exp_w); i++ )
-    {
-        double addend_f = std::log( std::pow( 2.0, double( i ) ) );
-        addend[frac_w+guard_w+i] = to_t( addend_f );
-        if ( debug ) std::cout << "reduce_log_arg LUT: addend[" << to_rstring(i) << "]=" << to_flt(addend[frac_w+guard_w+i]) << 
-                                  " addend_f=" << addend_f << "\n";
-    }
 }
 
 template< typename T, typename FLT >
@@ -1125,7 +1113,6 @@ Cordic<T,FLT>::~Cordic( void )
     delete _reduce_sinhcosh_cosh_i;
     delete _reduce_sinhcosh_sinh_i_oflow;
     delete _reduce_sinhcosh_cosh_i_oflow;
-    delete _reduce_log_addend;
 }
 
 //-----------------------------------------------------
@@ -2915,20 +2902,7 @@ inline T Cordic<T,FLT>::log( const T& _x ) const
 template< typename T, typename FLT >
 inline T Cordic<T,FLT>::log1p( const T& _x, bool do_reduce, bool is_final ) const
 { 
-    return log( _x + _one, do_reduce, is_final );   // for now
-
-    // TODO: this doesn't work yet, not sure why
-    if ( is_final ) _log_1( log1p, _x );
-    T x = _x;
-    cassert( x > -one(), "log1p: x+1 must be positive" );
-    T addend;
-    if ( do_reduce ) reduce_log_arg( x, addend );
-    T dv = div( x, x+_two, true, false );
-    T lg1p = atanh2( dv, _one, _do_reduce, false, true ) << 1;
-    if ( do_reduce ) lg1p += addend;
-    if ( is_final ) lg1p = rfrac( lg1p, false );
-    if ( debug ) std::cout << "log1p: x_orig=" << to_flt(_x) << " reduced_x=" << to_flt(x) << " log1p=" << to_flt(lg1p) << "\n";
-    return lg1p;
+    return log( _x + _one, do_reduce, is_final );   
 }
 
 template< typename T, typename FLT >
@@ -3687,18 +3661,19 @@ template< typename T, typename FLT >
 inline void Cordic<T,FLT>::reduce_log_arg( T& x, T& addend ) const 
 {
     //-----------------------------------------------------
-    // log(ab) = log(a) + log(b)
+    // log(x*y)         = log(x) + log(y)
+    // log(b^i)         = i*log(b)
+    // log(2^i + f)     = i*log(2) + log(f)                     i=integer f=remainder
     // 
     // Normalize x so that it's in 1.00 .. 2.00.
-    // Then addend = log(1 << lshift).
+    // Then addend = i*log(2).
     //-----------------------------------------------------
     cassert( x >= 0, "log argument may not be negative for fixed-point numbers" );
     T x_orig = x;
     int32_t x_lshift;
     bool x_sign;
     reduce_arg( x, x_lshift, x_sign, true, true, true );
-    const T * addends = _reduce_log_addend;
-    addend = addends[_frac_w+_guard_w+x_lshift];
+    addend = to_t( FLT(x_lshift) * std::log(2) );
     if ( debug ) std::cout << "reduce_log_arg: x_orig=" << to_flt(x_orig) << " x_reduced=" << to_flt(x) << " addend=" << to_flt(addend) << "\n"; 
 }
 
