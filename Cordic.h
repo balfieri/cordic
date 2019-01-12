@@ -599,7 +599,6 @@ public:
     void reduce_hypot_args( T& x, T& y, int32_t& lshift, bool& swapped ) const;
     void reduce_sincos_arg( T& a, uint32_t& quadrant, bool& sign, bool& did_minus_pi_div_4 ) const;
     void reduce_sinpicospi_arg( T& a, uint32_t& quadrant, bool& sign, bool& did_minus_pi_div_4 ) const;
-    void reduce_sinhcosh_arg( T& x, T& sinh_i, T& cosh_i, bool& sign ) const;                  
 
     //-----------------------------------------------------
     // Logging Support
@@ -787,11 +786,6 @@ private:
     T                           _hyperbolic_vectoring_gain;              // hyperbolic vectoring gain
     T                           _hyperbolic_vectoring_one_over_gain;     // hyperbolic vectoring 1/gain
     T                           _hyperbolic_angle_max;                   // hyperbolic vectoring |z0| max value
-
-    T *                         _reduce_sinhcosh_sinh_i;                // for each possible integer value, sinh(i)
-    T *                         _reduce_sinhcosh_cosh_i;                // for each possible integer value, cosh(i)
-    bool *                      _reduce_sinhcosh_sinh_i_oflow;          // boolean indicating if this index creates too big of a number
-    bool *                      _reduce_sinhcosh_cosh_i_oflow;          // boolean indicating if this index creates too big of a number
 
     static Logger<T,FLT> * logger;
 };
@@ -1068,42 +1062,6 @@ Cordic<T,FLT>::Cordic( uint32_t int_exp_w, uint32_t frac_w, bool is_float, bool 
     if ( debug ) std::cout << "circular_vectoring_one_over_gain="   << std::setw(30) << to_flt(_circular_vectoring_one_over_gain) << "\n";
     if ( debug ) std::cout << "hyperbolic_rotation_one_over_gain="  << std::setw(30) << to_flt(_hyperbolic_rotation_one_over_gain) << "\n";
     if ( debug ) std::cout << "hyperbolic_vectoring_one_over_gain=" << std::setw(30) << to_flt(_hyperbolic_vectoring_one_over_gain) << "\n";
-
-    // construct LUT used by reduce_sinhcosh_arg();
-    // use integer part plus 0.25 bit of fraction
-    // these need not be logged
-    cassert( int_exp_w <= 24, "too many cases to worry about" );
-    uint32_t N = 1 << (2+int_exp_w);
-    uint32_t * quadrant     = new uint32_t[N];
-    bool *     odd_pi_div_4 = new bool[N];
-    T *        sinh_i       = new T[N];
-    T *        cosh_i       = new T[N];
-    bool *     sinh_i_oflow = new bool[N];
-    bool *     cosh_i_oflow = new bool[N];
-    _reduce_sinhcosh_sinh_i       = sinh_i;
-    _reduce_sinhcosh_cosh_i       = cosh_i;
-    _reduce_sinhcosh_sinh_i_oflow = sinh_i_oflow;
-    _reduce_sinhcosh_cosh_i_oflow = cosh_i_oflow;
-    const FLT PI       = M_PI;
-    const FLT PI_DIV_2 = PI / 2.0;
-    const FLT PI_DIV_4 = PI / 4.0;
-    const T   MASK     = (T(1) << (int_exp_w+T(1)))-T(1);  // include 0.5 bit of fraction
-    const T   MAX      = (T(1) << (_w-1))-T(1);
-    const FLT MAX_F    = to_flt( MAX );
-    for( T i = 0; i <= MASK; i++ )
-    {
-        FLT i_f = FLT(i) / 4.0;
-
-        FLT sinh_i_f    = std::sinh( i_f );
-        FLT cosh_i_f    = std::cosh( i_f );
-        sinh_i_oflow[i] = sinh_i_f > MAX_F;
-        cosh_i_oflow[i] = cosh_i_f > MAX_F;
-        sinh_i[i] = sinh_i_oflow[i] ? MAX : to_t( std::sinh( i_f ) );
-        cosh_i[i] = cosh_i_oflow[i] ? MAX : to_t( std::cosh( i_f ) );
-        if ( debug ) std::cout << "reduce_sinhcosh_arg LUT: i=" << uint64_t(i) << " i_last=" << uint64_t(MASK) << " i_f=" << i_f << 
-                                  " sinh_i=" << to_flt(sinh_i[i]) << " cosh_i=" << to_flt(cosh_i[i]) << 
-                                  " sinh_i_oflow=" << sinh_i_oflow[i] << " cosh_i_oflow=" << cosh_i_oflow[i] << "\n";
-    }
 }
 
 template< typename T, typename FLT >
@@ -1113,10 +1071,6 @@ Cordic<T,FLT>::~Cordic( void )
 
     delete _circular_atan;
     delete _hyperbolic_atanh;
-    delete _reduce_sinhcosh_sinh_i;
-    delete _reduce_sinhcosh_cosh_i;
-    delete _reduce_sinhcosh_sinh_i_oflow;
-    delete _reduce_sinhcosh_cosh_i_oflow;
 }
 
 //-----------------------------------------------------
@@ -3423,49 +3377,39 @@ void Cordic<T,FLT>::sinhcosh( const T& _x, T& sih, T& coh, bool do_reduce, bool 
         }
     }
 
-    //-----------------------------------------------------
-    // Identities:
-    //     sinh(-x)         = -sinh(x)
-    //     sinh(x+y)        = sinh(x)*cosh(y) + cosh(x)*sinh(y)    
-    //     cosh(-x)         = cosh(x)
-    //     cosh(x+y)        = cosh(x)*cosh(y) - sinh(x)*sinh(y)     
-    // Strategy:
-    //     split abs(x) into i + f
-    //     use LUT for sinh(i) and cosh(i)
-    //     run cordic on f
-    //     do the multiplications
-    //     fix sign of sih
-    //-----------------------------------------------------
     T x = _x;
-    T sinh_i; 
-    T cosh_i;
-    bool sign;
-    if ( do_reduce ) reduce_sinhcosh_arg( x, sinh_i, cosh_i, sign );  
-
-    T r = _hyperbolic_rotation_one_over_gain;
-    int32_t r_lshift;
-    bool r_sign = false;
-    if ( _r != nullptr ) {
-        r = *_r;
-        if ( do_reduce ) reduce_arg( r, r_lshift, r_sign );
-        r = mulc( r, _hyperbolic_rotation_one_over_gain, false, false );  
-    }
-
-    T sinh_f;
-    T cosh_f;
-    T zz;
-    hyperbolic_rotation( r, _zero, x, cosh_f, sinh_f, zz );
     if ( do_reduce ) {
+        //-----------------------------------------------------
+        // sinh(x) = (exp(x) - 1/exp(x))/2
+        // cosh(x) = (exp(x) + 1/exp(x))/2
+        //
+        // Currently, this appears more efficient than other techniques that don't use a LUT.
+        //-----------------------------------------------------
+        T expx = exp( x, true, false );
+        T one_over_expx = div( _one, expx, true, false );
+        if ( _r != nullptr ) expx = mul( expx, *_r, true, false );
         if ( need_sih ) {
-            sih = mul( sinh_f, cosh_i, true, false ) + mul( cosh_f, sinh_i, true, false );
-            if ( sign ) sih = -sih;
+            sih = expx - one_over_expx;
+            sih = scalbn( sih, -1, false );
         }
         if ( need_coh ) {
-            coh = mul( cosh_f, cosh_i, true, false ) + mul( sinh_f, sinh_i, true, false );
+            coh = expx + one_over_expx;
+            coh = scalbn( coh, -1, false );
         }
     } else {
-        sih = sinh_f;
-        coh = cosh_f;
+        //-----------------------------------------------------
+        // Use hyperbolic_rotation() to get both in one shot.
+        //-----------------------------------------------------
+        T r = _hyperbolic_rotation_one_over_gain;
+        int32_t r_lshift;
+        bool r_sign = false;
+        if ( _r != nullptr ) {
+            r = *_r;
+            r = mulc( r, _hyperbolic_rotation_one_over_gain, false, false );  
+        }
+
+        T zz;
+        hyperbolic_rotation( r, _zero, x, coh, sih, zz );
     }
 
     if ( is_final ) {
@@ -3793,45 +3737,6 @@ inline void Cordic<T,FLT>::reduce_sinpicospi_arg( T& a, uint32_t& quad, bool& si
     if ( debug ) std::cout << "reduce_sinpicospi_arg: a_orig=" << to_flt(a_orig) << " i=" << to_rstring(i) << 
                               " f=" << to_flt(f) << " a_reduced=" << to_flt(a) << 
                               " quadrant=" << quad << " did_minus_pi_div_4=" << did_minus_pi_div_4 << "\n"; 
-}
-
-template< typename T, typename FLT >
-inline void Cordic<T,FLT>::reduce_sinhcosh_arg( T& x, T& sinh_i, T& cosh_i, bool& sign ) const
-{
-    //-----------------------------------------------------
-    // Identities:
-    //     sinh(x+y)    = sinh(x)*cosh(y) + cosh(x)*sinh(y)             
-    //     let x=2^i and y=fraction f
-    //     sinh(2^i+f)  = sinh(2^i)*cosh(f) + cosh(2^i)*sinh(f)
-    //     sinh(2^i)    = (e^(2^i) - e^(-2^i))/2
-    //                  = (2^(log2(e) << i) - 2^(-log2(e) << i))/2      let j = integer part of (log2(e) << i), f = fractional part
-    //                  = ((2^f << j) - (2^(-f) >> j))/2
-    //                  = (exp(log(2)*f) << (j-1)) - (1/exp(log(2)*f) >> (j+1))   
-    //                    note: exp(log(2)*f) can use CORDIC sinh(log(2)*f) + cosh(log(2)*f)
-    //     cosh(2^i)    = (e^(2^i) + e^(-2^i))/2
-    //                  = [similar to above]
-    //                  = (exp(log(2)*f) << (j-1)) + (1/exp(log(2)*f) >> (j+1))   
-    //                    note: exp(log(2)*f) can use CORDIC sinh(log(2)*f) + cosh(log(2)*f)
-    // Strategy:
-    //-----------------------------------------------------
-    T x_orig = x;
-    sign = x < 0;
-    if ( sign ) x = -x;
-
-    const T MASK = (T(1) << (_int_w+2)) - T(1);  // include 0.25 bit of fraction
-    T i = (x >> (_frac_w+_guard_w-2)) & MASK;
-    x   = x & ((T(1) << (_frac_w+_guard_w-2))-T(1));
-    const T *    sinh_i_vals   = _reduce_sinhcosh_sinh_i;
-    const T *    cosh_i_vals   = _reduce_sinhcosh_cosh_i;
-    const bool * sinh_i_oflows = _reduce_sinhcosh_sinh_i_oflow;
-    const bool * cosh_i_oflows = _reduce_sinhcosh_cosh_i_oflow;
-    cassert( !sinh_i_oflows[i], "reduce_sinhcosh_arg x will cause an overflow for sinh" );
-    cassert( !cosh_i_oflows[i], "reduce_sinhcosh_arg x will cause an overflow for cosh" );
-    sinh_i = sinh_i_vals[i];
-    cosh_i = cosh_i_vals[i];
-    if ( debug ) std::cout << "reduce_sinhcosh_arg: x_orig=" << to_flt(x_orig) << " sinh_i[" << to_rstring(i) << 
-                              "]=" << to_flt(sinh_i) << " coshh_i[" << to_rstring(i) << "]=" << to_flt(cosh_i) << 
-                              " x_reduced=" << to_flt(x) << "\n";
 }
 
 template class Cordic<int64_t, double>;
