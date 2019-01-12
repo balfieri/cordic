@@ -2812,17 +2812,15 @@ T Cordic<T,FLT>::exp( const T& _x, bool do_reduce, bool is_final ) const
 { 
     //-----------------------------------------------------
     // Identities:
-    //     Assume: x = i + f  (integer plus fraction)
-    //     exp(i+f) = exp(i) * exp(f)
-    //     pow(b,x) = log(b) * exp(x) = [log(b)*exp(i)] * exp(f)
-    //     exp(f)   = cosh(f) + sinh(f)
+    //     pow(b,x)  = exp2(log2(b) * x)
+    //     exp2(i+f) = exp2(i) * exp2(f)     i = integer part, f = fractional remainder
+    //               = exp2(f) << i    
+    //               = exp(log(2)*f) << i
     //
     // Strategy:
-    //     Find i such that x-i is in -1 .. 1.
-    //     Because x can be negative, so can i.
-    //     exp(i) comes from a pre-built LUT kept in FLT
-    //     so we can multiply it by log(e)==1 before converting to type T and
-    //     then multiplying by exp(f) here.
+    //     For exp2(i+f), choose i such at f is in -1..1.  Note that i can be negative.
+    //     Multiply f by log(2) and return that as the returned x.
+    //     And return i as the lshift.
     //-----------------------------------------------------
     if ( is_final ) _log_1( exp, _x );
     T x = _x;
@@ -3684,7 +3682,7 @@ inline void Cordic<T,FLT>::reduce_exp_arg( FLT b, T& x, int32_t& i ) const
     T log2_b = to_t( std::log2( b ) );
     x   = mulc( x, log2_b, true, false );
     i   = x >> (_frac_w + _guard_w);  // can be + or -
-    T f = x - (i << (_frac_w + _guard_w));
+    T f = x & ((1 << (_frac_w + _guard_w))-1);
     if ( debug ) std::cout << "reduce_exp_arg: log2(b)*x=" << to_flt(x) << " i=" << i << " f=" << to_flt(f) << "\n";
     x   = mulc( f, _log2, true, false );
     if ( debug ) std::cout << "reduce_exp_arg: b=" << b << " x_orig=" << to_flt(x_orig) << 
