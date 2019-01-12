@@ -43,6 +43,7 @@ static inline FLT tolerance( uint32_t frac_w, FLT expected, FLT tol, int32_t& to
 
 #define do_op1( str, c_fn, exp_fn, fltx, do_reduce )                    \
 {                                                                       \
+    std::cout << "\n" << #str << "\n";			                \
     freal tx   = fltx;			                                \
     freal tz   = std::c_fn( tx );		                        \
     FLT   fltz = tz;	                                                \
@@ -67,6 +68,7 @@ static inline FLT tolerance( uint32_t frac_w, FLT expected, FLT tol, int32_t& to
 
 #define do_op12( str, c_fn, exp_fn, fltx, do_reduce )                   \
 {                                                                       \
+    std::cout << "\n" << #str << "\n";			                \
     freal tx  = fltx;			                                \
     freal tz1, tz2;                                                     \
     std::c_fn( tx, tz1, tz2 );		                                \
@@ -105,6 +107,7 @@ static inline FLT tolerance( uint32_t frac_w, FLT expected, FLT tol, int32_t& to
 
 #define do_op2( str, c_fn, exp_fn, fltx, flty, do_reduce )              \
 {                                                                       \
+    std::cout << "\n" << #str << "\n";			                \
     freal tx  = fltx;			                                \
     freal ty  = flty;			                                \
     freal tz  = std::c_fn( tx, ty );	                                \
@@ -131,6 +134,7 @@ static inline FLT tolerance( uint32_t frac_w, FLT expected, FLT tol, int32_t& to
 
 #define do_op22( str, c_fn, exp_fn, fltx, flty, do_reduce )             \
 {                                                                       \
+    std::cout << "\n" << #str << "\n";			                \
     freal tx  = fltx;			                                \
     freal ty  = flty;			                                \
     freal tz1, tz2;                                                     \
@@ -171,6 +175,7 @@ static inline FLT tolerance( uint32_t frac_w, FLT expected, FLT tol, int32_t& to
 
 #define do_op3( str, c_fn, exp_fn, fltx, flty, fltw, do_reduce )        \
 {                                                                       \
+    std::cout << "\n" << #str << "\n";			                \
     freal tx   = fltx;			                                \
     freal ty   = flty;			                                \
     freal tw   = fltw;			                                \
