@@ -3798,16 +3798,20 @@ inline void Cordic<T,FLT>::reduce_sinhcosh_arg( T& x, T& sinh_i, T& cosh_i, bool
 {
     //-----------------------------------------------------
     // Identities:
-    //     sinh(-x)         = -sinh(x)
-    //     sinh(x+y)        = sinh(x)*cosh(y) + cosh(x)*sinh(y)    
-    //     cosh(-x)         = cosh(x)
-    //     cosh(x+y)        = cosh(x)*cosh(y) - sinh(x)*sinh(y)     
+    //     sinh(x+y)    = sinh(x)*cosh(y) + cosh(x)*sinh(y)             
+    //     let x=2^i and y=fraction f
+    //     sinh(2^i+f)  = sinh(2^i)*cosh(f) + cosh(2^i)*sinh(f)
+    //
+    //     sinh(2^i)    = (e^(2^i) - e^(-2^i))/2
+    //                  = (2^(log2(e) << i) - 2^(-log2(e) << i))/2      let j = integer part of (log2(e) << i), f = fractional part
+    //                  = ((2^f << j) - (2^(-f) >> j))/2
+    //                  = (exp(log(2)*f) << (j-1)) - (1/exp(log(2)*f) >> (j+1))   
+    //                    note: exp(log(2)*f) can use CORDIC sinh(log(2)*f) + cosh(log(2)*f)
+    //     cosh(2^i)    = (e^(2^i) + e^(-2^i))/2
+    //                  = [similar to above]
+    //                  = (exp(log(2)*f) << (j-1)) + (1/exp(log(2)*f) >> (j+1))   
+    //                    note: exp(log(2)*f) can use CORDIC sinh(log(2)*f) + cosh(log(2)*f)
     // Strategy:
-    //     split abs(x) into i + f
-    //     use LUT for sinh(i) and cosh(i)
-    //     run cordic on f
-    //     do the multiplications
-    //     fix sign of sih
     //-----------------------------------------------------
     T x_orig = x;
     sign = x < 0;
