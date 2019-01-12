@@ -374,22 +374,26 @@ public:
     // sinh(-x)         = -sinh(x)
     // sinh(x)          = (e^x - e^-x)/2
     //                  = (e^x - 1/e^x)/2
-    // sinh(x)          = expm1(x) * (expm1(x)+2)/(expm1(x)+1) / 2
-    // sinh(x+y)        = sinh(x)*cosh(y) + cosh(x)*sinh(y)             let x=2^i and y=fraction, then sinh(y) and cosh(y) can use CORDIC
+    // sinh(x+y)        = sinh(x)*cosh(y) + cosh(x)*sinh(y)             
+    // sinh(2^i + f)    = sinh(2^i)*cosh(f) + cosh(2^i)*sinh(f)
     // sinh(2^i)        = (e^(2^i) - e^(-2^i))/2
-    //                  = (2^(log2(e) << i) - 2^(-log2(e) << i))/2      let j = integer part of (log2(e) << i), f = fractional part
-    //                  = ((2^f << j) - (2^(-f) >> j))/2
-    //                  = (exp(log(2)*f) << (j-1)) - (1/exp(log(2)*f) >> (j+1))   
-    //                    note: exp(log(2)*f) can use CORDIC sinh(log(2)*f) + cosh(log(2)*f)
+    //                  = (2^(log2(e) << i) - 2^(-log2(e) << i))/2      let j = integer part of (log2(e) << i), g = fractional part
+    //                  = ((2^g << j) - (2^(-g) >> j))/2
+    //                  = (exp(log(2)*g) << (j-1)) - (1/exp(log(2)*g) >> (j+1))   
+    //                    note: exp(log(2)*g) == hyperbolic_rotation()  
+    //                    note: this whole method doesn't look more efficient than just using (e^x - 1/e^x)/2
     //
     // cosh(-x)         = cosh(x)
     // cosh(x)          = (e^x + e^-x)/2
     //                  = (e^x + 1/e^x)/2
     // cosh(x+y)        = cosh(x)*cosh(y) + sinh(x)*sinh(y)
+    // cosh(2^i + f)    = cosh(2^i)*cosh(f) + sinh(2^i)*sinh(f)
     // cosh(2^i)        = (e^(2^i) + e^(-2^i))/2
-    //                  = [similar to above]
-    //                  = (exp(log(2)*f) << (j-1)) + (1/exp(log(2)*f) >> (j+1))   
-    //                    note: exp(log(2)*f) can use CORDIC sinh(log(2)*f) + cosh(log(2)*f)
+    //                  = (2^(log2(e) << i) + 2^(-log2(e) << i))/2      let j = integer part of (log2(e) << i), g = fractional part
+    //                  = ((2^g << j) + (2^(-g) >> j))/2
+    //                  = (exp(log(2)*g) << (j-1)) + (1/exp(log(2)*g) >> (j+1))   
+    //                    note: exp(log(2)*g) == hyperbolic_rotation() 
+    //                    note: this whole method doesn't look more efficient than just using (e^x + 1/e^x)/2
     //
     // tanh(-x)         = -tanh(x)
     // tanh(x)          = (e^x - e^-x) / (e^x + e^-x)
@@ -2801,28 +2805,26 @@ T Cordic<T,FLT>::exp( const T& _x, bool do_reduce, bool is_final, FLT b ) const
 { 
     //-----------------------------------------------------
     // Identities:
+    //     exp(x)    = sinh(x) + cosh(x)
     //     pow(b,x)  = exp2(log2(b) * x)
     //     exp2(i+f) = exp2(i) * exp2(f)     i = integer part, f = fractional remainder
     //               = exp2(f) << i    
     //               = exp(log(2)*f) << i
     //
     // Strategy:
-    //     For exp2(i+f), choose i such at f is in -1..1.  Note that i can be negative.
-    //     Multiply f by log(2) and return that as the returned x.
-    //     And return i as the lshift.
+    //     Call reduce_exp_arg() to get i and x=log(b)*f.
+    //     Call hyperbolic_rotation() to get sinh(x) + cosh(x) in one shot.
     //-----------------------------------------------------
     if ( is_final ) _log_1( exp, _x );
     T x = _x;
-    int32_t lshift;
-    if ( do_reduce ) reduce_exp_arg( b, x, lshift ); 
+    int32_t i;
+    if ( do_reduce ) reduce_exp_arg( b, x, i ); 
 
-    // hyperbolic_rotation() can compute cosh(f) + sinh(f) in one shot
     T xx, yy, zz;
     hyperbolic_rotation( _hyperbolic_rotation_one_over_gain, _hyperbolic_rotation_one_over_gain, x, xx, yy, zz );
     if ( do_reduce ) {
-        if ( debug ) std::cout << "exp mid: b=" << b << " x_orig=" << to_flt(_x) << 
-                                  " lshift << " << lshift << " exp(log(2)*f)=" << to_flt(xx) << "\n";
-        xx = scalbn( xx, lshift, false );
+        if ( debug ) std::cout << "exp mid: b=" << b << " x_orig=" << to_flt(_x) << " i=" << i << " exp(log(2)*f)=" << to_flt(xx) << "\n";
+        xx = scalbn( xx, i, false );
     }
     if ( is_final ) xx = rfrac( xx, false );
     if ( debug ) std::cout << "exp: x_orig=" << to_flt(_x) << " reduced_x=" << to_flt(x) << " exp=" << to_flt(xx) << "\n";
@@ -3801,7 +3803,6 @@ inline void Cordic<T,FLT>::reduce_sinhcosh_arg( T& x, T& sinh_i, T& cosh_i, bool
     //     sinh(x+y)    = sinh(x)*cosh(y) + cosh(x)*sinh(y)             
     //     let x=2^i and y=fraction f
     //     sinh(2^i+f)  = sinh(2^i)*cosh(f) + cosh(2^i)*sinh(f)
-    //
     //     sinh(2^i)    = (e^(2^i) - e^(-2^i))/2
     //                  = (2^(log2(e) << i) - 2^(-log2(e) << i))/2      let j = integer part of (log2(e) << i), f = fractional part
     //                  = ((2^f << j) - (2^(-f) >> j))/2
