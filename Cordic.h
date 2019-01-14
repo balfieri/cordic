@@ -305,6 +305,7 @@ public:
     // log(1+x)         = 2*atanh(x/(x+2))                      log1p()
     //
     // sin(-x)          = -sin(x)
+    // sin(x)           = cos(x - pi/2)
     // sin(x)           = sin(i*pi/2 + f)                       where i is an integer and |f| <= pi/4
     // sin(x+y)         = sin(x)*cos(y) + cos(x)*sin(y)         
     // sin(x-y)         = sin(x)*cos(y) - cos(x)*sin(y)
@@ -323,6 +324,7 @@ public:
     // sin(x)*sin(y)    = (cos(x-y) - cos(x+y)) / 2
     //
     // cos(-x)          = cos(x)
+    // cos(x)           = sin(x + pi/2)
     // cos(x+y)         = cos(x)*cos(y) - sin(x)*sin(y)
     // cos(x+pi/4)      = sqrt(2)/2 * (cos(x) - sin(x))
     // cos(i*pi/2 + f)  = +/-cos(f) or +/-sin(f)                i=integer, f=frac
