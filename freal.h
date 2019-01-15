@@ -73,6 +73,7 @@ public:
     freal( const freal& other );                        // copy type and value of other
     freal( const freal& other, FLT f );                 // copy type of other, but value of f
     freal( Cordic<T,FLT> * cordic, FLT f );             // use type from cordic, but value of f; fractional lsb is never rounded
+    static void logger_set( Logger<T,FLT> * logger );   // record logger for any implicit cordic
 
     static freal make_fixed( uint32_t int_w, uint32_t frac_w, FLT init_f=FLT(0) );  // make a signed fixed-point    number 
     static freal make_float( uint32_t exp_w, uint32_t frac_w, FLT init_f=FLT(0) );  // make a signed floating-point number
@@ -586,6 +587,12 @@ bool std::numeric_limits<freal>::is_specialized = false;
 Cordic<T,FLT> * freal::implicit_to = nullptr;  // disallow
 
 bool                  freal::implicit_from = false;  // disallow
+
+void freal::logger_set( Logger<T,FLT> * logger )
+{
+    Cordic<T,FLT>::logger_set( logger );
+    if ( implicit_to != nullptr ) implicit_to->log_constructed();
+}
 
 //-----------------------------------------------------
 // Constructors

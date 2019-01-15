@@ -73,6 +73,8 @@ public:
             uint32_t guard_w=-1,                // number of guard bits used for CORDIC proper (-1 == default == log2(frac_w))
             uint32_t n=-1 );                    // number of iterations used for CORDIC proper (-1 == default == frac_w)
     ~Cordic();
+    
+    void log_constructed( void );               // for when Cordic constructed before logging enabled
 
     //-----------------------------------------------------
     // Construction
@@ -1073,6 +1075,12 @@ Cordic<T,FLT>::~Cordic( void )
 
     delete _circular_atan;
     delete _hyperbolic_atanh;
+}
+
+template< typename T, typename FLT >
+void Cordic<T,FLT>::log_constructed( void )
+{
+    if ( logger != nullptr ) logger->cordic_constructed( this, _int_w|_exp_w, _frac_w, _is_float, _guard_w, _n );
 }
 
 //-----------------------------------------------------

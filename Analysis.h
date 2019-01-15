@@ -43,6 +43,10 @@ public:
     Analysis( std::string base_name = "log" );     
     ~Analysis();
 
+    // Call this if you want this to be thread-safe
+    //
+    virtual void tid_set( uint32_t t );
+
     // Logger Overrides
     //
     virtual void cordic_constructed( const void * cordic, uint32_t int_exp_w, uint32_t frac_w, 
@@ -72,6 +76,7 @@ public:
     virtual void inc_op_cnt( OP op, uint32_t by=1 );
 
     virtual void parse( void );
+    virtual void clear_stats( void );
     virtual void print_stats( std::string basename="", double scale_factor=1.0, const std::vector<std::string>& ignore_funcs=std::vector<std::string>() ) const;
 
 private:
@@ -146,6 +151,8 @@ private:
         op2f, 
     };
 
+    std::mutex                                  lock;                   // to make this thread-safe
+
     static constexpr uint32_t KIND_cnt = 12;
 
     std::map<std::string, KIND>                 kinds;
@@ -155,13 +162,14 @@ private:
     std::map<uint64_t, CordicInfo>              cordics;
     std::map<uint64_t, ValInfo>                 vals;
 
+    static constexpr uint32_t                   THREAD_CNT_MAX = 64;
     static constexpr uint32_t                   STACK_CNT_MAX = 1024;
-    FrameInfo                                   stack[STACK_CNT_MAX];   // func call stack
-    uint32_t                                    stack_cnt;              // func call stack depth
+    FrameInfo                                   stack[THREAD_CNT_MAX][STACK_CNT_MAX];   // func call stack
+    uint32_t                                    stack_cnt[THREAD_CNT_MAX];              // func call stack depth
 
     static constexpr uint32_t                   VAL_STACK_CNT_MAX = 2;
-    ValInfo                                     val_stack[VAL_STACK_CNT_MAX];
-    uint32_t                                    val_stack_cnt;
+    ValInfo                                     val_stack[THREAD_CNT_MAX][VAL_STACK_CNT_MAX];
+    uint32_t                                    val_stack_cnt[THREAD_CNT_MAX];
 
     void                stack_push( const FrameInfo& info );
     FrameInfo&          stack_top( void );
@@ -171,6 +179,7 @@ private:
     ValInfo             val_stack_pop( void );
 
     void                calc_int_w_used( ValInfo& val );
+    void                inc_op_cnt_nolock( OP op, uint32_t by=1 );
     void                inc_opnd_cnt( OP op, const ValInfo& val, uint32_t by=1 );
     void                inc_all_opnd_cnt( OP op, bool all_are_const, uint32_t max_int_w_used, uint32_t by=1 );
 
@@ -243,11 +252,25 @@ Analysis<T,FLT>::Analysis( std::string _base_name ) : Logger<T,FLT>( Cordic<T,FL
     kinds["op3"]                = KIND::op3;
     kinds["op4"]                = KIND::op4;
 
+    for( uint32_t t = 0; t < THREAD_CNT_MAX; t++ )
+    {
+        stack_cnt[t]     = 0;
+        val_stack_cnt[t] = 0;
+    }
 }
 
 template< typename T, typename FLT >
 Analysis<T,FLT>::~Analysis()
 {
+}
+
+static thread_local uint32_t tid = 0;
+
+template< typename T, typename FLT >
+void Analysis<T,FLT>::tid_set( uint32_t t )
+{
+    cassert( t < THREAD_CNT_MAX, "tid_set: tid must be < THREAD_CNT_MAX" );
+    tid = t;
 }
 
 //-----------------------------------------------------
@@ -257,6 +280,7 @@ template< typename T, typename FLT >
 void Analysis<T,FLT>::cordic_constructed( const void * cordic_ptr, uint32_t int_exp_w, uint32_t frac_w, 
                                           bool is_float, uint32_t guard_w, uint32_t n )
 {
+    std::lock_guard<std::mutex> guard(lock);
     CordicInfo info;
     uint64_t cordic = uint64_t(cordic_ptr); 
     info.is_alive   = true;
@@ -274,6 +298,7 @@ void Analysis<T,FLT>::cordic_constructed( const void * cordic_ptr, uint32_t int_
 template< typename T, typename FLT >
 void Analysis<T,FLT>::cordic_destructed( const void * cordic_ptr )
 {
+    std::lock_guard<std::mutex> guard(lock);
     uint64_t cordic = uint64_t(cordic_ptr); 
     auto it = cordics.find( cordic );
     cassert( it != cordics.end() && it->second.is_alive, "Cordic destructed before being constructed" );
@@ -283,6 +308,7 @@ void Analysis<T,FLT>::cordic_destructed( const void * cordic_ptr )
 template< typename T, typename FLT >
 void Analysis<T,FLT>::enter( const char * _name )
 {
+    std::lock_guard<std::mutex> guard(lock);
     std::string name = _name;
     auto it = funcs.find( name );
     if ( it == funcs.end() ) {
@@ -313,6 +339,7 @@ void Analysis<T,FLT>::enter( const char * _name )
 template< typename T, typename FLT >
 void Analysis<T,FLT>::leave( const char * _name )
 {
+    std::lock_guard<std::mutex> guard(lock);
     std::string name = _name;
     auto it = funcs.find( name );
     cassert( it != funcs.end(), "leave should have found function " + name );
@@ -325,6 +352,7 @@ void Analysis<T,FLT>::leave( const char * _name )
 template< typename T, typename FLT >
 void Analysis<T,FLT>::constructed( const T * v, const void * cordic_ptr )
 {
+    std::lock_guard<std::mutex> guard(lock);
     uint64_t val    = reinterpret_cast<uint64_t>( v );
     uint64_t cordic = reinterpret_cast<uint64_t>( cordic_ptr );
     ValInfo info;
@@ -358,6 +386,7 @@ void Analysis<T,FLT>::constructed( const T * v, const void * cordic_ptr )
 template< typename T, typename FLT >
 void Analysis<T,FLT>::destructed(  const T * v, const void * cordic_ptr )
 {
+    std::lock_guard<std::mutex> guard(lock);
     uint64_t val    = reinterpret_cast<uint64_t>( v );
     uint64_t cordic = reinterpret_cast<uint64_t>( cordic_ptr );
     auto it = vals.find( val );
@@ -368,8 +397,9 @@ void Analysis<T,FLT>::destructed(  const T * v, const void * cordic_ptr )
 template< typename T, typename FLT >
 void Analysis<T,FLT>::op( uint16_t _op, uint32_t opnd_cnt, const T * opnd[] )
 {
+    std::lock_guard<std::mutex> guard(lock);
     OP op = OP(_op);
-    inc_op_cnt( op );
+    inc_op_cnt_nolock( op );
     uint32_t max_int_w_used = 0;
     bool     all_are_const = true;
     for( uint32_t i = 0; i < opnd_cnt; i++ )
@@ -421,19 +451,21 @@ inline void Analysis<T,FLT>::op1( uint16_t _op, const T& opnd1 )
 template< typename T, typename FLT >
 inline void Analysis<T,FLT>::op1( uint16_t _op, bool opnd1 )
 {
+    std::lock_guard<std::mutex> guard(lock);
     (void)opnd1;
     OP op = OP(_op);
     cassert( op == OP::pop_bool, "op1b allowed only for pop_bool right now" );
-    inc_op_cnt( op );
+    inc_op_cnt_nolock( op );
     (void)val_stack_pop();
 }
 
 template< typename T, typename FLT >
 inline void Analysis<T,FLT>::op1( uint16_t _op, const FLT& opnd1 )
 {
+    std::lock_guard<std::mutex> guard(lock);
     OP op = OP(_op);
     cassert( op == OP::push_constant, "op1f allowed only for make_constant" );
-    inc_op_cnt( op );
+    inc_op_cnt_nolock( op );
     ValInfo val;
     val.is_alive    = true;
     val.is_assigned = true;
@@ -471,9 +503,10 @@ inline void Analysis<T,FLT>::calc_int_w_used( ValInfo& val )
 template< typename T, typename FLT >
 inline void Analysis<T,FLT>::op2( uint16_t _op, const T * opnd1, const T& opnd2 )
 {
+    std::lock_guard<std::mutex> guard(lock);
     OP op = OP(_op);
     cassert( op == OP::scalbn || op == OP::pop_value, "op2i allowed only for scalbn/pop_value" );
-    inc_op_cnt( op );
+    inc_op_cnt_nolock( op );
     auto it = vals.find( reinterpret_cast<uint64_t>( opnd1 ) );
     cassert( it != vals.end() && it->second.is_alive, "opnd[0] does not exist" );
     switch( op )
@@ -506,7 +539,8 @@ inline void Analysis<T,FLT>::op2( uint16_t _op, const T * opnd1, const T& opnd2 
 template< typename T, typename FLT >
 inline void Analysis<T,FLT>::op2( uint16_t op, const T * opnd1, const FLT& opnd2 ) 
 {
-    inc_op_cnt( OP(op) );
+    std::lock_guard<std::mutex> guard(lock);
+    inc_op_cnt_nolock( OP(op) );
     auto it = vals.find( reinterpret_cast<uint64_t>( opnd1 ) );
     cassert( it != vals.end() && it->second.is_alive, "opnd1 does not exist" );
     cassert( it->second.is_assigned,                  "opnd1 is used before being assigned" );
@@ -626,30 +660,37 @@ inline FLT Analysis<T,FLT>::parse_flt( char *& c )
 
 template< typename T, typename FLT > inline void Analysis<T,FLT>::stack_push( const FrameInfo& info )
 {
-    cassert( stack_cnt < STACK_CNT_MAX, "depth of call stack exceeded" );
-    stack[stack_cnt++] = info;
+    cassert( stack_cnt[tid] < STACK_CNT_MAX, "depth of call stack exceeded" );
+    stack[tid][stack_cnt[tid]++] = info;
 }
 
 template< typename T, typename FLT >
 inline typename Analysis<T,FLT>::FrameInfo& Analysis<T,FLT>::stack_top( void )
 {
-    cassert( stack_cnt > 0, "can't get top of an empty call stack" );
-    return stack[stack_cnt-1];
+    cassert( stack_cnt[tid] > 0, "can't get top of an empty call stack" );
+    return stack[tid][stack_cnt[tid]-1];
 }
 
 template< typename T, typename FLT >
 inline void Analysis<T,FLT>::stack_pop( void )
 {
-    cassert( stack_cnt > 0, "can't pop an empty call stack" );
-    stack_cnt--;
+    cassert( stack_cnt[tid] > 0, "can't pop an empty call stack" );
+    stack_cnt[tid]--;
+}
+
+template< typename T, typename FLT >
+inline void Analysis<T,FLT>::inc_op_cnt_nolock( OP op, uint32_t by )
+{
+    FrameInfo& frame = stack_top();
+    FuncInfo& func = funcs[frame.func_name];
+    func.op_cnt[uint32_t(op)] += by;
 }
 
 template< typename T, typename FLT >
 inline void Analysis<T,FLT>::inc_op_cnt( OP op, uint32_t by )
 {
-    FrameInfo& frame = stack_top();
-    FuncInfo& func = funcs[frame.func_name];
-    func.op_cnt[uint32_t(op)] += by;
+    std::lock_guard<std::mutex> guard(lock);
+    inc_op_cnt_nolock( op, by );
 }
 
 template< typename T, typename FLT >
@@ -679,15 +720,15 @@ inline void Analysis<T,FLT>::inc_all_opnd_cnt( OP op, bool all_are_const, uint32
 template< typename T, typename FLT > 
 inline void Analysis<T,FLT>::val_stack_push( const ValInfo& info )
 {
-    cassert( val_stack_cnt < VAL_STACK_CNT_MAX, "depth of val_stack exceeded" );
-    val_stack[val_stack_cnt++] = info;
+    cassert( val_stack_cnt[tid] < VAL_STACK_CNT_MAX, "depth of val_stack exceeded" );
+    val_stack[tid][val_stack_cnt[tid]++] = info;
 }
 
 template< typename T, typename FLT >
 inline typename Analysis<T,FLT>::ValInfo Analysis<T,FLT>::val_stack_pop( void )
 {
-    cassert( val_stack_cnt > 0, "can't pop an empty val_stack" );
-    return val_stack[--val_stack_cnt];
+    cassert( val_stack_cnt[tid] > 0, "can't pop an empty val_stack" );
+    return val_stack[tid][--val_stack_cnt[tid]];
 }
 
 template< typename T, typename FLT >
@@ -696,8 +737,11 @@ void Analysis<T,FLT>::parse( void )
     // assume parsing text at this point
     std::string line;
     char cs[1024];
-    stack_cnt = 0;
-    val_stack_cnt = 0;
+    for( uint32_t t = 0; t < THREAD_CNT_MAX; t++ )
+    {
+        stack_cnt[t] = 0;
+        val_stack_cnt[t] = 0;
+    }
     while( std::getline( *in, line ) )
     {
         if ( debug ) std::cout << line << "\n";
@@ -823,6 +867,24 @@ void Analysis<T,FLT>::parse( void )
             {
                 continue;
             }
+        }
+    }
+}
+
+template< typename T, typename FLT >
+void Analysis<T,FLT>::clear_stats( void )
+{
+    //--------------------------------------------------------
+    // Print only the non-zero counts from non-ignored functions.
+    //--------------------------------------------------------
+    for( auto nit = func_names.begin(); nit != func_names.end(); nit++ )
+    {
+        auto it = funcs.find( *nit );
+        FuncInfo& func = it->second;
+        func.call_cnt = 0;
+        for( uint32_t i = 0; i < OP_cnt; i++ )
+        {
+            func.op_cnt[i] = 0;
         }
     }
 }
