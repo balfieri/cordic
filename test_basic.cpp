@@ -22,6 +22,7 @@
 //
 #include "freal.h"                                      // not used yet, just here to test build
 #include "Analysis.h"
+#include "AnalysisLight.h"
 #include "mpint.h"
 
 #include "test_helpers.h"                               // must be included after FLT is defined
