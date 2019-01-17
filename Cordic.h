@@ -2478,26 +2478,17 @@ template< typename T, typename FLT >
 T Cordic<T,FLT>::scalbn( const T& x, int ls, bool is_final ) const
 {
     if ( is_final ) _log_2i( scalbn, x, T(ls) );
-    cassert( x >= 0, "lshift x should be non-negative" );
     if ( ls > 0 ) {
         //-----------------------------------------------------
         // For now, crap out if we overflow.
         // At some point, we'll have options to saturate or set a flag in the container.
         //-----------------------------------------------------
-        // TODO: float case
-        int32_t ls_max = _int_w;
-        uint32_t i = x >> (_frac_w + _guard_w);
-        cassert( i <= _maxint, "lshift x integer part should be <= _maxint"  );
-        while( i != 0 ) 
-        {
-            ls_max--;
-            i >>= 1;
-        }
-        if ( ls > ls_max ) {
-            std::cout << "lshift x << " << ls << " will overflow x\n";
-            exit( 1 );
-        }
-        return x << ls;   // don't round if already not rounded
+        T sign_mask = (x < 0) ? (T(-1) << (_w - 1)) : 0;
+        cassert( (x & sign_mask) == sign_mask, "scalbn() x overflowed even before shift" );
+        bool x_overflow = (x & sign_mask) != sign_mask;
+        T r = x << ls;
+        cassert( (r & sign_mask) == sign_mask, "scalbn() shifted x overflowed" );
+        return r;
     } else if ( ls < 0 ) {
         //-----------------------------------------------------
         // Keep track of the sticky bit even if not rounding.

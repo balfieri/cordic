@@ -106,11 +106,12 @@ public:
     freal( uint32_t i );
     freal( int32_t i );
 
-    operator FLT( void );
-    operator uint64_t( void );
-    operator int64_t( void );
-    operator uint32_t( void );
-    operator int32_t( void );
+    operator FLT( void ) const;
+    operator float( void ) const;
+    operator uint64_t( void ) const;
+    operator int64_t( void ) const;
+    operator uint32_t( void ) const;
+    operator int32_t( void ) const;
 
     //-----------------------------------------------------
     // Constants (freal ones are never rounded, so call rfrac() if you want them rounded)
@@ -750,31 +751,37 @@ inline freal::freal( int32_t i )
     *this = freal( implicit_to, FLT(i) );
 }
 
-inline freal::operator FLT( void )
+inline freal::operator FLT( void ) const
 { 
     cassert( implicit_from, "implicit_from_set( true ) must be called before relying on any implicit from freal<> to FLT" );
     return to_flt();
 }
 
-inline freal::operator uint64_t( void )
+inline freal::operator float( void ) const
+{ 
+    cassert( implicit_from, "implicit_from_set( true ) must be called before relying on any implicit from freal<> to FLT" );
+    return to_flt();
+}
+
+inline freal::operator uint64_t( void ) const
 { 
     cassert( implicit_from, "implicit_from_set( true ) must be called before relying on any implicit from freal<> to uint64_t" );
     return uint64_t( to_flt() );
 }
 
-inline freal::operator int64_t( void )
+inline freal::operator int64_t( void ) const
 { 
     cassert( implicit_from, "implicit_from_set( true ) must be called before relying on any implicit from freal<> to int64_t" );
     return int64_t( to_flt() );
 }
 
-inline freal::operator uint32_t( void )
+inline freal::operator uint32_t( void ) const
 { 
     cassert( implicit_from, "implicit_from_set( true ) must be called before relying on any implicit from freal<> to uint32_t" );
     return uint32_t( to_flt() );
 }
 
-inline freal::operator int32_t( void )
+inline freal::operator int32_t( void ) const
 { 
     cassert( implicit_from, "implicit_from_set( true ) must be called before relying on any implicit from freal<> to int32_t" );
     return int32_t( to_flt() );
