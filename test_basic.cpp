@@ -104,14 +104,15 @@ int main( int argc, const char * argv[] )
         {
             case 0:
             case 1:
-            {
                 x  = 0.681807431807431031 + 3*i;
                 xs = 0.681807431807431031 + 1.23*i;
                 y  = 0.810431798013170871 + 3*i;
                 w  = 0.103301038084310970 + 3*i;
                 b  = M_E * 1.1;
-            }
-            break;
+                break;
+
+            default:
+                break;
         }
 
         //                          freal   reference

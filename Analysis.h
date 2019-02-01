@@ -32,6 +32,7 @@
 #include <fstream>
 #include <vector>
 #include <map>
+#include <mutex>
 
 #include "Cordic.h"
 #include "Logger.h"

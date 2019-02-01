@@ -299,7 +299,7 @@ void AnalysisLight<T,FLT>::print_stats( std::string basename, double scale_facto
         if ( cnt == 0 ) continue;
 
         uint64_t scaled_cnt = double(cnt) * scale_factor + 0.5;
-        fprintf( out, "    %-40s:  %10lld   %10lld\n", Cordic<T,FLT>::op_to_str( i ).c_str(), cnt, scaled_cnt );
+        fprintf( out, "    %-40s:  %10llu   %10llu\n", Cordic<T,FLT>::op_to_str( i ).c_str(), cnt, scaled_cnt );
         csv << "\"" << Cordic<T,FLT>::op_to_str( i ) << "\", " << cnt << ", " << scaled_cnt << "\n";
     }
 

@@ -358,12 +358,6 @@ static inline std::ostream& operator << ( std::ostream &out, const freal& a )
     return out;     
 }
 
-static inline int fesetround( int round ) 
-{ return freal::implicit_to_get()->fesetround( round ); }
-
-static inline int fegetround( void ) 
-{ return freal::implicit_to_get()->fegetround(); }
-
 // use macros to avoid redundancy
 //
 #define _freal freal

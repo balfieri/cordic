@@ -25,6 +25,7 @@
 #include <cfenv>
 #include <iostream>
 #include <iomanip>
+#include <cstring>
 
 #include "Logger.h"
 
