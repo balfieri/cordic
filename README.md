@@ -26,7 +26,7 @@ mathematics from 1624 and 1771.
 CORDIC is seven years older than the author of this repository and a year older than the ubiquitous
 carry lookahead adder.  
 CORDIC was first used in the navigation system of the B-58 bomber, which had an early digital computer
-that did not have a multiply instruction.  Prior to that, navigation systems were done using
+with no multiply instruction.  Prior to that, navigation systems were done using
 analog circuitry.  
 </p>
 
