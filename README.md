@@ -165,7 +165,7 @@ and all the associated complex math functions will just work:
 #include &lt;complex&gt;
 #include "freal.h"
 typedef freal real;
-typedef complex&lt;real&gt; creal;
+typedef complex&lt;real&gt; cmplx;
 </pre>
 
 <h1>Higher Dimensions</h1>
