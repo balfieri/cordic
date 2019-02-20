@@ -17,13 +17,22 @@ these complicated math functions by using a simple sequence of shifts and adds. 
 be reduced to a small range of values, typically -1 .. 1, or -PI/4 .. PI/4.
 </p>
 
+<h1>History</h1>
+
 <p>
-CORDIC was invented in 1956 by Jack Volder using mathematics from 1624 and 1771.  CORDIC, which stands for for 
-<b>CO</b>ordinate <b>R</b>otation <b>DI</b>gital <b>C</b>omputer
-was first used in the navigation system of the B-58 bomber, which used an early digital computer
-that did even have a multiply instruction.  Prior to that, navigation systems were done using
-analog circuitry.  So CORDIC is over 60 years old and all been done before.  The hope of
-this library is to create a small, yet complete, tutorial package.
+CORDIC, which stands for for
+<b>CO</b>ordinate <b>R</b>otation <b>DI</b>gital <b>C</b>omputer, was invented in 1956 by Jack Volder using 
+mathematics from 1624 and 1771.  
+CORDIC is seven years older than the author of this repository and a year older than the ubiquitous
+carry lookahead adder.  
+CORDIC was first used in the navigation system of the B-58 bomber, which had an early digital computer
+that did not have a multiply instruction.  Prior to that, navigation systems were done using
+analog circuitry.  
+</p>
+
+<p>
+The hope of this library is to create a small, yet complete, tutorial package for those
+wishing to learn this timeless computer math algorithm.
 </p>
 
 <h1>Fixed-Point</h1>
