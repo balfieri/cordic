@@ -62,15 +62,14 @@ Format         value            binary (spaces added for readability)
 </pre>
 
 <p>
-This code automatically performs appropriate argument range reductions and post-CORDIC adjustments, 
-but it can be turned off if you know that the inputs to the math functions are in the proper range already.
+This code automatically performs appropriate argument range reductions and post-CORDIC adjustments.
 </p>
 
 <p>
 The CORDIC routines perform frac_w iterations in order to arrive at frac_w precision.  You may, however,
 reduce the number of iterations by passing a different value for n to the constructor.  The numeric encoding
-will be the same, but the result will be less precise.  Again, two different Cordic() instances with idential parameters
-except for do_reduce and n can be used on an operation-by-operation basis.
+will be the same, but the result will be less precise.  Again, different Cordic() instances with idential parameters
+except for n can be used on an operation-by-operation basis.
 </p>
 
 <h1>Floating-Point</h1>
@@ -93,15 +92,6 @@ Fixed-point numbers naturally support denorms (i.e., they are all denorms), but 
 outside their allowed range.  The library needs
 an option to mark a number as +Infinity, -Infinity, or NaN.  An additional needed option is
 to gracefully flush large numbers to +/- "max value" and NaNs to zero.
-</p>
-
-<p>
-Also not handled are the different IEEE rounding modes: round-to-nearest (current behavior 
-and what one normally expects), 
-round-toward-zero, round-toward-plus-infinity, round-toward-minus-infinity.  There's another one worth doing
-called round-away-from-zero (aka round-toward-plus-or-minus-infinity). The rounding mode would be set
-during the constructor and used for all operations.  These modes will be implemented for both fixed-point and floating-point
-encodings.
 </p>
 
 <p>
