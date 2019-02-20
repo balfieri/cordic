@@ -184,7 +184,6 @@ To build and run the basic "smoke" test, <b>test_basic.cpp</b>, on Linux, Cygwin
 doit.test
 doit.test 1                             - run with debug spew 
 doit.test 0 test_basic                  - same as doit.test with no args
-doit.test 1 test_basic -new_bugs        - run new bugs too (those not fixed yet)
 doit.test 0 test_basic -int_w 8         - change int_w from default to 8 bits
 </pre>
 
