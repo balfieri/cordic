@@ -147,10 +147,10 @@ public:
     freal four_div_pi( void );                                  // 4/PI
     freal e( void );                                            // natural exponent
     freal nan( const char * arg );                              // not-a-number (NaN)
-    freal quiet_nan( void );                                    // quiet not-a-number (NaN)
-    freal signaling_nan( void );                                // signaling not-a-number (NaN)
-    freal inf( void );                                          // +infinity
-    freal ninf( void );                                         // -infinity
+    freal quiet_NaN( void );                                    // quiet not-a-number (NaN)
+    freal signaling_NaN( void );                                // signaling not-a-number (NaN)
+    freal infinity( void );                                     // +infinity
+    freal ninfinity( void );                                    // -infinity
 
     //-----------------------------------------------------
     // Standard Operators
@@ -158,27 +158,41 @@ public:
     freal  operator -  ()                 const;                // -x
 
     freal  operator +  ( const freal& b ) const;
+    freal  operator +  ( const FLT&   b ) const;
     freal  operator -  ( const freal& b ) const;
+    freal  operator -  ( const FLT&   b ) const;
     freal  operator *  ( const freal& b ) const;
+    freal  operator *  ( const FLT&   b ) const;
     freal  operator /  ( const freal& b ) const;
+    freal  operator /  ( const FLT&   b ) const;
     freal  operator << (       int    b ) const;
     freal  operator >> (       int    b ) const;
 
     freal& operator =  ( const freal& b );
     freal& operator =  ( const FLT&   b );
     freal& operator += ( const freal& b );
+    freal& operator += ( const FLT&   b );
     freal& operator -= ( const freal& b );
+    freal& operator -= ( const FLT&   b );
     freal& operator *= ( const freal& b );
+    freal& operator *= ( const FLT&   b );
     freal& operator /= ( const freal& b );
+    freal& operator /= ( const FLT&   b );
     freal& operator <<=(       int    b );
     freal& operator >>=(       int    b );
 
     bool   operator >  ( const freal& b ) const;
+    bool   operator >  ( const FLT&   b ) const;
     bool   operator >= ( const freal& b ) const;
+    bool   operator >= ( const FLT&   b ) const;
     bool   operator <  ( const freal& b ) const;
+    bool   operator <  ( const FLT&   b ) const;
     bool   operator <= ( const freal& b ) const;
+    bool   operator <= ( const FLT&   b ) const;
     bool   operator != ( const freal& b ) const;
+    bool   operator != ( const FLT&   b ) const;
     bool   operator == ( const freal& b ) const;
+    bool   operator == ( const FLT&   b ) const;
 
     //-----------------------------------------------------
     // Well-Known Math Operators and Functions 
@@ -195,14 +209,17 @@ public:
     int    ilogb( void ) const;
     freal  logb( void ) const;
     int    fpclassify( void ) const; 
+    bool   iszero( void ) const;
     bool   isfinite( void ) const;  
     bool   isinf( void ) const;    
     bool   isnan( void ) const;   
     bool   isnormal( void ) const;
+    bool   issubnormal( void ) const;
 
     int    fesetround( int round ) const;
     int    fegetround( void ) const;
     freal  nextafter( const freal& to ) const;
+    freal  nextafter( const FLT&   to ) const;
     freal  nexttoward( long double to ) const;
     freal  floor( void ) const;
     freal  ceil( void ) const;
@@ -227,32 +244,59 @@ public:
     freal  abs( void ) const;
     freal  neg( void ) const; 
     freal  copysign( const freal& b ) const;
+    freal  copysign( const FLT&   b ) const;
     freal  add( const freal& b ) const; 
+    freal  add( const FLT&   b ) const; 
     freal  sub( const freal& b ) const; 
-    freal  fma( const freal& b, const freal& c ) const;             
-    freal  mul( const freal& b ) const;                             
-    freal  sqr( void ) const;                             
+    freal  sub( const FLT&   b ) const; 
     freal  scalbn( int b ) const;
     freal  scalbnn( int b ) const;                              // scalbn( -b )
     freal  ldexp( int b ) const;
+    freal  fma( const freal& b, const freal& c ) const;             
+    freal  fma( const freal& b, const FLT&   c ) const;             
+    freal  fma( const FLT&   b, const freal& c ) const;             
+    freal  fma( const FLT&   b, const FLT&   c ) const;             
+    freal  mul( const freal& b ) const;                             
+    freal  mul( const FLT&   b ) const;                             
+    freal  sqr( void ) const;                             
     freal  fda( const freal& b, const freal& c ) const;      
+    freal  fda( const freal& b, const FLT&   c ) const;      
+    freal  fda( const FLT& b,   const freal& c ) const;      
+    freal  fda( const FLT& b,   const FLT&   c ) const;      
     freal  div( const freal& b ) const;      
+    freal  div( const FLT&   b ) const;      
     freal  remainder( const freal& b ) const;
+    freal  remainder( const FLT&   b ) const;
     freal  fmod( const freal& b ) const;
+    freal  fmod( const FLT&   b ) const;
     freal  remquo( const freal& x, int * quo ) const;
+    freal  remquo( const FLT&   x, int * quo ) const;
     freal  rcp( void ) const;                                    
 
+    int    compare( const freal& b ) const;                        
+    int    compare( const FLT&   b ) const;                        
     bool   isgreater( const freal& b ) const;                        
+    bool   isgreater( const FLT&   b ) const;                        
     bool   isgreaterequal( const freal& b ) const;                 
+    bool   isgreaterequal( const FLT&   b ) const;                 
     bool   isless( const freal& b ) const;                          
+    bool   isless( const FLT&   b ) const;                          
     bool   islessequal( const freal& b ) const;                   
+    bool   islessequal( const FLT&   b ) const;                   
     bool   islessgreater( const freal& b ) const;                
+    bool   islessgreater( const FLT&   b ) const;                
     bool   isunordered( const freal& b ) const;              
+    bool   isunordered( const FLT&   b ) const;              
     bool   isunequal( const freal& b ) const;                 
+    bool   isunequal( const FLT&   b ) const;                 
     bool   isequal( const freal& b ) const;                   
+    bool   isequal( const FLT&   b ) const;                   
     freal  fdim( const freal& b ) const;
+    freal  fdim( const FLT&   b ) const;
     freal  fmax( const freal& b ) const;
+    freal  fmax( const FLT&   b ) const;
     freal  fmin( const freal& b ) const;
+    freal  fmin( const FLT&   b ) const;
 
     freal  sqrt( void ) const;                                        
     freal  rsqrt( void ) const;                               
@@ -265,8 +309,10 @@ public:
     freal  exp2( void ) const;               // 2^x
     freal  exp10( void ) const;              // 10^x
     freal  pow( const freal& e ) const;      // a^e
+    freal  pow( const FLT&   e ) const;      // a^e
     freal  log( void ) const;                // log base-e
     freal  log( const freal& b ) const;      // log base-b
+    freal  log( const FLT&   b ) const;      // log base-b
     freal  log1p( void ) const;              // log base-e (a+1)
     freal  logc( const FLT c ) const;        // log base-c (c is a constant)
     freal  log2( void ) const;               // log base-2
@@ -277,11 +323,15 @@ public:
     freal  sin( void ) const;
     freal  sinpi( void ) const;
     freal  sin( const freal& r ) const;                                 // multiply sin by r
+    freal  sin( const FLT&   r ) const;                                 // multiply sin by r
     freal  sinpi( const freal& r ) const;                               // multiply sin by r
+    freal  sinpi( const FLT&   r ) const;                               // multiply sin by r
     freal  cos( void ) const;
     freal  cospi( void ) const;
     freal  cos( const freal& r ) const;                                 // multiply cos by r
+    freal  cos( const FLT&   r ) const;                                 // multiply cos by r
     freal  cospi( const freal& r ) const;                               // multiply cos by r
+    freal  cospi( const FLT&   r ) const;                               // multiply cos by r
     void   sincos( freal& si, freal& co ) const;
     void   sinpicospi( freal& si, freal& co ) const;
     void   sincos( freal& si, freal& co, const freal& r ) const;        // multiply sin and cos by r
@@ -293,16 +343,23 @@ public:
     freal  acos( void ) const;                                        
     freal  atan( void ) const;                                        
     freal  atan2( const freal& b ) const;    // y=a, x=b
+    freal  atan2( const FLT&   b ) const;    // y=a, x=b
 
     void   polar_to_rect( const freal& angle, freal& x, freal& y     ) const;  // a=radius
+    void   polar_to_rect( const FLT&   angle, freal& x, freal& y     ) const;  // a=radius
     void   rect_to_polar( const freal& b,     freal& r, freal& angle ) const;  // x=a, y=b 
+    void   rect_to_polar( const FLT&   b,     freal& r, freal& angle ) const;  // x=a, y=b 
     freal  hypot(  const freal& b ) const;    
+    freal  hypot(  const FLT&   b ) const;    
     freal  hypoth( const freal& b ) const;   
+    freal  hypoth( const FLT&   b ) const;   
 
     freal  sinh( void ) const;
     freal  sinh( const freal& r ) const;                                // multiply sinh by r
+    freal  sinh( const FLT&   r ) const;                                // multiply sinh by r
     freal  cosh( void ) const;
     freal  cosh( const freal& r ) const;                                // multiply cosh by r
+    freal  cosh( const FLT&   r ) const;                                // multiply cosh by r
     void   sinhcosh( freal& sih, freal& coh ) const;
     void   sinhcosh( freal& sih, freal& coh, const freal& r ) const;    // multiply sinh and cosh by r
     freal  tanh( void ) const;                                        
@@ -310,6 +367,7 @@ public:
     freal  acosh( void ) const;                                       
     freal  atanh( void ) const;                                       
     freal  atanh2( const freal& b ) const;   // atanh2( a, b )
+    freal  atanh2( const FLT&   b ) const;   // atanh2( a, b )
 
     //-----------------------------------------------------
     // Introspection
@@ -361,6 +419,7 @@ static inline std::ostream& operator << ( std::ostream &out, const freal& a )
 // use macros to avoid redundancy
 //
 #define _freal freal
+#define _FLT   FLT
 
 #define decl_std1( name )                                       \
     static inline _freal name( const _freal& a )                \
@@ -373,18 +432,34 @@ static inline std::ostream& operator << ( std::ostream &out, const freal& a )
 #define decl_std1_ret2( name )                                  \
     static inline void name( const _freal& a, _freal& r1, _freal& r2 ) \
     { a.name( r1, r2 ); }                                       \
+    static inline void name( const _FLT&   a, _freal& r1, _freal& r2 ) \
+    { _freal(a).name( r1, r2 ); }                               \
 
 #define decl_std2( name )                                       \
     static inline _freal name( const _freal& a, const _freal& b ) \
     { return a.name( b ); }                                     \
+    static inline _freal name( const _freal& a, const _FLT&   b ) \
+    { return a.name( b ); }                                     \
+    static inline _freal name( const _FLT&   a, const _freal& b ) \
+    { return _freal(a).name( b ); }                             \
 
 #define decl_std2_ret( name, ret_type )                         \
     static inline ret_type name( const _freal& a, const _freal& b ) \
     { return a.name( b ); }                                     \
+    static inline ret_type name( const _freal& a, const _FLT& b ) \
+    { return a.name( b ); }                                     \
+    static inline ret_type name( const _FLT& a,   const _freal& b ) \
+    { return _freal(a).name( b ); }                             \
 
 #define decl_std2_ret2( name )                                  \
     static inline void name( const _freal& a, const _freal& b, _freal& r1, _freal& r2 ) \
     { a.name( b, r1, r2 ); }                                    \
+    static inline void name( const _freal& a, const _FLT& b,   _freal& r1, _freal& r2 ) \
+    { a.name( b, r1, r2 ); }                                    \
+    static inline void name( const _FLT&   a, const _freal& b, _freal& r1, _freal& r2 ) \
+    { _freal(a).name( b, r1, r2 ); }                            \
+    static inline void name( const _FLT&   a, const _FLT& b,   _freal& r1, _freal& r2 ) \
+    { _freal(a).name( b, r1, r2 ); }                            \
 
 #define decl_std2x( name, b_type )                              \
     static inline _freal name( const _freal& a, b_type b )      \
@@ -393,14 +468,34 @@ static inline std::ostream& operator << ( std::ostream &out, const freal& a )
 #define decl_std2x_ret2( name, b_type )                         \
     static inline void name( const _freal& a, _freal& r1, _freal& r2, b_type b ) \
     { a.name( r1, r2, b ); }                                    \
+    static inline void name( const _FLT&   a, _freal& r1, _freal& r2, b_type b ) \
+    { _freal(a).name( r1, r2, b ); }                            \
 
 #define decl_std3( name )                                       \
     static inline _freal name( const _freal& a, const _freal& b, const _freal& c ) \
     { return a.name( b, c ); }                                  \
+    static inline _freal name( const _freal& a, const _FLT&   b, const _freal& c ) \
+    { return a.name( b, c ); }                                  \
+    static inline _freal name( const _freal& a, const _freal& b, const _FLT&   c ) \
+    { return a.name( b, c ); }                                  \
+    static inline _freal name( const _freal& a, const _FLT&   b, const _FLT&   c ) \
+    { return a.name( b, c ); }                                  \
+    static inline _freal name( const _FLT&   a, const _freal& b, const _freal& c ) \
+    { return _freal(a).name( b, c ); }                          \
+    static inline _freal name( const _FLT&   a, const _FLT&   b, const _freal& c ) \
+    { return _freal(a).name( b, c ); }                          \
+    static inline _freal name( const _FLT&   a, const _freal& b, const _FLT&   c ) \
+    { return _freal(a).name( b, c ); }                          \
 
 #define decl_std3x( name, c_type )                              \
     static inline _freal name( const _freal& a, const _freal& b, c_type c ) \
     { return a.name( b, c ); }                                  \
+    static inline _freal name( const _freal& a, const _FLT&   b, c_type c ) \
+    { return a.name( b, c ); }                                  \
+    static inline _freal name( const _FLT&   a, const _freal& b, c_type c ) \
+    { return _freal(a).name( b, c ); }                          \
+    static inline _freal name( const _FLT&   a, const _FLT&   b, c_type c ) \
+    { return _freal(a).name( b, c ); }                          \
 
 decl_std1_ret( signbit,         bool            )
 decl_std2x(    frexp,           int *           )
@@ -408,10 +503,12 @@ decl_std2x(    modf,            _freal *        )
 decl_std1_ret( ilogb,           int             )
 decl_std1(     logb                             )
 decl_std1_ret( fpclassify,      int             )
+decl_std1_ret( iszero,          bool            )
 decl_std1_ret( isfinite,        bool            )
 decl_std1_ret( isinf,           bool            )
 decl_std1_ret( isnan,           bool            )
 decl_std1_ret( isnormal,        bool            )
+decl_std1_ret( issubnormal,     bool            )
 decl_std1_ret( to_string,       std::string     )
 decl_std1_ret( to_bstring,      std::string     )
 decl_std2(     nextafter                        )
@@ -440,17 +537,19 @@ decl_std1(     neg                              )
 decl_std2(     copysign                         )
 decl_std2(     add                              )
 decl_std2(     sub                              )
+decl_std2x(    scalbn,          int             )
+decl_std2x(    scalbnn,         int             )
+decl_std2x(    ldexp,           int             )
 decl_std3(     fma                              )
 decl_std2(     mul                              )
 decl_std1(     sqr                              )
-decl_std2x(    scalbn,          int             )
-decl_std2x(    ldexp,           int             )
 decl_std3(     fda                              )
 decl_std2(     div                              )
 decl_std2(     remainder                        )
 decl_std2(     fmod                             )
 decl_std3x(    remquo,          int *           )
 decl_std1(     rcp                              )
+decl_std2_ret( compare,         int             )
 decl_std2_ret( isgreater,       bool            )
 decl_std2_ret( isgreaterequal,  bool            )
 decl_std2_ret( isless,          bool            )
@@ -547,9 +646,9 @@ public:
     static bool                 has_signaling_NaN;
     static const float_denorm_style has_denorm = denorm_present;
     static const bool           has_denorm_loss = false;
-    static freal                infinity() throw()      { return freal::implicit_to_get()->inf(); }
-    static freal                quiet_NaN() throw()     { return freal::implicit_to_get()->quiet_nan(); }
-    static freal                signaling_NaN() throw() { return freal::implicit_to_get()->signaling_nan(); }
+    static freal                infinity() throw()      { return freal::implicit_to_get()->infinity(); }
+    static freal                quiet_NaN() throw()     { return freal::implicit_to_get()->quiet_NaN(); }
+    static freal                signaling_NaN() throw() { return freal::implicit_to_get()->signaling_NaN(); }
     static freal                denorm_min() throw()    { return freal::implicit_to_get()->denorm_min(); }
 
     static bool                 is_iec559;
@@ -868,10 +967,10 @@ decl_const( two_div_pi )
 decl_const( four_div_pi )
 decl_const( e )
 decl_const1x( nan, const char * )
-decl_const( quiet_nan )
-decl_const( signaling_nan )
-decl_const( inf )
-decl_const( ninf )
+decl_const( quiet_NaN )
+decl_const( signaling_NaN )
+decl_const( infinity )
+decl_const( ninfinity )
 
 //-----------------------------------------------------
 // Standard Operators 
@@ -887,9 +986,13 @@ decl_const( ninf )
 #define decl_op2( op, name )                                    \
     inline _freal  _freal::operator op ( const _freal& b ) const \
     { return name( b );                 }                       \
+    inline _freal  _freal::operator op ( const _FLT& b ) const  \
+    { return name( b );                 }                       \
 
 #define decl_op2_ret( op, name, ret_type )                      \
     inline ret_type _freal::operator op ( const _freal& b ) const \
+    { return name( b );                 }                       \
+    inline ret_type _freal::operator op ( const _FLT& b ) const \
     { return name( b );                 }                       \
 
 #define decl_op2x( op, name, b_type )                           \
@@ -898,6 +1001,8 @@ decl_const( ninf )
 
 #define decl_op2a( op, name )                                   \
     inline _freal& _freal::operator op ( const _freal& b )      \
+    { return assign( name( b ) );       }                       \
+    inline  freal& _freal::operator op ( const _FLT& b )        \
     { return assign( name( b ) );       }                       \
 
 #define decl_op2ax( op, name, b_type )                          \
@@ -912,7 +1017,6 @@ decl_op2(     /,        div             )
 decl_op2x(    <<,       scalbn,  int    )
 decl_op2x(    >>,       scalbnn, int    )
 decl_op2a(    =,        _freal          )
-decl_op2ax(   =,        _freal,  const FLT& )
 decl_op2a(    +=,       add             )
 decl_op2a(    -=,       sub             )
 decl_op2a(    *=,       mul             )
@@ -956,6 +1060,8 @@ inline freal& freal::assign( const freal& b )
 #define decl_pop2( name )                               \
     inline _freal _freal::name( const _freal& b ) const \
     { return( cw( b ), pop_value( cordic, cordic->name( v, b.v ) ) ); } \
+    inline _freal _freal::name( const _FLT&   b ) const \
+    { return( cw( b ), pop_value( cordic, cordic->name( v, _freal(b).v ) ) ); } \
 
 #define decl_pop2_ret2( name )                          \
     inline void _freal::name( const _freal& b, _freal& r1, _freal& r2 ) const \
@@ -965,10 +1071,26 @@ inline freal& freal::assign( const freal& b )
         r1 = pop_value( cordic, r1_t );                 \
         r2 = pop_value( cordic, r2_t );                 \
     }                                                   \
+    inline void _freal::name( const _FLT&   b, _freal& r1, _freal& r2 ) const \
+    {                                                   \
+        T r1_t, r2_t;                                   \
+        _freal bb = b;                                  \
+        c( bb )->name( v, bb.v, r1_t, r2_t );           \
+        r1 = pop_value( cordic, r1_t );                 \
+        r2 = pop_value( cordic, r2_t );                 \
+    }                                                   \
 
 #define decl_popb2( name )                              \
     inline bool _freal::name( const _freal& b ) const   \
     { return( cw( b ), pop_bool( cordic, cordic->name( v, b.v ) ) ); } \
+    inline bool _freal::name( const _FLT&   b ) const   \
+    { _freal bb = b; return( cw( bb ), pop_bool( cordic, cordic->name( v, bb.v ) ) ); } \
+
+#define decl_popi2( name )                              \
+    inline int _freal::name( const _freal& b ) const    \
+    { return( cw( b ), pop_bool( cordic, cordic->name( v, b.v ) ) ); } \
+    inline int _freal::name( const _FLT&   b ) const    \
+    { _freal bb = b; return( cw( bb ), pop_bool( cordic, cordic->name( v, bb.v ) ) ); } \
 
 #define decl_pop2p( name )                              \
     inline _freal _freal::name( _freal * b ) const      \
@@ -981,6 +1103,8 @@ inline freal& freal::assign( const freal& b )
 #define decl_pop2np( name )                             \
     inline _freal _freal::name( const _freal& b ) const \
     { return( cw(), pop_value( cordic, cordic->name( v, &b.v ) ) ); } \
+    inline _freal _freal::name( const _FLT&   b ) const \
+    { _freal bb = b; return( cw(), pop_value( cordic, cordic->name( v, &bb.v ) ) ); } \
 
 #define decl_pop2x_ret2( name, b_type )                 \
     inline void _freal::name( _freal& r1, _freal& r2, b_type b ) const \
@@ -994,10 +1118,18 @@ inline freal& freal::assign( const freal& b )
 #define decl_pop3( name )                               \
     inline _freal _freal::name( const _freal& b, const _freal& c ) const \
     { return( cw( b, c ), pop_value( cordic, cordic->name( v, b.v, c.v ) ) ); } \
+    inline _freal _freal::name( const _freal& b, const _FLT&   c ) const \
+    { _freal cc = c; return( cw( b, cc ), pop_value( cordic, cordic->name( v, b.v, cc.v ) ) ); } \
+    inline _freal _freal::name( const _FLT&   b, const _freal& c ) const \
+    { _freal bb = b; return( cw( bb, c ), pop_value( cordic, cordic->name( v, bb.v, c.v ) ) ); } \
+    inline _freal _freal::name( const _FLT&   b, const _FLT&   c ) const \
+    { _freal bb = b; _freal cc = c; return( cw( bb, cc ), pop_value( cordic, cordic->name( v, bb.v, cc.v ) ) ); } \
 
 #define decl_pop3x( name, c_type )                      \
     inline _freal _freal::name( const _freal& b, c_type c ) const \
     { return( cw( b ), pop_value( cordic, cordic->name( v, b.v, c ) ) ); } \
+    inline _freal _freal::name( const _FLT&   b, c_type c ) const \
+    { _freal bb = b; return( cw( bb ), pop_value( cordic, cordic->name( v, bb.v, c ) ) ); } \
 
 #define decl_nopop0( name, ret_type )                   \
     inline ret_type _freal::name( void ) const          \
@@ -1063,6 +1195,7 @@ decl_pop2(      remainder                               )
 decl_pop2(      fmod                                    )
 decl_pop3x(     remquo,         int *                   )
 decl_pop1(      rcp                                     )
+decl_popi2(     compare                                 )
 decl_popb2(     isgreater                               )
 decl_popb2(     isgreaterequal                          )
 decl_popb2(     isless                                  )

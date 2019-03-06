@@ -32,8 +32,9 @@ int main( int argc, const char * argv[] )
     //---------------------------------------------------------------------------
     // Process command-line arguments after applying defaults.
     //---------------------------------------------------------------------------
-    int int_w  = 14;                            // fixed-point for now, max integer is 127
-    int frac_w = 24;                            // same as double
+    bool is_float = true;                       // floating-point or fixed-point?
+    int  exp_or_int_w  = 8;                     // exponent width for floating point; for fixed-point max integer width
+    int  frac_w = 23;                           // same as float
     FLT TOL = 1.0 / FLT( 1LL << (frac_w-3) );   // we'd like this to be 1/(1 << (frac_w-1))  (in most cases, it is)
                                                 // not clear the CPU is doing the ops correctly either
     bool     new_bugs = false;                  // by default, don't run new bugs
@@ -41,8 +42,10 @@ int main( int argc, const char * argv[] )
 
     for( int i = 1; i < argc; i++ )
     {
-        if ( strcmp( argv[i], "-int_w" ) == 0 ) {
-            int_w = std::atoi( argv[++i] );
+        if ( strcmp( argv[i], "-exp_or_int_w" ) == 0 ) {
+            exp_or_int_w = std::atoi( argv[++i] );
+        } else if ( strcmp( argv[i], "-is_float" ) == 0 ) {
+            is_float = atoi( argv[++i] );
         } else if ( strcmp( argv[i], "-frac_w" ) == 0 ) {
             frac_w = std::atoi( argv[++i] );
         } else if ( strcmp( argv[i], "-tol" ) == 0 ) {
@@ -60,18 +63,17 @@ int main( int argc, const char * argv[] )
             exit( 1 );
         }
     }
-    std::cout << "int_w=" << int_w << " frac_w=" << frac_w << " tol=" << TOL << "\n\n";
+    std::cout << "exp_or_int_w=" << exp_or_int_w << " frac_w=" << frac_w << " tol=" << TOL << "\n\n";
 
     //---------------------------------------------------------------------------
     // Set up default freal type to use for implicit conversions.
     //---------------------------------------------------------------------------
-    freal::implicit_to_set( int_w, frac_w );
+    freal::implicit_to_set( exp_or_int_w, frac_w, is_float );
     freal::implicit_from_set( true );
 
     //---------------------------------------------------------------------------
     // New and fixed bugs.
     //---------------------------------------------------------------------------
-    bool do_reduce = true;      // let routines handle the general case
     if ( new_bugs ) {
         //---------------------------------------------------------------------------
         // Put new bugs here.
@@ -81,17 +83,16 @@ int main( int argc, const char * argv[] )
     //---------------------------------------------------------------------------
     // Put fixed bugs here so they get regressed.
     //---------------------------------------------------------------------------
-    do_op2(  "7) pow",         pow,    std::pow,      0.004999995231628418, 0.45454543828964233, do_reduce );
-    do_op2(  "6) hypot",       hypot,  hypot,         0.70710676908493042, 0.70710664987564087, do_reduce );
-    do_op1(  "5) cos",         cos,    std::cos,      1.6214,           do_reduce );
-    do_op1(  "4) sqrt",        sqrt,   std::sqrt,     3.8104,           do_reduce );
-    do_op2(  "3) hypoth",      hypoth, hypoth,        0.8104, 0.6818,   do_reduce );          
-    do_op2(  "2) mul",         mul,    mul,           1.45, 0.4782,     do_reduce );
-    do_op1(  "1) log",         log,    std::log,      1.53,             do_reduce );
+    do_op2(  "7) pow",         pow,    std::pow,      0.004999995231628418, 0.45454543828964233 );
+    do_op2(  "6) hypot",       hypot,  hypot,         0.70710676908493042, 0.70710664987564087 );
+    do_op1(  "5) cos",         cos,    std::cos,      1.6214 );
+    do_op1(  "4) sqrt",        sqrt,   std::sqrt,     3.8104 );
+    do_op2(  "3) hypoth",      hypoth, hypoth,        0.8104, 0.6818 );
+    do_op2(  "2) mul",         mul,    mul,           1.45, 0.4782 );
+    do_op1(  "1) log",         log,    std::log,      1.53 );
 
     //---------------------------------------------------------------------------
-    // Run through all operations quickly with do_reduce=true.
-    // Trying to run with do_reduce=false is painful to deal with.
+    // Run through all operations.
     //---------------------------------------------------------------------------
     for( uint32_t i = 0; i < loop_cnt; i++ )
     {
@@ -116,65 +117,65 @@ int main( int argc, const char * argv[] )
         }
 
         //                          freal   reference
-        do_op3(  "x*y + w",          fma,     fma,            x, y, w, do_reduce );
-        do_op2(  "x*y",              mul,     mul,            x, y, do_reduce );
+        do_op3(  "x*y + w",          fma,     fma,            x, y, w );
+        do_op2(  "x*y",              mul,     mul,            x, y );
         if ( x > 0.0 ) {
-            do_op3(  "y/x + w",          fda,     fda,            y, x, w, do_reduce );
-            do_op2(  "y/x",              div,     div,            y, x, do_reduce );
-            do_op1(  "1/x",              rcp,     rcp,            x   , do_reduce );
-            do_op1(  "sqrt(x)",          sqrt,    std::sqrt,      x   , do_reduce );
-            do_op1(  "rsqrt(x)",         rsqrt,   rsqrt,          x+1.0, do_reduce );
-            do_op1(  "cbrt(x)",          cbrt,    std::cbrt,      x   , do_reduce );
-            do_op1(  "rcbrt(x)",         rcbrt,   rcbrt,          x+1.0, do_reduce );
+            do_op3(  "y/x + w",          fda,     fda,            y, x, w );
+            do_op2(  "y/x",              div,     div,            y, x );
+            do_op1(  "1/x",              rcp,     rcp,            x    );
+            do_op1(  "sqrt(x)",          sqrt,    std::sqrt,      x    );
+            do_op1(  "rsqrt(x)",         rsqrt,   rsqrt,          x+1.0 );
+            do_op1(  "cbrt(x)",          cbrt,    std::cbrt,      x    );
+            do_op1(  "rcbrt(x)",         rcbrt,   rcbrt,          x+1.0 );
         }
-        do_op2(  "fdim(x,y)",        fdim,    std::fdim,      x, y, do_reduce );
-        do_op2(  "fmax(x,y)",        fmax,    std::fmax,      x, y, do_reduce );
-        do_op2(  "fmin(x,y)",        fmin,    std::fmin,      x, y, do_reduce );
+        do_op2(  "fdim(x,y)",        fdim,    std::fdim,      x, y );
+        do_op2(  "fmax(x,y)",        fmax,    std::fmax,      x, y );
+        do_op2(  "fmin(x,y)",        fmin,    std::fmin,      x, y );
 
-        do_op1(  "exp(x)",           exp,     std::exp,       x   , do_reduce );
-        do_op1(  "expm1(x)",         expm1,   std::expm1,     x   , do_reduce );
-        do_op1(  "exp2(x)",          exp2,    std::exp2,      x   , do_reduce );
-        do_op1(  "exp10(x)",         exp10,   exp10,          xs  , do_reduce );
-        do_op2(  "pow(x,y)",         pow,     std::pow,       b, y, do_reduce );
+        do_op1(  "exp(x)",           exp,     std::exp,       x    );
+        do_op1(  "expm1(x)",         expm1,   std::expm1,     x    );
+        do_op1(  "exp2(x)",          exp2,    std::exp2,      x    );
+        do_op1(  "exp10(x)",         exp10,   exp10,          xs   );
+        do_op2(  "pow(x,y)",         pow,     std::pow,       b, y );
         if ( x > 0.0 ) {
-            do_op1(  "log(x)",       log,     std::log,       x   , true      );
-            do_op1(  "log1p(x)",     log1p,   std::log1p,     x   , true      );
-            do_op2(  "log(x,b)",     log,     log,            x, b, true      );
-            do_op1(  "log2(x)",      log2,    log2,           x   , true      );
-            do_op1(  "log10(x)",     log10,   log10,          x   , true      );
+            do_op1(  "log(x)",       log,     std::log,       x );
+            do_op1(  "log1p(x)",     log1p,   std::log1p,     x );
+            do_op2(  "log(x,b)",     log,     log,            x, b );
+            do_op1(  "log2(x)",      log2,    log2,           x );
+            do_op1(  "log10(x)",     log10,   log10,          x );
         }
-        do_op1(  "sin(x)",           sin,     std::sin,       x   , do_reduce );
-        do_op1(  "cos(x)",           cos,     std::cos,       x   , do_reduce );
-        do_op12( "sincos(x)",        sincos,  sincos,         x   , do_reduce );
+        do_op1(  "sin(x)",           sin,     std::sin,       x    );
+        do_op1(  "cos(x)",           cos,     std::cos,       x    );
+        do_op12( "sincos(x)",        sincos,  sincos,         x    );
         if ( std::cos(x) != 0.0 ) {
-            do_op1(  "tan(x)",       tan,     std::tan,       x   , do_reduce );
+            do_op1(  "tan(x)",       tan,     std::tan,       x    );
         }
         if ( x >= -1.0 && x <= 1.0 ) {
-            do_op1(  "asin(x)",      asin,    std::asin,      x   , do_reduce );
-            do_op1(  "acos(x)",      acos,    std::acos,      x   , do_reduce );
-            do_op1(  "atan(x)",      atan,    std::atan,      x   , do_reduce );
+            do_op1(  "asin(x)",      asin,    std::asin,      x    );
+            do_op1(  "acos(x)",      acos,    std::acos,      x    );
+            do_op1(  "atan(x)",      atan,    std::atan,      x    );
         }
-        do_op2(  "atan2(y,x)",       atan2,   std::atan2,     y, x, true      );
-        do_op1(  "sinh(x)",          sinh,    std::sinh,      x   , do_reduce );
-        do_op1(  "cosh(x)",          cosh,    std::cosh,      x   , do_reduce );
-        do_op12( "sinhcosh(x)",      sinhcosh,sinhcosh,       x   , do_reduce );
-        do_op1(  "tanh(x)",          tanh,    std::tanh,      x   , do_reduce );
-        do_op1(  "asinh(x)",         asinh,   std::asinh,     x   , true      );
+        do_op2(  "atan2(y,x)",       atan2,   std::atan2,     y, x );
+        do_op1(  "sinh(x)",          sinh,    std::sinh,      x    );
+        do_op1(  "cosh(x)",          cosh,    std::cosh,      x    );
+        do_op12( "sinhcosh(x)",      sinhcosh,sinhcosh,       x    );
+        do_op1(  "tanh(x)",          tanh,    std::tanh,      x    );
+        do_op1(  "asinh(x)",         asinh,   std::asinh,     x    );
         if ( x >= 1.0 ) {
-            do_op1(  "acosh(x)",     acosh,   std::acosh,     x   , true      );
+            do_op1(  "acosh(x)",     acosh,   std::acosh,     x    );
         }
         if ( x >= -1.0 && x <= 1.0 ) {
-            do_op1(  "atanh(x)",     atanh,   std::atanh,     x   , true      );
+            do_op1(  "atanh(x)",     atanh,   std::atanh,     x    );
         }
         if ( y/x >= -1.0 && y/x <= 1.0 ) {
-            do_op2(  "atanh2(y,x)",  atanh2,  atanh2,         y, x, true      );
+            do_op2(  "atanh2(y,x)",  atanh2,  atanh2,         y, x );
         }
-        do_op2(  "hypot(x,y)",       hypot,   hypot,          y, x, do_reduce );
+        do_op2(  "hypot(x,y)",       hypot,   hypot,          y, x );
         if ( y >= x ) {
-            do_op2(  "hypoth(x,y)",  hypoth,  hypoth,         y, x, true      );
+            do_op2(  "hypoth(x,y)",  hypoth,  hypoth,         y, x );
         }
-        do_op22( "rect_to_polar(x,y)", rect_to_polar, rect_to_polar, x, y, do_reduce );
-        do_op22( "polar_to_rect(x,y)", polar_to_rect, polar_to_rect, x, y, do_reduce );
+        do_op22( "rect_to_polar(x,y)", rect_to_polar, rect_to_polar, x, y );
+        do_op22( "polar_to_rect(x,y)", polar_to_rect, polar_to_rect, x, y );
     }
 
     std::cout << "PASSED\n";

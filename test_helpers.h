@@ -41,7 +41,7 @@ static inline FLT tolerance( uint32_t frac_w, FLT expected, FLT tol, int32_t& to
     return std::pow( 2.0, tol_lg2 );
 }
 
-#define do_op1( str, c_fn, exp_fn, fltx, do_reduce )                    \
+#define do_op1( str, c_fn, exp_fn, fltx )                               \
 {                                                                       \
     std::cout << "\n" << #str << "\n";			                \
     freal tx   = fltx;			                                \
@@ -57,7 +57,6 @@ static inline FLT tolerance( uint32_t frac_w, FLT expected, FLT tol, int32_t& to
 			                                                \
     std::cout.precision(24);			                        \
     std::cout << #str << "\n";			                        \
-    std::cout << "Reduce:   " << do_reduce << "\n";                     \
     std::cout << "Input:    " << std::setw(30) << fltx   << " (x)\n";	\
     std::cout << "Tol:      " << std::setw(30) << tol    << " (" << tol_bits                << " bits)\n"; \
     std::cout << "Expected: " << std::setw(30) << flte   << " (" << std::to_bstring( te )   << ")\n"; \
@@ -66,7 +65,7 @@ static inline FLT tolerance( uint32_t frac_w, FLT expected, FLT tol, int32_t& to
     cassert( flterr <= tol, "outside tolerance" );			\
 }    
 
-#define do_op12( str, c_fn, exp_fn, fltx, do_reduce )                   \
+#define do_op12( str, c_fn, exp_fn, fltx )                              \
 {                                                                       \
     std::cout << "\n" << #str << "\n";			                \
     freal tx  = fltx;			                                \
@@ -91,7 +90,6 @@ static inline FLT tolerance( uint32_t frac_w, FLT expected, FLT tol, int32_t& to
 			                                                \
     std::cout.precision(24);			                        \
     std::cout << #str << "\n";			                        \
-    std::cout << "Reduce:   " << do_reduce << "\n";                     \
     std::cout << "Input:    " << std::setw(30) << fltx << " (x)\n";	\
     std::cout << "Tol:      " << std::setw(30) << tol1    << " (" << tol1_bits                << " bits)\n"; \
     std::cout << "Tol:      " << std::setw(30) << tol2    << " (" << tol2_bits                << " bits)\n"; \
@@ -105,7 +103,7 @@ static inline FLT tolerance( uint32_t frac_w, FLT expected, FLT tol, int32_t& to
     cassert( flterr2 <= tol2, "outside tolerance" );			\
 }    
 
-#define do_op2( str, c_fn, exp_fn, fltx, flty, do_reduce )              \
+#define do_op2( str, c_fn, exp_fn, fltx, flty )                         \
 {                                                                       \
     std::cout << "\n" << #str << "\n";			                \
     freal tx  = fltx;			                                \
@@ -122,7 +120,6 @@ static inline FLT tolerance( uint32_t frac_w, FLT expected, FLT tol, int32_t& to
 			                                                \
     std::cout.precision(24);			                        \
     std::cout << #str << "\n";			                        \
-    std::cout << "Reduce:   " << do_reduce << "\n";                     \
     std::cout << "Input:    " << std::setw(30) << fltx << " (x)\n";     \
     std::cout << "Input:    " << std::setw(30) << flty << " (y)\n";     \
     std::cout << "Tol:      " << std::setw(30) << tol    << " (" << tol_bits                << " bits)\n"; \
@@ -132,7 +129,7 @@ static inline FLT tolerance( uint32_t frac_w, FLT expected, FLT tol, int32_t& to
     cassert( flterr <= tol, "outside tolerance" );			\
 }    
 
-#define do_op22( str, c_fn, exp_fn, fltx, flty, do_reduce )             \
+#define do_op22( str, c_fn, exp_fn, fltx, flty )                        \
 {                                                                       \
     std::cout << "\n" << #str << "\n";			                \
     freal tx  = fltx;			                                \
@@ -158,7 +155,6 @@ static inline FLT tolerance( uint32_t frac_w, FLT expected, FLT tol, int32_t& to
 			                                                \
     std::cout.precision(24);			                        \
     std::cout << #str << "\n";			                        \
-    std::cout << "Reduce:   " << do_reduce << "\n";                     \
     std::cout << "Input:    " << std::setw(30) << fltx << " (x)\n";     \
     std::cout << "Input:    " << std::setw(30) << flty << " (y)\n";     \
     std::cout << "Tol:      " << std::setw(30) << tol1    << " (" << tol1_bits                << " bits)\n"; \
@@ -173,7 +169,7 @@ static inline FLT tolerance( uint32_t frac_w, FLT expected, FLT tol, int32_t& to
     cassert( flterr2 <= tol2, "outside tolerance" );			\
 }    
 
-#define do_op3( str, c_fn, exp_fn, fltx, flty, fltw, do_reduce )        \
+#define do_op3( str, c_fn, exp_fn, fltx, flty, fltw )                   \
 {                                                                       \
     std::cout << "\n" << #str << "\n";			                \
     freal tx   = fltx;			                                \
@@ -191,7 +187,6 @@ static inline FLT tolerance( uint32_t frac_w, FLT expected, FLT tol, int32_t& to
 			                                                \
     std::cout.precision(24);			                        \
     std::cout << #str << "\n";			                        \
-    std::cout << "Reduce:   " << do_reduce << "\n";                     \
     std::cout << "Input:    " << std::setw(30) << fltx << " (x)\n";     \
     std::cout << "Input:    " << std::setw(30) << flty << " (y)\n";     \
     std::cout << "Input:    " << std::setw(30) << fltz << " (z)\n";     \
