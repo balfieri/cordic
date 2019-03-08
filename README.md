@@ -52,7 +52,10 @@ wishing to learn this timeless computer math algorithm.
 <p>
 By default, the library implements IEEE floating-point numbers with
 arbitrary exponent width (exp_w), fraction width (frac_w), and guard bits (guard_w). 
-These encoded values are stored in a type T integer container (default is int64_t).
+The container type T must be a signed integer at least as wide as 1+exp_w+frac_w+log2(frac_w). The log2(frac_w) are the default 
+number of guard bits (guard_w). A floating-point number stores the sign in the most-significant bit, followed by the exp_w biased
+exponent bits, followed by the frac_w+guard_w binary fraction bits in the least-significant bits.  If T contains extra MSB bits, 
+they will be set to 0.
 </p>
 <p>
 In IEEE floating-point numbers, int_w is 0 because the binary fraction is 
@@ -74,31 +77,31 @@ Denorm-As-Zero (DAZ) means that any denorm input to an operation is first change
 <p>
 The CORDIC routines perform frac_w iterations in order to arrive at frac_w precision.  You may, however,
 reduce the number of iterations by passing a different value for n to the constructor.  The numeric encoding
-will be the same, but the result will be less precise.  Again, different Cordic() instances with idential parameters
-except for n can be used on an operation-by-operation basis.
+will be the same, but the result will be less precise.  
 </p>
 
 <h1>Fixed-Point</h1>
 
 <p>
-The library also supports values that are stored as fixed-point with user-defined integer width (int_w) and fraction width (frac_w).  
+The library also supports values that are stored in fixed-point with user-defined integer width (int_w) and fraction width (frac_w).  
 The fixed-point container type T must be a signed integer at least as wide as 1+int_w+frac_w+log2(frac_w). The log2(frac_w) are
 the default number of guard bits (guard_w).  A fixed-point number stores
 the sign in the most-significant bit, followed by the int_w binary integer bits, followed by the frac_w+guard_w binary fraction bits 
 in the least-significant
 bits.  If T is larger than the required number of bits, the extra upper bits are assumed to contain replications of the sign bit
 (1=negative, 0=non-negative).  In other words, fixed-point values are stored in 2's-complement integer containers, so -A == ~A + 1.
+This is done to make it easier to do addition and subtraction.
 </p>
 
 <p>
-Fixed-point numbers naturally support denorms (i.e., they are all denorms), but have no way to indicate a value 
+Fixed-point numbers naturally support subnormals (i.e., they are all subnormals), but have no way to indicate a value 
 outside their allowed range.  The library needs
-an option to mark a number as +Infinity, -Infinity, or NaN.  An additional needed option is
+a future option to mark a number as +Infinity, -Infinity, or NaN.  An additional needed option is
 to gracefully flush large numbers to +/- "max value" and NaNs to zero.
 </p>
 
 <p>
-Here are some examples of fixed-point numbers.  1.3.8 means 1 sign bit, 3 integer bits, and 8 fraction bits.
+Here are some examples of fixed-point numbers.  1.3.8 means 1 sign bit, 3 integer bits (int_w), and 8 fraction bits (frac_w).
 </p>
 <pre>
 Format         value            binary (spaces added for readability)
