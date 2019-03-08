@@ -554,6 +554,7 @@ public:
     // These version are used internally, but making them available publically.
     // In general, you should only call the earlier routines.
     //-----------------------------------------------------
+    T    neg( const T& x, bool is_final ) const;                                      
     T    add( const T& x, const T& y, bool is_final ) const;                 
     T    sub( const T& x, const T& y, bool is_final ) const;                 
     T    scalbn( const T& x, int y, bool is_final ) const;                             
@@ -2522,9 +2523,9 @@ template< typename T, typename FLT >
 inline T Cordic<T,FLT>::roundfrac( const T& x ) const    { return rfrac( x, FE_TONEAREST ); }
 
 template< typename T, typename FLT >
-inline T Cordic<T,FLT>::neg( const T& x ) const
+inline T Cordic<T,FLT>::neg( const T& x, bool is_final ) const
 {
-    _log_1( neg, x );
+    if ( is_final ) _log_1( neg, x );
     T x_neg;
     if ( _is_float ) {
         // FLOAT: toggle sign bit
@@ -2540,11 +2541,17 @@ inline T Cordic<T,FLT>::neg( const T& x ) const
 }
 
 template< typename T, typename FLT >
+inline T Cordic<T,FLT>::neg( const T& x ) const
+{
+    return neg( x, true );
+}
+
+template< typename T, typename FLT >
 inline T Cordic<T,FLT>::abs( const T& x ) const
 {
     _log_1( abs, x );
     T x_abs = x;
-    if ( signbit( x_abs ) ) x_abs = neg( x_abs );
+    if ( signbit( x_abs ) ) x_abs = neg( x_abs, false );
     return x_abs;
 }
 
@@ -2554,7 +2561,7 @@ inline T Cordic<T,FLT>::copysign( const T& x, const T& y ) const
     _log_2( copysign, x, y );
     bool x_sign = signbit( x );
     bool y_sign = signbit( y );
-    return (x_sign != y_sign) ? neg( x ) : x;
+    return (x_sign != y_sign) ? neg( x, false ) : x;
 }
 
 template< typename T, typename FLT >
@@ -2567,7 +2574,7 @@ inline T Cordic<T,FLT>::add( const T& x, const T& y ) const
 template< typename T, typename FLT >
 inline T Cordic<T,FLT>::sub( const T& x, const T& y, bool is_final ) const
 {
-    return add( x, neg( y ), is_final );
+    return add( x, neg( y, false ), is_final );
 }
 
 template< typename T, typename FLT >
@@ -2954,7 +2961,7 @@ T Cordic<T,FLT>::rsqrt( const T& x ) const
     //-----------------------------------------------------
     _log_1( rsqrt, x );
     T lg = log( x, false );
-    T lg_div_m2 = scalbn( neg( lg ), -1, false );
+    T lg_div_m2 = scalbn( neg( lg, false ), -1, false );
     T r = exp( lg_div_m2, false );
     r = rfrac( r );
     if ( debug ) std::cout << "rsqrt end: x_orig=" << _to_flt(x) << " lg=" << _to_flt(lg) <<
@@ -2969,9 +2976,9 @@ inline T Cordic<T,FLT>::cbrt( const T& _x ) const
     _log_1( cbrt, _x );
     T x = _x;
     bool sign = signbit( x );
-    if ( sign ) x = neg( x );
+    if ( sign ) x = neg( x, false );
     T r = exp( mulc( log( x, false ), _third, false ) );
-    if ( sign ) r = neg( x );
+    if ( sign ) r = neg( x, false );
     r = rfrac( r );
     if ( debug ) std::cout << "cbrt end: x_orig=" << _to_flt(_x, false) << 
                               " x_reduced=" << _to_flt(x, false, true, false) << " r=" << _to_flt(r, false) << "\n";
@@ -2985,9 +2992,9 @@ T Cordic<T,FLT>::rcbrt( const T& _x ) const
     _log_1( rcbrt, _x );
     T x = _x;
     bool sign = signbit( x );
-    if ( sign ) x = neg( x );
+    if ( sign ) x = neg( x, false );
     T r = exp( mulc( log( x, false ), _neg_third, false ) ); 
-    if ( sign ) r = neg( x );
+    if ( sign ) r = neg( x, false );
     r = rfrac( r );
     if ( debug ) std::cout << "rcbrt end: x_orig=" << _to_flt(_x, false) << 
                               " x_reduced=" << _to_flt(x, false, true, false) << " r=" << _to_flt(r, false) << "\n";
@@ -3448,8 +3455,8 @@ void Cordic<T,FLT>::sincos( bool times_pi, const T& _x, T& si, T& co, bool is_fi
             co = si;
             si = tmp;
         }
-        if ( need_si && (x_sign ^ (quadrant >= 2)) )                  si = neg( si );
-        if ( need_co && (         (quadrant == 1) || quadrant == 2) ) co = neg( co );
+        if ( need_si && (x_sign ^ (quadrant >= 2)) )                  si = neg( si, false );
+        if ( need_co && (         (quadrant == 1) || quadrant == 2) ) co = neg( co, false );
 
         if ( _r != nullptr ) {
             //-----------------------------------------------------
@@ -3604,7 +3611,7 @@ inline T Cordic<T,FLT>::atan( const T& x ) const
 template< typename T, typename FLT >
 inline T Cordic<T,FLT>::atan2( const T& y, const T& x ) const
 { 
-    T r = atan2( y, x, false, false, nullptr );
+    T r = atan2( y, x, true, false, nullptr );
     if ( debug ) std::cout << "atan2 end: y=" << _to_flt(y) << " x=" << _to_flt(x) << " atan2=" << _to_flt(r) << "\n";
     return r;
 }
@@ -3667,7 +3674,7 @@ T Cordic<T,FLT>::atan2( const T& _y, const T& _x, bool is_final, bool x_is_one, 
     // normal case
     //
     T hpx = hypot( x, y, false );
-      hpx = add( hpx, x_gt_0 ? x : neg(x), false );
+      hpx = add( hpx, x_gt_0 ? x : neg( x, false ), false );
     if ( debug ) std::cout << "atan2 mid: y=" << _to_flt(_y) << " x=" << _to_flt(_x) << " hpx=" << _to_flt(hpx) << "\n";
 
     // decide which is the numerator and which is the denominator
@@ -4056,7 +4063,7 @@ inline void Cordic<T,FLT>::reconstruct( T& x, EXP_CLASS x_exp_class, int32_t x_e
     T x_orig = x;
     if ( debug ) std::cout << "reconstruct: x_orig=" << std::hex << x << std::dec << " x_orig_f=" << _to_flt(x, false, true) <<
                               " x_exp_class=" + to_str(x_exp_class) << " x_exp=" << x_exp << " sign=" << sign << "\n";
-    uint32_t exp = 0;
+    int32_t exp = 0;
     if ( _is_float ) {
         // FLOAT
         //
@@ -4087,7 +4094,17 @@ inline void Cordic<T,FLT>::reconstruct( T& x, EXP_CLASS x_exp_class, int32_t x_e
                 cassert( int_part == 1, "reconstruct() normal int_part should be exactly 1, got " + std::to_string(int_part) );
 
                 exp = x_exp + _exp_bias;
-                if ( exp >= _exp_mask ) x = infinity();
+                if ( exp >= int32_t(_exp_mask) ) {
+                    // infinity
+                    exp = _exp_mask;
+                    x = 0;
+                } else if ( exp < 0 ) {
+                    // subnormal
+                    exp = -exp;
+                    T mask = (T(1) << exp) - 1;
+                    x = (x >> exp) | ((x & mask) != 0);
+                    exp = 0;
+                }
                 break;
 
             case EXP_CLASS::INFINITE:
@@ -4393,7 +4410,7 @@ inline void Cordic<T,FLT>::reduce_sincos_arg( bool times_pi, T& a, uint32_t& qua
             exp_class = EXP_CLASS::NORMAL;
             const T a_orig = a;
             sign = signbit( a );
-            if ( sign ) a = neg( a );
+            if ( sign ) a = neg( a, false );
             T m;
             T s = 0;
             T i;
