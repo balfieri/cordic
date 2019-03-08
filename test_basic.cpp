@@ -83,13 +83,21 @@ int main( int argc, const char * argv[] )
     //---------------------------------------------------------------------------
     // Put fixed bugs here so they get regressed.
     //---------------------------------------------------------------------------
-    do_op2(  "7) pow",         pow,    std::pow,      0.004999995231628418, 0.45454543828964233 );
-    do_op2(  "6) hypot",       hypot,  hypot,         0.70710676908493042, 0.70710664987564087 );
-    do_op1(  "5) cos",         cos,    std::cos,      1.6214 );
-    do_op1(  "4) sqrt",        sqrt,   std::sqrt,     3.8104 );
-    do_op2(  "3) hypoth",      hypoth, hypoth,        0.8104, 0.6818 );
-    do_op2(  "2) mul",         mul,    mul,           1.45, 0.4782 );
-    do_op1(  "1) log",         log,    std::log,      1.53 );
+    do_op2(     "15, x*y",              mul,    mul,           -0.00000000000000000010980813584353493, 0.00000000000000000010980813584353493 );
+    do_op2(     "14) atan2(y,x)",       atan2,  std::atan2,    0.85865706205368042, 0 );
+    do_op2(     "13) atan2(y,x)",       atan2,  std::atan2,    -0.000000059604651880817983, -0.84004300832748413 );
+    do_op2(     "12) atan2(y,x)",       atan2,  std::atan2,    0.00018440188432577997, -0.62388521432876587 );
+    do_op22sc(  "11) sincos",           sincos, sincos,        0.7853982001543045, -0.64947649836540222 );
+    do_op12(    "10) sincos",           sincos, sincos,        1.5707963891327381 );
+    do_op12(    "9) sincos",            sincos, sincos,        0.887265 );
+    do_op2(     "8) pow",               pow,    std::pow,      0.0, 0.4 );
+    do_op2(     "7) pow",               pow,    std::pow,      0.004999995231628418, 0.45454543828964233 );
+    do_op2(     "6) hypot",             hypot,  hypot,         0.70710676908493042, 0.70710664987564087 );
+    do_op1(     "5) cos",               cos,    std::cos,      1.6214 );
+    do_op1(     "4) sqrt",              sqrt,   std::sqrt,     3.8104 );
+    do_op2(     "3) hypoth",            hypoth, hypoth,        0.8104, 0.6818 );
+    do_op2(     "2) mul",               mul,    mul,           1.45, 0.4782 );
+    do_op1(     "1) log",               log,    std::log,      1.53 );
 
     //---------------------------------------------------------------------------
     // Run through all operations.

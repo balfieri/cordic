@@ -27,6 +27,12 @@
 #include <cmath>
 #include <iostream>
 
+#ifndef NO_FMT_LLU
+#define FMT_LLU "lu"
+#else 
+#define FMT_LLU "llu"
+#endif
+
 template< typename T=int64_t, typename FLT=double >
 class Logger
 {

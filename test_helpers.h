@@ -169,6 +169,46 @@ static inline FLT tolerance( uint32_t frac_w, FLT expected, FLT tol, int32_t& to
     cassert( flterr2 <= tol2, "outside tolerance" );			\
 }    
 
+#define do_op22sc( str, c_fn, exp_fn, fltx, flty )                      \
+{                                                                       \
+    std::cout << "\n" << #str << "\n";			                \
+    freal tx  = fltx;			                                \
+    freal ty  = flty;			                                \
+    freal tz1, tz2;                                                     \
+    std::c_fn( tx, tz1, tz2, ty );	                                \
+    FLT fltz1 = tz1;		                                        \
+    FLT fltz2 = tz2;		                                        \
+    FLT flte1, flte2;                                                   \
+    exp_fn( fltx, flte1, flte2, flty );			                \
+    freal te1  = std::rfrac( freal(flte1) );                            \
+    freal te2  = std::rfrac( freal(flte2) );                            \
+    freal terr1 = (tz1 >= te1) ? (tz1-te1) : (te1-tz1);                 \
+    freal terr2 = (tz2 >= te2) ? (tz2-te2) : (te2-tz2);                 \
+    FLT flterr1 = terr1;                                                \
+    FLT flterr2 = terr2;                                                \
+    int32_t tol1_lg2;                                                   \
+    int32_t tol2_lg2;                                                   \
+    FLT tol1  = tolerance( te1.frac_w(), flte1, TOL, tol1_lg2 );        \
+    FLT tol2  = tolerance( te2.frac_w(), flte2, TOL, tol2_lg2 );        \
+    int32_t tol1_bits = te1.frac_w() + tol1_lg2;                        \
+    int32_t tol2_bits = te2.frac_w() + tol2_lg2;                        \
+			                                                \
+    std::cout.precision(24);			                        \
+    std::cout << #str << "\n";			                        \
+    std::cout << "Input:    " << std::setw(30) << fltx << " (x)\n";     \
+    std::cout << "Input:    " << std::setw(30) << flty << " (y)\n";     \
+    std::cout << "Tol:      " << std::setw(30) << tol1    << " (" << tol1_bits                << " bits)\n"; \
+    std::cout << "Tol:      " << std::setw(30) << tol2    << " (" << tol2_bits                << " bits)\n"; \
+    std::cout << "Expected: " << std::setw(30) << flte1   << " (" << std::to_bstring( te1 )   << ")\n"; \
+    std::cout << "Expected: " << std::setw(30) << flte2   << " (" << std::to_bstring( te2 )   << ")\n"; \
+    std::cout << "Actual:   " << std::setw(30) << fltz1   << " (" << std::to_bstring( tz1 )   << ")\n"; \
+    std::cout << "Actual:   " << std::setw(30) << fltz2   << " (" << std::to_bstring( tz2 )   << ")\n"; \
+    std::cout << "Diff:     " << std::setw(30) << flterr1 << " (" << std::to_bstring( terr1 ) << ")\n"; \
+    std::cout << "Diff:     " << std::setw(30) << flterr2 << " (" << std::to_bstring( terr2 ) << ")\n\n"; \
+    cassert( flterr1 <= tol1, "outside tolerance" );			\
+    cassert( flterr2 <= tol2, "outside tolerance" );			\
+}    
+
 #define do_op3( str, c_fn, exp_fn, fltx, flty, fltw )                   \
 {                                                                       \
     std::cout << "\n" << #str << "\n";			                \
@@ -210,8 +250,8 @@ FLT  exp10( FLT x )      { return std::pow( 10.0, x ); }
 FLT  log( FLT x, FLT y ) { return std::log( x ) / std::log( y ); }
 FLT  log2( FLT x )       { return std::log( x ) / std::log( 2.0 ); }
 FLT  log10( FLT x )      { return std::log( x ) / std::log( 10.0 ); }
-void sincos( FLT x, FLT& si, FLT& co ) { si = std::sin( x ); co = std::cos( x ); }
-void sinhcosh( FLT x, FLT& si, FLT& co ) { si = std::sinh( x ); co = std::cosh( x ); }
+void sincos( FLT x, FLT& si, FLT& co, FLT r=1.0 )   { si = r*std::sin( x );  co = r*std::cos( x ); }
+void sinhcosh( FLT x, FLT& si, FLT& co, FLT r=1.0 ) { si = r*std::sinh( x ); co = r*std::cosh( x ); }
 FLT  atanh2( FLT y, FLT x ){ return std::atanh( y/x); }
 FLT  hypot( FLT x, FLT y ){ return std::sqrt( x*x + y*y ); }
 FLT  hypoth( FLT x, FLT y ){ return std::sqrt( x*x - y*y ); }

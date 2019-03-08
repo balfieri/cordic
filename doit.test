@@ -4,13 +4,15 @@ use strict;
 use warnings;
 
 my $debug_level = shift @ARGV || 0;
+my $is_fixed    = shift @ARGV || 0;
 my $prog        = shift @ARGV || "test_basic";
+$is_fixed and unshift @ARGV, "-is_float 0";
 my $other_args  = join( " ", @ARGV );
 
 my $opt = ($debug_level <= 0) ? "3" : "0";
 
 my $CFLAGS = "-std=c++17 -Wextra -Wstrict-aliasing -pedantic -Werror -Wcast-align -Wcast-qual -Wctor-dtor-privacy -Wdisabled-optimization -Wformat=2 -Winit-self -Wmissing-include-dirs -Wold-style-cast -Woverloaded-virtual -Wredundant-decls -Wshadow -Wsign-promo -Wstrict-overflow=5 -Wswitch-default -Wundef -O${opt} -g -DDEBUG_LEVEL=${debug_level}";
-`uname` !~ /Darwin/ and $CFLAGS .= " -Wno-shift-negative-value -Wno-strict-overflow -Wno-maybe-uninitialized -Wno-logical-op -Wstrict-null-sentinel -Wno-strict-aliasing";
+`uname` !~ /Darwin/ and $CFLAGS .= " -Wno-shift-negative-value -Wno-strict-overflow -Wno-maybe-uninitialized -Wno-logical-op -Wstrict-null-sentinel";
 `uname` =~ /Darwin/ and $CFLAGS .= " -Wno-shift-negative-value -Wno-c++14-binary-literal -ferror-limit=10 -DNO_FMT_LLU";
 
 system( "rm -f ${prog}.o ${prog} Cordic.o" );

@@ -31,7 +31,7 @@
 // Typical usage:
 //
 //     #include freal.h
-//     freal::implicit_to_set( 8, 21 );         // default is to convert FLT values to fixed-point 1.8.21
+//     freal::implicit_to_set( 8, 21, true );   // default is to convert FLT values to floating-point 1.8.21
 //     ...
 //     freal g;                                 // g is undefined, no type
 //     freal f = 25.473822;                     // implicitly convert to fixed-point 1.8.21
@@ -95,7 +95,7 @@ public:
     // IMPORTANT: implicit_from_set() must be called before
     // using any implicit conversions FROM freal.
     //-----------------------------------------------------
-    static void            implicit_to_set( uint32_t int_w, uint32_t frac_w, bool is_float=false );
+    static void            implicit_to_set( uint32_t int_w, uint32_t frac_w, bool is_float=true );
     static void            implicit_to_set( Cordic<T,FLT> * cordic );
     static Cordic<T,FLT> * implicit_to_get( void );
     static void            implicit_from_set( bool allow );
@@ -729,16 +729,12 @@ inline freal::freal( const freal& other, FLT f )
 
 inline freal freal::make_fixed( uint32_t int_w, uint32_t frac_w, FLT init_f )
 {
-    return freal( new Cordic<T,FLT>( int_w, frac_w ), init_f );
+    return freal( new Cordic<T,FLT>( int_w, frac_w, false ), init_f );
 }
 
 inline freal freal::make_float( uint32_t exp_w, uint32_t frac_w, FLT init_f )
 {
-    cassert( false, "can't encode floating-point values right now" );
-    (void)exp_w;   // unused
-    (void)frac_w;
-    (void)init_f;
-    return freal();
+    return freal( new Cordic<T,FLT>( exp_w, frac_w, true ), init_f );
 }
 
 inline freal freal::pop_value( Cordic<T,FLT> * cordic, const T& encoded )

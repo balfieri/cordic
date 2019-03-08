@@ -1,0 +1,213 @@
+#!/usr/bin/perl
+#
+# cordiff - take debug output and see where output is wrong compared to Perl math library
+#
+# cordiff < make.out
+#
+use strict;
+use warnings;
+
+use Math::Trig;
+
+my $tol = shift @ARGV || 0.01;       # 1%
+
+while( <> )
+{
+    /end: / or next;
+    /^reconstruct/ and next;
+    /^reduce/ and next;
+
+    if ( /^fma end: x_orig=(\S+) y_orig=(\S+) have_addend=(\d+) addend=(\S+) x_reduced=\S+ y_reduced=\S+ fma=(\S+)/ ) {
+        my $x = $1 * 1.0;
+        my $y = $2 * 1.0;
+        my $a = $3 ? ($4 * 1.0) : 0.0;
+        my $v = $5 * 1.0;
+        my $e = $x*$y + $a;
+        my $d = abs( ($v - $e) / (($e == 0.0) ? 1.0 : $e) );
+        $d > $tol and print "e=$e: $_";
+        next;
+    }
+
+    if ( /^fda end: x_orig=(\S+) y_orig=(\S+) have_addend=(\d+) addend=(\S+) x_reduced=\S+ y_reduced=\S+ fda=(\S+)/ ) {
+        my $x = $1 * 1.0;
+        my $y = $2 * 1.0;
+        my $a = $3 ? ($4 * 1.0) : 0.0;
+        my $v = $5 * 1.0;
+        my $e = ($x == 0.0) ? (($y < 0) ? "-inf" : "inf") : ($y/$x + $a);
+        my $d = abs( ($v - $e) / (($e == 0.0) ? 1.0 : $e) );
+        $d > $tol and print "e=$e: $_";
+        next;
+    }
+
+    if ( /^isless end: x_orig=(\S+) y_orig=(\S+) isless=(\d+)/ ) {
+        my $x = $1 * 1.0;
+        my $y = $2 * 1.0;
+        my $v = int( $3 );
+        my $e = int( $x < $y );
+        $e != $v and print "e=$e: $_";
+        next;
+    }
+
+    if ( /^islessequal end: x_orig=(\S+) y_orig=(\S+) islessequal=(\d+)/ ) {
+        my $x = $1 * 1.0;
+        my $y = $2 * 1.0;
+        my $v = int( $3 );
+        my $e = int( $x <= $y );
+        $e != $v and print "e=$e: $_";
+        next;
+    }
+
+    if ( /^isgreater end: x_orig=(\S+) y_orig=(\S+) isgreater=(\d+)/ ) {
+        my $x = $1 * 1.0;
+        my $y = $2 * 1.0;
+        my $v = int( $3 );
+        my $e = int( $x > $y );
+        $e != $v and print "e=$e: $_";
+        next;
+    }
+
+    if ( /^isgreaterequal end: x_orig=(\S+) y_orig=(\S+) isgreaterequal=(\d+)/ ) {
+        my $x = $1 * 1.0;
+        my $y = $2 * 1.0;
+        my $v = int( $3 );
+        my $e = int( $x >= $y );
+        $e != $v and print "e=$e: $_";
+        next;
+    }
+
+    if ( /^pow end: b=(\S+) x=(\S+) pow=(\S+)/ ) {
+        my $x = $1 * 1.0;
+        my $y = $2 * 1.0;
+        my $v = $3 * 1.0;
+        my $e = $x ** $y;
+        my $d = abs( ($v - $e) / (($e == 0.0) ? 1.0 : $e) );
+        $d > $tol and print "e=$e: $_";
+        next;
+    }
+
+    if ( /sqrt end: x_orig=(\S+) sqrt=(\S+)/ ) {
+        my $x = $1 * 1.0;
+        my $v = $2 * 1.0;
+        my $e = sqrt( $x );
+        my $d = abs( ($v - $e) / (($e == 0.0) ? 1.0 : $e) );
+        $d > $tol and print "e=$e: $_";
+        next;
+    }
+
+    if ( /^log end: x_orig=(\S+).* log=(\S+)/ ) {
+        my $x = $1 * 1.0;
+        my $v = $2 * 1.0;
+        my $e = ($x == 0.0) ? "-inf" : log( $x );
+        my $d = abs( ($v - $e) / (($e == 0.0) ? 1.0 : $e) );
+        $d > $tol and print "e=$e: $_";
+        next;
+    }
+
+    if ( /^exp end: x_orig=(\S+) b=\S+ exp=(\S+)/ ) {
+        my $x = $1 * 1.0;
+        my $v = $2 * 1.0;
+        my $e = exp( $x );
+        my $d = abs( ($v - $e) / (($e == 0.0) ? 1.0 : $e) );
+        $d > $tol and print "e=$e: $_";
+        next;
+    }
+
+    if ( /^sin end: x_orig=(\S+) sin=(\S+)/ ) {
+        my $x = $1 * 1.0;
+        my $v = $2 * 1.0;
+        my $e = sin( $x );
+        my $d = abs( ($v - $e) / (($e == 0.0) ? 1.0 : $e) );
+        $d > $tol and print "e=$e: $_";
+        next;
+    }
+
+    if ( /^cos end: x_orig=(\S+) cos=(\S+)/ ) {
+        my $x = $1 * 1.0;
+        my $v = $2 * 1.0;
+        my $e = cos( $x );
+        my $d = abs( ($v - $e) / (($e == 0.0) ? 1.0 : $e) );
+        $d > $tol and print "e=$e: $_";
+        next;
+    }
+
+    if ( /^sincos end: x_orig=(\S+) sin=(\S+) cos=(\S+) r=(\S+)/ ) {
+        my $x  = $1 * 1.0;
+        my $v0 = $2 * 1.0;
+        my $v1 = $3 * 1.0;
+        my $r  = $4 * 1.0;
+        my $e0 = sin( $x ) * $r;
+        my $e1 = cos( $x ) * $r;
+        my $d0 = abs( ($v0 - $e0) / (($e0 == 0.0) ? 1.0 : $e0) );
+        my $d1 = abs( ($v1 - $e1) / (($e1 == 0.0) ? 1.0 : $e1) );
+        $d0 > $tol and print "e0=$e0: $_";
+        $d1 > $tol and print "e1=$e1: $_";
+        next;
+    }
+
+    if ( /^sinpicospi end: x_orig=(\S+) sinpi=(\S+) cospi=(\S+) r=(\S+)/ ) {
+        my $x  = $1 * 1.0;
+        my $v0 = $2 * 1.0;
+        my $v1 = $3 * 1.0;
+        my $r  = $4 * 1.0;
+        my $e0 = sin( $x * pi ) * $r;
+        my $e1 = cos( $x * pi ) * $r;
+        my $d0 = abs( ($v0 - $e0) / (($e0 == 0.0) ? 1.0 : $e0) );
+        my $d1 = abs( ($v1 - $e1) / (($e1 == 0.0) ? 1.0 : $e1) );
+        $d0 > $tol and print "e0=$e0: $_";
+        $d1 > $tol and print "e1=$e1: $_";
+        next;
+    }
+
+    if ( /^tan end: x_orig=(\S+) tan=(\S+)/ ) {
+        my $x = $1 * 1.0;
+        my $v = $2 * 1.0;
+        my $e = tan( $x );
+        my $d = abs( ($v - $e) / (($e == 0.0) ? 1.0 : $e) );
+        $d > $tol and print;
+        next;
+    }
+
+    if ( /^sinh end: x_orig=(\S+) sinh=(\S+)/ ) {
+        my $x = $1 * 1.0;
+        my $v = $2 * 1.0;
+        my $e = sinh( $x );
+        my $d = abs( ($v - $e) / (($e == 0.0) ? 1.0 : $e) );
+        $d > $tol and print "e=$e: $_";
+        next;
+    }
+
+    if ( /^cosh end: x_orig=(\S+) cosh=(\S+)/ ) {
+        my $x = $1 * 1.0;
+        my $v = $2 * 1.0;
+        my $e = cosh( $x );
+        my $d = abs( ($v - $e) / (($e == 0.0) ? 1.0 : $e) );
+        $d > $tol and print "e=$e: $_";
+        next;
+    }
+
+    if ( /^sinhcosh end: x_orig=(\S+) sinh=(\S+) cosh=(\S+) r=(\S+)/ ) {
+        my $x  = $1 * 1.0;
+        my $v0 = $2 * 1.0;
+        my $v1 = $3 * 1.0;
+        my $r  = $4 * 1.0;
+        my $e0 = sinh( $x ) * $r;
+        my $e1 = cosh( $x ) * $r;
+        my $d0 = abs( ($v0 - $e0) / (($e0 == 0.0) ? 1.0 : $e0) );
+        my $d1 = abs( ($v1 - $e1) / (($e1 == 0.0) ? 1.0 : $e1) );
+        $d0 > $tol and print "e0=$e0: $_";
+        $d1 > $tol and print "e1=$e1: $_";
+        next;
+    }
+
+    if ( /^tanh end: x_orig=(\S+) tanh=(\S+)/ ) {
+        my $x = $1 * 1.0;
+        my $v = $2 * 1.0;
+        my $e = tanh( $x );
+        my $d = abs( ($v - $e) / (($e == 0.0) ? 1.0 : $e) );
+        $d > $tol and print "e=$e: $_";
+        next;
+    }
+
+    print;
+    die "ERROR: not handled\n";
+}
