@@ -1,6 +1,18 @@
 <p>
-This repository contains some C++ code that shows how to implement CORDIC math. <b>See Cordic.h.</b>
+This repository contains some C++ code that shows how to implement CORDIC math.  This "library" provides the following features:
 </p>
+
+<ul>
+<li>Floating-point (default) or fixed-point real numbers.</li>
+<li>Configurable bit widths for exponent, integer, fraction, and guard bits.</li>
+<li>A flexible "freal" class that provides the same functions as other C++ floating-point numbers, including 
+elementary functions, rounding modes, and IEEE 754 compliance.</li>
+<li>Note: this library is not yet fully bit-accurate with IEEE 754, but will be in the near future.</li>
+<li>An infrastructure for logging operations.</li>
+<li>A basic test.</li>
+</ul>
+
+<h1>Open Source</h1>
 
 <p>
 <b>This is all open-source.  Refer to the LICENSE.md for licensing details.
@@ -35,16 +47,54 @@ The hope of this library is to create a small, yet complete, tutorial package fo
 wishing to learn this timeless computer math algorithm.
 </p>
 
+<h1>Floating-Point</h1>
+
+<p>
+By default, the library implements IEEE floating-point numbers with
+arbitrary exponent width (exp_w), fraction width (frac_w), and guard bits (guard_w). 
+These encoded values are stored in a type T integer container (default is int64_t).
+</p>
+<p>
+In IEEE floating-point numbers, int_w is 0 because the binary fraction is 
+assumed to have an implied '1' before the 
+binary point, which is known as a normalized number (e.g., 1.110110<sub>2</sub> * 2<sup>24</sup>).  One exception is when
+the value is less than the smallest normalized number 1.0 * 2<sup>MIN_EXP</sup>, which makes it a subnormal number or "denorm." 
+Other special numbers include +Infinity (e.g., from 1/0), -Infinity (e.g., from -1/0), or NaN (not a number, e.g., from sqrt(-1)), which 
+are identified using special encodings of the exponent.
+</p>
+
+<p>
+There are a couple other options supported in most floating-point libraries that we'll need to add for
+floating-point encodings only.
+Flush-To-Zero (FTZ) means that any time an operation would produce a denom (again, a number smaller than the smallest normalized
+number), it is changed to zero.
+Denorm-As-Zero (DAZ) means that any denorm input to an operation is first changed to zero.
+</p>
+
+<p>
+The CORDIC routines perform frac_w iterations in order to arrive at frac_w precision.  You may, however,
+reduce the number of iterations by passing a different value for n to the constructor.  The numeric encoding
+will be the same, but the result will be less precise.  Again, different Cordic() instances with idential parameters
+except for n can be used on an operation-by-operation basis.
+</p>
+
 <h1>Fixed-Point</h1>
 
 <p>
-The library assumes that values are stored as fixed-point with user-defined integer width (int_w) and fraction width (frac_w).  
+The library also supports values that are stored as fixed-point with user-defined integer width (int_w) and fraction width (frac_w).  
 The fixed-point container type T must be a signed integer at least as wide as 1+int_w+frac_w+log2(frac_w). The log2(frac_w) are
 the default number of guard bits (guard_w).  A fixed-point number stores
 the sign in the most-significant bit, followed by the int_w binary integer bits, followed by the frac_w+guard_w binary fraction bits 
 in the least-significant
 bits.  If T is larger than the required number of bits, the extra upper bits are assumed to contain replications of the sign bit
 (1=negative, 0=non-negative).  In other words, fixed-point values are stored in 2's-complement integer containers, so -A == ~A + 1.
+</p>
+
+<p>
+Fixed-point numbers naturally support denorms (i.e., they are all denorms), but have no way to indicate a value 
+outside their allowed range.  The library needs
+an option to mark a number as +Infinity, -Infinity, or NaN.  An additional needed option is
+to gracefully flush large numbers to +/- "max value" and NaNs to zero.
 </p>
 
 <p>
@@ -63,43 +113,6 @@ Format         value            binary (spaces added for readability)
 
 <p>
 This code automatically performs appropriate argument range reductions and post-CORDIC adjustments.
-</p>
-
-<p>
-The CORDIC routines perform frac_w iterations in order to arrive at frac_w precision.  You may, however,
-reduce the number of iterations by passing a different value for n to the constructor.  The numeric encoding
-will be the same, but the result will be less precise.  Again, different Cordic() instances with idential parameters
-except for n can be used on an operation-by-operation basis.
-</p>
-
-<h1>Floating-Point</h1>
-
-<p>
-At some point in the near future, the library will be enhanced to allow T to hold IEEE floating-point numbers with
-arbitrary exponent width (exp_w). So the library will allow T (still an integer container) to hold 
-fixed-point OR floating-point encodings including, but not
-limited to, standard IEEE floating-point formats such as float (fp32), double (fp64), quadruple (fp128), half (fp16), and quarter (fp8).
-Only one of int_w or exp_w may be non-zero.  In IEEE floating-point numbers, int_w is 0 because the binary fraction is 
-assumed to have an implied '1' before the 
-binary point, which is known as a normalized number (e.g., 1.110110<sub>2</sub> * 2<sup>24</sup>).  One exception is when
-the value is less than the smallest normalized number 1.0 * 2<sup>MIN_EXP</sup>, which makes it a denormalized number or "denorm." Other special
-numbers include +Infinity (e.g., from 1/0), -Infinity (e.g., from -1/0), or NaN (not a number, e.g., from sqrt(-1)), which 
-are identified using special encodings of the exponent.
-</p>
-
-<p>
-Fixed-point numbers naturally support denorms (i.e., they are all denorms), but have no way to indicate a value 
-outside their allowed range.  The library needs
-an option to mark a number as +Infinity, -Infinity, or NaN.  An additional needed option is
-to gracefully flush large numbers to +/- "max value" and NaNs to zero.
-</p>
-
-<p>
-There are a couple other options supported in most floating-point libraries that we'll need to add for
-floating-point encodings only.
-Flush-To-Zero (FTZ) means that any time an operation would produce a denom (again, a number smaller than the smallest normalized
-number), it is changed to zero.
-Denorm-As-Zero (DAZ) means that any denorm input to an operation is first changed to zero.
 </p>
 
 <h1>freal</h1>
@@ -127,8 +140,8 @@ typedef freal real;
 inline void real_init( void ) 
 {
     // one-time calls to static methods
-    real::implicit_to_set( 7, 24 );     // allow implicit conversion  TO   freal (fixed-point 1.7.24)
-    real::implicit_from_set( true );    // allow implicit conversions FROM freal (to int, double, etc.)
+    real::implicit_to_set( 8, 23, true );  // allow implicit conversion  TO   freal (floating-point 1.8.23)
+    real::implicit_from_set( true );       // allow implicit conversions FROM freal (to int, double, etc.)
 }
 
 [have your main program call real_init() before using real numbers.]
@@ -184,7 +197,7 @@ To build and run the basic "smoke" test, <b>test_basic.cpp</b>, on Linux, Cygwin
 doit.test
 doit.test 1                             - run with debug spew 
 doit.test 0 test_basic                  - same as doit.test with no args
-doit.test 0 test_basic -int_w 8         - change int_w from default to 8 bits
+doit.test 0 test_basic -exp_w 16        - change exp_w from default to 16 bits
 </pre>
 
 <p>
