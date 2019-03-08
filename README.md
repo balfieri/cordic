@@ -5,10 +5,10 @@ This repository contains some C++ code that shows how to implement CORDIC math. 
 <ul>
 <li>Floating-point (default) or fixed-point real numbers.</li>
 <li>Configurable bit widths for exponent, integer, fraction, and guard bits.</li>
-<li>A flexible "freal" class that provides the same functions as other C++ floating-point numbers, including 
-elementary functions, rounding modes, and IEEE 754 compliance.</li>
+<li>A flexible "freal" class that provides the same behavior as other C++ floating-point numbers, including 
+arithemtic operations, the elementary functions, rounding modes, and IEEE 754 compliance.</li>
 <li>Note: this library is not yet fully bit-accurate with IEEE 754, but will be in the near future.</li>
-<li>An infrastructure for logging operations.</li>
+<li>An infrastructure for logging operations and analyzing them.</li>
 <li>A basic test.</li>
 </ul>
 
