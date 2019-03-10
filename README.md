@@ -66,6 +66,38 @@ Other special numbers include +Infinity (e.g., from 1/0), -Infinity (e.g., from 
 are identified using special encodings of the exponent.
 </p>
 
+
+<p>
+Here are some examples of floating-point numbers.  1.3.8 means 1 sign bit, 3 exponent bits (int_w), and 8 fraction bits (frac_w).
+</p>
+<pre>
+Format         value            binary (spaces added for readability)
+---------------------------------------------------------------------
+1.3.8           0.0             0 000 00000000
+1.3.8          -0.0             1 000 00000000
+1.3.8           inf             0 111 00000000
+1.3.8          -inf             1 111 00000000
+1.3.8           NaN             0 111.00000001          fraction bits just need to be non-zero
+1.3.8          -NaN             1 111 00000001          
+
+1.3.8           1.0             0 011 00000000          1 * 2^0
+1.3.8          -1.0             0 011 00000000          
+1.3.8           2.0             0 100 00000000
+1.3.8           3.9921875       0 100 11111111          (1 + 255/256) * 2^1
+1.3.8          -3.9921875       1 100 11111111          
+1.3.8           4.0             0 101 00000000
+1.3.8           2^3             0 110 00000000
+1.3.8          -2^3             1 110 00000000          
+1.3.8           0.5             0 010 00000000          1 * 2^-1
+1.3.8          -0.5             1 010 00000000          
+1.3.8           0.25            0 001 00000000          smallest positive normalized value
+1.3.8          -0.25            1 001 00000000          
+
+1.3.8           0.00048828125   0 000.00000001          smallest positive subnormal value: (0 + 1/256) * 2^-3
+1.3.8          -0.00048828125   1 000.00000001          
+
+</pre>
+
 <p>
 There are a couple other options supported in most floating-point libraries that we'll need to add for
 floating-point encodings only.
