@@ -37,7 +37,6 @@ int main( int argc, const char * argv[] )
     int  frac_w = 23;                           // same as float
     FLT TOL = 1.0 / FLT( 1LL << (frac_w-3) );   // we'd like this to be 1/(1 << (frac_w-1))  (in most cases, it is)
                                                 // not clear the CPU is doing the ops correctly either
-    bool     new_bugs = false;                  // by default, don't run new bugs
     uint32_t loop_cnt = 2;                      
 
     for( int i = 1; i < argc; i++ )
@@ -50,8 +49,6 @@ int main( int argc, const char * argv[] )
             frac_w = std::atoi( argv[++i] );
         } else if ( strcmp( argv[i], "-tol" ) == 0 ) {
             TOL = std::atof( argv[++i] );
-        } else if ( strcmp( argv[i], "-new_bugs" ) == 0 ) {
-            new_bugs = true;
         } else if ( strcmp( argv[i], "-loop_cnt" ) == 0 ) {
             loop_cnt = std::atoi( argv[++i] );
         } else if ( strcmp( argv[i], "-log" ) == 0 ) {
@@ -70,34 +67,6 @@ int main( int argc, const char * argv[] )
     //---------------------------------------------------------------------------
     freal::implicit_to_set( exp_or_int_w, frac_w, is_float );
     freal::implicit_from_set( true );
-
-    //---------------------------------------------------------------------------
-    // New and fixed bugs.
-    //---------------------------------------------------------------------------
-    if ( new_bugs ) {
-        //---------------------------------------------------------------------------
-        // Put new bugs here.
-        // Once fixed, they will be moved to below.
-        //---------------------------------------------------------------------------
-    }
-    //---------------------------------------------------------------------------
-    // Put fixed bugs here so they get regressed.
-    //---------------------------------------------------------------------------
-    do_op2(     "15, x*y",              mul,    mul,           -0.00000000000000000010980813584353493, 0.00000000000000000010980813584353493 );
-    do_op2(     "14) atan2(y,x)",       atan2,  std::atan2,    0.85865706205368042, 0 );
-    do_op2(     "13) atan2(y,x)",       atan2,  std::atan2,    -0.000000059604651880817983, -0.84004300832748413 );
-    do_op2(     "12) atan2(y,x)",       atan2,  std::atan2,    0.00018440188432577997, -0.62388521432876587 );
-    do_op22sc(  "11) sincos",           sincos, sincos,        0.7853982001543045, -0.64947649836540222 );
-    do_op12(    "10) sincos",           sincos, sincos,        1.5707963891327381 );
-    do_op12(    "9) sincos",            sincos, sincos,        0.887265 );
-    do_op2(     "8) pow",               pow,    std::pow,      0.0, 0.4 );
-    do_op2(     "7) pow",               pow,    std::pow,      0.004999995231628418, 0.45454543828964233 );
-    do_op2(     "6) hypot",             hypot,  hypot,         0.70710676908493042, 0.70710664987564087 );
-    do_op1(     "5) cos",               cos,    std::cos,      1.6214 );
-    do_op1(     "4) sqrt",              sqrt,   std::sqrt,     3.8104 );
-    do_op2(     "3) hypoth",            hypoth, hypoth,        0.8104, 0.6818 );
-    do_op2(     "2) mul",               mul,    mul,           1.45, 0.4782 );
-    do_op1(     "1) log",               log,    std::log,      1.53 );
 
     //---------------------------------------------------------------------------
     // Run through all operations.
@@ -185,6 +154,27 @@ int main( int argc, const char * argv[] )
         do_op22( "rect_to_polar(x,y)", rect_to_polar, rect_to_polar, x, y );
         do_op22( "polar_to_rect(x,y)", polar_to_rect, polar_to_rect, x, y );
     }
+
+    //---------------------------------------------------------------------------
+    // Put fixed bugs here so they get regressed.
+    //---------------------------------------------------------------------------
+    std::cout << "\nPAST BUGS:\n";
+
+    do_op1(     "1) log",               log,    std::log,      1.53 );
+    do_op2(     "2) mul",               mul,    mul,           1.45, 0.4782 );
+    do_op2(     "3) hypoth",            hypoth, hypoth,        0.8104, 0.6818 );
+    do_op1(     "4) sqrt",              sqrt,   std::sqrt,     3.8104 );
+    do_op1(     "5) cos",               cos,    std::cos,      1.6214 );
+    do_op2(     "6) hypot",             hypot,  hypot,         0.70710676908493042, 0.70710664987564087 );
+    do_op2(     "7) pow",               pow,    std::pow,      0.004999995231628418, 0.45454543828964233 );
+    do_op2(     "8) pow",               pow,    std::pow,      0.0, 0.4 );
+    do_op12(    "9) sincos",            sincos, sincos,        0.887265 );
+    do_op12(    "10) sincos",           sincos, sincos,        1.5707963891327381 );
+    do_op22sc(  "11) sincos",           sincos, sincos,        0.7853982001543045, -0.64947649836540222 );
+    do_op2(     "12) atan2(y,x)",       atan2,  std::atan2,    0.00018440188432577997, -0.62388521432876587 );
+    do_op2(     "13) atan2(y,x)",       atan2,  std::atan2,    -0.000000059604651880817983, -0.84004300832748413 );
+    do_op2(     "14) atan2(y,x)",       atan2,  std::atan2,    0.85865706205368042, 0 );
+    do_op2(     "15, x*y",              mul,    mul,           -0.00000000000000000010980813584353493, 0.00000000000000000010980813584353493 );
 
     std::cout << "PASSED\n";
     return 0;
