@@ -72,10 +72,10 @@ Here are some notes on possible biased exponent encodings into an exp_w-bit expo
 <pre>
 Biased Exp      Unbiased Exp            Meaning
 -------------------------------------------------------------
-01111....110    0                       bias   (2^0)
+01111....110    0                       bias   
 00000....000    0 - bias                subnormal 
-111111111110    (1 << (exp_w-1))-1      largest normal exponent
-00000....001    0 - bias + 1            smallest normal exponent
+111111111110    (1 << (exp_w-1))-1      largest normal exponent  (MAX_EXP)
+00000....001    0 - bias + 1            smallest normal exponent (MIN_EXP)
 11111....111    infinity or NaN         special
 </pre>
 
