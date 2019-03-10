@@ -3694,10 +3694,15 @@ T Cordic<T,FLT>::atan2( const T& _y, const T& _x, bool is_final, bool x_is_one, 
 
     // check for special cases
     T rr;
-    if ( exp_class == EXP_CLASS::ZERO ) {
-        // 0
+    bool did_neg = false;
+    if ( exp_class == EXP_CLASS::ZERO || exp_class == EXP_CLASS::INFINITE ) {
+        // 0 or inf
         // 
         rr = 0;
+    } else if ( exp_class == EXP_CLASS::NOT_A_NUMBER ) {
+        // NaN
+        rr = (x > 0) ? x : 1;          // must be non-zero
+
     } else {
         cassert( exp_class == EXP_CLASS::NORMAL || exp_class == EXP_CLASS::SUBNORMAL,
                  "atan2: unexpected exp_class=" + to_str(exp_class) );
@@ -3706,13 +3711,14 @@ T Cordic<T,FLT>::atan2( const T& _y, const T& _x, bool is_final, bool x_is_one, 
         // reduce
         T xx, yy;
         circular_vectoring( x, y, _zero, xx, yy, rr );
+
+        did_neg = rr < 0;
+        if ( did_neg ) {
+            rr = -rr;
+            rr_sign = !rr_sign;
+        }
     }
 
-    bool did_neg = rr < 0;
-    if ( did_neg ) {
-        rr = -rr;
-        rr_sign = !rr_sign;
-    }
     reconstruct( rr, exp_class, 0, rr_sign );
     rr = scalbn( rr, 1, false );
     if ( swapped ) rr = sub( did_neg ? _neg_pi : _pi, rr, false );
