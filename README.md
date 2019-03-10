@@ -66,6 +66,18 @@ Other special numbers include +Infinity (e.g., from 1/0), -Infinity (e.g., from 
 are identified using special encodings of the exponent.
 </p>
 
+<p>
+Here are some notes on possible biased exponent encodings into an exp_w-bit exponent:
+</p>
+<pre>
+Biased Exp      Unbiased Exp            Meaning
+-------------------------------------------------------------
+01111....110    0                       bias 
+00000....000    0 - bias                subnormal 
+111110000110    (1 << (exp_w-1))-1      largest normal exponent
+00000....001    0 - bias + 1            smallest normal exponent
+11111....111    infinity or NaN         special
+</pre>
 
 <p>
 Here are some examples of floating-point numbers.  1.3.8 means 1 sign bit, 3 exponent bits (exp_w), and 8 fraction bits (frac_w).
@@ -80,21 +92,22 @@ Format         value            binary (spaces added for readability)
 1.3.8          -infinity        1 111 00000000
 1.3.8           NaN             0 111 00000001          all 1's exponent; any non-zero fraction 
 1.3.8          -NaN             1 111 00000001          
-1.3.8           1.0             0 011 00000000          1 * 2^0
-1.3.8          -1.0             0 011 00000000          
-1.3.8           2.0             0 100 00000000
-1.3.8           3.9921875       0 100 11111111          (1 + 255/256) * 2^1
-1.3.8          -3.9921875       1 100 11111111          
-1.3.8           4.0             0 101 00000000
-1.3.8           2^3             0 110 00000000
-1.3.8          -2^3             1 110 00000000          
-1.3.8           0.5             0 010 00000000          1 * 2^-1
+1.3.8           1.0             0 010 00000000          1 * 2^0 (bias exponent)
+1.3.8          -1.0             0 010 00000000          
+1.3.8           2.0             0 011 00000000          
+1.3.8           3.9921875       0 011 11111111          (1 + 255/256) * 2^1
+1.3.8          -3.9921875       1 011 11111111          
+1.3.8           4.0             0 100 00000000
+1.3.8           8.0             0 101 00000000
+1.3.8          16.0             0 110 00000000          1 * 2^4              (largest normal exponent)
+1.3.8          31.9375          0 110 11111111          (1 + 255/256) * 2^4  (largest normal value)
+1.3.8           0.5             0 001 00000000          1 * 2^-1
 1.3.8          -0.5             1 010 00000000          
 1.3.8           0.25            0 001 00000000          smallest positive normal value: 1 * 2^-2
 1.3.8          -0.25            1 001 00000000          
-1.3.8           0.00048828125   0 000.00000001          smallest positive subnormal value: (0 + 1/256) * 2^-3
-1.3.8          -0.00048828125   1 000.00000001          
-
+1.3.8           0.000976625     0 000 00000001          smallest positive subnormal value: (0 + 1/256) * 2^-2
+1.3.8          -0.000976625     1 000 00000001          
+1.3.8           0.2490234375    0 000 11111111          largest subnormal valu : (0 + 255/256) * 2^-2 
 </pre>
 
 <p>
