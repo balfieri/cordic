@@ -113,9 +113,9 @@ Format         value            binary (spaces added for readability)
 <p>
 There are a couple other options supported in most floating-point libraries that we'll need to add for
 floating-point encodings only.
-Flush-To-Zero (FTZ) means that any time an operation would produce a denom (again, a number smaller than the smallest normalized
+Flush-To-Zero (FTZ) means that any time an operation would produce a subnormal (again, a number smaller than the smallest normalized
 number), it is changed to zero.
-Denorm-As-Zero (DAZ) means that any denorm input to an operation is first changed to zero.
+Denorm-As-Zero (DAZ) means that any subnormal (aka denorm) input to an operation is first changed to zero.
 </p>
 
 <p>
