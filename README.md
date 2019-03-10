@@ -87,7 +87,7 @@ Guard bits are not shown.
 Format         value            binary (spaces added for readability)
 ---------------------------------------------------------------------
 1.3.8           0.0             0 000 00000000
-1.3.8          -0.0             1 000 00000000
+1.3.8          -0.0             1 000 00000000          
 1.3.8           infinity        0 111 00000000          all 1's exponent; zero fraction
 1.3.8          -infinity        1 111 00000000
 1.3.8           NaN             0 111 00000001          all 1's exponent; any non-zero fraction 
@@ -99,15 +99,15 @@ Format         value            binary (spaces added for readability)
 1.3.8          -3.9921875       1 011 11111111          
 1.3.8           4.0             0 100 00000000
 1.3.8           8.0             0 101 00000000
-1.3.8          16.0             0 110 00000000          1 * 2^4              (largest normal exponent)
-1.3.8          31.9375          0 110 11111111          (1 + 255/256) * 2^4  (largest normal value)
+1.3.8          16.0             0 110 00000000          1 * 2^4              
+1.3.8          31.9375          0 110 11111111          largest positive normal value: (1 + 255/256) * 2^4
 1.3.8           0.5             0 001 00000000          1 * 2^-1
 1.3.8          -0.5             1 010 00000000          
 1.3.8           0.25            0 001 00000000          smallest positive normal value: 1 * 2^-2
 1.3.8          -0.25            1 001 00000000          
 1.3.8           0.000976625     0 000 00000001          smallest positive subnormal value: (0 + 1/256) * 2^-2
 1.3.8          -0.000976625     1 000 00000001          
-1.3.8           0.2490234375    0 000 11111111          largest subnormal valu : (0 + 255/256) * 2^-2 
+1.3.8           0.2490234375    0 000 11111111          largest subnormal value: (0 + 255/256) * 2^-2 
 </pre>
 
 <p>
