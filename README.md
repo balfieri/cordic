@@ -79,7 +79,6 @@ Format         value            binary (spaces added for readability)
 1.3.8          -inf             1 111 00000000
 1.3.8           NaN             0 111.00000001          fraction bits just need to be non-zero
 1.3.8          -NaN             1 111 00000001          
- 
 1.3.8           1.0             0 011 00000000          1 * 2^0
 1.3.8          -1.0             0 011 00000000          
 1.3.8           2.0             0 100 00000000
@@ -90,9 +89,8 @@ Format         value            binary (spaces added for readability)
 1.3.8          -2^3             1 110 00000000          
 1.3.8           0.5             0 010 00000000          1 * 2^-1
 1.3.8          -0.5             1 010 00000000          
-1.3.8           0.25            0 001 00000000          smallest positive normalized value
+1.3.8           0.25            0 001 00000000          smallest positive normal value: 1 * 2^-2
 1.3.8          -0.25            1 001 00000000          
- 
 1.3.8           0.00048828125   0 000.00000001          smallest positive subnormal value: (0 + 1/256) * 2^-3
 1.3.8          -0.00048828125   1 000.00000001          
 
