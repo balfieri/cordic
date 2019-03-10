@@ -86,8 +86,8 @@ Guard bits are not shown.
 <pre>
 Format         value            binary (spaces added for readability)
 ---------------------------------------------------------------------
-1.3.8           0.0             0 000 00000000
-1.3.8          -0.0             1 000 00000000          
+1.3.8           0.0             0 000 00000000          1/0    =  infinity
+1.3.8          -0.0             1 000 00000000          1/(-0) = -infinity etc.
 1.3.8           infinity        0 111 00000000          all 1's exponent; zero fraction
 1.3.8          -infinity        1 111 00000000
 1.3.8           NaN             0 111 00000001          all 1's exponent; any non-zero fraction 
