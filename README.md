@@ -68,7 +68,8 @@ are identified using special encodings of the exponent.
 
 
 <p>
-Here are some examples of floating-point numbers.  1.3.8 means 1 sign bit, 3 exponent bits (int_w), and 8 fraction bits (frac_w).
+Here are some examples of floating-point numbers.  1.3.8 means 1 sign bit, 3 exponent bits (exp_w), and 8 fraction bits (frac_w).
+Guard bits are not shown.
 </p>
 <pre>
 Format         value            binary (spaces added for readability)
@@ -132,6 +133,7 @@ to gracefully flush large numbers to +/- "max value" and NaNs to zero.
 
 <p>
 Here are some examples of fixed-point numbers.  1.3.8 means 1 sign bit, 3 integer bits (int_w), and 8 fraction bits (frac_w).
+Guard bits are not shown.
 </p>
 <pre>
 Format         value            binary (spaces added for readability)
