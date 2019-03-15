@@ -1506,22 +1506,25 @@ inline FLT Cordic<T,FLT>::_to_flt( const T& _x, bool is_final, bool from_fixed, 
         switch( x_exp_class )
         {
             case EXP_CLASS::ZERO:                   
-                 x_f = 0.0;
-                 break;
+                x_f = 0.0;
+                break;
 
             case EXP_CLASS::NORMAL: 
+                x_f = std::scalbn( FLT( x ), x_exp - _frac_guard_w );
+                break;
+
             case EXP_CLASS::SUBNORMAL:
-                 x_f = std::scalbn( FLT( x ), x_exp - _frac_guard_w );
-                 break;
+                x_f = std::scalbn( FLT( x ), -_exp_bias - _frac_guard_w );
+                break;
 
             case EXP_CLASS::INFINITE:
-                 x_f = std::numeric_limits<FLT>::infinity();
-                 break;
+                x_f = std::numeric_limits<FLT>::infinity();
+                break;
 
             case EXP_CLASS::NOT_A_NUMBER:
             default:
-                 x_f = std::numeric_limits<FLT>::quiet_NaN();   // FIXIT: retain frac bits 
-                 break;
+                x_f = std::numeric_limits<FLT>::quiet_NaN();   // FIXIT: retain frac bits 
+                break;
         }
     } else {
         // FIXED: return x / _one
@@ -2503,6 +2506,7 @@ inline T Cordic<T,FLT>::rfrac( const T& _x, int rmode ) const
         default:                                                                        break;
     }
 
+    if ( x_exp_class == EXP_CLASS::SUBNORMAL && x == 0 ) x_exp_class = EXP_CLASS::ZERO;
     reconstruct( x, x_exp_class, x_exp, x_sign );  
     return x;
 }
@@ -2646,7 +2650,7 @@ inline T Cordic<T,FLT>::add( const T& _x, const T& _y, bool is_final ) const
                 cassert( x < _four_fxd, "add() sum of mantissas should have been less than 4" );
                 cassert( x_exp_class == EXP_CLASS::NORMAL, "add() expected NORMAL class x value at this point" );
                 x_exp++;
-                x >>= 1;
+                x = (x >> 1) | (x & 1); // perhaps set sticky bit
                 if ( x_exp >= _exp_unbiased_max ) {
                     x_exp_class = EXP_CLASS::INFINITE;
                     x_exp = _exp_mask;
@@ -2792,6 +2796,7 @@ inline T Cordic<T,FLT>::fma_fda( bool is_fma, const T& _x, const T& _y, const T&
         }
         rr_exp_class = x_exp_class;
         rr_exp = y_exp + (is_fma ? x_exp : -x_exp);
+        if ( rr == 0 ) rr_exp_class = EXP_CLASS::ZERO;
         do_rest = true;
     }
 
@@ -4015,6 +4020,8 @@ inline void Cordic<T,FLT>::deconstruct( T& x, EXP_CLASS& x_exp_class, int32_t& x
         uint32_t exp_biased = (x >> _frac_guard_w) & _exp_mask;
                  sign       = (x >> (_w-1)) & 1;
                  x         &= _frac_guard_mask;     // mantissa without implicit 1.
+        if ( debug && allow_debug ) std::cout << "\ndeconstruct: sign=" << sign << " exp_biased=" << exp_biased << 
+                                                 " frac_guard=" << std::hex << x << std::dec << "\n";
         if ( exp_biased == 0 ) {
             if ( x == 0 ) {
                 x_exp_class = EXP_CLASS::ZERO;
@@ -4100,16 +4107,16 @@ inline void Cordic<T,FLT>::reconstruct( T& x, EXP_CLASS x_exp_class, int32_t x_e
                 cassert( int_part == 1, "reconstruct() normal int_part should be exactly 1, got " + std::to_string(int_part) );
 
                 exp = x_exp + _exp_bias;
-                if ( exp >= int32_t(_exp_mask) ) {
-                    // infinity
-                    exp = _exp_mask;
-                    x = 0;
-                } else if ( exp < 0 ) {
+                if ( exp < 0 ) {
                     // subnormal
                     exp = -exp;
                     T mask = (T(1) << exp) - 1;
                     x = (x >> exp) | ((x & mask) != 0);
                     exp = 0;
+                } else if ( exp >= int32_t(_exp_mask) ) {
+                    // infinity
+                    exp = _exp_mask;
+                    x = 0;
                 }
                 break;
 
@@ -4345,8 +4352,20 @@ inline void Cordic<T,FLT>::reduce_hypot_args( T& x, T& y, EXP_CLASS& exp_class, 
         exp_class = y_exp_class;
         exp       = y_exp;
 
+    } else if ( x_exp_class == EXP_CLASS::ZERO && y_exp_class == EXP_CLASS::ZERO ) {
+        x = 0;
+        exp_class = EXP_CLASS::ZERO;
+        exp = 0;
+    
     } else {  
         exp_class = EXP_CLASS::NORMAL;
+        if ( x_exp_class == EXP_CLASS::ZERO ) {
+            x_exp = y_exp;
+            x = 0;
+        } else if ( y_exp_class == EXP_CLASS::ZERO ) {
+            y_exp = x_exp;
+            y = 0;
+        }
         int32_t diff = x_exp - y_exp;
         if ( diff > 0 ) {
             T mask = (T(1) << diff) - 1;
