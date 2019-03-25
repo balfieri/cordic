@@ -771,6 +771,7 @@ private:
     uint32_t                    _n;
     int                         _rounding_mode;
 
+    T                           _quiet_NaN_fxd;
     T                           _maxint;
     T                           _max;
     T                           _min;
@@ -1043,6 +1044,7 @@ Cordic<T,FLT>::Cordic( uint32_t int_exp_w, uint32_t frac_w, bool is_float, uint3
     _one_fxd         = T(1) << _frac_guard_w;                        
     _two_fxd         = T(2) << _frac_guard_w;
     _four_fxd        = T(4) << _frac_guard_w;
+    _quiet_NaN_fxd   = T(1) << (_frac_guard_w-1);
 
     _max             = is_float ? make_float( false, _exp_mask-1, _frac_guard_mask ) : to_t( std::pow( 2.0, int_exp_w ) - 1.0 );
     _min             = is_float ? make_float( false, 0,           1                ) : to_t( 1.0 / std::pow( 2.0, frac_w ) );
@@ -2174,9 +2176,15 @@ T Cordic<T,FLT>::modf( const T& _x, T * i ) const
     switch( fpclassify( _x ) )
     {
         case FP_ZERO:
+        {
+            // return +/- zero 
+            break;
+        }
+
         case FP_NAN:
         {
-            // return +/- zero or +/- NaN for both
+            // return +/- quiet_NaN for both
+            x |= _quiet_NaN_fxd;
             break;
         }
 
@@ -2217,7 +2225,7 @@ T Cordic<T,FLT>::modf( const T& _x, T * i ) const
 
         default:
         {
-            x  = quiet_NaN();
+            x |= _quiet_NaN_fxd;
             *i = x;
             break;
         }
@@ -2617,15 +2625,17 @@ inline T Cordic<T,FLT>::add( const T& _x, const T& _y, bool is_final ) const
             x_sign      = y_sign;
 
         } else if ( x_exp_class == EXP_CLASS::INFINITE ) {
-            // x is the answer, but could change to NaN 
+            // x is the answer, but could change to quiet_NaN 
             if ( x_sign != y_sign && y_exp_class == EXP_CLASS::INFINITE ) {
                 x_exp_class = EXP_CLASS::NOT_A_NUMBER;
+                x |= _quiet_NaN_fxd;
             }
 
         } else if ( y_exp_class == EXP_CLASS::INFINITE ) {
-            // y is the answer, but could change to NaN 
+            // y is the answer, but could change to quiet_NaN 
             if ( x_sign != y_sign && x_exp_class == EXP_CLASS::INFINITE ) {
                 y_exp_class = EXP_CLASS::NOT_A_NUMBER;
+                y |= _quiet_NaN_fxd;
             }
             x_exp_class = y_exp_class;
             x_exp       = y_exp;
@@ -2762,19 +2772,33 @@ inline T Cordic<T,FLT>::fma_fda( bool is_fma, const T& _x, const T& _y, const T&
         rr           = y;
 
     } else if ( x_exp_class == EXP_CLASS::INFINITE ) {
-        // x is the answer, but could change to NaN 
-        if ( y_exp_class == EXP_CLASS::ZERO ) {
-            rr_exp_class = EXP_CLASS::NOT_A_NUMBER;
-        } else { 
-            rr_exp_class = EXP_CLASS::INFINITE;
+        if ( is_fma ) {
+            if ( y_exp_class == EXP_CLASS::ZERO ) {
+                rr_exp_class = EXP_CLASS::NOT_A_NUMBER;
+            } else {
+                rr_exp_class = EXP_CLASS::INFINITE;
+            }
+        } else {
+            if ( y_exp_class == EXP_CLASS::INFINITE ) {
+                rr_exp_class = EXP_CLASS::NOT_A_NUMBER;
+            } else {
+                rr_exp_class = EXP_CLASS::ZERO;
+            }
         }
 
     } else if ( y_exp_class == EXP_CLASS::INFINITE ) {
-        // y is the answer, but could change to NaN 
-        if ( x_exp_class == EXP_CLASS::ZERO ) {
-            rr_exp_class = EXP_CLASS::NOT_A_NUMBER;
-        } else { 
-            rr_exp_class = EXP_CLASS::INFINITE;
+        if ( is_fma ) {
+            if ( x_exp_class == EXP_CLASS::ZERO ) {
+                rr_exp_class = EXP_CLASS::NOT_A_NUMBER;
+            } else { 
+                rr_exp_class = EXP_CLASS::INFINITE;
+            }
+        } else {
+            if ( y_exp_class == EXP_CLASS::INFINITE ) {
+                rr_exp_class = EXP_CLASS::NOT_A_NUMBER;
+            } else {
+                rr_exp_class = EXP_CLASS::INFINITE;
+            }
         }
 
     } else if ( x_exp_class == EXP_CLASS::ZERO ) {
@@ -2924,12 +2948,13 @@ T Cordic<T,FLT>::sqrt( const T& _x, bool is_final ) const
     // check for special cases
     //
     bool do_rest = false;
-    if ( x_sign ) {
-        // NaN
+    if ( x_sign || x_exp_class == EXP_CLASS::NOT_A_NUMBER ) {
+        // quiet NaN
         x_exp_class = EXP_CLASS::NOT_A_NUMBER;
+        x |= _quiet_NaN_fxd;
         reconstruct( x, x_exp_class, x_exp, x_sign );
 
-    } else if ( x_exp_class == EXP_CLASS::ZERO || x_exp_class == EXP_CLASS::NOT_A_NUMBER || x_exp_class == EXP_CLASS::INFINITE ) {
+    } else if ( x_exp_class == EXP_CLASS::ZERO || x_exp_class == EXP_CLASS::INFINITE ) {
         // x is the answer
 
     } else {
@@ -3425,6 +3450,7 @@ void Cordic<T,FLT>::sincos( bool times_pi, const T& _x, T& si, T& co, bool is_fi
     } else if ( x_exp_class == EXP_CLASS::NOT_A_NUMBER || x_exp_class == EXP_CLASS::INFINITE ) {
         // NaN
         x_exp_class = EXP_CLASS::NOT_A_NUMBER;
+        x |= _quiet_NaN_fxd;
         reconstruct( x, x_exp_class, 0, x_sign );
         if ( need_si ) si = x;
         if ( need_co ) co = x;
@@ -3706,7 +3732,7 @@ T Cordic<T,FLT>::atan2( const T& _y, const T& _x, bool is_final, bool x_is_one, 
         rr = 0;
     } else if ( exp_class == EXP_CLASS::NOT_A_NUMBER ) {
         // NaN
-        rr = (x > 0) ? x : 1;          // must be non-zero
+        rr = x | _quiet_NaN_fxd;
 
     } else {
         cassert( exp_class == EXP_CLASS::NORMAL || exp_class == EXP_CLASS::SUBNORMAL,
@@ -3975,10 +4001,13 @@ T Cordic<T,FLT>::atanh2( const T& _y, const T& _x, bool is_final, bool x_is_one 
     bool sign = y_sign ^ x_sign;
     int32_t exp = x_exp + y_exp;
     T r;
-    if ( y_exp_class == EXP_CLASS::NOT_A_NUMBER || x_exp_class == EXP_CLASS::NOT_A_NUMBER ||
-         y_exp_class == EXP_CLASS::INFINITE || x_exp_class == EXP_CLASS::ZERO || exp > 0 ) {
-        // NaN/Nan or Inf or y/0 or exp > 0 => NaN
-        r = sign ? -quiet_NaN() : quiet_NaN();
+    if ( y_exp_class == EXP_CLASS::NOT_A_NUMBER || y_exp_class == EXP_CLASS::INFINITE || exp > 0 ) {
+        r = y | _quiet_NaN_fxd;
+        reconstruct( r, EXP_CLASS::NOT_A_NUMBER, _exp_mask, sign );
+
+    } else if ( x_exp_class == EXP_CLASS::NOT_A_NUMBER || x_exp_class == EXP_CLASS::ZERO ) {
+        r = x | _quiet_NaN_fxd;
+        reconstruct( r, EXP_CLASS::NOT_A_NUMBER, _exp_mask, sign );
 
     } else if ( y_exp_class == EXP_CLASS::ZERO || x_exp_class == EXP_CLASS::INFINITE ) {
         // y/x == 0 => return +/- 0
