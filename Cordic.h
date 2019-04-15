@@ -225,7 +225,8 @@ public:
 
     // elementary functions
     T    sqrt( const T& x ) const;                                      // hypoth( x+1, x-1 ) / 2
-    T    rsqrt( const T& x ) const;                                     // x^(-1/2) = exp(log(x)/-2)
+    T    rsqrt( const T& x ) const;                                     // 1.0 / sqrt( x )
+    T    rsqrt_orig( const T& x ) const;                                // x^(-1/2) = exp(log(x)/-2)
     T    cbrt( const T& x ) const;                                      // x^(1/3)  = exp(log(x)/3)
     T    rcbrt( const T& x ) const;                                     // x^(-1/3) = exp(log(x)/-3)
 
@@ -1012,7 +1013,7 @@ std::string Cordic<T,FLT>::op_to_str( uint16_t op )
 template< typename T, typename FLT >
 Cordic<T,FLT>::Cordic( uint32_t int_exp_w, uint32_t frac_w, bool is_float, uint32_t guard_w, uint32_t n )
 {
-    if ( n == uint32_t(-1) ) n = frac_w;
+    if ( n == uint32_t(-1) ) n = 1 + frac_w;
     if ( guard_w == uint32_t(-1) ) guard_w = std::ceil(std::log2(frac_w));
     if ( logger != nullptr ) logger->cordic_constructed( this, int_exp_w, frac_w, is_float, guard_w, n );
 
@@ -1118,14 +1119,14 @@ Cordic<T,FLT>::Cordic( uint32_t int_exp_w, uint32_t frac_w, bool is_float, uint3
     _hyperbolic_rotation_one_over_gain      = to_t( FLT(1) / _to_flt(_hyperbolic_rotation_gain_fxd,  false, true ),     false, false );
     _hyperbolic_vectoring_one_over_gain_fxd = to_t( FLT(1) / _to_flt(_hyperbolic_vectoring_gain_fxd, false, true ),     false, true  );
     _hyperbolic_vectoring_one_over_gain     = to_t( FLT(1) / _to_flt(_hyperbolic_vectoring_gain_fxd, false, true ),     false, false );
-    if ( debug ) std::cout << "circular_rotation_gain_fxd="             << std::setw(30) << _to_flt(_circular_rotation_gain_fxd, false, true ) << "\n";
-    if ( debug ) std::cout << "circular_vectoring_gain_fxd="            << std::setw(30) << _to_flt(_circular_vectoring_gain_fxd, false, true ) << "\n";
-    if ( debug ) std::cout << "hyperbolic_rotation_gain_fxd="           << std::setw(30) << _to_flt(_hyperbolic_rotation_gain_fxd, false, true ) << "\n";
-    if ( debug ) std::cout << "hyperbolic_vectoring_gain_fxd="          << std::setw(30) << _to_flt(_hyperbolic_vectoring_gain_fxd, false, true ) << "\n";
-    if ( debug ) std::cout << "circular_rotation_one_over_gain_fxd="    << std::setw(30) << _to_flt(_circular_rotation_one_over_gain_fxd, false, true ) << "\n";
-    if ( debug ) std::cout << "circular_vectoring_one_over_gain_fxd="   << std::setw(30) << _to_flt(_circular_vectoring_one_over_gain_fxd, false, true ) << "\n";
-    if ( debug ) std::cout << "hyperbolic_rotation_one_over_gain_fxd="  << std::setw(30) << _to_flt(_hyperbolic_rotation_one_over_gain_fxd, false, true ) << "\n";
-    if ( debug ) std::cout << "hyperbolic_vectoring_one_over_gain_fxd=" << std::setw(30) << _to_flt(_hyperbolic_vectoring_one_over_gain_fxd, false, true ) << "\n";
+    if ( debug ) printf( "circular_rotation_gain_fxd:                   %016" FMT_LLX "   %.30f\n",  _circular_rotation_gain_fxd, _to_flt(_circular_rotation_gain_fxd, false, true) );
+    if ( debug ) printf( "circular_vectoring_gain_fxd:                  %016" FMT_LLX "   %.30f\n",  _circular_vectoring_gain_fxd, _to_flt(_circular_vectoring_gain_fxd, false, true) );
+    if ( debug ) printf( "hyperbolic_rotation_gain_fxd:                 %016" FMT_LLX "   %.30f\n",  _hyperbolic_rotation_gain_fxd, _to_flt(_hyperbolic_rotation_gain_fxd, false, true) );
+    if ( debug ) printf( "hyperbolic_vectoring_gain_fxd:                %016" FMT_LLX "   %.30f\n",  _hyperbolic_vectoring_gain_fxd, _to_flt(_hyperbolic_vectoring_gain_fxd, false, true) );
+    if ( debug ) printf( "circular_rotation_one_over_gain_fxd:          %016" FMT_LLX "   %.30f\n",  _circular_rotation_one_over_gain_fxd, _to_flt(_circular_rotation_one_over_gain_fxd, false, true) );
+    if ( debug ) printf( "circular_vectoring_one_over_gain_fxd:         %016" FMT_LLX "   %.30f\n",  _circular_vectoring_one_over_gain_fxd, _to_flt(_circular_vectoring_one_over_gain_fxd, false, true) );
+    if ( debug ) printf( "hyperbolic_rotation_one_over_gain_fxd:        %016" FMT_LLX "   %.30f\n",  _hyperbolic_rotation_one_over_gain_fxd, _to_flt(_hyperbolic_rotation_one_over_gain_fxd, false, true) );
+    if ( debug ) printf( "hyperbolic_vectoring_one_over_gain_fxd:       %016" FMT_LLX "   %.30f\n",  _hyperbolic_vectoring_one_over_gain_fxd, _to_flt(_hyperbolic_vectoring_one_over_gain_fxd, false, true) );
 }
 
 template< typename T, typename FLT >
@@ -1651,8 +1652,8 @@ void Cordic<T,FLT>::circular_rotation( const T& x0, const T& y0, const T& z0, T&
     //-----------------------------------------------------
     const T ONE = _one_fxd;
     const T ANGLE_MAX = _circular_angle_max_fxd + 2*_min_fxd;
-    if ( debug ) std::cout << "circular_rotation begin: x0,y0,z0=[ " << 
-                              _to_flt(x0, false, true) << ", " << _to_flt(y0, false, true) << ", " << _to_flt(z0, false, true) << "]\n";
+    if ( debug ) printf( "circular_rotation begin: xyz_fxd=[0x%016" FMT_LLX ",0x%016" FMT_LLX ",0x%016" FMT_LLX "] xyz=[%.30f,%.30f,%.30f]\n",
+                         x0, y0, z0, _to_flt(x0, false, true), _to_flt(y0, false, true), _to_flt(z0, false, true) );
     cassert( x0 >= -ONE       && x0 <= ONE,       "circular_rotation x0 must be in the range -1 .. 1" );
     cassert( y0 >= -ONE       && y0 <= ONE,       "circular_rotation y0 must be in the range -1 .. 1" );
     cassert( z0 >= -ANGLE_MAX && z0 <= ANGLE_MAX, "circular_rotation |z0| must be <= circular_angle_max (" +
@@ -1673,8 +1674,8 @@ void Cordic<T,FLT>::circular_rotation( const T& x0, const T& y0, const T& z0, T&
         T xi;
         T yi;
         T zi;
-        if ( debug ) printf( "circular_rotation: i=%d xyz=[%.30f,%.30f,%.30f] test=%d\n", 
-                             i, _to_flt(x, false, true), _to_flt(y, false, true), _to_flt(z, false, true), int(z >= _zero_fxd) );
+        if ( debug ) printf( "circular_rotation: i=%2d xyz_fxd=[0x%016" FMT_LLX ",0x%016" FMT_LLX ",0x%016" FMT_LLX "] xyz=[%.30f,%.30f,%.30f] test=%d\n", 
+                             i, x, y, z, _to_flt(x, false, true), _to_flt(y, false, true), _to_flt(z, false, true), int(z >= _zero_fxd) );
         if ( z >= 0 ) {
             xi = x - (y >> i);
             yi = y + (x >> i);
@@ -1711,8 +1712,8 @@ void Cordic<T,FLT>::circular_vectoring( const T& x0, const T& y0, const T& z0, T
     const T THREE = 3*ONE;
     const T PI  = _pi_fxd;
     const T ANGLE_MAX = _circular_angle_max_fxd + 2*_min_fxd;
-    if ( debug ) std::cout << "circular_vectoring begin: x0,y0,z0=[ " << 
-                              _to_flt(x0, false, true) << ", " << _to_flt(y0, false, true) << ", " << _to_flt(z0, false, true) << "]\n";
+    if ( debug ) printf( "circular_vectoring begin: xyz_fxd=[0x%016" FMT_LLX ",0x%016" FMT_LLX ",0x%016" FMT_LLX "] xyz=[%.30f,%.30f,%.30f]\n",
+                         x0, y0, z0, _to_flt(x0, false, true), _to_flt(y0, false, true), _to_flt(z0, false, true) );
     cassert( x0 >= -THREE && x0 <= THREE, "circular_vectoring x0 must be in the range -3 .. 3" );
     cassert( y0 >= -ONE   && y0 <= ONE  , "circular_vectoring y0 must be in the range -1 .. 1" );
     cassert( z0 >= -PI    && z0 <= PI   , "circular_vectoring z0 must be in the range -PI .. PI" );
@@ -1734,8 +1735,8 @@ void Cordic<T,FLT>::circular_vectoring( const T& x0, const T& y0, const T& z0, T
         T xi;
         T yi;
         T zi;
-        if ( debug ) printf( "circular_vectoring: i=%d xyz=[%.30f,%.30f,%.30f] test=%d\n", 
-                             i, _to_flt(x, false, true), _to_flt(y, false, true), _to_flt(z, false, true), int((x < 0) != (y < 0)) );
+        if ( debug ) printf( "circular_vectoring: i=%2d xyz_fxd=[0x%016" FMT_LLX ",0x%016" FMT_LLX ",0x%016" FMT_LLX "] xyz=[%.30f,%.30f,%.30f] test=%d\n", 
+                             i, x, y, z, _to_flt(x, false, true), _to_flt(y, false, true), _to_flt(z, false, true), int((x < 0) != (y < 0)) );
         if ( y < 0 ) {
             xi = x - (y >> i);
             yi = y + (x >> i);
@@ -1768,7 +1769,8 @@ void Cordic<T,FLT>::circular_vectoring_xy( const T& x0, const T& y0, T& x, T& y 
     //-----------------------------------------------------
     const T ONE = _one_fxd;
     const T THREE = 3*ONE;
-    if ( debug ) std::cout << "circular_vectoring_xy begin: x0,y0=[ " << _to_flt(x0, false, true, false) << ", " << _to_flt(y0, false, true, false) << "\n";
+    if ( debug ) printf( "circular_vectoring_xy begin: xy_fxd=[0x%016" FMT_LLX ",0x%016" FMT_LLX "] xy=[%.30f,%.30f]\n",
+                         x0, y0, _to_flt(x0, false, true), _to_flt(y0, false, true) );
     cassert( x0 >= -THREE && x0 <= THREE, "circular_vectoring_xy x0 must be in the range -3 .. 3" );
     cassert( y0 >= -ONE   && y0 <= ONE  , "circular_vectoring_xy y0 must be in the range -1 .. 1" );
 
@@ -1784,8 +1786,8 @@ void Cordic<T,FLT>::circular_vectoring_xy( const T& x0, const T& y0, T& x, T& y 
     {
         T xi;
         T yi;
-        if ( debug ) printf( "circular_vectoring_xy: i=%d xy=[%.30f,%.30f] test=%d\n", 
-                             i, _to_flt(x, false, true), _to_flt(y, false, true), int(y < 0) );
+        if ( debug ) printf( "circular_vectoring_xy: i=%d xy_fxd=[0x%016" FMT_LLX ",0x%016" FMT_LLX "] xy=[%.30f,%.30f] test=%d\n", 
+                             i, x, y, _to_flt(x, false, true), _to_flt(y, false, true), int(y < 0) );
         if ( y < 0 ) {
             xi = x - (y >> i);
             yi = y + (x >> i);
@@ -1815,8 +1817,8 @@ void Cordic<T,FLT>::hyperbolic_rotation( const T& x0, const T& y0, const T& z0, 
     //-----------------------------------------------------
     const T TWO = _two_fxd;
     const T ANGLE_MAX = _hyperbolic_angle_max_fxd + 2*_min_fxd;
-    if ( debug ) std::cout << "hyperbolic_rotation begin: x0,y0,z0=[ " << 
-                              _to_flt(x0, false, true) << ", " << _to_flt(y0, false, true) << ", " << _to_flt(z0, false, true) << "]\n";
+    if ( debug ) printf( "hyperbolic_rotation begin: xyz_fxd=[0x%016" FMT_LLX ",0x%016" FMT_LLX ",0x%016" FMT_LLX "] xyz=[%.30f,%.30f,%.30f]\n",
+                         x0, y0, z0, _to_flt(x0, false, true), _to_flt(y0, false, true), _to_flt(z0, false, true) );
     cassert( x0 >= -TWO       && x0 <= TWO,       "hyperbolic_rotation x0 must be in the range -2 .. 2" );
     cassert( y0 >= -TWO       && y0 <= TWO,       "hyperbolic_rotation y0 must be in the range -2 .. 2" );
     cassert( z0 >= -ANGLE_MAX && z0 <= ANGLE_MAX, "hyperbolic_rotation |z0| must be <= hyperbolic_angle_max (" + 
@@ -1838,8 +1840,8 @@ void Cordic<T,FLT>::hyperbolic_rotation( const T& x0, const T& y0, const T& z0, 
         T xi;
         T yi;
         T zi;
-        if ( debug ) printf( "hyperbolic_rotation: i=%d xyz=[%.30f,%.30f,%.30f] test=%d\n", 
-                             i, _to_flt(x, false, true), _to_flt(y, false, true), _to_flt(z, false, true), int(z >= 0) );
+        if ( debug ) printf( "hyperbolic_rotation: i=%2d xyz_fxd=[0x%016" FMT_LLX ",0x%016" FMT_LLX ",0x%016" FMT_LLX "] xyz=[%.30f,%.30f,%.30f] test=%d\n", 
+                             i, x, y, z, _to_flt(x, false, true), _to_flt(y, false, true), _to_flt(z, false, true), int(z >= 0) );
         if ( z >= 0 ) {
             xi = x + (y >> i);
             yi = y + (x >> i);
@@ -1881,8 +1883,8 @@ void Cordic<T,FLT>::hyperbolic_vectoring( const T& x0, const T& y0, const T& z0,
     const T TWO = _two_fxd;
     const T PI  = _pi_fxd;
     const T ANGLE_MAX = _hyperbolic_angle_max_fxd;
-    if ( debug ) std::cout << "hyperbolic_vectoring begin: x0,y0,z0=[ " << 
-                              _to_flt(x0, false, true) << ", " << _to_flt(y0, false, true) << ", " << _to_flt(z0, false, true) << "]\n";
+    if ( debug ) printf( "hyperbolic_vectoring begin: xyz_fxd=[0x%016" FMT_LLX ",0x%016" FMT_LLX ",0x%016" FMT_LLX "] xyz=[%.30f,%.30f,%.30f]\n",
+                         x0, y0, z0, _to_flt(x0, false, true), _to_flt(y0, false, true), _to_flt(z0, false, true) );
     cassert( x0 >= -TWO && x0 <= TWO, "hyperbolic_vectoring x0 must be in the range -2 .. 2" );
     cassert( y0 >= -TWO && y0 <= TWO, "hyperbolic_vectoring y0 must be in the range -2 .. 2" );
     cassert( z0 >= -PI  && z0 <= PI , "hyperbolic_vectoring z0 must be in the range -PI .. PI" );
@@ -1906,8 +1908,8 @@ void Cordic<T,FLT>::hyperbolic_vectoring( const T& x0, const T& y0, const T& z0,
         T xi;
         T yi;
         T zi;
-        if ( debug ) printf( "hyperbolic_vectoring: i=%d xyz=[%.30f,%.30f,%.30f] test=%d\n", i, 
-                             _to_flt(x, false, true), _to_flt(y, false, true), _to_flt(z, false, true), int((x < 0) != (y < 0)) );
+        if ( debug ) printf( "hyperbolic_vectoring: i=%2d xyz_fxd=[0x%016" FMT_LLX ",0x%016" FMT_LLX ",0x%016" FMT_LLX "] xyz=[%.30f,%.30f,%.30f] test=%d\n", 
+                             i, x, y, z, _to_flt(x, false, true), _to_flt(y, false, true), _to_flt(z, false, true), int((x < 0) != (y < 0)) );
         if ( y < 0 ) {
             xi = x + (y >> i);
             yi = y + (x >> i);
@@ -1946,7 +1948,8 @@ void Cordic<T,FLT>::hyperbolic_vectoring_xy( const T& x0, const T& y0, T& x, T& 
     //-----------------------------------------------------
     const T TWO = _two_fxd;
     const T PI  = _pi_fxd;
-    if ( debug ) std::cout << "hyperbolic_vectoring_xy begin: x0,y0=[ " << _to_flt(x0, false, true, false) << ", " << _to_flt(y0, false, true, false) << "\n";
+    if ( debug ) printf( "hyperbolic_vectoring_xy begin: xy_fxd=[0x%016" FMT_LLX ",0x%016" FMT_LLX "] xy=[%.30f,%.30f]\n",
+                         x0, y0, _to_flt(x0, false, true), _to_flt(y0, false, true) );
     cassert( x0 >= -TWO && x0 <= TWO, "hyperbolic_vectoring_xy x0 must be in the range -2 .. 2" );
     cassert( y0 >= -TWO && y0 <= TWO, "hyperbolic_vectoring_xy y0 must be in the range -2 .. 2" );
 
@@ -1963,8 +1966,8 @@ void Cordic<T,FLT>::hyperbolic_vectoring_xy( const T& x0, const T& y0, T& x, T& 
     {
         T xi;
         T yi;
-        if ( debug ) printf( "hyperbolic_vectoring_xy: i=%d xy=[%.30f,%.30f] test=%d\n", 
-                             i, _to_flt(x, false, true), _to_flt(y, false, true), int(y < 0) );
+        if ( debug ) printf( "hyperbolic_vectoring_xy: i=%2d xy_fxd=[0x%016" FMT_LLX ",0x%016" FMT_LLX "] xy=[%.30f,%.30f] test=%d\n", 
+                             i, x, y, _to_flt(x, false, true), _to_flt(y, false, true), int(y < 0) );
         if ( y < 0 ) {
             xi = x + (y >> i);
             yi = y + (x >> i);
@@ -2000,8 +2003,8 @@ void Cordic<T,FLT>::linear_rotation( const T& x0, const T& y0, const T& z0, T& x
     //-----------------------------------------------------
     const T ONE = _one_fxd;
     const T TWO = _two_fxd;
-    if ( debug ) std::cout << "linear_rotation begin: x0,y0,z0=[ " << 
-                              _to_flt(x0, false, true) << ", " << _to_flt(y0, false, true) << ", " << _to_flt(z0, false, true) << "]\n";
+    if ( debug ) printf( "linear_rotation begin: xyz_fxd=[0x%016" FMT_LLX ",0x%016" FMT_LLX ",0x%016" FMT_LLX "] xyz=[%.30f,%.30f,%.30f]\n",
+                         x0, y0, z0, _to_flt(x0, false, true), _to_flt(y0, false, true), _to_flt(z0, false, true) );
     cassert( x0 >= -TWO && x0 <= TWO, "linear_rotation x0 must be in the range -2 .. 2" );
     cassert( y0 >= -TWO && y0 <= TWO, "linear_rotation y0 must be in the range -2 .. 2" );
     //cassert( z0 >= -ONE && z0 <= ONE, "linear_rotation z0 must be in the range -1 .. 1" );
@@ -2019,8 +2022,8 @@ void Cordic<T,FLT>::linear_rotation( const T& x0, const T& y0, const T& z0, T& x
     T pow2 = ONE;
     for( uint32_t i = 0; i <= n; i++, pow2 >>= 1 )
     {
-        if ( debug ) printf( "linear_rotation: i=%d xyz=[%.30f,%.30f,%.30f] test=%d\n", 
-                             i, _to_flt(x, false, true), _to_flt(y, false, true), _to_flt(z, false, true), int(z >= 0) );
+        if ( debug ) printf( "linear_rotation: i=%2d xyz_fxd=[0x%016" FMT_LLX ",0x%016" FMT_LLX ",0x%016" FMT_LLX "] xyz=[%.30f,%.30f,%.30f] test=%d\n", 
+                             i, x, y, z, _to_flt(x, false, true), _to_flt(y, false, true), _to_flt(z, false, true), int(z >= 0) );
         T yi;
         T zi;
         if ( z >= 0 ) {
@@ -2053,8 +2056,8 @@ void Cordic<T,FLT>::linear_vectoring( const T& x0, const T& y0, const T& z0, T& 
     //-----------------------------------------------------
     const T ONE = _one_fxd;
     const T TWO = _two_fxd;
-    if ( debug ) std::cout << "linear_vectoring begin: x0,y0,z0=[ " << 
-                              _to_flt(x0, false, true) << ", " << _to_flt(y0, false, true) << ", " << _to_flt(z0, false, true) << "]\n";
+    if ( debug ) printf( "linear_vectoring begin: xyz_fxd=[0x%016" FMT_LLX ",0x%016" FMT_LLX ",0x%016" FMT_LLX "] xyz=[%.30f,%.30f,%.30f]\n",
+                         x0, y0, z0, _to_flt(x0, false, true), _to_flt(y0, false, true), _to_flt(z0, false, true) );
     cassert( x0 >= -TWO && x0 <= TWO, "linear_vectoring x0 must be in the range -2 .. 2, got " + to_string(x0, true) );
     cassert( y0 >= -TWO && y0 <= TWO, "linear_vectoring y0 must be in the range -2 .. 2, got " + to_string(y0, true) );
     //cassert( std::abs( _to_flt(y0, false, true) / _to_flt(x0, false, true) ) <= FLT(1.0) &&
@@ -2073,8 +2076,8 @@ void Cordic<T,FLT>::linear_vectoring( const T& x0, const T& y0, const T& z0, T& 
     T pow2 = ONE;
     for( uint32_t i = 0; i <= n; i++, pow2 >>= 1 )
     {
-        if ( debug ) printf( "linear_vectoring: i=%d xyz=[%.30f,%.30f,%.30f] test=%d\n", 
-                             i, _to_flt(x, false, true), _to_flt(y, false, true), _to_flt(z, false, true), int(y < 0) );
+        if ( debug ) printf( "linear_vectoring: i=%2d xyz_fxd=[0x%016" FMT_LLX ",0x%016" FMT_LLX ",0x%016" FMT_LLX "] xyz=[%.30f,%.30f,%.30f] test=%d\n", 
+                             i, x, y, z, _to_flt(x, false, true), _to_flt(y, false, true), _to_flt(z, false, true), int(y < 0) );
         T yi;
         T zi;
         if ( y < 0 ) {
@@ -2836,8 +2839,8 @@ inline T Cordic<T,FLT>::fma_fda( bool is_fma, const T& _x, const T& _y, const T&
                               " y_orig=" << _to_flt(_y, is_final) << 
                               " have_addend=" << have_addend << " addend=" << _to_flt(addend, is_final) << 
                               " x_reduced=" << _to_flt(x, false, true) << " y_reduced=" << _to_flt(y, false, true) << 
-                              " " << kind << "=" << _to_flt(rr, is_final) << 
-                              " x_exp_class=" << to_str(x_exp_class) << " x_exp=" << x_exp << 
+                              " " << kind << "=" << _to_flt(rr, is_final) << " (0x" << std::hex << rr << std::dec << 
+                              ") x_exp_class=" << to_str(x_exp_class) << " x_exp=" << x_exp << 
                               " y_exp_class=" << to_str(y_exp_class) << " y_exp=" << y_exp << "\n";
     return rr;
 }
@@ -2985,6 +2988,19 @@ inline T Cordic<T,FLT>::sqrt( const T& x ) const
 
 template< typename T, typename FLT >
 T Cordic<T,FLT>::rsqrt( const T& x ) const
+{ 
+    //-----------------------------------------------------
+    // 1.0 / sqrt( x )
+    //-----------------------------------------------------
+    _log_1( rsqrt, x );
+    T sq = sqrt( x, false );
+    T r = div( _one, sq );
+    if ( debug ) std::cout << "rsqrt end: x_orig=" << _to_flt(x) << " sqrt=" << _to_flt(sq) << " r=" << _to_flt(r, false) << "\n";
+    return r;
+}
+
+template< typename T, typename FLT >
+T Cordic<T,FLT>::rsqrt_orig( const T& x ) const
 { 
     //-----------------------------------------------------
     // x^(-1/2) = exp( log(x) / -2 );
@@ -3273,8 +3289,8 @@ inline T Cordic<T,FLT>::pow( const T& b, const T& x ) const
 { 
     if ( debug ) std::cout << "pow begin: b=" << _to_flt(b) << " x=" << _to_flt(x) << "\n";
     _log_2( pow, b, x );
-    T lg = log( b, false );
-    T m  = mul( x, lg, false );
+    T lg_b = log( b, false );
+    T m  = mul( x, lg_b, false );
     T r = exp( m, false );
     r = rfrac( r );
     if ( debug ) std::cout << "pow end: b=" << _to_flt(b) << " x=" << _to_flt(x) << " pow=" << _to_flt(r) << "\n";
@@ -3324,7 +3340,7 @@ inline T Cordic<T,FLT>::log( const T& _x, bool is_final ) const
           r    = add( lg2, addend, false );
         if ( is_final ) r = rfrac( r );
         if ( debug ) std::cout << "log end: x_orig=" << _to_flt(_x) << " x_m1=" << _to_flt(x_m1) << " x_p1=" << _to_flt(x_p1) <<
-                                          " dv=" << _to_flt(dv) << " lg1=" << _to_flt(lg1) << " lg2=" << _to_flt(lg2) << 
+                                          " dv=" << _to_flt(dv) << " lg1=" << _to_flt(lg1) << " lg2=" << _to_flt(lg2) << " addend=" << _to_flt(addend) <<
                                           " log=" << _to_flt(r) << "\n";
     }
     return r;
@@ -4019,6 +4035,10 @@ T Cordic<T,FLT>::atanh2( const T& _y, const T& _x, bool is_final, bool x_is_one 
 
         T xx, yy;
         hyperbolic_vectoring( x, y, _zero, xx, yy, r );
+        if ( r < 0 ) {
+            r = -r;
+            sign = !sign;
+        }
 
         reconstruct( r, EXP_CLASS::NORMAL, exp, sign );
         if ( is_final ) r = rfrac( r );
@@ -4133,7 +4153,8 @@ inline void Cordic<T,FLT>::reconstruct( T& x, EXP_CLASS x_exp_class, int32_t x_e
                     int_part >>= 1;
                     x_exp++;
                 }
-                cassert( int_part == 1, "reconstruct() normal int_part should be exactly 1, got " + std::to_string(int_part) );
+                cassert( int_part == 1, "reconstruct() normal int_part should be exactly 1, int=" + std::to_string(int_part) + 
+                                        + " frac=" + std::to_string(x) + " x_orig=" + std::to_string(x_orig) );
 
                 exp = x_exp + _exp_bias;
                 if ( exp < 0 ) {
@@ -4342,10 +4363,12 @@ inline void Cordic<T,FLT>::reduce_log_arg( T& x, EXP_CLASS& x_exp_class, bool& x
     if ( x_exp_class == EXP_CLASS::NORMAL ) {
         x_exp++;
         x = (x >> 1) | (x & 1);
+        if ( debug ) std::cout << "reduce_log_mid: x_shifted=0x" << std::hex << x << std::dec << "\n";
     }
     addend = to_t( FLT(x_exp) * std::log(2) );
     reconstruct( x, x_exp_class, 0, false );
     if ( debug ) std::cout << "reduce_log_arg: x_orig=" << _to_flt(x_orig) << " x_reduced=" << _to_flt(x, false) <<
+                                             " (0x" << std::hex << x << ")" << std::dec <<
                                              " addend=" << _to_flt(addend, false) << "\n";
 }
 
@@ -4373,11 +4396,19 @@ inline void Cordic<T,FLT>::reduce_hypot_args( T& x, T& y, EXP_CLASS& exp_class, 
 
     // check for special cases
     //
-    if ( x_exp_class == EXP_CLASS::NOT_A_NUMBER || x_exp_class == EXP_CLASS::INFINITE ) {
+    if ( x_exp_class == EXP_CLASS::NOT_A_NUMBER ) {
         exp_class = x_exp_class;
         exp       = x_exp;
 
-    } else if ( y_exp_class == EXP_CLASS::NOT_A_NUMBER || y_exp_class == EXP_CLASS::INFINITE ) {
+    } else if ( y_exp_class == EXP_CLASS::NOT_A_NUMBER ) {
+        exp_class = y_exp_class;
+        exp       = y_exp;
+
+    } else if ( x_exp_class == EXP_CLASS::INFINITE ) {
+        exp_class = x_exp_class;
+        exp       = x_exp;
+
+    } else if ( y_exp_class == EXP_CLASS::INFINITE ) {
         exp_class = y_exp_class;
         exp       = y_exp;
 
@@ -4395,18 +4426,22 @@ inline void Cordic<T,FLT>::reduce_hypot_args( T& x, T& y, EXP_CLASS& exp_class, 
             y_exp = x_exp;
             y = 0;
         }
+
         int32_t diff = x_exp - y_exp;
         if ( diff > 0 ) {
             T mask = (T(1) << diff) - 1;
             y = (y >> diff) | ((y & mask) != 0);
             exp = x_exp;
+            if ( debug ) std::cout << "reduce_hypot_args mid: using x_exp=" << exp << " y_rshift=" << diff << "\n";
         } else if ( diff < 0 ) {
             diff = -diff;
             T mask = (T(1) << diff) - 1;
             x = (x >> diff) | ((x & mask) != 0);
             exp = y_exp;
+            if ( debug ) std::cout << "reduce_hypot_args mid: using y_exp=" << exp << " x_lshift=" << diff << "\n";
         } else {
             exp = x_exp; 
+            if ( debug ) std::cout << "reduce_hypot_args mid: using x_exp=" << exp << " y_rshift=0\n";
         }
 
         swapped = x < y;
@@ -4422,8 +4457,8 @@ inline void Cordic<T,FLT>::reduce_hypot_args( T& x, T& y, EXP_CLASS& exp_class, 
             y = (y >> 1) | (y & 1);
         }
         if ( debug ) std::cout << "reduce_hypot_args end: xy_orig=[" << _to_flt(x_orig) << "," << _to_flt(y_orig) << "]" << 
-                                       " xy_reduced=[" << _to_flt(x, false, true, false) << "," << _to_flt(y, false, true, false) << 
-                                       "] exp_class=" << to_str(exp_class) << 
+                                       " xy_reduced_f=[" << _to_flt(x, false, true, false) << "," << _to_flt(y, false, true, false) << 
+                                       "] xy_reduced=[" << std::hex << x << "," << y << std::dec << "] exp_class=" << to_str(exp_class) << 
                                        " x_exp=" << x_exp << " y_exp=" << y_exp << " exp=" << exp << " swapped=" << swapped << "\n"; 
     }
 }
@@ -4466,13 +4501,16 @@ inline void Cordic<T,FLT>::reduce_sincos_arg( bool times_pi, T& a, uint32_t& qua
             sign = signbit( a );
             if ( sign ) a = neg( a, false );
             T m;
-            T s = 0;
+            T aa = 0;
             T i;
             if ( !times_pi ) {
                 m = mulc( a, _four_div_pi, false );
                 (void)modf( m, &i );
-                s = mulc( i, _pi_div_4, false );
-                a = sub( a, s, false );
+                aa = mulc( i, _pi_div_4, false );
+                a = sub( a, aa, false );
+                if ( debug ) std::cout << "reduce_sincos_arg mid: a_orig=" << _to_flt(a_orig) <<
+                                          " aa_f=" << _to_flt(aa) << " aa=0x" << std::hex << aa << std::dec << 
+                                          " a_reduced_f=" << _to_flt(a) << " a_reduced=0x" << std::hex << a << std::dec << "\n";
             } else {
                 m = scalbn( a, -2, false );  // divide by 4
                 m = modf( m, &i );
@@ -4493,7 +4531,7 @@ inline void Cordic<T,FLT>::reduce_sincos_arg( bool times_pi, T& a, uint32_t& qua
             did_minus_pi_div_4 = ii & 1;
 
             if ( debug ) std::cout << "reduce_sincos_arg: times_pi=" << times_pi << " a_orig=" << _to_flt(a_orig) << 
-                                      " m=" << _to_flt(m) << " s=" << _to_flt(s) << " i=" << _to_flt(i) << " ii=" << ii <<
+                                      " m=" << _to_flt(m) << " aa=" << _to_flt(aa) << " i=" << _to_flt(i) << " ii=" << ii <<
                                       " a_reduced=" << _to_flt(a, false, true) << " a_exp_class=" << to_str(a_exp_class) << 
                                       " a_exp=" << a_exp << " a_sign=" << a_sign << " quadrant=" << quad << " did_minus_pi_div_4=" << did_minus_pi_div_4 << "\n"; 
 

@@ -62,7 +62,7 @@ static inline FLT tolerance( uint32_t frac_w, FLT expected, FLT tol, int32_t& to
     std::cout << "Expected: " << std::setw(30) << flte   << " (" << std::to_bstring( te )   << ")\n"; \
     std::cout << "Actual:   " << std::setw(30) << fltz   << " (" << std::to_bstring( tz )   << ")\n"; \
     std::cout << "Diff:     " << std::setw(30) << flterr << " (" << std::to_bstring( terr ) << ")\n\n"; \
-    cassert( flterr <= tol, "outside tolerance" );			\
+    cassert( (std::isnan(fltz) && std::isnan(flte)) || flterr <= tol, "outside tolerance" );			\
 }    
 
 #define do_op12( str, c_fn, exp_fn, fltx )                              \
@@ -126,7 +126,7 @@ static inline FLT tolerance( uint32_t frac_w, FLT expected, FLT tol, int32_t& to
     std::cout << "Expected: " << std::setw(30) << flte   << " (" << std::to_bstring( te )   << ")\n"; \
     std::cout << "Actual:   " << std::setw(30) << fltz   << " (" << std::to_bstring( tz )   << ")\n"; \
     std::cout << "Diff:     " << std::setw(30) << flterr << " (" << std::to_bstring( terr ) << ")\n\n"; \
-    cassert( flterr <= tol, "outside tolerance" );			\
+    cassert( (std::isnan(fltz) && std::isnan(flte)) || flterr <= tol, "outside tolerance" );			\
 }    
 
 #define do_op22( str, c_fn, exp_fn, fltx, flty )                        \
@@ -234,11 +234,13 @@ static inline FLT tolerance( uint32_t frac_w, FLT expected, FLT tol, int32_t& to
     std::cout << "Expected: " << std::setw(30) << flte   << " (" << std::to_bstring( te )   << ")\n"; \
     std::cout << "Actual:   " << std::setw(30) << fltz   << " (" << std::to_bstring( tz )   << ")\n"; \
     std::cout << "Diff:     " << std::setw(30) << flterr << " (" << std::to_bstring( terr ) << ")\n\n"; \
-    cassert( flterr <= tol, "outside tolerance" );			\
+    cassert( (std::isnan(fltz) && std::isnan(flte) || flterr <= tol), "outside tolerance" );			\
 }    
 
 // FLT wrapper routines for those that are not in std::
 //
+FLT  add( FLT x, FLT y ) { return x+y; }
+FLT  sub( FLT x, FLT y ) { return x-y; }
 FLT  fma( FLT x, FLT y, FLT w ) { return x*y + w; }
 FLT  mul( FLT x, FLT y ) { return x*y; }
 FLT  fda( FLT x, FLT y, FLT w ) { return x/y + w; }

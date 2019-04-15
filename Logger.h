@@ -27,10 +27,12 @@
 #include <cmath>
 #include <iostream>
 
-#ifndef NO_FMT_LLU
+#ifdef NO_FMT_LL
 #define FMT_LLU "lu"
+#define FMT_LLX "lx"
 #else 
 #define FMT_LLU "llu"
+#define FMT_LLX "llx"
 #endif
 
 template< typename T=int64_t, typename FLT=double >
