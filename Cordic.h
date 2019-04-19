@@ -562,6 +562,7 @@ public:
     T    fma_fda( bool is_fma, const T& x, const T& y, const T& addend, bool is_final ) const;
     T    mul( const T& x, const T& y, bool is_final ) const;                 
     T    mulc( const T& x, const T& c, bool is_final ) const;
+    T    sqr( const T& x, bool is_final ) const;
     T    div( const T& y, const T& x, bool is_final ) const;                  
     T    sqrt( const T& x, bool is_final ) const;                              
     T    exp( const T& x, bool is_final, FLT b=M_E ) const;                              
@@ -915,6 +916,7 @@ std::string Cordic<T,FLT>::op_to_str( uint16_t op )
         _ocase( fma )
         _ocase( mul )
         _ocase( mulc )
+        _ocase( sqr )
         _ocase( scalbn )
         _ocase( ldexp )
         _ocase( fda )
@@ -2879,9 +2881,18 @@ inline T Cordic<T,FLT>::mulc( const T& x, const T& c ) const
 }
 
 template< typename T, typename FLT >
+inline T Cordic<T,FLT>::sqr( const T& x, bool is_final ) const
+{
+    if ( is_final ) _log_1( sqr, x );
+    T r = mul( x, x, false );
+    if ( is_final ) r = rfrac( r );
+    return r;
+}
+
+template< typename T, typename FLT >
 inline T Cordic<T,FLT>::sqr( const T& x ) const
 {
-    return fma( x, x, _zero );
+    return sqr( x, true );
 }
 
 template< typename T, typename FLT >
@@ -3262,7 +3273,6 @@ inline T Cordic<T,FLT>::expm1( const T& x ) const
     //-----------------------------------------------------
     // Compute without rounding, then round.
     //-----------------------------------------------------
-    _log_1( expm1, x );
     return sub( exp( x, false ), one() );
 }
 
