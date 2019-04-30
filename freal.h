@@ -984,12 +984,16 @@ decl_const( ninfinity )
     { return name( b );                 }                       \
     inline _freal  _freal::operator op ( const _FLT& b ) const  \
     { return name( b );                 }                       \
+    inline _freal          operator op ( const _FLT& a, const _freal& b ) \
+    { return _freal(a).name( b );       }             \
 
 #define decl_op2_ret( op, name, ret_type )                      \
     inline ret_type _freal::operator op ( const _freal& b ) const \
     { return name( b );                 }                       \
     inline ret_type _freal::operator op ( const _FLT& b ) const \
     { return name( b );                 }                       \
+    inline ret_type         operator op ( const _FLT& a, const _freal& b ) \
+    { return _freal(a).name( b );                 }             \
 
 #define decl_op2x( op, name, b_type )                           \
     inline _freal  _freal::operator op ( b_type b ) const       \

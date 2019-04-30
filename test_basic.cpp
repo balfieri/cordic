@@ -35,13 +35,12 @@ int main( int argc, const char * argv[] )
     bool is_float = true;                       // floating-point or fixed-point?
     int  exp_or_int_w  = 8;                     // exponent width for floating point; for fixed-point max integer width
     int  frac_w = 23;                           // same as float
-    FLT TOL = 1.0 / FLT( 1LL << (frac_w-3) );   // we'd like this to be 1/(1 << (frac_w-1))  (in most cases, it is)
-                                                // not clear the CPU is doing the ops correctly either
+    FLT  TOL = -1; 
     uint32_t loop_cnt = 2;                      
 
     for( int i = 1; i < argc; i++ )
     {
-        if ( strcmp( argv[i], "-exp_or_int_w" ) == 0 ) {
+        if ( strcmp( argv[i], "-exp_w" ) == 0 || strcmp( argv[i], "-int_w" ) == 0 ) {
             exp_or_int_w = std::atoi( argv[++i] );
         } else if ( strcmp( argv[i], "-is_float" ) == 0 ) {
             is_float = atoi( argv[++i] );
@@ -59,6 +58,10 @@ int main( int argc, const char * argv[] )
             std::cout << "ERROR: unknown option " << argv[i] << "\n";
             exit( 1 );
         }
+    }
+    if ( TOL < 0.0 ) {
+        TOL = 1.0 / FLT( 1LL << (frac_w-3) );   // we'd like this to be 1/(1 << (frac_w-1))  (in most cases, it is)
+                                                // not clear the CPU is doing the ops correctly either
     }
     std::cout << "exp_or_int_w=" << exp_or_int_w << " frac_w=" << frac_w << " tol=" << TOL << "\n\n";
 
