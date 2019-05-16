@@ -246,8 +246,7 @@ To build and run the basic "smoke" test, <b>test_basic.cpp</b>, on Linux, Cygwin
 <pre>
 doit.test
 doit.test 1                             - run with debug spew 
-doit.test 0 test_basic                  - same as doit.test with no args
-doit.test 0 test_basic -exp_w 16        - change exp_w from default to 16 bits
+doit.test 0 -exp_w 16                   - change exp_w from default to 16 bits
 </pre>
 
 <p>
