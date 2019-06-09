@@ -1,3 +1,18 @@
+# Table of Contents
+
+- [Overview](#overview)
+- [Open Source](#open-source)
+- [Motivation](#motivation)
+- [History](#history)
+- [Floating-Point](#floating-point)
+- [Fixed-Point](#fixed-point)
+- [freal](#freal)
+- [Complex Numbers](#complex-numbers)
+- [Higher Dimensions](#higher-dimensions)
+- [Installation](#installation)
+
+# Overview
+
 <p>
 This repository contains some C++ code that shows how to implement CORDIC math.  This "library" provides the following features:
 </p>
@@ -12,7 +27,7 @@ arithemtic operations, the elementary functions, rounding modes, and IEEE 754 co
 <li>A basic test.</li>
 </ul>
 
-<h1>Open Source</h1>
+# Open Source
 
 <p>
 <b>This is all open-source.  Refer to the LICENSE.md for licensing details.
@@ -20,7 +35,7 @@ This code is intended for tutorial purposes only. You should not assume that the
 for use as a production reference model.</b>
 </p>
 
-<h1>Motivation</h1>
+# Motivation
 
 <p>
 Addition, subtraction, and multiplication are relatively easy tasks to implement in a computer chip.  Divide, sqrt(), and other
@@ -29,7 +44,7 @@ these complicated math functions by using a simple sequence of shifts and adds. 
 be reduced to a small range of values, typically -1 .. 1, or -PI/4 .. PI/4.
 </p>
 
-<h1>History</h1>
+# History
 
 <p>
 CORDIC, which stands for for
@@ -47,7 +62,7 @@ The hope of this library is to create a small, yet complete, tutorial package fo
 wishing to learn this timeless computer math algorithm.
 </p>
 
-<h1>Floating-Point</h1>
+# Floating-Point
 
 <p>
 By default, the library implements IEEE floating-point numbers with
@@ -126,7 +141,7 @@ reduce the number of iterations by passing a different value for n to the constr
 will be the same, but the result will be less precise.  
 </p>
 
-<h1>Fixed-Point</h1>
+# Fixed-Point
 
 <p>
 The library also supports values that are stored in fixed-point with user-defined integer width (int_w) and fraction width (frac_w).  
@@ -165,7 +180,7 @@ Format         value            binary (spaces added for readability)
 This code automatically performs appropriate argument range reductions and post-CORDIC adjustments.
 </p>
 
-<h1>freal</h1>
+# freal
 
 <p>
 The library provides an "freal" flexible real number class that follows all the rules of any C++ floating-point number 
@@ -207,7 +222,7 @@ real a = 5.2;          // this will implicitly convert 5.2 to real because no op
 real c = real(1) + a;  // this is an operator, so must explicity convert the 1 to disambiguate for C++
 </pre>
 
-<h1>Complex Numbers</h1>
+# Complex Numbers
 
 <p>
 This library does nothing special for complex numbers. Simply use the C++ complex&lt;freal&lt;&gt;&gt; template class
@@ -221,11 +236,11 @@ typedef freal real;
 typedef complex&lt;real&gt; cmplx;
 </pre>
 
-<h1>Higher Dimensions</h1>
+# Higher Dimensions
 
 See NOTES.txt for a discussion of extending CORDIC to higher dimensions.  The library does not yet support it.
 
-<h1>Installation</h1>
+# Installation
 
 <p>
 To install this on your computer, you'll need git and a C++ compiler, then:
