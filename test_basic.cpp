@@ -60,8 +60,9 @@ int main( int argc, const char * argv[] )
         }
     }
     if ( TOL < 0.0 ) {
-        TOL = 1.0 / FLT( 1LL << (frac_w-3) );   // we'd like this to be 1/(1 << (frac_w-1))  (in most cases, it is)
-                                                // not clear the CPU is doing the ops correctly either
+        int tol_frac_w = frac_w - ((frac_w > 10) ? 3 : 4);
+        TOL = 1.0 / FLT( 1LL << (tol_frac_w-3) );   // we'd like this to be 1/(1 << (frac_w-1))  (in most cases, it is)
+                                                    // not clear the CPU is doing the ops correctly either
     }
     std::cout << "exp_or_int_w=" << exp_or_int_w << " frac_w=" << frac_w << " tol=" << TOL << "\n\n";
 
@@ -174,15 +175,22 @@ int main( int argc, const char * argv[] )
     do_op12(    "9) sincos",            sincos, sincos,        0.887265 );
     do_op12(    "10) sincos",           sincos, sincos,        1.5707963891327381 );
     do_op22sc(  "11) sincos",           sincos, sincos,        0.7853982001543045, -0.64947649836540222 );
+    if ( frac_w > 10 ) {
     do_op2(     "12) atan2(y,x)",       atan2,  std::atan2,    0.00018440188432577997, -0.62388521432876587 );
     do_op2(     "13) atan2(y,x)",       atan2,  std::atan2,    -0.000000059604651880817983, -0.84004300832748413 );
+    }
     do_op2(     "14) atan2(y,x)",       atan2,  std::atan2,    0.85865706205368042, 0 );
+    if ( frac_w > 10 ) {
+    if ( frac_w > 23 ) {
     do_op2(     "15) x*y",              mul,    mul,           -0.00000000000000000010980813584353493, 0.00000000000000000010980813584353493 );
+    }
     do_op2(     "16) x*y",              mul,    mul,           -2.02836e-24, -2.02836e-24 );
     do_op1(     "17) sqrt",             sqrt,   std::sqrt,     1.000000204890966415405273437500 );
-    if ( 0 )  // not ready
+    if ( frac_w > 23 ) {
     do_op1(     "18) atanh",            atanh,  std::atanh,    1.000000204890966415405273437500 );  
+    }
     do_op1(     "19) atanh",            atanh,  std::atanh,    1.000000204890966415405273437500/2.0 );  
+    }
     do_op2(     "20) atanh2",           atanh2, atanh2,        1.000229761004447937011718750000/2.0, 1.000000204890966415405273437500 );
     do_op2(     "21) hypot",            hypot,  hypot,         1.000000204890966415405273437500, 1.000229761004447937011718750000 );
     do_op2(     "22) hypoth",           hypoth, hypoth,        1.000000204890966415405273437500, 1.000229761004447937011718750000/2.0 );
@@ -190,9 +198,11 @@ int main( int argc, const char * argv[] )
     do_op1(     "24) exp",              exp,    std::exp,      1.000000204890966415405273437500 );
     do_op2(     "25) atan2",            atan2,  std::atan2,    1.000229761004447937011718750000, -1.000000204890966415405273437500 );
     do_op1(     "26) log",              log,    std::log,      1.000000204890966415405273437500 );
+    if ( frac_w > 10 ) {
     do_op1(     "27) asin",             asin,   std::asin,     1.000000204890966415405273437500 );
     do_op1(     "28) acos",             acos,   std::acos,     1.000000204890966415405273437500 );
     do_op2(     "29) hypoth",           hypoth, hypoth,        1.0, 1.000000204890966415405273437500 );
+    }
     do_op2(     "30) add",              add,    add,           1.0, 1.000000204890966415405273437500 );
     do_op2(     "31) sub",              sub,    sub,           1.0, 1.000000204890966415405273437500 );
     do_op1(     "32) asin",             asin,   std::asin,     1.000000204890966415405273437500/2 );
