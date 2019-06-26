@@ -27,6 +27,16 @@ arithemtic operations, the elementary functions, rounding modes, and IEEE 754 co
 <li>A basic test.</li>
 </ul>
 
+<p>
+Here are some CORDIC tutorials:</p>
+
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/CORDIC">CORDIC Wiki Page</a>
+<li><a href="https://www.allaboutcircuits.com/technical-articles/an-introduction-to-the-cordic-algorithm/">Intro to CORDIC</a>
+<li><a href="https://dspguru.com/dsp/faqs/cordic/">CORDIC FAQ</a>
+<li><a href="https://eprints.soton.ac.uk/267873/1/tcas1_cordic_review.pdf">50 Years of CORDIC Review</a>
+</ul>
+
 # Open Source
 
 <p>
@@ -61,16 +71,6 @@ analog circuitry.
 The hope of this library is to create a small, yet complete, tutorial package for those
 wishing to learn this timeless computer math algorithm.
 </p>
-
-<p>
-Here are a few links to CORDIC overviews:</p>
-
-<ul>
-<li><a href="https://en.wikipedia.org/wiki/CORDIC">CORDIC Wiki Page</a>
-<li><a href="https://www.allaboutcircuits.com/technical-articles/an-introduction-to-the-cordic-algorithm/">Intro to CORDIC</a>
-<li><a href="https://dspguru.com/dsp/faqs/cordic/">CORDIC FAQ</a>
-<li><a href="https://eprints.soton.ac.uk/267873/1/tcas1_cordic_review.pdf">50 Years of CORDIC Review</a>
-</ul>
 
 # Floating-Point
 
