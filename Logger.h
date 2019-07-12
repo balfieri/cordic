@@ -51,8 +51,8 @@ public:
     virtual void cordic_destructed(  const void * cordic );
 
     // log enter/leave routine
-    virtual void enter( const char * name );
-    virtual void leave( const char * name );
+    virtual void enter( uint16_t func_id );
+    virtual void leave( uint16_t func_id );
 
     // log construction/destruction of T values
     virtual void constructed( const T * v, const void * cordic );
@@ -130,18 +130,18 @@ inline void Logger<T,FLT>::cordic_destructed(  const void * cordic )
 }
 
 template< typename T, typename FLT >
-inline void Logger<T,FLT>::enter( const char * name )
+inline void Logger<T,FLT>::enter( uint16_t func_id )
 {
     if ( out_text ) {
-        *out << "enter( " << name << " )\n";
+        *out << "enter( " << func_id << " )\n";
     }
 }
 
 template< typename T, typename FLT >
-inline void Logger<T,FLT>::leave( const char * name )
+inline void Logger<T,FLT>::leave( uint16_t func_id )
 {
     if ( out_text ) {
-        *out << "leave( " << name << " )\n";
+        *out << "leave( " << func_id << " )\n";
     }
 }
 

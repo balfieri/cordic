@@ -50,8 +50,8 @@ public:
                                      bool is_float, uint32_t guard_w, uint32_t n );
     virtual void cordic_destructed(  const void * cordic );
 
-    virtual void enter( const char * name );
-    virtual void leave( const char * name );
+    virtual void enter( uint16_t func_id );
+    virtual void leave( uint16_t func_id );
 
     virtual void constructed( const T * v, const void * cordic );
     virtual void destructed(  const T * v, const void * cordic );
@@ -74,14 +74,23 @@ public:
 
     virtual void parse( void );
     virtual void clear_stats( void );
-    virtual void print_stats( std::string basename="", double scale_factor=1.0, const std::vector<std::string>& ignore_funcs=std::vector<std::string>() ) const;
+    virtual void print_stats( std::string basename, double scale_factor,
+                              const std::vector<std::string>& func_names, const std::vector<uint16_t>& ignore_funcs=std::vector<uint16_t>() ) const;
 
 private:
     std::string         base_name;
 
     static constexpr uint32_t INT_W_MAX = 32;           
+    static constexpr uint32_t FUNC_CNT_MAX = 64;
     static constexpr uint32_t THREAD_CNT_MAX = 64;
-    uint64_t op_cnt[THREAD_CNT_MAX][OP_cnt];                            // keep totals for each thread
+    static constexpr uint32_t STACK_CNT_MAX = 1024;
+    uint64_t                  op_cnt[THREAD_CNT_MAX][FUNC_CNT_MAX][OP_cnt];             // keep totals for each thread-function
+    uint16_t                  stack[THREAD_CNT_MAX][STACK_CNT_MAX];                     // func call stack
+    uint32_t                  stack_cnt[THREAD_CNT_MAX];                                // func call stack depth
+
+    void                stack_push( uint16_t func_id );
+    uint16_t            stack_top( void );
+    void                stack_pop( void );
 };
 
 //-----------------------------------------------------
@@ -109,6 +118,11 @@ AnalysisLight<T,FLT>::AnalysisLight( std::string _base_name ) : Logger<T,FLT>( C
 {
     base_name = _base_name;
 
+    for( uint32_t t = 0; t < THREAD_CNT_MAX; t++ )
+    {
+        stack_cnt[t] = 0;
+    }
+
     clear_stats();
 }
 
@@ -127,6 +141,27 @@ void AnalysisLight<T,FLT>::tid_set( uint32_t t )
 //-----------------------------------------------------
 // Logger Method Overrides
 //-----------------------------------------------------
+template< typename T, typename FLT > 
+inline void AnalysisLight<T,FLT>::stack_push( uint16_t func_id )
+{
+    cassert( stack_cnt[tid] < STACK_CNT_MAX, "depth of call stack exceeded" );
+    stack[tid][stack_cnt[tid]++] = func_id;
+}
+
+template< typename T, typename FLT >
+inline uint16_t AnalysisLight<T,FLT>::stack_top( void )
+{
+    cassert( stack_cnt[tid] > 0, "can't get top of an empty call stack" );
+    return stack[tid][stack_cnt[tid]-1];
+}
+
+template< typename T, typename FLT >
+inline void AnalysisLight<T,FLT>::stack_pop( void )
+{
+    cassert( stack_cnt[tid] > 0, "can't pop an empty call stack" );
+    stack_cnt[tid]--;
+}
+
 template< typename T, typename FLT >
 inline void AnalysisLight<T,FLT>::cordic_constructed( const void * cordic_ptr, uint32_t int_exp_w, uint32_t frac_w, 
                                           bool is_float, uint32_t guard_w, uint32_t n )
@@ -146,15 +181,18 @@ inline void AnalysisLight<T,FLT>::cordic_destructed( const void * cordic_ptr )
 }
 
 template< typename T, typename FLT >
-inline void AnalysisLight<T,FLT>::enter( const char * _name )
+inline void AnalysisLight<T,FLT>::enter( uint16_t func_id )
 {
-    (void)_name;
+    cassert( func_id < FUNC_CNT_MAX, "func_id is too large" );
+    stack_push( func_id );
 }
 
 template< typename T, typename FLT >
-inline void AnalysisLight<T,FLT>::leave( const char * _name )
+inline void AnalysisLight<T,FLT>::leave( uint16_t func_id )
 {
-    (void)_name;
+    cassert( stack_top() == func_id , "trying to leave a routine that's not at the top of the stack: entered " + 
+                                      std::to_string(stack_top()) + " leaving " + std::to_string(func_id) );
+    stack_pop();
 }
 
 template< typename T, typename FLT >
@@ -176,35 +214,35 @@ inline void AnalysisLight<T,FLT>::op( uint16_t _op, uint32_t opnd_cnt, const T *
 {
     (void)opnd_cnt;
     (void)opnd;
-    op_cnt[tid][_op]++;
+    op_cnt[tid][stack_top()][_op]++;
 }
 
 template< typename T, typename FLT >
 inline void AnalysisLight<T,FLT>::op1( uint16_t _op, const T * opnd1 )
 {
     (void)opnd1;
-    op_cnt[tid][_op]++;
+    op_cnt[tid][stack_top()][_op]++;
 }
 
 template< typename T, typename FLT >
 inline void AnalysisLight<T,FLT>::op1( uint16_t _op, const T& opnd1 )
 {
     (void)opnd1;
-    op_cnt[tid][_op]++;
+    op_cnt[tid][stack_top()][_op]++;
 }
 
 template< typename T, typename FLT >
 inline void AnalysisLight<T,FLT>::op1( uint16_t _op, bool opnd1 )
 {
     (void)opnd1;
-    op_cnt[tid][_op]++;
+    op_cnt[tid][stack_top()][_op]++;
 }
 
 template< typename T, typename FLT >
 inline void AnalysisLight<T,FLT>::op1( uint16_t _op, const FLT& opnd1 )
 {
     (void)opnd1;
-    op_cnt[tid][_op]++;
+    op_cnt[tid][stack_top()][_op]++;
 }
 
 template< typename T, typename FLT >
@@ -212,7 +250,7 @@ inline void AnalysisLight<T,FLT>::op2( uint16_t _op, const T * opnd1, const T * 
 {
     (void)opnd1;
     (void)opnd2;
-    op_cnt[tid][_op]++;
+    op_cnt[tid][stack_top()][_op]++;
 }
 
 template< typename T, typename FLT >
@@ -220,7 +258,7 @@ inline void AnalysisLight<T,FLT>::op2( uint16_t _op, const T * opnd1, const T& o
 {
     (void)opnd1;
     (void)opnd2;
-    op_cnt[tid][_op]++;
+    op_cnt[tid][stack_top()][_op]++;
 }
 
 template< typename T, typename FLT >
@@ -228,7 +266,7 @@ inline void AnalysisLight<T,FLT>::op2( uint16_t _op, const T * opnd1, const FLT&
 {
     (void)opnd1;
     (void)opnd2;
-    op_cnt[tid][_op]++;
+    op_cnt[tid][stack_top()][_op]++;
 }
 
 template< typename T, typename FLT >
@@ -237,7 +275,7 @@ inline void AnalysisLight<T,FLT>::op3( uint16_t _op, const T * opnd1, const T * 
     (void)opnd1;
     (void)opnd2;
     (void)opnd3;
-    op_cnt[tid][_op]++;
+    op_cnt[tid][stack_top()][_op]++;
 }
 
 template< typename T, typename FLT >
@@ -247,13 +285,13 @@ inline void AnalysisLight<T,FLT>::op4( uint16_t _op, const T * opnd1, const T * 
     (void)opnd2;
     (void)opnd3;
     (void)opnd4;
-    op_cnt[tid][_op]++;
+    op_cnt[tid][stack_top()][_op]++;
 }
 
 template< typename T, typename FLT >
 inline void AnalysisLight<T,FLT>::inc_op_cnt( OP _op, uint32_t by )
 {
-    op_cnt[tid][uint16_t(_op)] += by;
+    op_cnt[tid][stack_top()][uint16_t(_op)] += by;
 }
 
 //-----------------------------------------------------
@@ -271,33 +309,73 @@ void AnalysisLight<T,FLT>::clear_stats( void )
 {
     for( uint32_t t = 0; t < THREAD_CNT_MAX; t++ )
     {
-        for( uint32_t o = 0; o < Cordic<T,FLT>::OP_cnt; o++ )
+        for( uint32_t f = 0; f < FUNC_CNT_MAX; f++ )
         {
-            op_cnt[t][o] = 0;
+            for( uint32_t o = 0; o < Cordic<T,FLT>::OP_cnt; o++ )
+            {
+                op_cnt[t][f][o] = 0;
+            }
         }
     }
 }
 
 template< typename T, typename FLT >
-void AnalysisLight<T,FLT>::print_stats( std::string basename, double scale_factor, const std::vector<std::string>& ignore_funcs ) const
+void AnalysisLight<T,FLT>::print_stats( std::string basename, double scale_factor, 
+                                        const std::vector<std::string>& func_names, const std::vector<uint16_t>& ignore_funcs ) const
 {
-    (void)ignore_funcs;
-
     std::string out_name = basename + ".out";
     FILE * out = fopen( out_name.c_str(), "w" );
     std::ofstream csv( basename + ".csv", std::ofstream::out );
 
-    fprintf( out, "\n\nOP Totals:\n" );
-    csv << "\n\n\"Totals:\"" << "\n";
+    uint64_t total_op_cnt[OP_cnt];
     for( uint32_t i = 0; i < OP_cnt; i++ )
     {
-        uint64_t cnt = 0;
-        for( uint32_t t = 0; t < THREAD_CNT_MAX; t++ )
+        total_op_cnt[i] = 0;
+    }
+    for( uint32_t f = 0; f < FUNC_CNT_MAX; f++ )
+    {
+        bool ignored = false;
+        for( uint32_t i = 0; !ignored && i < ignore_funcs.size(); i++ )
         {
-            cnt += op_cnt[t][i];
+            ignored = f == ignore_funcs[i];
         }
-        if ( cnt == 0 ) continue;
+        if ( ignored ) continue;
 
+        bool have_any = false;
+        for( uint32_t i = 0; !have_any && i < OP_cnt; i++ )
+        {
+            for( uint32_t t = 0; t < THREAD_CNT_MAX; t++ )
+            {
+                have_any |= op_cnt[t][f][i];
+            }
+        }
+        if ( !have_any ) continue;
+        cassert( f < func_names.size(), "func_names doesn't have enough names" );
+
+        fprintf( out, "\n\n%s OP Totals:\n", func_names[f].c_str() );
+        csv << "\n\n\"" << func_names[f] << " OP Totals:\"\n";
+        for( uint32_t i = 0; i < OP_cnt; i++ )
+        {
+            uint64_t cnt = 0;
+            for( uint32_t t = 0; t < THREAD_CNT_MAX; t++ )
+            {
+                cnt += op_cnt[t][f][i];
+            }
+            if ( cnt == 0 ) continue;
+            total_op_cnt[i] += cnt;
+
+            uint64_t scaled_cnt = double(cnt) * scale_factor + 0.5;
+            fprintf( out, "    %-40s:  %10" FMT_LLU "   %10" FMT_LLU "\n", Cordic<T,FLT>::op_to_str( i ).c_str(), cnt, scaled_cnt );
+            csv << "\"" << Cordic<T,FLT>::op_to_str( i ) << "\", " << cnt << ", " << scaled_cnt << "\n";
+        }
+    }
+
+    fprintf( out, "\n\nOP Grand Totals:\n" );
+    csv << "\n\n\"OP Grand Totals:\"\n";
+    for( uint32_t i = 0; i < OP_cnt; i++ )
+    {
+        uint64_t cnt = total_op_cnt[i];
+        if ( cnt == 0 ) continue;
         uint64_t scaled_cnt = double(cnt) * scale_factor + 0.5;
         fprintf( out, "    %-40s:  %10" FMT_LLU "   %10" FMT_LLU "\n", Cordic<T,FLT>::op_to_str( i ).c_str(), cnt, scaled_cnt );
         csv << "\"" << Cordic<T,FLT>::op_to_str( i ) << "\", " << cnt << ", " << scaled_cnt << "\n";

@@ -54,8 +54,8 @@ public:
                                      bool is_float, uint32_t guard_w, uint32_t n );
     virtual void cordic_destructed(  const void * cordic );
 
-    virtual void enter( const char * name );
-    virtual void leave( const char * name );
+    virtual void enter( uint16_t func_id );
+    virtual void leave( uint16_t func_id );
 
     virtual void constructed( const T * v, const void * cordic );
     virtual void destructed(  const T * v, const void * cordic );
@@ -78,7 +78,8 @@ public:
 
     virtual void parse( void );
     virtual void clear_stats( void );
-    virtual void print_stats( std::string basename="", double scale_factor=1.0, const std::vector<std::string>& ignore_funcs=std::vector<std::string>() ) const;
+    virtual void print_stats( std::string basename, double scale_factor,
+                              const std::vector<std::string>& func_names, const std::vector<uint16_t>& ignore_funcs=std::vector<uint16_t>() ) const;
 
 private:
     std::string         base_name;
@@ -101,7 +102,7 @@ private:
 
     struct FrameInfo
     {
-        std::string func_name;                          
+        uint16_t    func_id;
     };
 
     struct CordicInfo
@@ -158,8 +159,7 @@ private:
 
     std::map<std::string, KIND>                 kinds;
     std::map<std::string, OP>                   ops;
-    std::vector<std::string>                    func_names;             // in order of appearance
-    std::map<std::string, FuncInfo>             funcs;
+    std::vector<FuncInfo>                       funcs;
     std::map<uint64_t, CordicInfo>              cordics;
     std::map<uint64_t, ValInfo>                 vals;
 
@@ -307,46 +307,31 @@ void Analysis<T,FLT>::cordic_destructed( const void * cordic_ptr )
 }
 
 template< typename T, typename FLT >
-void Analysis<T,FLT>::enter( const char * _name )
+void Analysis<T,FLT>::enter( uint16_t func_id )
 {
     std::lock_guard<std::mutex> guard(lock);
-    std::string name = _name;
-    auto it = funcs.find( name );
-    if ( it == funcs.end() ) {
-        func_names.push_back( name );       // for printouts
-        FuncInfo info;
-        funcs[name] = info;
-        it = funcs.find( name );
-        it->second.call_cnt = 0;
-        for( uint32_t i = 0; i < OP_cnt; i++ )
+    size_t size = funcs.size();
+    if ( size <= func_id ) {
+        funcs.resize( func_id+1 );
+        for( size_t i = size; i <= func_id; i++ )
         {
-            it->second.op_cnt[i] = 0;
-            it->second.opnd_cnt[i] = 0;
-            it->second.opnd_is_const_cnt[i] = 0;
-            it->second.opnd_all_are_const_cnt[i] = 0;
-            for( uint32_t j = 0; j < (INT_W_MAX+1); j++ )
-            {
-                it->second.opnd_int_w_used_cnt[i][j] = 0;
-                it->second.opnd_max_int_w_used_cnt[i][j] = 0;
-            }
+            memzero( &funcs[i], sizeof(funcs[0]) );
         }
-    } 
-    it->second.call_cnt++;
+    }
+    funcs[func_id].call_cnt++; 
     FrameInfo frame;
-    frame.func_name = name;
+    frame.func_id = func_id;
     stack_push( frame );
 }
 
 template< typename T, typename FLT >
-void Analysis<T,FLT>::leave( const char * _name )
+void Analysis<T,FLT>::leave( uint16_t func_id )
 {
     std::lock_guard<std::mutex> guard(lock);
-    std::string name = _name;
-    auto it = funcs.find( name );
-    cassert( it != funcs.end(), "leave should have found function " + name );
+    cassert( funcs.size() > func_id, "func_id " + std::to_string(func_id) + " does not exist" );
     FrameInfo& frame = stack_top();
-    cassert( frame.func_name == name, "trying to leave a routine that's not at the top of the stack: entered " + 
-                                      frame.func_name + " leaving " + name );
+    cassert( frame.func_id == func_id , "trying to leave a routine that's not at the top of the stack: entered " + 
+                                        frame.func_id + " leaving " + func_id );
     stack_pop();
 }
 
@@ -683,7 +668,7 @@ template< typename T, typename FLT >
 inline void Analysis<T,FLT>::inc_op_cnt_nolock( OP op, uint32_t by )
 {
     FrameInfo& frame = stack_top();
-    FuncInfo& func = funcs[frame.func_name];
+    FuncInfo& func = funcs[frame.func_id];
     func.op_cnt[uint32_t(op)] += by;
 }
 
@@ -698,7 +683,7 @@ template< typename T, typename FLT >
 inline void Analysis<T,FLT>::inc_opnd_cnt( OP op, const ValInfo& val, uint32_t by )
 {
     FrameInfo& frame = stack_top();
-    FuncInfo& func = funcs[frame.func_name];
+    FuncInfo& func = funcs[frame.func_id];
     uint16_t op_i = uint16_t(op);
     func.opnd_cnt[op_i] += by;
     if ( val.is_constant ) func.opnd_is_const_cnt[op_i] += by;
@@ -711,7 +696,7 @@ template< typename T, typename FLT >
 inline void Analysis<T,FLT>::inc_all_opnd_cnt( OP op, bool all_are_const, uint32_t max_int_w_used, uint32_t by )
 {
     FrameInfo& frame = stack_top();
-    FuncInfo& func = funcs[frame.func_name];
+    FuncInfo& func = funcs[frame.func_id];
     uint16_t op_i = uint16_t(op);
     if ( all_are_const ) func.opnd_all_are_const_cnt[op_i] += by;
     if ( max_int_w_used > INT_W_MAX ) max_int_w_used = INT_W_MAX;
@@ -878,26 +863,26 @@ void Analysis<T,FLT>::clear_stats( void )
     //--------------------------------------------------------
     // Print only the non-zero counts from non-ignored functions.
     //--------------------------------------------------------
-    for( auto nit = func_names.begin(); nit != func_names.end(); nit++ )
+    for( size_t i = 0; i < funcs.size(); i++ )
     {
-        auto it = funcs.find( *nit );
-        FuncInfo& func = it->second;
+        FuncInfo& func = &funcs[i];
         func.call_cnt = 0;
-        for( uint32_t i = 0; i < OP_cnt; i++ )
+        for( uint32_t j = 0; j < OP_cnt; j++ )
         {
-            func.op_cnt[i] = 0;
+            func.op_cnt[j] = 0;
         }
     }
 }
 
 template< typename T, typename FLT >
-void Analysis<T,FLT>::print_stats( std::string basename, double scale_factor, const std::vector<std::string>& ignore_funcs ) const
+void Analysis<T,FLT>::print_stats( std::string basename, double scale_factor, 
+                                   const std::vector<std::string>& func_names, const std::vector<uint16_t>& ignore_funcs ) const
 {
     //--------------------------------------------------------
     // Print only the non-zero counts from non-ignored functions.
     //--------------------------------------------------------
     if ( basename == "" ) basename = base_name;
-    std::map<std::string, bool> func_ignored;
+    std::map<uint16_t, bool> func_ignored;
     for( auto it = ignore_funcs.begin(); it != ignore_funcs.end(); it++ )
     {
         func_ignored[*it] = true;
@@ -923,23 +908,23 @@ void Analysis<T,FLT>::print_stats( std::string basename, double scale_factor, co
             total_opnd_max_int_w_used_cnt[i][j] = 0;
         }
     }
+    cassert( funcs.size() <= func_names.size(), "func_names doesn't have enough names" );
     for( uint32_t for_opnds = 0; for_opnds < 2; for_opnds++ )
     {
         fprintf( out, for_opnds ? "\nOPERAND COUNTS:\n" : "\nOP COUNTS:\n" );
-        for( auto nit = func_names.begin(); nit != func_names.end(); nit++ )
+        for( size_t i = 0; i < funcs.size(); i++ )
         {
-            if ( func_ignored.find( *nit ) != func_ignored.end() ) continue;
-            auto it = funcs.find( *nit );
-            const FuncInfo& func = it->second;
+            if ( func_ignored.find( i ) != func_ignored.end() ) continue;
+            const FuncInfo& func = funcs[i];
             if ( !for_opnds ) {
-                fprintf( out, "\n%-44s: %8lld calls\n", it->first.c_str(), it->second.call_cnt );
-                csv << "\n\"" << it->first + "\", " << it->second.call_cnt << "\n";
+                fprintf( out, "\n%-20s: %8lld calls\n", func_names[i].c_str(), func.call_cnt );
+                csv << "\n\"" << func_names[i] << "\", " << func.call_cnt << "\n";
             } else {
-                fprintf( out, "\n%s:\n", it->first.c_str() );
+                fprintf( out, "\n%4d:\n", i );
             }
-            for( uint32_t i = 0; i < OP_cnt; i++ )
+            for( uint32_t j = 0; j < OP_cnt; j++ )
             {
-                OP op = OP(i);
+                OP op = OP(j);
                 if ( op == OP::push_constant || op == OP::assign || op == OP::pop_value || op == OP::pop_bool ) continue; // consume no hardware
 
                 uint64_t cnt = func.op_cnt[i];
@@ -947,7 +932,7 @@ void Analysis<T,FLT>::print_stats( std::string basename, double scale_factor, co
 
                 if ( !for_opnds ) {
                     total_op_cnt[i] += cnt;
-                    double avg = double(cnt) / double(it->second.call_cnt);
+                    double avg = double(cnt) / double(func.call_cnt);
                     uint64_t scaled_cnt = double(cnt) * scale_factor + 0.5;
                     fprintf( out, "    %-40s: %8.1f/call   %10lld total   %10lld scaled_total\n", Cordic<T,FLT>::op_to_str( i ).c_str(), avg, cnt, scaled_cnt );
                     csv << "\"" << Cordic<T,FLT>::op_to_str( i ) << "\", " << avg << ", " << cnt << ", " << scaled_cnt << "\n";
