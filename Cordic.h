@@ -2770,7 +2770,7 @@ inline T Cordic<T,FLT>::fma_fda( bool is_fma, const T& _x, const T& _y, const T&
     int32_t   x_exp;
     int32_t   y_exp;
     EXP_CLASS rr_exp_class;
-    int32_t   rr_exp;
+    int32_t   rr_exp = 0;
     bool      rr_sign;
     reduce_mul_div_args( is_fma, x, y, x_exp_class, x_exp, y_exp_class, y_exp, rr_sign );
 
