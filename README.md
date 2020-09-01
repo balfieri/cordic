@@ -41,7 +41,7 @@ Here are some CORDIC tutorials:</p>
 
 <p>
 <b>This is all open-source.  Refer to the LICENSE.md for licensing details.
-This code is intended for tutorial purposes only. You should not assume that the library is bug-free or accurate enough
+This code is intended for tutorial and research purposes only. You should not assume that the library is bug-free or accurate enough
 for use as a production reference model.</b>
 </p>
 
