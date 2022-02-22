@@ -370,8 +370,8 @@ void AnalysisLight<T,FLT>::print_stats( std::string basename, double scale_facto
         }
     }
 
-    fprintf( out, "\n\nOP Grand Totals:\n" );
-    csv << "\n\n\"OP Grand Totals:\"\n";
+    fprintf( out, "\n\nGrand OP Totals:\n" );
+    csv << "\n\n\"Grand OP Totals:\"\n";
     for( uint32_t i = 0; i < OP_cnt; i++ )
     {
         uint64_t cnt = total_op_cnt[i];
