@@ -1,0 +1,19 @@
+#!/usr/bin/perl -w
+#
+# fixed-point to float conversion
+#
+no warnings 'portable';
+
+@ARGV >= 2 or die "ERROR: flt <val> <width> [<frac_width>]\n";
+my $fp_str   = shift @ARGV;
+my $fp_width = shift @ARGV;
+my $frac_width = shift @ARGV || 24;
+
+$fp_str =~ s/^h//;
+my $fp = hex( $fp_str );
+my $sign = ($fp >> ($fp_width-1)) & 1;
+$sign and $fp = (~$fp + 1) & ((1 << ($fp_width-1)) - 1);
+$sign and $fp = -$fp;
+$fp /= 1 << $frac_width;
+printf "%0.10f\n", $fp;
+exit 0;
