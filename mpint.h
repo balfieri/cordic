@@ -37,6 +37,11 @@
 #define _mpint_h
 
 #include <cmath>
+#ifdef issubnormal
+#undef issubnormal
+#endif
+#include <cstddef>
+#include <cstdint>
 #include <iostream>
 #include <string>
 

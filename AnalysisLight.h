@@ -25,6 +25,10 @@
 
 #include <string>
 #include <cmath>
+#ifdef issubnormal
+#undef issubnormal
+#endif
+#include <cstdint>
 #include <iostream>
 #include <fstream>
 #include <vector>
