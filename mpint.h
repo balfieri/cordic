@@ -37,6 +37,8 @@
 #define _mpint_h
 
 #include <cmath>
+#include <cstddef>
+#include <cstdint>
 #include <iostream>
 #include <string>
 

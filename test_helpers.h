@@ -24,6 +24,7 @@
 #define _test_helpers_h
 
 #include "freal.h"
+#include <cstdint>
 
 // some useful macros to avoid redundant typing
 //

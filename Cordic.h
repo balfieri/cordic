@@ -23,6 +23,7 @@
 
 #include <cmath>
 #include <cfenv>
+#include <cstdint>
 #include <iostream>
 #include <iomanip>
 #include <cstring>

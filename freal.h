@@ -41,6 +41,7 @@
 #define _freal_h
 
 #include "Cordic.h"
+#include <cstdint>
 
 // #defines:
 //

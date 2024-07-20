@@ -25,6 +25,7 @@
 
 #include <string>
 #include <cmath>
+#include <cstdint>
 #include <iostream>
 #include <fstream>
 #include <vector>
